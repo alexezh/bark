@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { game } from "./main";
 
 export class ParticlePool {
@@ -202,7 +203,7 @@ export class ParticlePool {
         vx = dirx + (1 - get_rand() * 2);
         vy = diry + get_rand() * 4;
         vz = dirz + (1 - get_rand() * 2);
-        type = "chunk_debris";
+        let type = "chunk_debris";
         //   if(chunk.current_blocks > 0) {
         //       mass = 1/(chunk.current_blocks*0.01); 
         //       console.log(mass);
@@ -791,15 +792,24 @@ export class ParticlePool {
 }
 
 export class Particle {
+    public type = "regular";
+    public chunk!: any;
+    public light = false;
+    public owner: any;
+
+    public particle_type: number = 0;
+
     public life = 0;
     public active = 0;
-    public mesh = undefined;
+    public mesh: any;
+    public chunk_mesh: any;
     public gravity = 9.82;
     public e = -0.3; // restitution
     public mass = 0.1; // kg
     public airDensity = 1.2;
     public area = 0.001;
     public avg_ay = 0;
+    public power = 0;
 
     public vy = 0;
     public vx = 0;
@@ -832,8 +842,6 @@ export class Particle {
     public r = 0;
     public g = 0;
     public b = 0;
-    public type = "regular";
-    public chunk = 0;
     public damage = 0;
     public cd_update = 0;
     public old_mesh = 0;
@@ -866,7 +874,7 @@ export class Particle {
             this.mesh = this.chunk_mesh;
             //            game.scene.add(this.mesh);
             this.mesh.visible = true;
-            this.mesh.position.set(this.x, this.y, this.z);
+            this.mesh.position.set(this.vx, this.vy, this.vz);
         }
         if (this.light) {
             var p = game.p_light.clone();
@@ -935,7 +943,6 @@ export class Particle {
         this.r = 0;
         this.g = 0;
         this.b = 0;
-        this.type = 0;
         this.chunk = null;
         this.light = false;
         this.hit = false;
@@ -1046,7 +1053,7 @@ export class Particle {
                 case "empty_shell":
                     this.mesh.rotation.set(this.vx, this.vy, this.vz);
                     if (get_rand() > 0.96) {
-                        game.sounds.PlaySound("ammo_fall", this.mesh.position, 210);
+                        game.sounds.playSound("ammo_fall", this.mesh.position, 210);
                     }
                     this.bounce();
                     if (get_rand() > 0.9) {
@@ -1136,7 +1143,7 @@ export class Particle {
                 case "grenade":
                     game.particles.explosion(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.power, this.type);
                     game.world.explode(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.damage, this.type);
-                    game.sounds.PlaySound("rocket_explode", this.mesh.position, 1000);
+                    game.sounds.playSound("rocket_explode", this.mesh.position, 1000);
                     break;
                 case "missile":
                     //game.world.explode(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.power);
@@ -1144,7 +1151,7 @@ export class Particle {
                         game.particles.explosion(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.power, this.type);
                         game.world.explode(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.damage, this.type);
                     }
-                    game.sounds.PlaySound("rocket_explode", this.mesh.position, 800);
+                    game.sounds.playSound("rocket_explode", this.mesh.position, 800);
                     break;
                 //   case "minigun":
                 //game.world.explode(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.power);
@@ -1217,7 +1224,7 @@ export class Particle {
         }
     };
 
-    splatterRain(time, delta) {
+    splatterRain(time?, delta?) {
         if (game.world.checkExists(this.mesh.position.clone()).length != 0) {
             game.particles.debris(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, 0.2, this.r, this.g, this.b, false, null, null, null, false);
             game.particles.debris(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, 0.2, this.r, this.g, this.b, false, null, null, null, false);
@@ -1257,7 +1264,7 @@ export class Particle {
             game.world.explode(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.damage, this.type);
             if (this.type == "missile") {
                 game.particles.explosion(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.power, this.type);
-                game.sounds.PlaySound("rocket_explode", this.mesh.position, 800);
+                game.sounds.playSound("rocket_explode", this.mesh.position, 800);
             }
             this.active = 0;
             return;

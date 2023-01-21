@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { game } from "./main";
 
 export class SoundLoader {
@@ -16,7 +17,7 @@ export class SoundLoader {
         this.sounds[name].source = null;
     };
 
-    playSound(name, position, radius, loop) {
+    playSound(name, position, radius, loop?) {
         if (loop == null) { loop = false; }
         this.sounds[name].source = this.context.createBufferSource();
         this.sounds[name].source.buffer = this.sounds[name].buffer;

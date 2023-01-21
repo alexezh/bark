@@ -42,10 +42,10 @@ export class Vox {
         return buffer[from] | (buffer[from + 1] << 8) | (buffer[from + 2] << 16) | (buffer[from + 3] << 24);
     };
 
-    LoadModel(data, name) {
+    loadModel(data: ArrayBuffer, name: string): any {
         var colors = [];
-        var colors2 = undefined;
-        var voxelData = [];
+        var colors2: any = undefined;
+        var voxelData: any = [];
 
         var map = new Array();
         var sizex = 0, sizey = 0, sizez = 0;

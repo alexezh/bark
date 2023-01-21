@@ -1,42 +1,47 @@
 import { ModelLoader } from "./model_loader";
 import { SoundLoader } from "./sound";
 import { Textures } from "./textures";
+import * as THREE from 'three';
+import { World } from "./world";
+import { Ammo, AmmoP90, AmmoSniper, Heart, Shell } from "./objects";
+import { Level1, Maps } from "./map";
+import { ParticlePool } from "./particles";
 
 //if (!Detector.webgl) Detector.addGetWebGLMessage();
 //////////////////////////////////////////////////////////////////////
 // Main class - Where the magic happens
 //////////////////////////////////////////////////////////////////////
 export class Main {
-    public renderer = 0;
-    public controls = 0;
-    public camera = 0;
-    public scene = 0;
-    public stats = 0;
-    public clock = 0;
-    public light1 = 0;
-    public particles = 0;
-    public particles_box = 0;
+    public renderer!: THREE.WebGLRenderer;
+    public controls: any;
+    public camera: any;
+    public scene!: THREE.Scene;
+    public stats: any;
+    public clock!: THREE.Clock;
+    public light1: any;
+    public particles!: ParticlePool;
+    public particles_box!: ParticlePool;
     public t_start = Date.now();
     public modelLoader = new ModelLoader();
-    public maps = 0;
+    public maps!: Maps;
     public world = new World();
-    public update_objects = [];
-    public cdList = [];
-    public player = 0;
+    public update_objects: any = [];
+    public cdList: any = [];
+    public player: any;
     public visible_distance = 250; // from player to hide chunks + enemies.
     public textures = new Textures();
-    public chunk_material = 0;
-    public objects = {};
+    public objects: any = {};
     public ff_objects = [];
     public sounds = new SoundLoader();
 
     // Particle stuff.
     public box_material = new THREE.MeshPhongMaterial({ color: 0xffffff });
     public sprite_material = new THREE.SpriteMaterial({ color: 0xffffff });
+    // @ts-ignore
     public chunk_material = new THREE.MeshPhongMaterial({ vertexColors: THREE.VertexColors, wireframe: false });
     public p_light = new THREE.PointLight(0xFFAA00, 1, 10);
 
-    init() {
+    init(container: HTMLElement) {
         this.sounds.Add({ name: "sniper", file: "assets/sounds/sniper.wav.mp3" });
         this.sounds.Add({ name: "take_heart", file: "assets/sounds/heart.wav.mp3" });
         this.sounds.Add({ name: "walk1", file: "assets/sounds/walk1.wav.mp3" });
@@ -84,7 +89,6 @@ export class Main {
         //        that.bump_map = new THREE.MeshPhongMaterial({ map: texture,specularMap: texture, vertexColors: THREE.VertexColors, wireframe: false });
         //    }
         //);
-        var container = document.getElementById('container');
         this.scene = new THREE.Scene();
         this.clock = new THREE.Clock();
 
@@ -175,8 +179,8 @@ export class Main {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(this.renderer.domElement);
-        this.stats = new Stats();
-        container.appendChild(this.stats.dom);
+        //this.stats = new Stats();
+        //container.appendChild(this.stats.dom);
 
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
 
@@ -189,10 +193,8 @@ export class Main {
 
 
         // Init particle engine
-        this.particles = new ParticlePool();
-        this.particles.init(2000, 0);
-        this.particles_box = new ParticlePool();
-        this.particles_box.init(1000, 1);
+        this.particles = new ParticlePool(2000, 0);
+        this.particles_box = new ParticlePool(1000, 1);
 
         // DEBUG STUFF
         // var gridHelper = new THREE.GridHelper( 5000, 100);
@@ -224,7 +226,6 @@ export class Main {
             }, 500);
         } else {
             this.maps = new Level1();
-            this.maps.init();
             //game.maps.init("Level 1", "assets/maps/map3_ground.png", "assets/maps/map3_objects.png");
             // Load objects here to reduce overhead of multiple objects of same type.
             this.objects["shell"] = new Shell();
@@ -341,3 +342,7 @@ export class Main {
 }
 
 export let game: Main;
+
+export function createVoxelGame() {
+    game = new Main();
+}

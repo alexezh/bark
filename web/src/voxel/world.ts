@@ -4,19 +4,20 @@
 import { Chunk } from "./chunk";
 import { game } from "./main";
 import { Textures } from "./textures";
+import * as THREE from 'three';
 
 //////////////////////////////////////////////////////////////////////
-class World {
+export class World {
     // Generic chunk
     public obj_size_x = 16;
     public obj_size_z = 16;
     public obj_size_y = 2;
-    public chunks = Chunk[];
+    public chunks: Chunk[] = [];
     public cid = 0;
-    public textures = 0;
+    public textures!: Textures;
     public debug_update = 0;
     public rebuild_idx = 0;
-    public radioactive_blocks = [];
+    public radioactive_blocks: any = [];
     public rpc = 0;
     public rpc_max = 0;
     public obj_type = "world";
@@ -41,12 +42,12 @@ class World {
         this.textures.prepare();
     };
 
-    getChunkId(x, y, z, create) {
+    getChunkId(x, y, z, create): number[] {
         x |= 0;
         y |= 0;
         z |= 0;
 
-        var finds = [];
+        var finds: any = [];
         var c = 0;
         for (var i = 0; i < this.chunks.length; i++) {
             // Split for perf.
@@ -97,7 +98,7 @@ class World {
         z |= 0;
         var pow = power * power;
 
-        var list = [];
+        var list: any = [];
         var vx = 0, vy = 0, vz = 0, val = 0, offset = 0;
         for (var rx = x - power; rx <= x + power; rx++) {
             vx = Math.pow((rx - x), 2);
@@ -116,7 +117,7 @@ class World {
         }
         // Check if any object is in the way.
         if (type == "missile" || type == "grenade") {
-            var pos = 0;
+            var pos: any = {};
             var pxp = x + power * 2;
             var pxm = x - power * 2;
             var pzp = z + power * 2;
@@ -149,10 +150,12 @@ class World {
         pos.y |= 0;
         pos.z |= 0;
         var c = this.getChunkId(pos.x, pos.y, pos.z, false);
+        // @ts-ignore
         if (c == -1) {
             return -1;
         }
         // Return first color?
+        // @ts-ignore
         return this.chunks[c[0]].getColor(pos.x, pos.y, pos.z);
     };
 
@@ -167,7 +170,7 @@ class World {
             return [];
         }
 
-        var list = [];
+        var list: any = [];
         for (var i = 0; i < c.length; i++) {
             var r = this.chunks[c[i]].checkExists(pos.x, pos.y, pos.z);
             if (r != -1) {

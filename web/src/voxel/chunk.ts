@@ -1,9 +1,9 @@
-//////////////////////////////////////////////////////////////////////
-// Chunk class
-
+import * as THREE from 'three';
 import { game } from "./main";
+import { FFChunk } from './objects';
 
 //////////////////////////////////////////////////////////////////////
+// chunk if unit of rendering. Loaded from vox
 export class Chunk {
     public type: string;
     public id: string;
@@ -17,12 +17,12 @@ export class Chunk {
     public chunk_size_y: number;
     public chunk_size_z: number;
     public blockSize: number;
-    public owner = "";
-    public mesh = undefined;
+    public owner: any;
+    public mesh: any = undefined;
     // public bb = undefined; // boundingbox
     //public batch_points = [];
     //public bp = 0; // batch_points pointer
-    public blocks = 0;
+    public blocks: any;
     public wireframe = false;
     public triangles = 0;
     //public shadow_blocks = [];
@@ -30,16 +30,17 @@ export class Chunk {
     public skips = 0;
     public starting_blocks = 0;
     public current_blocks = 0;
-    public blood_positions = [];
+    public blood_positions: THREE.Vector3[] = [];
     public health = 100;
     public dirty = true;
     public positions = 0;
     public colors = 0;
-    public geometry = 0;
-    public v = 0;
-    public c = 0;
+    public geometry!: THREE.BufferGeometry;
+    public v: any;
+    public c: any;
     public prev_len = 0;
-    public offset = 0;
+    public offset!: THREE.BufferGeometry;
+    public material!: THREE.MeshPhongMaterial;
 
     public constructor(x, y, z, cx, cy, cz, id, bs, type) {
         this.type = type;
@@ -68,7 +69,7 @@ export class Chunk {
         this.blocks = null;
     };
 
-    SameColor(block1, block2) {
+    sameColor(block1, block2) {
         if (((block1 >> 8) & 0xFFFFFF) == ((block2 >> 8) & 0xFFFFFF) && block1 != 0 && block2 != 0) {
             return true;
         }
@@ -92,8 +93,8 @@ export class Chunk {
     };
 
     build() {
-        var vertices = [];
-        var colors = [];
+        var vertices: any = [];
+        var colors: any = [];
         var cc = 0; // Color counter
         var r = 0;
         var g = 0;
@@ -252,14 +253,14 @@ export class Chunk {
 
                                 for (var x_ = x; x_ < this.chunk_size_x; x_++) {
                                     // Check not drawn + same color
-                                    if ((this.blocks[x_][y][z] & 0x20) == 0 && this.SameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
+                                    if ((this.blocks[x_][y][z] & 0x20) == 0 && this.sameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
                                         maxX++;
                                     } else {
                                         break;
                                     }
                                     var tmpZ = 0;
                                     for (var z_ = z; z_ < this.chunk_size_z; z_++) {
-                                        if ((this.blocks[x_][y][z_] & 0x20) == 0 && this.SameColor(this.blocks[x_][y][z_], this.blocks[x][y][z])) {
+                                        if ((this.blocks[x_][y][z_] & 0x20) == 0 && this.sameColor(this.blocks[x_][y][z_], this.blocks[x][y][z])) {
                                             tmpZ++;
                                         } else {
                                             break;
@@ -307,14 +308,14 @@ export class Chunk {
 
                             for (var x_ = x; x_ < this.chunk_size_x; x_++) {
                                 // Check not drawn + same color
-                                if ((this.blocks[x_][y][z] & 0x2) == 0 && this.SameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
+                                if ((this.blocks[x_][y][z] & 0x2) == 0 && this.sameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
                                     maxX++;
                                 } else {
                                     break;
                                 }
                                 var tmpZ = 0;
                                 for (var z_ = z; z_ < this.chunk_size_z; z_++) {
-                                    if ((this.blocks[x_][y][z_] & 0x2) == 0 && this.SameColor(this.blocks[x_][y][z_], this.blocks[x][y][z])) {
+                                    if ((this.blocks[x_][y][z_] & 0x2) == 0 && this.sameColor(this.blocks[x_][y][z_], this.blocks[x][y][z])) {
                                         tmpZ++;
                                     } else {
                                         break;
@@ -360,14 +361,14 @@ export class Chunk {
 
                             for (var x_ = x; x_ < this.chunk_size_x; x_++) {
                                 // Check not drawn + same color
-                                if ((this.blocks[x_][y][z] & 0x10) == 0 && this.SameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
+                                if ((this.blocks[x_][y][z] & 0x10) == 0 && this.sameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
                                     maxX++;
                                 } else {
                                     break;
                                 }
                                 var tmpY = 0;
                                 for (var y_ = y; y_ < this.chunk_size_y; y_++) {
-                                    if ((this.blocks[x_][y_][z] & 0x10) == 0 && this.SameColor(this.blocks[x_][y_][z], this.blocks[x][y][z])) {
+                                    if ((this.blocks[x_][y_][z] & 0x10) == 0 && this.sameColor(this.blocks[x_][y_][z], this.blocks[x][y][z])) {
                                         tmpY++;
                                     } else {
                                         break;
@@ -411,14 +412,14 @@ export class Chunk {
 
                             for (var x_ = x; x_ < this.chunk_size_x; x_++) {
                                 // Check not drawn + same color
-                                if ((this.blocks[x_][y][z] & 0x1) == 0 && this.SameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
+                                if ((this.blocks[x_][y][z] & 0x1) == 0 && this.sameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
                                     maxX++;
                                 } else {
                                     break;
                                 }
                                 var tmpY = 0;
                                 for (var y_ = y; y_ < this.chunk_size_y; y_++) {
-                                    if ((this.blocks[x_][y_][z] & 0x1) == 0 && this.SameColor(this.blocks[x_][y_][z], this.blocks[x][y][z])) {
+                                    if ((this.blocks[x_][y_][z] & 0x1) == 0 && this.sameColor(this.blocks[x_][y_][z], this.blocks[x][y][z])) {
                                         tmpY++;
                                     } else {
                                         break;
@@ -462,14 +463,14 @@ export class Chunk {
 
                             for (var z_ = z; z_ < this.chunk_size_z; z_++) {
                                 // Check not drawn + same color
-                                if ((this.blocks[x][y][z_] & 0x8) == 0 && this.SameColor(this.blocks[x][y][z_], this.blocks[x][y][z])) {
+                                if ((this.blocks[x][y][z_] & 0x8) == 0 && this.sameColor(this.blocks[x][y][z_], this.blocks[x][y][z])) {
                                     maxZ++;
                                 } else {
                                     break;
                                 }
                                 var tmpY = 0;
                                 for (var y_ = y; y_ < this.chunk_size_y; y_++) {
-                                    if ((this.blocks[x][y_][z_] & 0x8) == 0 && this.SameColor(this.blocks[x][y_][z_], this.blocks[x][y][z])) {
+                                    if ((this.blocks[x][y_][z_] & 0x8) == 0 && this.sameColor(this.blocks[x][y_][z_], this.blocks[x][y][z])) {
                                         tmpY++;
                                     } else {
                                         break;
@@ -513,14 +514,14 @@ export class Chunk {
 
                             for (var z_ = z; z_ < this.chunk_size_z; z_++) {
                                 // Check not drawn + same color
-                                if ((this.blocks[x][y][z_] & 0x4) == 0 && this.SameColor(this.blocks[x][y][z_], this.blocks[x][y][z])) {
+                                if ((this.blocks[x][y][z_] & 0x4) == 0 && this.sameColor(this.blocks[x][y][z_], this.blocks[x][y][z])) {
                                     maxZ++;
                                 } else {
                                     break;
                                 }
                                 var tmpY = 0;
                                 for (var y_ = y; y_ < this.chunk_size_y; y_++) {
-                                    if ((this.blocks[x][y_][z_] & 0x4) == 0 && this.SameColor(this.blocks[x][y_][z_], this.blocks[x][y][z])) {
+                                    if ((this.blocks[x][y_][z_] & 0x4) == 0 && this.sameColor(this.blocks[x][y_][z_], this.blocks[x][y][z])) {
                                         tmpY++;
                                     } else {
                                         break;
@@ -600,11 +601,11 @@ export class Chunk {
                 this.c.setXYZW(i, colors[i][0], colors[i][1], colors[i][2], 1);
             }
             this.geometry = new THREE.BufferGeometry();
-            this.geometry.dynamic = true;
+            //this.geometry.dynamic = true;
             this.geometry.addAttribute('position', this.v);
             this.geometry.addAttribute('color', this.c);
-            this.geometry.attributes.position.dynamic = true;
-            this.geometry.attributes.color.dynamic = true;
+            //this.geometry.attributes.position.dynamic = true;
+            //this.geometry.attributes.color.dynamic = true;
             this.geometry.computeBoundingBox();
             this.geometry.computeVertexNormals();
             this.prev_len = vertices.length;
@@ -636,7 +637,7 @@ export class Chunk {
         this.dirty = false;
     };
 
-    rmBlock(x, y, z, dir, dmg, local) {
+    rmBlock(x, y, z, dir?, dmg?, local?) {
         //this.batch_points[this.bp++] = { x: x, y: y, z: z};
         var wx = x;
         var wy = y;
@@ -689,7 +690,8 @@ export class Chunk {
                             mp_z + z * this.blockSize,
                             size, (c >> 24) & 0xFF, (c >> 16) & 0xFF, (c >> 8) & 0xFF, false,
                             //this.blockSize, (c >> 24) & 0xFF, (c >> 16) & 0xFF, (c >> 8) & 0xFF, false,
-                            dir.x, dir.y, dir.z
+                            dir.x, dir.y, dir.z,
+                            null
                         );
                     }
                     if (this.owner.radioactive_leak) {
@@ -749,7 +751,7 @@ export class Chunk {
             }
             this.current_blocks--;
         }
-    };
+    }
 
     addBlock(x, y, z, r, g, b) {
         x -= this.from_x * this.blockSize;
@@ -768,7 +770,7 @@ export class Chunk {
             (b & 0xFF) << 8 |
             0 & 0xFF;
         this.dirty = true;
-    };
+    }
 
     blockExists(x, y, z) {
         x -= this.from_x * this.blockSize;
@@ -791,13 +793,14 @@ export class Chunk {
         if (this.blocks == null) {
             return;
         }
-        var x = 0;
+        let x = 0;
         var y = 0;
         var z = 0;
         var vx = 0, vy = 0, vz = 0, val = 0, offset = 0;
         var ff = new Array();
         power = power * (1 / this.blockSize);
         var pow = power * power;
+        let rx = 0, ry = 0, ry = 0;
 
         var max = 0.5;
         if (this.total_blocks > 3000) {
@@ -851,6 +854,7 @@ export class Chunk {
         if (this.type == "enemy") {
             offset = 20;
         }
+
         // Try to find a point which has a block to not repeat the hits
         if (x >= 0 && y >= 0 && z >= 0 && x < this.chunk_size_x && y < this.chunk_size_y && z < this.chunk_size_z) {
             if ((this.blocks[x][y][z] >> 8) == 0) {
@@ -897,7 +901,7 @@ export class Chunk {
         //    }
         //}
 
-        var isHit = 0;
+        var isHit = false;
         var from_x = (x - power) < 0 ? 0 : x - power;
         var from_z = (z - power) < 0 ? 0 : z - power;
         var from_y = (y - power) < 0 ? 0 : y - power;
@@ -1058,7 +1062,7 @@ export class Chunk {
             }
             this.dirty = true;
 
-            ffc = new FFChunk();
+            let ffc = new FFChunk();
             ffc.create(chunk);
             ffc.base_type = this.owner.base_type;
             chunk.build();
@@ -1082,7 +1086,7 @@ export class Chunk {
             for (var y = 0; y < this.chunk_size_y; y++) {
                 for (var z = 0; z < this.chunk_size_z; z++) {
                     if ((this.blocks[x][y][z] >> 8) != 0) {
-                        this.rmBlock(x, y, z, dir, damage);
+                        this.rmBlock(x, y, z, dir, damage, undefined);
                     }
                 }
             }
@@ -1124,7 +1128,11 @@ export class Chunk {
                                 pos.z + z * this.blockSize / 2,
                                 this.blockSize,
                                 (c >> 24) & 0xFF, (c >> 16) & 0xFF, (c >> 8) & 0xFF,
-                                true
+                                true,
+                                null,
+                                null,
+                                null,
+                                null
                             );
                         }
                     }

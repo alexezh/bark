@@ -1,9 +1,11 @@
-//////////////////////////////////////////////////////////////////////
-// ModelLoader class (Loads both .vox and image files)
+import { Chunk } from "./chunk";
+import { game } from "./main";
+import { Vox } from "./vox";
+
 //////////////////////////////////////////////////////////////////////
 export class ModelLoader {
-    models = []
-    files = [];
+    models: any = []
+    files: any = [];
 
 
     public constructor() {
@@ -48,6 +50,8 @@ export class ModelLoader {
     };
 
     loadFiles() {
+        let key: any;
+
         if (this.files.length > 0) {
             key = this.files.pop();
         } else {
@@ -93,9 +97,10 @@ export class ModelLoader {
 
     loadModel(name) {
         var vox = new Vox();
-        var model = vox.LoadModel(this.models[name][0], name);
-        var p = 0, r = 0, g = 0, b = 0;
-        var chunk = new Chunk(0, 0, 0, model.sx, model.sz, model.sy, name, this.models[name][1], this.models[key][2]);
+        var model = vox.loadModel(this.models[name][0], name);
+        var p: any;
+        let r = 0, g = 0, b = 0;
+        var chunk = new Chunk(0, 0, 0, model.sx, model.sz, model.sy, name, this.models[name][1], this.models[name][2]);
         chunk.blockSize = this.models[name][1];
         chunk.init();
         for (var i = 0; i < model.data.length; i++) {
@@ -133,7 +138,8 @@ export class ModelLoader {
             game.scene.add(new_obj.mesh);
             game.addToCD(new_obj.mesh);
         } else {
-            var new_obj = jQuery.extend(true, {}, this.models[name]);
+            var new_obj: any = {};
+            Object.assign(new_obj, this.models[name]);
             new_obj.owner = obj;
             new_obj.blockSize = size;
             // new_obj.bb = undefined;

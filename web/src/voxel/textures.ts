@@ -1,16 +1,16 @@
-const MAP1 = 0;
-const WALL1 = 1;
-const ROAD1 = 2;
-const GRASS1 = 3;
-const TREE1 = 4;
-const DIRT1 = 5;
-const STONE_WALL = 6;
-const WALL2 = 7;
-const FLOOR1 = 8;
-const RADIOACTIVE_BARREL = 9;
-const LEVEL1_WALL = 10;
-const WOOD_WALL = 11;
-const LEVEL1_WALL2 = 12;
+export const MAP1 = 0;
+export const WALL1 = 1;
+export const ROAD1 = 2;
+export const GRASS1 = 3;
+export const TREE1 = 4;
+export const DIRT1 = 5;
+export const STONE_WALL = 6;
+export const WALL2 = 7;
+export const FLOOR1 = 8;
+export const RADIOACTIVE_BARREL = 9;
+export const LEVEL1_WALL = 10;
+export const WOOD_WALL = 11;
+export const LEVEL1_WALL2 = 12;
 
 const IMAGE = 0;
 const HEIGHT_MAP = 1;
@@ -31,7 +31,7 @@ export class Textures {
         ["wood_fence.png", IMAGE],
         ["wall2_level1.png", IMAGE],
     ];
-    tex = [];
+    tex: any = [];
     loaded = 0;
     heightMap = {};
 
@@ -90,7 +90,7 @@ export class Textures {
         var image = new Image();
         image.src = "assets/textures/" + filename;
         image.id = id;
-        var ctx = document.createElement('canvas').getContext('2d');
+        var ctx = document.createElement('canvas').getContext('2d')!;
         var that = this;
 
         image.onload = function () {
@@ -133,7 +133,7 @@ export class Textures {
         var image = new Image();
         image.src = "assets/textures/" + filename;
         image.id = id;
-        var ctx = document.createElement('canvas').getContext('2d');
+        var ctx = document.createElement('canvas').getContext('2d')!;
         var that = this;
         image.onload = function () {
             ctx.canvas.width = image.width;

@@ -4,6 +4,7 @@
     "target": "es2017",
     "module": "esnext",
     "removeComments": true,
+    "noImplicitAny": false,
     "outDir": "./out",
     "sourceMap": true,
     "alwaysStrict": true,

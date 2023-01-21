@@ -1,41 +1,47 @@
+import { game } from "./main";
+import { WALL2, WOOD_WALL } from "./textures";
+import * as THREE from 'three';
+import { Chunk } from "./chunk";
+
 //////////////////////////////////////////////////////////////////////
 // Maps class - Loading of maps from images
-//////////////////////////////////////////////////////////////////////
-function Maps() {
-    this.name = "";
-    this.ground = 3;
-    this.wall_height = 25;
-    this.wall_thickness = 2;
-    this.objects = [];
-    this.wall_texture = 0;
-    this.wall2_texture = 0;
-    // Object => color in obj image
-    this.objects["Agent"] = { r: 0xFF, g: 0x00, b: 0x00 };
-    this.objects["Greenie"] = { r: 0xEE, g: 0x00, b: 0x00 };
-    this.objects["Dudo"] = { r: 0xDD, g: 0x00, b: 0x00 };
-    this.objects["Hearty"] = { r: 0xCC, g: 0x00, b: 0x00 };
-    this.objects["AgentBlack"] = { r: 0xBB, g: 0x00, b: 0x00 };
-    this.objects["Lamp1"] = { r: 0x00, g: 0xFF, b: 0x00 };
-    this.objects["Portal"] = { r: 0x00, g: 0xEE, b: 0x00 };
-    this.objects["RadiationSign"] = { r: 0x00, g: 0xDD, b: 0x00 };
-    this.objects["UfoSign"] = { r: 0x00, g: 0xCC, b: 0x00 };
-    this.objects["DeadHearty"] = { r: 0x00, g: 0xBB, b: 0x00 };
-    this.objects["BarrelFire"] = { r: 0x00, g: 0xAA, b: 0x00 };
-    this.objects["StreetLamp"] = { r: 0x00, g: 0x99, b: 0x00 };
-    this.objects["Tree"] = { r: 0x00, g: 0x88, b: 0x00 };
-    this.objects["PaperAgent"] = { r: 0x00, g: 0x77, b: 0x00 };
-    this.objects["PaperPoliceCar"] = { r: 0x00, g: 0x66, b: 0x00 };
-    this.objects["Barrel"] = { r: 0x00, g: 0x55, b: 0x00 };
-    this.objects["Player"] = { r: 0x00, g: 0x00, b: 0xFF };
-    this.objects["PainKillers"] = { r: 0x00, g: 0x00, b: 0xEE };
-
-    this.walls = [];
-    this.width = 0;
-    this.height = 0;
+export class Maps {
+    public name = "";
+    public ground = 3;
+    public wall_height = 25;
+    public wall_thickness = 2;
+    public objects: any = [];
+    public wall_texture = 0;
+    public wall2_texture = 0;
+    public walls = [];
+    public width = 0;
+    public height = 0;
     // Objects loaded 
-    this.loaded = [];
+    public loaded: any = [];
 
-    this.ambient_light = 0;
+    public ambient_light!: THREE.AmbientLight;
+
+    public constructor() {
+        // Object => color in obj image
+        this.objects["Agent"] = { r: 0xFF, g: 0x00, b: 0x00 };
+        this.objects["Greenie"] = { r: 0xEE, g: 0x00, b: 0x00 };
+        this.objects["Dudo"] = { r: 0xDD, g: 0x00, b: 0x00 };
+        this.objects["Hearty"] = { r: 0xCC, g: 0x00, b: 0x00 };
+        this.objects["AgentBlack"] = { r: 0xBB, g: 0x00, b: 0x00 };
+        this.objects["Lamp1"] = { r: 0x00, g: 0xFF, b: 0x00 };
+        this.objects["Portal"] = { r: 0x00, g: 0xEE, b: 0x00 };
+        this.objects["RadiationSign"] = { r: 0x00, g: 0xDD, b: 0x00 };
+        this.objects["UfoSign"] = { r: 0x00, g: 0xCC, b: 0x00 };
+        this.objects["DeadHearty"] = { r: 0x00, g: 0xBB, b: 0x00 };
+        this.objects["BarrelFire"] = { r: 0x00, g: 0xAA, b: 0x00 };
+        this.objects["StreetLamp"] = { r: 0x00, g: 0x99, b: 0x00 };
+        this.objects["Tree"] = { r: 0x00, g: 0x88, b: 0x00 };
+        this.objects["PaperAgent"] = { r: 0x00, g: 0x77, b: 0x00 };
+        this.objects["PaperPoliceCar"] = { r: 0x00, g: 0x66, b: 0x00 };
+        this.objects["Barrel"] = { r: 0x00, g: 0x55, b: 0x00 };
+        this.objects["Player"] = { r: 0x00, g: 0x00, b: 0xFF };
+        this.objects["PainKillers"] = { r: 0x00, g: 0x00, b: 0xEE };
+    }
 
     reset() {
         for (var i = 0; i < this.loaded.length; i++) {
@@ -78,7 +84,7 @@ function Maps() {
         }
     };
 
-    init(name, ground, objects) {
+    private init(name, ground, objects) {
         this.name = name;
         var that = this;
 
@@ -86,8 +92,8 @@ function Maps() {
         loadImageFile(ground, function (data, width, height, map) {
             that.width = width;
             that.height = height;
-            var walls = [];
-            var floor = [];
+            var walls: any = [];
+            var floor: any = [];
             var wall_map = new Array(width);
             for (var x = 0; x < width; x++) {
                 wall_map[x] = new Array(height);
@@ -285,11 +291,11 @@ function Maps() {
 
                 // Now find all blocks within the range.
                 // 0.01 = offset so we don't see black borders on the floor.
-                var chunk = 0;
+                var chunk: Chunk;
                 if (max_x > max_z) {
-                    chunk = new Chunk(x - wall_thickness, that.ground, z - wall_thickness, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
+                    chunk = new Chunk(x - that.wall_thickness, that.ground, z - that.wall_thickness, max_x + that.wall_thickness, that.wall_height, max_z + that.wall_thickness, "x", 1, "world");
                 } else {
-                    chunk = new Chunk(x - wall_thickness, that.ground, z, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
+                    chunk = new Chunk(x - that.wall_thickness, that.ground, z, max_x + that.wall_thickness, that.wall_height, max_z + that.wall_thickness, "x", 1, "world");
                 }
                 chunk.init();
                 for (var i = 0; i < walls.length; i++) {
@@ -327,18 +333,17 @@ function Maps() {
     };
 };
 
-function Map1() {
-    Maps.call(this);
-    this.wall_texture = WALL2; // from textures class.
-    this.wall2_texture = WALL2; // from textures class.
-    this.map_file = "assets/maps/map3_ground.png";
-    this.obj_file = "assets/maps/map3_objects.png";
+export class Map1 extends Maps {
+    wall_texture = WALL2; // from textures class.
+    wall2_texture = WALL2; // from textures class.
+    map_file = "assets/maps/map3_ground.png";
+    obj_file = "assets/maps/map3_objects.png";
 
 
     init() {
         Maps.prototype.init.call(this, "Level1", this.map_file, this.obj_file);
         this.set_lightning();
-        game.sounds.PlaySound("ambient_horror", null, 800, true);
+        game.sounds.playSound("ambient_horror", null, 800, true);
     };
 
     set_lightning() {
@@ -346,15 +351,16 @@ function Map1() {
         game.scene.add(this.ambient_light);
     };
 }
-Map1.prototype = new Maps;
-Map1.prototype.constructor = Map1;
 
-function Level1() {
-    Maps.call(this);
-    this.wall_texture = WALL2; // from textures class.
-    this.wall2_texture = WOOD_WALL; // from textures class.
-    this.map_file = "assets/maps/map3_ground.png";
-    this.obj_file = "assets/maps/map3_objects.png";
+export class Level1 extends Maps {
+    wall_texture = WALL2; // from textures class.
+    wall2_texture = WOOD_WALL; // from textures class.
+
+    public constructor() {
+        super("Level1", "assets/maps/map3_ground.png", "assets/maps/map3_objects.png");
+        this.set_lightning();
+        game.sounds.playSound("ambient_horror", null, 800, true);
+    };
 
     update(time, delta) {
         Maps.prototype.update.call(this, time, delta);
@@ -365,13 +371,7 @@ function Level1() {
 
     reset() {
         Maps.prototype.reset.call(this);
-        game.sounds.StopSound("ambient_horror");
-    };
-
-    init() {
-        Maps.prototype.init.call(this, "Level1", this.map_file, this.obj_file);
-        this.set_lightning();
-        game.sounds.PlaySound("ambient_horror", null, 800, true);
+        game.sounds.stopSound("ambient_horror");
     };
 
     set_lightning() {
@@ -379,5 +379,3 @@ function Level1() {
         game.scene.add(this.ambient_light);
     };
 }
-Level1.prototype = new Maps;
-Level1.prototype.constructor = Level1;
