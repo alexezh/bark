@@ -1,0 +1,38 @@
+{
+  "version": "3.0.3",
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "esnext",
+    "removeComments": true,
+    "outDir": "./out",
+    "sourceMap": true,
+    "alwaysStrict": true,
+    "declaration": true,
+    "skipLibCheck": true,
+    "types": [],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "node",
+    "noEmit": false,
+  },
+  "types": [
+    "babylonjs",
+    "codeflask"
+  ],
+  "include": [
+    "src/**/*.ts",
+  ],
+  "exclude": [
+    "./out.d.ts",
+    "./node_modules/*"
+  ]
+}

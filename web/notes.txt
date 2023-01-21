@@ -1,0 +1,59 @@
+
+https://github.com/lambders/pokemon-sprite-generator
+
+https://github.com/lambders/fantasy-map-generator
+
+https://skejven11.github.io/Fantasy-Map-Generator/
+
+https://github.com/lebesnec/island.js
+
+
+tiles:
+ 50 sand
+ 90 ground
+ 87 grass
+
+ isSolid
+ island
+ terrain
+
+my params
+
+ 535 water:145 base:250
+
+ https://gist.github.com/harunpehlivan/5dc9a2ea4b6831ef5b82aa8a19b708d0
+ 
+ 2d lib
+
+ https://github.com/kutuluk/js13k-2d
+
+
+ https://api.pixijs.io/@pixi/tilemap/Tilemap.html
+
+ follow: goal
+  if(distance < x)
+    return
+  else 
+    move x
+  
+  when see belka
+    goal catch
+  
+  catch: goal
+    move x
+  
+  if collide 
+
+  goal: trade
+
+  trade: call 
+
+state machine? hierarchy of tasks. 
+
+task: trade
+buy ... i know 
+travel
+  find route
+  ask road /// assume map
+  knowledge? 
+sell

@@ -1,0 +1,8 @@
+login screen
+finish teleport to work all the time
+use function instead of eval?
+if we use JS, do we change commands? Too many typing per command
+
+spawn logic for npc and pokemon
+battle
+save player and pokemon position
