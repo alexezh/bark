@@ -121,16 +121,20 @@
 </style>
 <link rel="stylesheet" href="./xterm.css" />
 <link rel="stylesheet" href="./nes-core.css" />
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="./xterm.js"></script>
 <script src="./index.js"></script>
 <script>
     function onLoaded() {
-        const gameContainer = document.getElementById('gameContainer');
-        pokman.gameApp.setContainer(gameContainer);
+        const gameContainer = document.getElementById('gameCanvas');
+        pokman.initGame(gameContainer);
+        //pokman.gameApp.setContainer(gameContainer);
     }
 </script>
 
 <body id="body" scrolling="no" onload="onLoaded()">
+    <canvas height="100%" id="gameCanvas">
+    </canvas>
     <div height="100%" id="gameContainer">
     </div>
 </body>
