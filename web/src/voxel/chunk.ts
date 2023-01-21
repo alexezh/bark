@@ -1,4 +1,4 @@
-import THREE from 'three';
+import { BufferAttribute, BufferGeometry, Mesh, MeshPhongMaterial, Vector3 } from "three";
 import { game } from "./main";
 import { FFChunk } from './objects';
 import { get_rand } from './utils';
@@ -31,17 +31,17 @@ export class Chunk {
     public skips = 0;
     public starting_blocks = 0;
     public current_blocks = 0;
-    public blood_positions: THREE.Vector3[] = [];
+    public blood_positions: Vector3[] = [];
     public health = 100;
     public dirty = true;
     public positions = 0;
     public colors = 0;
-    public geometry!: THREE.BufferGeometry;
+    public geometry!: BufferGeometry;
     public v: any;
     public c: any;
     public prev_len = 0;
-    public offset!: THREE.BufferGeometry;
-    public material!: THREE.MeshPhongMaterial;
+    public offset!: BufferGeometry;
+    public material!: MeshPhongMaterial;
 
     public constructor(x, y, z, cx, cy, cz, id, bs, type) {
         this.type = type;
@@ -79,8 +79,8 @@ export class Chunk {
 
     init() {
         this.material = game.chunk_material;
-        //this.material = new THREE.MeshLambertMaterial({vertexColors: THREE.VertexColors, wireframe: this.wireframe});
-        //        this.material = new THREE.MeshPhongMaterial({bumpMap: bump, vertexColors: THREE.VertexColors, wireframe: this.wireframe});
+        //this.material = new MeshLambertMaterial({vertexColors: VertexColors, wireframe: this.wireframe});
+        //        this.material = new MeshPhongMaterial({bumpMap: bump, vertexColors: VertexColors, wireframe: this.wireframe});
         this.blocks = new Array(this.chunk_size_x);
         for (var x = 0; x < this.chunk_size_x; x++) {
             this.blocks[x] = new Array(this.chunk_size_y);
@@ -135,7 +135,7 @@ export class Chunk {
                         if (this.type == "world") {
                             // Check hit towards other chunks.
                             if (game.world.checkExists(
-                                new THREE.Vector3(
+                                new Vector3(
                                     (x + this.from_x * this.chunk_size_x) | 0,
                                     (y + this.from_y * this.chunk_size_y) | 0,
                                     ((z - 1) + this.from_z * this.chunk_size_z) | 0
@@ -154,7 +154,7 @@ export class Chunk {
                         if (this.type == "world") {
                             // Check hit towards other chunks.
                             if (game.world.checkExists(
-                                new THREE.Vector3(
+                                new Vector3(
                                     ((x - 1) + this.from_x * this.chunk_size_x) | 0,
                                     (y + this.from_y * this.chunk_size_y) | 0,
                                     (z + this.from_z * this.chunk_size_z) | 0
@@ -172,7 +172,7 @@ export class Chunk {
                     } else {
                         if (this.type == "world") {
                             if (game.world.checkExists(
-                                new THREE.Vector3(
+                                new Vector3(
                                     (x + 1 + this.from_x * this.chunk_size_x) | 0,
                                     (y + this.from_y * this.chunk_size_y) | 0,
                                     (z + this.from_z * this.chunk_size_z) | 0
@@ -201,7 +201,7 @@ export class Chunk {
                         if (this.type == "world") {
                             // Check hit towards other chunks.
                             if (game.world.checkExists(
-                                new THREE.Vector3(
+                                new Vector3(
                                     (x + this.from_x * this.chunk_size_x) | 0,
                                     ((y + 1) + this.from_y * this.chunk_size_y) | 0,
                                     (z + this.from_z * this.chunk_size_z) | 0
@@ -220,7 +220,7 @@ export class Chunk {
                         if (this.type == "world") {
                             // Check hit towards other chunks.
                             if (game.world.checkExists(
-                                new THREE.Vector3(
+                                new Vector3(
                                     (x + this.from_x * this.chunk_size_x) | 0,
                                     (y + this.from_y * this.chunk_size_y) | 0,
                                     ((z - 1) + this.from_z * this.chunk_size_z) | 0
@@ -596,13 +596,13 @@ export class Chunk {
                 this.geometry.translate(this.offset.x, this.offset.y, this.offset.z);
             }
         } else {
-            this.v = new THREE.BufferAttribute(new Float32Array(vertices.length * 3), 3);
-            this.c = new THREE.BufferAttribute(new Float32Array(colors.length * 3), 3);
+            this.v = new BufferAttribute(new Float32Array(vertices.length * 3), 3);
+            this.c = new BufferAttribute(new Float32Array(colors.length * 3), 3);
             for (var i = 0; i < vertices.length; i++) {
                 this.v.setXYZ(i, vertices[i][0], vertices[i][1], vertices[i][2]);
                 this.c.setXYZW(i, colors[i][0], colors[i][1], colors[i][2], 1);
             }
-            this.geometry = new THREE.BufferGeometry();
+            this.geometry = new BufferGeometry();
             //this.geometry.dynamic = true;
             this.geometry.addAttribute('position', this.v);
             this.geometry.addAttribute('color', this.c);
@@ -613,7 +613,7 @@ export class Chunk {
             this.prev_len = vertices.length;
 
             if (this.mesh == undefined) {
-                this.mesh = new THREE.Mesh(this.geometry, this.material);
+                this.mesh = new Mesh(this.geometry, this.material);
                 this.mesh.position.set(
                     this.from_x,
                     this.from_y,
@@ -943,11 +943,11 @@ export class Chunk {
                     } else if (val >= pow) {
                         if (rx >= 0 && ry >= 0 && rz >= 0 && rx < this.chunk_size_x && ry < this.chunk_size_y && rz < this.chunk_size_z) {
                             if ((this.blocks[rx][ry][rz] >> 8) != 0) {
-                                ff.push(new THREE.Vector3(rx, ry, rz));
+                                ff.push(new Vector3(rx, ry, rz));
                                 if (this.owner.base_type == "enemy" || this.owner.base_type == "player") {
                                     if (get_rand() > 0.5) {
                                         this.blocks[rx][ry][rz] = (0xAA & 0xFF) << 24 | (0x08 & 0xFF) << 16 | (0x08 & 0xFF) << 8;
-                                        this.blood_positions.push(new THREE.Vector3(rx, ry, rz));
+                                        this.blood_positions.push(new Vector3(rx, ry, rz));
                                     }
                                 }
                             }
@@ -1038,12 +1038,12 @@ export class Chunk {
                 return;
             }
 
-            stack.push(new THREE.Vector3(b.x, b.y + 1, b.z));
-            stack.push(new THREE.Vector3(b.x, b.y, b.z + 1));
-            stack.push(new THREE.Vector3(b.x + 1, b.y, b.z));
-            stack.push(new THREE.Vector3(b.x, b.y, b.z - 1));
-            stack.push(new THREE.Vector3(b.x - 1, b.y, b.z));
-            stack.push(new THREE.Vector3(b.x, b.y - 1, b.z));
+            stack.push(new Vector3(b.x, b.y + 1, b.z));
+            stack.push(new Vector3(b.x, b.y, b.z + 1));
+            stack.push(new Vector3(b.x + 1, b.y, b.z));
+            stack.push(new Vector3(b.x, b.y, b.z - 1));
+            stack.push(new Vector3(b.x - 1, b.y, b.z));
+            stack.push(new Vector3(b.x, b.y - 1, b.z));
         }
 
         if (result.length < 5) {

@@ -1,4 +1,4 @@
-import THREE from 'three';
+import { BoxGeometry, Mesh, Sprite, Vector3 } from "three";
 import { game } from "./main";
 import { get_rand } from './utils';
 
@@ -853,7 +853,7 @@ export class Particle {
     public stay = true;
 
     set(opts) {
-        if (!this.isVisible(new THREE.Vector3(opts.x, opts.y, opts.z))) {
+        if (!this.isVisible(new Vector3(opts.x, opts.y, opts.z))) {
             return;
         }
         for (var k in opts) {
@@ -953,9 +953,9 @@ export class Particle {
     init(particle_type) {
         this.particle_type = particle_type;
         if (particle_type == 0) {
-            this.mesh = new THREE.Sprite(game.sprite_material.clone());
+            this.mesh = new Sprite(game.sprite_material.clone());
         } else {
-            this.mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), game.box_material.clone());
+            this.mesh = new Mesh(new BoxGeometry(1, 1, 1), game.box_material.clone());
         }
 
         game.scene.add(this.mesh);
@@ -1234,7 +1234,7 @@ export class Particle {
     };
 
     cd(time, delta) {
-        var directionVector = new THREE.Vector3(this.vx, this.vy, this.vz);
+        var directionVector = new Vector3(this.vx, this.vy, this.vz);
 
         var o = 1;
         for (var idx = 0; idx < game.cdList.length; idx++) {

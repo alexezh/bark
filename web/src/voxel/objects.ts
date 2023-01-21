@@ -1,5 +1,5 @@
 import { throws } from 'assert';
-import THREE from 'three';
+import { PointLight, SpotLight, Vector3 } from 'three';
 import { game } from './main';
 import { get_rand } from './utils';
 
@@ -11,10 +11,10 @@ export class Obj {
     public active: any = [];
     public ptr = 0;
     public base_type = "object";
-    public red_light = new THREE.PointLight(0xFF00AA, 2, 10);
-    public yellow_light = new THREE.PointLight(0xFFAA00, 2, 80);
-    public green_light = new THREE.PointLight(0x00FF00, 2, 10);
-    public streetlight = new THREE.SpotLight(0xFFAA00);
+    public red_light = new PointLight(0xFF00AA, 2, 10);
+    public yellow_light = new PointLight(0xFFAA00, 2, 80);
+    public green_light = new PointLight(0x00FF00, 2, 10);
+    public streetlight = new SpotLight(0xFFAA00);
     public max = 20;
     public alive: boolean = false;
 
@@ -207,7 +207,7 @@ export class StreetLamp extends Obj {
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
         //  this.light = this.streetlight.clone();
-        //  var targetObject = new THREE.Object3D();
+        //  var targetObject = new Object3D();
         //  targetObject.position.set(0, 0, 0);
         //  game.scene.add(targetObject);
         //  this.light.target = targetObject;
@@ -218,8 +218,8 @@ export class StreetLamp extends Obj {
         // this.chunk.mesh.add(targetObject);
         // this.chunk.mesh.add(this.light);
         // DEBUG
-        //  var m = new THREE.Mesh(new THREE.BoxGeometry(2,2,2),
-        //                         new THREE.MeshBasicMaterial({color: 0xFF0000}));
+        //  var m = new Mesh(new BoxGeometry(2,2,2),
+        //                         new MeshBasicMaterial({color: 0xFF0000}));
         //  this.light.add(m);
 
         // this.light.position.set(0, 15, 0);
@@ -227,23 +227,23 @@ export class StreetLamp extends Obj {
         // Check rotation depending on wall
         this.chunk.mesh.position.set(x, game.maps.ground + 10, z);
         //this.chunk.mesh.position.set(x, game.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
-        var res = game.world.checkExists(new THREE.Vector3(x - 1, game.maps.ground + 10, z));
+        var res = game.world.checkExists(new Vector3(x - 1, game.maps.ground + 10, z));
         if (res.length > 0) {
             //     this.chunk.mesh.rotation.y = -Math.PI*2;
             this.chunk.mesh.position.x += 10;
             //    this.light.position.set(7, 18, 0);
         }
-        res = game.world.checkExists(new THREE.Vector3(x, game.maps.ground + 10, z - 1));
+        res = game.world.checkExists(new Vector3(x, game.maps.ground + 10, z - 1));
         //if(res.length > 0) {
         //    this.chunk.mesh.rotation.y = -Math.PI;
         //}
-        //res = game.world.checkExists(new THREE.Vector3(x+1,game.maps.ground+10,z+2));
+        //res = game.world.checkExists(new Vector3(x+1,game.maps.ground+10,z+2));
         //if(res.length > 0) {
         //    this.chunk.mesh.rotation.y = -Math.PI;
         //   // this.chunk.mesh.position.x -= 10;
         //}
         for (var i = 0; i < 10; i++) {
-            res = game.world.checkExists(new THREE.Vector3(x + i, game.maps.ground + 10, z));
+            res = game.world.checkExists(new Vector3(x + i, game.maps.ground + 10, z));
             if (res.length > 0) {
                 //        this.chunk.mesh.rotation.y = Math.PI;
                 this.chunk.mesh.position.x -= 10;
@@ -282,15 +282,15 @@ export class UfoSign extends Obj {
         this.chunk.mesh.rotation.y = Math.PI / 2;
         //     this.chunk.mesh.rotation.x = -Math.PI;
         // Check rotation depending on wall
-        var res = game.world.checkExists(new THREE.Vector3(x - 1, game.maps.ground + 10, z));
+        var res = game.world.checkExists(new Vector3(x - 1, game.maps.ground + 10, z));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = -Math.PI / 2;
         }
-        res = game.world.checkExists(new THREE.Vector3(x, game.maps.ground + 10, z - 1));
+        res = game.world.checkExists(new Vector3(x, game.maps.ground + 10, z - 1));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = 2 * Math.PI;
         }
-        res = game.world.checkExists(new THREE.Vector3(x, game.maps.ground + 10, z + 2));
+        res = game.world.checkExists(new Vector3(x, game.maps.ground + 10, z + 2));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = -Math.PI;
         }
@@ -317,15 +317,15 @@ export class RadiationSign extends Obj {
         this.chunk.mesh.rotation.y = Math.PI / 2;
         this.chunk.mesh.rotation.x = -Math.PI;
         // Check rotation depending on wall
-        var res = game.world.checkExists(new THREE.Vector3(x - 1, game.maps.ground + 10, z));
+        var res = game.world.checkExists(new Vector3(x - 1, game.maps.ground + 10, z));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = -Math.PI / 2;
         }
-        res = game.world.checkExists(new THREE.Vector3(x, game.maps.ground + 10, z - 1));
+        res = game.world.checkExists(new Vector3(x, game.maps.ground + 10, z - 1));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = 2 * Math.PI;
         }
-        res = game.world.checkExists(new THREE.Vector3(x, game.maps.ground + 10, z + 2));
+        res = game.world.checkExists(new Vector3(x, game.maps.ground + 10, z + 2));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = Math.PI;
         }
@@ -684,7 +684,7 @@ export class Heart extends Obj {
         l2.position.y = 2;
         l2.position.z = 2;
         game.addToCD(m);
-        //  var light1 = new THREE.PointLight( 0xFF00AA, 2, 20 );
+        //  var light1 = new PointLight( 0xFF00AA, 2, 20 );
         //  m.add( light1 );
     };
 }

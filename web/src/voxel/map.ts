@@ -1,8 +1,8 @@
-import THREE from 'three';
 import { game } from "./main";
 import { WALL2, WOOD_WALL } from "./textures";
 import { Chunk } from "./chunk";
 import { loadImageFile } from './utils';
+import { AmbientLight, Vector3 } from "three";
 
 //////////////////////////////////////////////////////////////////////
 // Maps class - Loading of maps from images
@@ -20,7 +20,7 @@ export class Maps {
     // Objects loaded 
     public loaded: any = [];
 
-    public ambient_light!: THREE.AmbientLight;
+    public ambient_light!: AmbientLight;
 
     public constructor() {
         // Object => color in obj image
@@ -72,7 +72,7 @@ export class Maps {
                         this.loaded[i].update(time, delta);
                     }
                 } else if (this.loaded[i].x) {
-                    if (new THREE.Vector3(this.loaded[i].x, this.loaded[i].y, this.loaded[i].z).distanceTo(game.player.chunk.mesh.position) < game.visible_distance) {
+                    if (new Vector3(this.loaded[i].x, this.loaded[i].y, this.loaded[i].z).distanceTo(game.player.chunk.mesh.position) < game.visible_distance) {
                         this.loaded[i].update(time, delta);
                     }
                 } else {
@@ -348,7 +348,7 @@ export class Map1 extends Maps {
     };
 
     set_lightning() {
-        this.ambient_light = new THREE.AmbientLight(0xFFFFFF, 0.9);
+        this.ambient_light = new AmbientLight(0xFFFFFF, 0.9);
         game.scene.add(this.ambient_light);
     };
 }
@@ -378,7 +378,7 @@ export class Level1 extends Maps {
     };
 
     set_lightning() {
-        this.ambient_light = new THREE.AmbientLight(0xFFFFFF, 0.8);
+        this.ambient_light = new AmbientLight(0xFFFFFF, 0.8);
         game.scene.add(this.ambient_light);
     };
 }

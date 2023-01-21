@@ -1,4 +1,4 @@
-import THREE from 'three';
+import { Vector3 } from "three";
 import { game } from "./main";
 
 export class SoundLoader {
@@ -33,7 +33,7 @@ export class SoundLoader {
         };
 
         if (position != undefined) {
-            var vector = game.camera.localToWorld(new THREE.Vector3(0, 0, 0));
+            var vector = game.camera.localToWorld(new Vector3(0, 0, 0));
             var distance = position.distanceTo(vector);
             if (distance <= radius) {
                 var vol = 1 * (1 - distance / radius);

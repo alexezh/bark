@@ -1,4 +1,3 @@
-import THREE from 'three';
 import { ModelLoader } from "./model_loader";
 import { SoundLoader } from "./sound";
 import { Textures } from "./textures";
@@ -6,18 +5,19 @@ import { World } from "./world";
 import { Ammo, AmmoP90, AmmoSniper, Heart, Shell } from "./objects";
 import { Level1, Maps } from "./map";
 import { ParticlePool } from "./particles";
+import { Clock, Fog, MeshPhongMaterial, PCFSoftShadowMap, PerspectiveCamera, PointLight, Scene, SpriteMaterial, WebGLRenderer } from "three";
 
 //if (!Detector.webgl) Detector.addGetWebGLMessage();
 //////////////////////////////////////////////////////////////////////
 // Main class - Where the magic happens
 //////////////////////////////////////////////////////////////////////
 export class Main {
-    public renderer!: THREE.WebGLRenderer;
+    public renderer!: WebGLRenderer;
     public controls: any;
     public camera: any;
-    public scene!: THREE.Scene;
+    public scene!: Scene;
     public stats: any;
-    public clock!: THREE.Clock;
+    public clock!: Clock;
     public light1: any;
     public particles!: ParticlePool;
     public particles_box!: ParticlePool;
@@ -35,11 +35,11 @@ export class Main {
     public sounds = new SoundLoader();
 
     // Particle stuff.
-    public box_material = new THREE.MeshPhongMaterial({ color: 0xffffff });
-    public sprite_material = new THREE.SpriteMaterial({ color: 0xffffff });
+    public box_material = new MeshPhongMaterial({ color: 0xffffff });
+    public sprite_material = new SpriteMaterial({ color: 0xffffff });
     // @ts-ignore
-    public chunk_material = new THREE.MeshPhongMaterial({ vertexColors: THREE.VertexColors, wireframe: false });
-    public p_light = new THREE.PointLight(0xFFAA00, 1, 10);
+    public chunk_material = new MeshPhongMaterial({ vertexColors: VertexColors, wireframe: false });
+    public p_light = new PointLight(0xFFAA00, 1, 10);
 
     init(container: HTMLElement) {
         this.sounds.Add({ name: "sniper", file: "assets/sounds/sniper.wav.mp3" });
@@ -76,7 +76,7 @@ export class Main {
         // this.sounds.Add({name: "haha2", file: "assets/sounds/haha2.wav.mp3"});
         // this.sounds.Add({name: "haha3", file: "assets/sounds/haha3.wav.mp3"});
         //
-        //var loader = new THREE.TextureLoader();
+        //var loader = new TextureLoader();
         //var that = this;
         //loader.load(
         //    'assets/textures/bump.png',
@@ -84,30 +84,30 @@ export class Main {
         //        //texture.anisotropy = 4;
         //        //texture.repeat.set(0.998, 0.998);
         //        //texture.offset.set(0.001, 0.001);
-        //        //texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-        //        //texture.format = THREE.RGBFormat;
-        //        that.bump_map = new THREE.MeshPhongMaterial({ map: texture,specularMap: texture, vertexColors: THREE.VertexColors, wireframe: false });
+        //        //texture.wrapS = texture.wrapT = RepeatWrapping;
+        //        //texture.format = RGBFormat;
+        //        that.bump_map = new MeshPhongMaterial({ map: texture,specularMap: texture, vertexColors: VertexColors, wireframe: false });
         //    }
         //);
-        this.scene = new THREE.Scene();
-        this.clock = new THREE.Clock();
+        this.scene = new Scene();
+        this.clock = new Clock();
 
         // Iosmetric view
         // var aspect = window.innerWidth / window.innerHeight;
         // var d = 70;
         // var aspect = window.innerWidth/window.innerHeight;
-        // this.camera = new THREE.OrthographicCamera( - d * aspect, d * aspect, d, -d, 1, 3000 );
-        this.camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, this.visible_distance);
-        // this.camera.applyMatrix( new THREE.Matrix4().makeTranslation( 300, 150, 300 ) );
-        // this.camera.applyMatrix( new THREE.Matrix4().makeRotationX( -0.8 ) );
+        // this.camera = new OrthographicCamera( - d * aspect, d * aspect, d, -d, 1, 3000 );
+        this.camera = new PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, this.visible_distance);
+        // this.camera.applyMatrix( new Matrix4().makeTranslation( 300, 150, 300 ) );
+        // this.camera.applyMatrix( new Matrix4().makeRotationX( -0.8 ) );
 
         //this.camera.position.set( 200, 300, 700 ); 
 
-        //  this.scene.fog = new THREE.FogExp2( 0xFFA1C1, 0.0059 );
-        //this.scene.fog = new THREE.Fog( 0xFFA1C1, 180, this.visible_distance );
-        this.scene.fog = new THREE.Fog(0x000000, 180, this.visible_distance);
+        //  this.scene.fog = new FogExp2( 0xFFA1C1, 0.0059 );
+        //this.scene.fog = new Fog( 0xFFA1C1, 180, this.visible_distance );
+        this.scene.fog = new Fog(0x000000, 180, this.visible_distance);
 
-        //   this.controls = new THREE.FlyControls( this.camera );
+        //   this.controls = new FlyControls( this.camera );
         //   this.controls.movementSpeed = 700;
         //   this.controls.domElement = container;
         //   this.controls.rollSpeed = Math.PI / 10;
@@ -116,27 +116,27 @@ export class Main {
 
 
         //
-        //       var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 1.1 );
+        //       var hemiLight = new HemisphereLight( 0xffffff, 0xffffff, 1.1 );
         //     //  hemiLight.color.setHSL( 0.6, 0.6, 0.6 );
         //      // hemiLight.groundColor.setHSL( 0.095, 0.5, 0.75 );
         //       hemiLight.position.set( 0, 10, 0 );
         //       this.scene.add( hemiLight );
 
-        // var dirLight = new THREE.DirectionalLight( 0xffffff, 0.6 );
+        // var dirLight = new DirectionalLight( 0xffffff, 0.6 );
         // dirLight.position.set(0, 50, 40);
         // this.scene.add( dirLight );
-        // var dirLight2 = new THREE.DirectionalLight( 0xffffff, 0.6 );
+        // var dirLight2 = new DirectionalLight( 0xffffff, 0.6 );
         // dirLight2.position.set(0, 50, -40);
         // this.scene.add( dirLight2 );
-        // var dirLight2 = new THREE.DirectionalLight( 0xffffff, 0.6 );
+        // var dirLight2 = new DirectionalLight( 0xffffff, 0.6 );
         // dirLight2.position.set(-1000, 0, -40);
         // this.scene.add( dirLight2 );
-        // var dirLight2 = new THREE.DirectionalLight( 0xffffff, 0.6 );
+        // var dirLight2 = new DirectionalLight( 0xffffff, 0.6 );
         // dirLight2.position.set(1000, 0, -40);
         // this.scene.add( dirLight2 );
         //
         //
-        //   var dirLight = new THREE.DirectionalLight( 0x000000, 1.2 );
+        //   var dirLight = new DirectionalLight( 0x000000, 1.2 );
         //   dirLight.color.setHSL( 0.5, 0.9, 0.95 );
         //   dirLight.position.set( 20, 10, -20 );
         //   dirLight.position.multiplyScalar( 10);
@@ -158,7 +158,7 @@ export class Main {
         //   this.light1 = dirLight;
         //   this.scene.add(dirLight);
 
-        //   this.controls = new THREE.FirstPersonControls(this.camera);
+        //   this.controls = new FirstPersonControls(this.camera);
         //   this.controls.lookSpeed = 0.4;
         //   this.controls.noFly = true;
         //   this.controls.lookVertical = false;
@@ -169,7 +169,7 @@ export class Main {
         //   this.controls.lat = 120;
         //   this.controls.movementSpeed = 70;
 
-        this.renderer = new THREE.WebGLRenderer({ antialias: false });
+        this.renderer = new WebGLRenderer({ antialias: false });
         //   console.log(window.devicePixelRatio);
         this.renderer.setPixelRatio(1);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -177,7 +177,7 @@ export class Main {
         //  this.renderer.setClearColor(0xFFA1C1, 1);
         this.renderer.setClearColor(0x000000, 1);
         this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.shadowMap.type = PCFSoftShadowMap;
         container.appendChild(this.renderer.domElement);
         //this.stats = new Stats();
         //container.appendChild(this.stats.dom);
@@ -197,7 +197,7 @@ export class Main {
         this.particles_box = new ParticlePool(1000, 1);
 
         // DEBUG STUFF
-        // var gridHelper = new THREE.GridHelper( 5000, 100);
+        // var gridHelper = new GridHelper( 5000, 100);
         // gridHelper.position.set(0,0,0);
         // game.scene.add( gridHelper );
 
@@ -244,7 +244,7 @@ export class Main {
     };
 
     reset() {
-        this.camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, this.visible_distance);
+        this.camera = new PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, this.visible_distance);
         this.world.reset();
         this.maps.reset();
         this.player.reset();
@@ -344,6 +344,7 @@ export class Main {
 
 export let game: Main;
 
-export function createVoxelGame() {
+export function createVoxelGame(container: HTMLElement) {
     game = new Main();
+    game.init(container)
 }

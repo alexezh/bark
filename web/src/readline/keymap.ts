@@ -34,7 +34,7 @@ export function parseInput(data: string): Input[] {
 }
 
 function* splitInput(data: string) {
-  let text = [];
+  let text: any = [];
 
   const it = data[Symbol.iterator]();
   for (let next = it.next(); !next.done; next = it.next()) {

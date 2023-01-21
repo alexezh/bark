@@ -1,7 +1,4 @@
-//////////////////////////////////////////////////////////////////////
-// Weapon base class
-
-import THREE from 'three';
+import { PointLight, Vector3 } from "three";
 import { game } from "./main";
 import { get_rand } from './utils';
 
@@ -18,7 +15,7 @@ export class Weapon {
     public alive = true;
     public timeout = 0;
     public relative_speed = 0;
-    public shoot_light = new THREE.PointLight(0xFFAA00, 3, 10);
+    public shoot_light = new PointLight(0xFFAA00, 3, 10);
     public damage = 1;
     public obj_type: any;
 
@@ -88,7 +85,7 @@ export class Weapon {
                 //    draw_light = false;
             }
             if (draw_light) {
-                var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+                var point = this.chunk.mesh.localToWorld(new Vector3(60, -1, 0));
                 this.shoot_light.position.set(
                     point.x,
                     point.y,
@@ -140,8 +137,8 @@ export class Shotgun extends Weapon {
 
     fire(q, id, shooter, speed) {
         game.sounds.playSound("shotgun", game.player.chunk.mesh.position, 250);
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-        var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+        var point = this.chunk.mesh.localToWorld(new Vector3(60, -1, 0));
+        var dir = new Vector3(0, 0, Math.PI).applyQuaternion(q);
 
         for (var i = 0; i < 10; i++) {
             game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
@@ -172,8 +169,8 @@ export class Sniper extends Weapon {
     fire(q, id, shooter, speed) {
         game.sounds.playSound("sniper", game.player.chunk.mesh.position, 300);
 
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-        var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+        var point = this.chunk.mesh.localToWorld(new Vector3(60, -1, 0));
+        var dir = new Vector3(0, 0, Math.PI).applyQuaternion(q);
 
         for (var i = 0; i < 2; i++) {
             game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
@@ -202,8 +199,8 @@ export class Pistol extends Weapon {
 
     fire(q, id, shooter, speed) {
         game.sounds.playSound("pistol", game.player.chunk.mesh.position, 450);
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-        var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+        var point = this.chunk.mesh.localToWorld(new Vector3(60, -1, 0));
+        var dir = new Vector3(0, 0, Math.PI).applyQuaternion(q);
 
         for (var i = 0; i < 2; i++) {
             game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
@@ -232,8 +229,8 @@ export class GrenadeLauncher extends Weapon {
 
     fire(q, id, shooter, speed) {
         game.sounds.playSound("grenadelauncher", game.player.chunk.mesh.position, 450);
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-        var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+        var point = this.chunk.mesh.localToWorld(new Vector3(60, -1, 0));
+        var dir = new Vector3(0, 0, Math.PI).applyQuaternion(q);
 
         for (var i = 0; i < 2; i++) {
             game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
@@ -261,8 +258,8 @@ export class P90 extends Weapon {
 
     fire(q, id, shooter, speed) {
         game.sounds.playSound("p90", game.player.chunk.mesh.position, 350);
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-        var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+        var point = this.chunk.mesh.localToWorld(new Vector3(60, -1, 0));
+        var dir = new Vector3(0, 0, Math.PI).applyQuaternion(q);
 
         for (var i = 0; i < 2; i++) {
             game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
@@ -291,8 +288,8 @@ export class Minigun extends Weapon {
 
     fire(q, id, shooter, speed) {
         game.sounds.playSound("minigun", game.player.chunk.mesh.position, 250);
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-        var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+        var point = this.chunk.mesh.localToWorld(new Vector3(60, -1, 0));
+        var dir = new Vector3(0, 0, Math.PI).applyQuaternion(q);
 
         for (var i = 0; i < 5; i++) {
             game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
@@ -323,8 +320,8 @@ export class Ak47 extends Weapon {
     fire(q, id, shooter, speed) {
         game.sounds.playSound("ak47", game.player.chunk.mesh.position, 350);
 
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-        var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+        var point = this.chunk.mesh.localToWorld(new Vector3(60, -1, 0));
+        var dir = new Vector3(0, 0, Math.PI).applyQuaternion(q);
 
         for (var i = 0; i < 5; i++) {
             game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
@@ -353,8 +350,8 @@ export class RocketLauncher extends Weapon {
 
     fire(q, id, shooter, speed) {
         game.sounds.playSound("rocket", game.player.chunk.mesh.position, 350);
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-        var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+        var point = this.chunk.mesh.localToWorld(new Vector3(60, -1, 0));
+        var dir = new Vector3(0, 0, Math.PI).applyQuaternion(q);
         game.particles.ammoMissile(point.x, point.y, point.z, dir.x, dir.y, dir.z, this, null, speed, this.damage);
 
         for (var i = 0; i < 50; i++) {

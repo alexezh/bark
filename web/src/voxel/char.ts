@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////
 // Char base class
 
-import THREE from "three";
+import { Matrix4, Object3D, PointLight, SpotLight, Vector3 } from "three";
 import { Chunk } from "./chunk";
 import { game } from "./main";
 import { get_rand } from "./utils";
@@ -12,7 +12,7 @@ export class Char {
     public base_type: string = "player";
     public hp: number = 0;
     public chunk!: Chunk;
-    public init_pos = new THREE.Vector3(0, 0, 0);
+    public init_pos = new Vector3(0, 0, 0);
     public weapon!: Weapon;
     public obj_type = "char";
     public loaded = false;
@@ -30,8 +30,8 @@ export class Char {
     public dying = 0;
     public radiation_poisoned = 0;
     public dying_counter = 0;
-    public green_light = new THREE.PointLight(0x00FF00, 2, 10);
-    public radiation_light!: THREE.PointLight;
+    public green_light = new PointLight(0x00FF00, 2, 10);
+    public radiation_light!: PointLight;
 
     sound_hit() {
         var r = get_rand();
@@ -105,7 +105,7 @@ export class Char {
 
     shoot() {
         if (this.weapon != null && this.loaded && this.can_shoot) {
-            //var light1 = new THREE.PointLight( 0xFFAA00, 3, 10 );
+            //var light1 = new PointLight( 0xFFAA00, 3, 10 );
             //light1.position.set(
             //    this.weapon.position.x,
             //    this.weapon.position.y,
@@ -176,7 +176,7 @@ export class Char {
             }
 
             if (this.bleed_timer < 0) {
-                this.hit(4, new THREE.Vector3(0, -3, 0), null);
+                this.hit(4, new Vector3(0, -3, 0), null);
                 this.bleed_timer = 10;
                 return;
             }
@@ -230,7 +230,7 @@ export class Char {
                         this.chunk.mesh.position.z + (2 - get_rand() * 4)
                     );
                     if (this.radiation_poisoned > 5) {
-                        this.chunk.hit(new THREE.Vector3(0, 0, 0), 1, null);
+                        this.chunk.hit(new Vector3(0, 0, 0), 1, null);
                     }
                 }
             }
@@ -246,22 +246,22 @@ export class Char {
     cd() {
         var pos = this.chunk.mesh.position;
         var points: any = [];
-        points[0] = new THREE.Vector3(
+        points[0] = new Vector3(
             pos.x + this.chunk.chunk_size_x / 2,
             pos.y,
             pos.z
         );
-        points[1] = new THREE.Vector3(
+        points[1] = new Vector3(
             pos.x,
             pos.y,
             pos.z + this.chunk.chunk_size_z / 2
         );
-        points[2] = new THREE.Vector3(
+        points[2] = new Vector3(
             pos.x,
             pos.y,
             pos.z - this.chunk.chunk_size_z / 2
         );
-        points[3] = new THREE.Vector3(
+        points[3] = new Vector3(
             pos.x - this.chunk.chunk_size_x / 2,
             pos.y,
             pos.z
@@ -781,7 +781,7 @@ export class Player extends Char {
     public weapons: Weapon[] = [];
     public can_switch = true;
     public falling = false;
-    public flashlight = new THREE.SpotLight(0xFFFFFF);
+    public flashlight = new SpotLight(0xFFFFFF);
     public footsteps = false;
     public shooting = false;
 
@@ -796,7 +796,7 @@ export class Player extends Char {
         //this.keyboard = new THREEx.KeyboardState();
         this.chunk.mesh.rotation.order = 'YXZ';
         game.player = this;
-        var targetObject = new THREE.Object3D();
+        var targetObject = new Object3D();
         targetObject.position.set(1, 1, 10);
         game.scene.add(targetObject);
         this.flashlight.target = targetObject;
@@ -822,8 +822,8 @@ export class Player extends Char {
         this.addWeapon(new RocketLauncher());
         this.addWeapon(new Shotgun());
 
-        //        var t = new THREE.Mesh(new THREE.BoxGeometry(5,5,5),
-        //                               new THREE.MeshBasicMaterial({color: 0xFF0000}));
+        //        var t = new Mesh(new BoxGeometry(5,5,5),
+        //                               new MeshBasicMaterial({color: 0xFF0000}));
         //        this.chunk.mesh.add(t);
         //        t.position.set(0, 150, 0);
 
@@ -834,7 +834,7 @@ export class Player extends Char {
         //game.camera.matrix.copy(this.chunk.mesh.matrix);
         this.chunk.mesh.add(game.camera);
         var pos = this.chunk.mesh.position.clone();
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(0, 0, 0));
+        var point = this.chunk.mesh.localToWorld(new Vector3(0, 0, 0));
         game.camera.lookAt(point);
         game.camera.rotation.z = Math.PI;
         game.camera.rotation.x = -Math.PI / 1.4;
@@ -1124,9 +1124,9 @@ export class Player extends Char {
             var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
             var x = movementX * 0.001;
 
-            var axis = new THREE.Vector3(0, 1, 0);
+            var axis = new Vector3(0, 1, 0);
             var radians = -(Math.PI / 2) * x;
-            var rotObjectMatrix = new THREE.Matrix4();
+            var rotObjectMatrix = new Matrix4();
             rotObjectMatrix.makeRotationAxis(axis.normalize(), radians);
             this.chunk.mesh.matrix.multiply(rotObjectMatrix);
             this.chunk.mesh.rotation.setFromRotationMatrix(this.chunk.mesh.matrix);

@@ -1,10 +1,10 @@
 //////////////////////////////////////////////////////////////////////
 // World class - Helper for world chunks
 
+import { Vector3 } from "three";
 import { Chunk } from "./chunk";
 import { game } from "./main";
 import { Textures } from "./textures";
-import * as THREE from 'three';
 import { get_rand } from "./utils";
 
 //////////////////////////////////////////////////////////////////////
@@ -130,14 +130,14 @@ export class World {
                         if (pos.x >= pxm && pos.x <= pxp &&
                             pos.z >= pzm && pos.z <= pzp) {
                             if (this.isFunction(game.cdList[i].owner.hit)) {
-                                game.cdList[i].owner.hit(power, new THREE.Vector3(0, 0, 0), "missile", new THREE.Vector3(x, y, z));
+                                game.cdList[i].owner.hit(power, new Vector3(0, 0, 0), "missile", new Vector3(x, y, z));
                             }
                         }
                     }
                 }
             }
         } else {
-            game.sounds.playSound("bullet_wall", new THREE.Vector3(x, y, z), 500);
+            game.sounds.playSound("bullet_wall", new Vector3(x, y, z), 500);
         }
         this.removeBatch(list);
     };
@@ -289,7 +289,7 @@ export class World {
             for (var i = 0; i < 10; i++) {
                 v = Math.random() * this.radioactive_blocks.length | 0;
                 if (this.radioactive_blocks[v] != 0) {
-                    if (this.checkExists(new THREE.Vector3(this.radioactive_blocks[v][0],
+                    if (this.checkExists(new Vector3(this.radioactive_blocks[v][0],
                         this.radioactive_blocks[v][1],
                         this.radioactive_blocks[v][2])).length == 0) {
                         this.radioactive_blocks[v] = 0;
