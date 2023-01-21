@@ -1,9 +1,14 @@
+import { throws } from 'assert';
+import THREE from 'three';
+import { game } from './main';
+import { get_rand } from './utils';
+
 /////////////////////////////////////////////////////////////////////
 // Objects
 /////////////////////////////////////////////////////////////////////
 export class Obj {
-    public chunk = 0;
-    public active = [];
+    public chunk: any;
+    public active: any = [];
     public ptr = 0;
     public base_type = "object";
     public red_light = new THREE.PointLight(0xFF00AA, 2, 10);
@@ -11,6 +16,7 @@ export class Obj {
     public green_light = new THREE.PointLight(0x00FF00, 2, 10);
     public streetlight = new THREE.SpotLight(0xFFAA00);
     public max = 20;
+    public alive: boolean = false;
 
     createObj(model: string, size: number) {
         this.chunk = game.modelLoader.getModel(model, size, this);
@@ -67,6 +73,7 @@ export class Portal extends Obj {
 
     update(time, delta) {
         var x = 0;
+        var z = 0;
         var r = 10;
         for (var a = 0; a < Math.PI * 2; a += Math.PI / 4) {
             x = this.x + r * Math.cos(a)
@@ -86,7 +93,7 @@ export class PainKillers extends Obj {
 
     grab(mesh_id) {
         if (!this.taken) {
-            game.sounds.PlaySound("painkillers", this.chunk.mesh.position, 250);
+            game.sounds.playSound("painkillers", this.chunk.mesh.position, 250);
             game.removeFromCD(this.chunk.mesh);
             game.player.bleed_timer += 60; // add 60 sec.
             this.taken = true;
@@ -103,7 +110,7 @@ export class PainKillers extends Obj {
     };
 
     update(time, delta) {
-        Obj.prototype.update.call();
+        //Obj.prototype.update.call();
         if (!this.taken) {
             this.chunk.mesh.rotation.y += Math.sin(delta);
             this.chunk.mesh.position.y = game.maps.ground + 6 + Math.sin(time * 2.5);
@@ -179,7 +186,7 @@ export class StreetLamp extends Obj {
     hit(dmg, dir, type, pos) {
         if (this.chunk.hit(dir, dmg, pos)) {
             if (type != "missile" && type != "grenade") {
-                game.sounds.PlaySound("bullet_metal", pos, 300);
+                game.sounds.playSound("bullet_metal", pos, 300);
             }
             // if(this.light.intensity > 0) {
             //     this.light.intensity -= 0.5*dmg;
@@ -258,12 +265,11 @@ export class StreetLamp extends Obj {
 }
 
 // UfoSign
-function UfoSign() {
-    Obj.call(this);
-    this.base_type = "object";
-    this.type = "radiation_sign";
-    this.alive = true;
-    this.light = 0;
+export class UfoSign extends Obj {
+    base_type = "object";
+    type = "radiation_sign";
+    alive = true;
+    light = 0;
 
     hit(dmg, dir, type, pos) {
         return this.chunk.hit(dir, dmg, pos);
@@ -333,7 +339,7 @@ export class DeadHearty extends Obj {
     public base_type = "object";
     public type = "dead_hearty";
     public alive = true;
-    public light = 0;
+    public light: any;
     public radioactive = true;
     public radioactive_leak = true;
 
@@ -362,20 +368,17 @@ export class DeadHearty extends Obj {
         this.chunk.mesh.add(this.light);
     };
 }
-DeadHearty.prototype = new Obj;
-DeadHearty.prototype.constructor = DeadHearty;
 
-function BarrelFire() {
-    Obj.call(this);
-    this.base_type = "object";
-    this.type = "barrel_fire";
-    this.alive = true;
-    this.light = 0;
+export class BarrelFire extends Obj {
+    base_type = "object";
+    type = "barrel_fire";
+    alive = true;
+    light: any;
 
     hit(dmg, dir, type, pos) {
         if (this.chunk.hit(dir, dmg, pos)) {
             if (type != "missile" && type != "grenade") {
-                game.sounds.PlaySound("bullet_metal", pos, 300);
+                game.sounds.playSound("bullet_metal", pos, 300);
             }
             this.alive = false;
             return true;
@@ -400,14 +403,12 @@ function BarrelFire() {
         this.chunk.mesh.add(this.light);
     };
 }
-BarrelFire.prototype = new Obj;
-BarrelFire.prototype.constructor = BarrelFire;
 
 export class Barrel extends Obj {
     public base_type = "object";
     public type = "barrel";
     public alive = true;
-    public light = 0;
+    public light: any;
     public radioactive = true;
     public radioactive_leak = true;
 
@@ -415,7 +416,7 @@ export class Barrel extends Obj {
         //this.chunk.explode(dir, dmg);
         if (this.chunk.hit(dir, dmg, pos)) {
             if (type != "missile" && type != "grenade") {
-                game.sounds.PlaySound("bullet_metal", pos, 300);
+                game.sounds.playSound("bullet_metal", pos, 300);
             }
             this.alive = false;
             return true;
@@ -463,34 +464,30 @@ export class FBIHQ extends Obj {
 
 // Spiderweb
 export class SpiderWeb extends Obj {
-    Obj.call(this);
-    this.base_type = "object";
-this.type = "spiderweb";
-this.alive = true;
-this.light = 0;
+    base_type = "object";
+    type = "spiderweb";
+    alive = true;
+    light = 0;
 
-hit(dmg, dir, type) {
-    this.chunk.explode(dir, dmg);
-    this.alive = false;
-};
+    hit(dmg, dir, type) {
+        this.chunk.explode(dir, dmg);
+        this.alive = false;
+    };
 
-create(x, y, z) {
-    this.chunk = game.modelLoader.getModel("spiderweb", 0.2, this);
-    this.chunk.owner = this;
-    this.chunk.mesh.visible = true;
-    this.chunk.mesh.position.set(x, game.maps.ground + 1, z);
-};
+    create(x, y, z) {
+        this.chunk = game.modelLoader.getModel("spiderweb", 0.2, this);
+        this.chunk.owner = this;
+        this.chunk.mesh.visible = true;
+        this.chunk.mesh.position.set(x, game.maps.ground + 1, z);
+    };
 }
-SpiderWeb.prototype = new Obj;
-SpiderWeb.prototype.constructor = SpiderWeb;
 
 // Ammo crate 
-function Lamp1() {
-    Obj.call(this);
-    this.base_type = "object";
-    this.type = "lamp1";
-    this.alive = true;
-    this.light = 0;
+export class Lamp1 extends Obj {
+    base_type = "object";
+    type = "lamp1";
+    alive = true;
+    light: any;
 
     hit(dmg, dir, type, pos) {
         this.chunk.hit(dir, dmg, pos)
@@ -543,7 +540,7 @@ export class AmmoCrate extends Obj {
 // Ammo shell 
 export class AmmoSniper extends Obj {
     create() {
-        Obj.prototype.create.call(this, "ammo", 0.02);
+        this.createObj("ammo", 0.02);
         for (var i = 0; i < this.max; i++) {
             var c = this.chunk.mesh.clone();
             c.visible = false;
@@ -564,7 +561,7 @@ export class AmmoSniper extends Obj {
 // Ammo shell
 export class AmmoP90 extends Obj {
     create() {
-        Obj.prototype.create.call(this, "ammo", 0.009);
+        this.createObj("ammo", 0.009);
         for (var i = 0; i < this.max; i++) {
             var c = this.chunk.mesh.clone();
             c.visible = false;
@@ -586,7 +583,7 @@ export class AmmoP90 extends Obj {
 // Ammo shell
 export class Ammo extends Obj {
     create() {
-        Obj.prototype.create.call(this, "ammo", 0.015);
+        this.createObj("ammo", 0.015);
         for (var i = 0; i < this.max; i++) {
             var c = this.chunk.mesh.clone();
             c.visible = false;
@@ -606,10 +603,8 @@ export class Ammo extends Obj {
 
 // Shotgun shell
 export class Shell extends Obj {
-    Obj.call(this);
-
     create() {
-        this.create("shell", 0.025);
+        this.createObj("shell", 0.025);
         for (var i = 0; i < this.max; i++) {
             var c = this.chunk.mesh.clone();
             c.visible = false;
@@ -632,13 +627,13 @@ export class Heart extends Obj {
     public obj_type = "heart";
 
     create() {
-        Obj.prototype.create.call(this, "heart", 0.2);
+        this.createObj("heart", 0.2);
     };
 
     grab(mesh_id) {
         for (var i = 0; i < this.active.length; i++) {
             if (this.active[i].id == mesh_id) {
-                game.sounds.PlaySound("take_heart", this.active[i].position, 250);
+                game.sounds.playSound("take_heart", this.active[i].position, 250);
                 game.removeFromCD(this.active[i]);
                 this.active[i].alive = false;
             }
@@ -646,7 +641,7 @@ export class Heart extends Obj {
     };
 
     update(time, delta) {
-        Obj.prototype.update.call();
+        // Obj.prototype.update.call();
         for (var i = 0; i < this.active.length; i++) {
             if (this.active[i].alive) {
                 this.active[i].rotation.y += Math.sin(delta);

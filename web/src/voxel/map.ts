@@ -1,7 +1,8 @@
+import THREE from 'three';
 import { game } from "./main";
 import { WALL2, WOOD_WALL } from "./textures";
-import * as THREE from 'three';
 import { Chunk } from "./chunk";
+import { loadImageFile } from './utils';
 
 //////////////////////////////////////////////////////////////////////
 // Maps class - Loading of maps from images
@@ -84,7 +85,7 @@ export class Maps {
         }
     };
 
-    private init(name, ground, objects) {
+    public initMap(name, ground, objects) {
         this.name = name;
         var that = this;
 
@@ -341,7 +342,7 @@ export class Map1 extends Maps {
 
 
     init() {
-        Maps.prototype.init.call(this, "Level1", this.map_file, this.obj_file);
+        this.initMap("Level1", this.map_file, this.obj_file);
         this.set_lightning();
         game.sounds.playSound("ambient_horror", null, 800, true);
     };
@@ -355,9 +356,11 @@ export class Map1 extends Maps {
 export class Level1 extends Maps {
     wall_texture = WALL2; // from textures class.
     wall2_texture = WOOD_WALL; // from textures class.
+    map_file = "assets/maps/map3_ground.png";
+    obj_file = "assets/maps/map3_objects.png";
 
-    public constructor() {
-        super("Level1", "assets/maps/map3_ground.png", "assets/maps/map3_objects.png");
+    public init() {
+        this.initMap("Level1", "assets/maps/map3_ground.png", "assets/maps/map3_objects.png");
         this.set_lightning();
         game.sounds.playSound("ambient_horror", null, 800, true);
     };

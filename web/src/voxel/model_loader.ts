@@ -1,5 +1,6 @@
 import { Chunk } from "./chunk";
 import { game } from "./main";
+import { loadImageFile } from "./utils";
 import { Vox } from "./vox";
 
 //////////////////////////////////////////////////////////////////////
@@ -120,7 +121,7 @@ export class ModelLoader {
         this.models[name] = chunk;
     };
 
-    getModel(name, size, obj, only_mesh) {
+    getModel(name, size, obj, only_mesh?) {
         if (size == null) { size = 1; }
         if (only_mesh == null) { only_mesh = false; }
         // Depp copy chunk

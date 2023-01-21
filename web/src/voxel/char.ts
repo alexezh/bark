@@ -1,11 +1,19 @@
 //////////////////////////////////////////////////////////////////////
 // Char base class
+
+import THREE from "three";
+import { Chunk } from "./chunk";
+import { game } from "./main";
+import { get_rand } from "./utils";
+import { Minigun, P90, Pistol, RocketLauncher, Shotgun, Sniper, Weapon } from "./weapon";
+
 //////////////////////////////////////////////////////////////////////
 export class Char {
+    public base_type: string = "player";
     public hp: number = 0;
-    public chunk = 0;
+    public chunk!: Chunk;
     public init_pos = new THREE.Vector3(0, 0, 0);
-    public weapon = 0;
+    public weapon!: Weapon;
     public obj_type = "char";
     public loaded = false;
     public alive = true;
@@ -19,303 +27,305 @@ export class Char {
     public bleed_timer = 0;
     public can_shoot = false;
     public cd_list = [];
-    public dying = false;
+    public dying = 0;
     public radiation_poisoned = 0;
     public dying_counter = 0;
     public green_light = new THREE.PointLight(0x00FF00, 2, 10);
-    public radiation_light = 0;
+    public radiation_light!: THREE.PointLight;
 
-    void sound_hit() {
-    var r = get_rand();
-    if (r < 0.4) {
-        r = "blood1";
-    } else if (r > 0.4 && r < 0.7) {
-        r = "blood2";
-    } else {
-        r = "blood3";
-    }
-    game.sounds.PlaySound(r, this.chunk.mesh.position, 300);
-    if (this.alive) {
-        if (get_rand() > 0.8) {
-            game.sounds.PlaySound("hit" + (1 + Math.random() * 2 | 0),
-                this.chunk.mesh.position,
-                500);
+    sound_hit() {
+        var r = get_rand();
+        var s: string;
+        if (r < 0.4) {
+            s = "blood1";
+        } else if (r > 0.4 && r < 0.7) {
+            s = "blood2";
+        } else {
+            s = "blood3";
         }
-    }
-};
-
-void create(model, x, y, z, size) {
-    if (!size) { size = 1; }
-    // Load model.
-    this.chunk = game.modelLoader.getModel(model, size, this);
-
-    // Set initial position
-    this.init_pos.x = x;
-    this.init_pos.y = y;
-    this.init_pos.z = z;
-    this.chunk.mesh.position.set(x, y, z);
-};
-
-addWeapon(weapon) {
-    if (this.weapon == 0 && !this.flee) {
-        if (weapon.attach(this.chunk.mesh)) {
-            this.weapon = weapon;
-            this.loadWeapon();
+        game.sounds.playSound(s, this.chunk.mesh.position, 300);
+        if (this.alive) {
+            if (get_rand() > 0.8) {
+                game.sounds.playSound("hit" + (1 + Math.random() * 2 | 0),
+                    this.chunk.mesh.position,
+                    500);
+            }
         }
-    }
-};
+    };
 
-void dropWeapon() {
-    if (this.weapon != 0) {
-        this.unloadWeapon();
-        this.weapon.detach(this.chunk.mesh, this.chunk.mesh.position);
-        // Wait a while to not pick up same weapon again.
+    create(model, x, y, z, size) {
+        if (!size) { size = 1; }
+        // Load model.
+        this.chunk = game.modelLoader.getModel(model, size, this);
+
+        // Set initial position
+        this.init_pos.x = x;
+        this.init_pos.y = y;
+        this.init_pos.z = z;
+        this.chunk.mesh.position.set(x, y, z);
+    };
+
+    addWeapon(weapon) {
+        if (this.weapon == null && !this.flee) {
+            if (weapon.attach(this.chunk.mesh)) {
+                this.weapon = weapon;
+                this.loadWeapon();
+            }
+        }
+    };
+
+    dropWeapon() {
+        if (this.weapon != null) {
+            this.unloadWeapon();
+            this.weapon.detach(this.chunk.mesh, this.chunk.mesh.position);
+            // Wait a while to not pick up same weapon again.
+            var that = this;
+            //setTimeout(function() {
+            // @ts-ignore
+            that.weapon = null;
+            //}, 500);
+        }
+    };
+
+    unloadWeapon() {
         var that = this;
-        //setTimeout(function() {
-        that.weapon = 0;
-        //}, 500);
-    }
-};
+        this.can_shoot = false;
+        setTimeout(function () {
+            that.loaded = false;
+        }, 200);
+    };
 
-void unloadWeapon() {
-    var that = this;
-    this.can_shoot = false;
-    setTimeout(function () {
-        that.loaded = false;
-    }, 200);
-};
+    loadWeapon() {
+        var that = this;
+        this.can_shoot = true;
+        setTimeout(function () {
+            that.loaded = true;
+        }, 200);
+    };
 
-void loadWeapon() {
-    var that = this;
-    this.can_shoot = true;
-    setTimeout(function () {
-        that.loaded = true;
-    }, 200);
-};
-
-void shoot() {
-    if (this.weapon != 0 && this.loaded && this.can_shoot) {
-        //var light1 = new THREE.PointLight( 0xFFAA00, 3, 10 );
-        //light1.position.set(
-        //    this.weapon.position.x,
-        //    this.weapon.position.y,
-        //    this.weapon.position.z
-        //);
-        //game.scene.add( light1 );
-        //setTimeout(function() { game.scene.remove(light1);}, 100);
-        this.weapon.shoot(this.chunk.mesh.quaternion, this.chunk.mesh.id, this.chunk.mesh, this.speed / 30);
-    }
-};
-
-update(time, delta) {
-    // open wound.
-    if (this.dying != 0) {
-        this.dying_counter++;
-        var max = 5;
-        var step = 0.05;
-        if (this.dying == 1) {
-            if (this.chunk.mesh.rotation.z < Math.PI / 2) {
-                this.chunk.mesh.rotation.z += step;
-            } else if (this.chunk.mesh.rotation.z > Math.PI / 2) {
-                this.chunk.mesh.rotation.z -= step;
-            }
-            if (this.dying_counter == max) {
-                this.alive = false;
-                this.chunk.mesh.rotation.z = Math.PI / 2;
-                this.chunk.mesh.position.y = game.maps.ground;
-            }
-        } else if (this.dying == 2) {
-            if (this.chunk.mesh.rotation.z < -Math.PI / 2) {
-                this.chunk.mesh.rotation.z += step;
-            } else if (this.chunk.mesh.rotation.z > -Math.PI / 2) {
-                this.chunk.mesh.rotation.z -= step;
-            }
-            if (this.dying_counter == max) {
-                this.alive = false;
-                this.chunk.mesh.rotation.z = -Math.PI / 2;
-                this.chunk.mesh.position.y = game.maps.ground;
-            }
-        } else if (this.dying == 3) {
-            if (this.chunk.mesh.rotation.x < -Math.PI / 2) {
-                this.chunk.mesh.rotation.x += step;
-            } else if (this.chunk.mesh.rotation.x > -Math.PI / 2) {
-                this.chunk.mesh.rotation.x -= step;
-            }
-            if (this.dying_counter == max) {
-                this.alive = false;
-                this.chunk.mesh.rotation.x = -Math.PI / 2;
-                this.chunk.mesh.position.y = game.maps.ground;
-            }
-        } else if (this.dying == 4) {
-            if (this.chunk.mesh.rotation.x < Math.PI / 2) {
-                this.chunk.mesh.rotation.x += step;
-            } else if (this.chunk.mesh.rotation.x > Math.PI / 2) {
-                this.chunk.mesh.rotation.x -= step;
-            }
-            if (this.dying_counter == max) {
-                this.alive = false;
-                this.chunk.mesh.rotation.x = Math.PI / 2;
-                this.chunk.mesh.position.y = game.maps.ground;
-            }
+    shoot() {
+        if (this.weapon != null && this.loaded && this.can_shoot) {
+            //var light1 = new THREE.PointLight( 0xFFAA00, 3, 10 );
+            //light1.position.set(
+            //    this.weapon.position.x,
+            //    this.weapon.position.y,
+            //    this.weapon.position.z
+            //);
+            //game.scene.add( light1 );
+            //setTimeout(function() { game.scene.remove(light1);}, 100);
+            this.weapon.shoot(this.chunk.mesh.quaternion, this.chunk.mesh.id, this.chunk.mesh, this.speed / 30);
         }
-    }
+    };
 
-    if (this.alive) {
-        if (this.chunk.blood_positions.length > 0) {
-            this.bleed_timer -= delta;
-        }
-
-        if (this.bleed_timer < 0) {
-            this.hit(4, new THREE.Vector3(0, -3, 0), null);
-            this.bleed_timer = 10;
-            return;
-        }
-
-        if (this.bleed_timer < 10 && this.bleed_timer != 0) {
-            if (this.base_type == "player") {
-                if (!game.sounds.isPlaying("heartbeat")) {
-                    game.sounds.PlaySound("heartbeat", this.chunk.mesh.position, 500);
+    update(time, delta) {
+        // open wound.
+        if (this.dying != 0) {
+            this.dying_counter++;
+            var max = 5;
+            var step = 0.05;
+            if (this.dying == 1) {
+                if (this.chunk.mesh.rotation.z < Math.PI / 2) {
+                    this.chunk.mesh.rotation.z += step;
+                } else if (this.chunk.mesh.rotation.z > Math.PI / 2) {
+                    this.chunk.mesh.rotation.z -= step;
                 }
-            }
-            for (var i = 0; i < this.chunk.blood_positions.length; i++) {
-                if (get_rand() > 0.99) {
-                    game.particles.blood(
-                        this.chunk.blockSize * this.chunk.blood_positions[i].x + this.chunk.mesh.position.x,
-                        this.chunk.blockSize * this.chunk.blood_positions[i].y + this.chunk.mesh.position.y,
-                        this.chunk.blockSize * this.chunk.blood_positions[i].z + this.chunk.mesh.position.z,
-                        0.5, 0, 0, 0
-                    );
+                if (this.dying_counter == max) {
+                    this.alive = false;
+                    this.chunk.mesh.rotation.z = Math.PI / 2;
+                    this.chunk.mesh.position.y = game.maps.ground;
+                }
+            } else if (this.dying == 2) {
+                if (this.chunk.mesh.rotation.z < -Math.PI / 2) {
+                    this.chunk.mesh.rotation.z += step;
+                } else if (this.chunk.mesh.rotation.z > -Math.PI / 2) {
+                    this.chunk.mesh.rotation.z -= step;
+                }
+                if (this.dying_counter == max) {
+                    this.alive = false;
+                    this.chunk.mesh.rotation.z = -Math.PI / 2;
+                    this.chunk.mesh.position.y = game.maps.ground;
+                }
+            } else if (this.dying == 3) {
+                if (this.chunk.mesh.rotation.x < -Math.PI / 2) {
+                    this.chunk.mesh.rotation.x += step;
+                } else if (this.chunk.mesh.rotation.x > -Math.PI / 2) {
+                    this.chunk.mesh.rotation.x -= step;
+                }
+                if (this.dying_counter == max) {
+                    this.alive = false;
+                    this.chunk.mesh.rotation.x = -Math.PI / 2;
+                    this.chunk.mesh.position.y = game.maps.ground;
+                }
+            } else if (this.dying == 4) {
+                if (this.chunk.mesh.rotation.x < Math.PI / 2) {
+                    this.chunk.mesh.rotation.x += step;
+                } else if (this.chunk.mesh.rotation.x > Math.PI / 2) {
+                    this.chunk.mesh.rotation.x -= step;
+                }
+                if (this.dying_counter == max) {
+                    this.alive = false;
+                    this.chunk.mesh.rotation.x = Math.PI / 2;
+                    this.chunk.mesh.position.y = game.maps.ground;
                 }
             }
         }
-        if (this.add_blood > 0 && this.moving) {
-            this.add_blood--;
-            // Add blood footsteps
-            game.world.addColorBlock(
-                this.chunk.mesh.position.x + (2 - get_rand() * 4),
-                game.maps.ground - 1,
-                this.chunk.mesh.position.z + (2 - get_rand() * 4),
-                138 + get_rand() * 20,
-                8 + get_rand() * 10,
-                8 + get_rand() * 10
-            );
-        }
-        if (this.add_radioactive > 0 && this.moving) {
-            this.add_radioactive--;
-            // Add radioactive footsteps
-            game.world.addColorBlock(
-                this.chunk.mesh.position.x + (2 - get_rand() * 4),
-                game.maps.ground - 1,
-                this.chunk.mesh.position.z + (2 - get_rand() * 4),
-                get_rand() * 50 | 0,
-                200 + get_rand() * 55 | 0,
-                50 + get_rand() * 55 | 0
-            );
-        }
-        if (this.radiation_poisoned > 0 && get_rand() > 0.9) {
-            for (var q = 0; q < this.radiation_poisoned; q++) {
-                game.particles.radiation(
+
+        if (this.alive) {
+            if (this.chunk.blood_positions.length > 0) {
+                this.bleed_timer -= delta;
+            }
+
+            if (this.bleed_timer < 0) {
+                this.hit(4, new THREE.Vector3(0, -3, 0), null);
+                this.bleed_timer = 10;
+                return;
+            }
+
+            if (this.bleed_timer < 10 && this.bleed_timer != 0) {
+                if (this.base_type == "player") {
+                    if (!game.sounds.isPlaying("heartbeat")) {
+                        game.sounds.playSound("heartbeat", this.chunk.mesh.position, 500);
+                    }
+                }
+                for (var i = 0; i < this.chunk.blood_positions.length; i++) {
+                    if (get_rand() > 0.99) {
+                        game.particles.blood(
+                            this.chunk.blockSize * this.chunk.blood_positions[i].x + this.chunk.mesh.position.x,
+                            this.chunk.blockSize * this.chunk.blood_positions[i].y + this.chunk.mesh.position.y,
+                            this.chunk.blockSize * this.chunk.blood_positions[i].z + this.chunk.mesh.position.z,
+                            0.5, 0, 0, 0
+                        );
+                    }
+                }
+            }
+            if (this.add_blood > 0 && this.moving) {
+                this.add_blood--;
+                // Add blood footsteps
+                game.world.addColorBlock(
                     this.chunk.mesh.position.x + (2 - get_rand() * 4),
-                    this.chunk.to_y + 1,
-                    this.chunk.mesh.position.z + (2 - get_rand() * 4)
+                    game.maps.ground - 1,
+                    this.chunk.mesh.position.z + (2 - get_rand() * 4),
+                    138 + get_rand() * 20,
+                    8 + get_rand() * 10,
+                    8 + get_rand() * 10
                 );
-                if (this.radiation_poisoned > 5) {
-                    this.chunk.hit(new THREE.Vector3(0, 0, 0), 1, null);
+            }
+            if (this.add_radioactive > 0 && this.moving) {
+                this.add_radioactive--;
+                // Add radioactive footsteps
+                game.world.addColorBlock(
+                    this.chunk.mesh.position.x + (2 - get_rand() * 4),
+                    game.maps.ground - 1,
+                    this.chunk.mesh.position.z + (2 - get_rand() * 4),
+                    get_rand() * 50 | 0,
+                    200 + get_rand() * 55 | 0,
+                    50 + get_rand() * 55 | 0
+                );
+            }
+            if (this.radiation_poisoned > 0 && get_rand() > 0.9) {
+                for (var q = 0; q < this.radiation_poisoned; q++) {
+                    game.particles.radiation(
+                        this.chunk.mesh.position.x + (2 - get_rand() * 4),
+                        this.chunk.to_y + 1,
+                        this.chunk.mesh.position.z + (2 - get_rand() * 4)
+                    );
+                    if (this.radiation_poisoned > 5) {
+                        this.chunk.hit(new THREE.Vector3(0, 0, 0), 1, null);
+                    }
                 }
             }
+            if (!this.moving) {
+                this.speed = 0;
+            }
         }
-        if (!this.moving) {
-            this.speed = 0;
-        }
-    }
-};
+    };
 
-// 4 directions based on chunk-size.
-// Move mesh -> check if any of directions are in a position.
-// If OK -> move mesh, otherwise move back mesh same amount.
-cd() {
-    var pos = this.chunk.mesh.position;
-    var points = [];
-    points[0] = new THREE.Vector3(
-        pos.x + this.chunk.chunk_size_x / 2,
-        pos.y,
-        pos.z
-    );
-    points[1] = new THREE.Vector3(
-        pos.x,
-        pos.y,
-        pos.z + this.chunk.chunk_size_z / 2
-    );
-    points[2] = new THREE.Vector3(
-        pos.x,
-        pos.y,
-        pos.z - this.chunk.chunk_size_z / 2
-    );
-    points[3] = new THREE.Vector3(
-        pos.x - this.chunk.chunk_size_x / 2,
-        pos.y,
-        pos.z
-    );
+    // 4 directions based on chunk-size.
+    // Move mesh -> check if any of directions are in a position.
+    // If OK -> move mesh, otherwise move back mesh same amount.
+    cd() {
+        var pos = this.chunk.mesh.position;
+        var points: any = [];
+        points[0] = new THREE.Vector3(
+            pos.x + this.chunk.chunk_size_x / 2,
+            pos.y,
+            pos.z
+        );
+        points[1] = new THREE.Vector3(
+            pos.x,
+            pos.y,
+            pos.z + this.chunk.chunk_size_z / 2
+        );
+        points[2] = new THREE.Vector3(
+            pos.x,
+            pos.y,
+            pos.z - this.chunk.chunk_size_z / 2
+        );
+        points[3] = new THREE.Vector3(
+            pos.x - this.chunk.chunk_size_x / 2,
+            pos.y,
+            pos.z
+        );
 
-    var res = true;
-    for (var i = 0; i < points.length; i++) {
-        if (game.world.checkExists(points[i]).length > 0) {
-            res = false;
-        }
-    }
-    for (var idx = 0; idx < game.cdList.length; idx++) {
-        if (this.chunk.mesh.id != game.cdList[idx].id && game.cdList[idx].owner.alive && game.cdList[idx].owner.base_type != "weapon" && game.cdList[idx].owner.obj_type != "painkillers") {
-            if (this.chunk.checkCD(game.cdList[idx].position, 6)) {
+        var res = true;
+        for (var i = 0; i < points.length; i++) {
+            if (game.world.checkExists(points[i]).length > 0) {
                 res = false;
             }
         }
-    }
-    return res;
-};
-
-hit(damage, direction, type, pos) {
-    this.bleed_timer = this.chunk.health / 100 * 10;
-
-    var die = false;
-
-    this.sound_hit();
-
-    this.chunk.hit(direction, damage, pos);
-    die = this.chunk.health < 90 ? true : false;
-    if (die && this.alive) {
-        this.dropWeapon();
-        // this.alive = false; 
-        if (this.base_type == "player") {
-            this.chunk.mesh.remove(game.camera);
-            var pos = this.chunk.mesh.position.clone();
-            pos.y = game.maps.ground;
-            game.scene.add(game.camera);
-            game.camera.position.z = pos.z;
-            game.camera.position.x = pos.x;
-            game.camera.position.y = 150; //120; 150
-            game.camera.rotation.x = -Math.PI / 2;
-            setTimeout(function () {
-                game.reset();
-            }, 3000);
+        for (var idx = 0; idx < game.cdList.length; idx++) {
+            if (this.chunk.mesh.id != game.cdList[idx].id && game.cdList[idx].owner.alive && game.cdList[idx].owner.base_type != "weapon" && game.cdList[idx].owner.obj_type != "painkillers") {
+                if (this.chunk.checkCD(game.cdList[idx].position, 6)) {
+                    res = false;
+                }
+            }
         }
-        this.dying = 0;
-        var r = get_rand();
-        if (r > 0.8) {
-            //this.chunk.mesh.rotation.z = Math.PI/2;
-            this.dying = 1;
-        } else if (r > 0.5) {
-            // this.chunk.mesh.rotation.z = -Math.PI/2;
-            this.dying = 2;
-        } else if (r > 0.3) {
-            //  this.chunk.mesh.rotation.x = -Math.PI/2;
-            this.dying = 3;
-        } else {
-            //this.chunk.mesh.rotation.x = Math.PI/2;
-            this.dying = 4;
+        return res;
+    };
+
+    hit(damage, direction, type, pos?) {
+        this.bleed_timer = this.chunk.health / 100 * 10;
+
+        var die = false;
+
+        this.sound_hit();
+
+        this.chunk.hit(direction, damage, pos);
+        die = this.chunk.health < 90 ? true : false;
+        if (die && this.alive) {
+            this.dropWeapon();
+            // this.alive = false; 
+            if (this.base_type == "player") {
+                this.chunk.mesh.remove(game.camera);
+                var pos = this.chunk.mesh.position.clone();
+                pos.y = game.maps.ground;
+                game.scene.add(game.camera);
+                game.camera.position.z = pos.z;
+                game.camera.position.x = pos.x;
+                game.camera.position.y = 150; //120; 150
+                game.camera.rotation.x = -Math.PI / 2;
+                setTimeout(function () {
+                    game.reset();
+                }, 3000);
+            }
+            this.dying = 0;
+            var r = get_rand();
+            if (r > 0.8) {
+                //this.chunk.mesh.rotation.z = Math.PI/2;
+                this.dying = 1;
+            } else if (r > 0.5) {
+                // this.chunk.mesh.rotation.z = -Math.PI/2;
+                this.dying = 2;
+            } else if (r > 0.3) {
+                //  this.chunk.mesh.rotation.x = -Math.PI/2;
+                this.dying = 3;
+            } else {
+                //this.chunk.mesh.rotation.x = Math.PI/2;
+                this.dying = 4;
+            }
         }
-    }
-    return die;
-};
+        return die;
+    };
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -329,7 +339,7 @@ class Enemy extends Char {
     run_speed = 20;
     walk_speed = 10;
     view = 0;
-    target = 0;
+    target: any;
     flee = false; // run!
     range_from_player = 30;
     follow_timer = 0;
@@ -341,14 +351,14 @@ class Enemy extends Char {
 
     hit(damage, dir, type, pos) {
         var die = Char.prototype.hit.call(this, damage, dir, type, pos);
-        if (die == true & this.moving) {
+        if (die != null && this.moving) {
             //   game.removeFromCD(this.view);
             this.moving = false;
             //game.objects["heart"].add(this.chunk.mesh.position.x, this.chunk.mesh.position.y, this.chunk.mesh.position.z);
             this.die();
         } else {
             if (this.chunk.health > 95) {
-                if (this.weapon != 0) {
+                if (this.weapon != null) {
                     this.target = game.player;
                 }
             } else {
@@ -402,7 +412,7 @@ class Enemy extends Char {
                 this.chunk.mesh.lookAt(p);
 
                 var dist = this.chunk.mesh.position.distanceTo(game.player.chunk.mesh.position);
-                if (dist > this.range_from_player && this.weapon != 0) {
+                if (dist > this.range_from_player && this.weapon != null) {
                     if (dist > game.visible_distance / 2) {
                         this.target = 0;
                     } else {
@@ -432,11 +442,11 @@ class Enemy extends Char {
                     if (this.chunk.checkCD(game.cdList[idx].position, this.view_range_current)) {
                         if (this.chunk.mesh.id != game.cdList[idx].id) {
                             if (game.cdList[idx].owner.obj_type != this.obj_type && (game.cdList[idx].owner.base_type == "player")) { // TBD //|| game.cdList[idx].object.owner.base_type == "enemy")) {
-                                if (this.target == 0 && this.weapon != 0) {
+                                if (this.target == 0 && this.weapon != null) {
                                     if (game.cdList[idx].owner.alive) {
                                         this.target = game.cdList[idx].owner;
                                         this.follow_timer = get_rand() * 10;
-                                        //  game.sounds.PlaySound("hunt"+(1+Math.random()*2|0), 
+                                        //  game.sounds.playSound("hunt"+(1+Math.random()*2|0), 
                                         //                        this.chunk.mesh.position,
                                         //                        500);
                                         this.loadWeapon();
@@ -448,7 +458,7 @@ class Enemy extends Char {
                                 }
                             } else if (game.cdList[idx].owner.base_type == "weapon") {
                                 // walk to weapon
-                                if ((this.weapon == 0 || this.weapon.damage < game.cdList[idx].owner.damage) && !this.flee) {
+                                if ((this.weapon == null || this.weapon.damage < game.cdList[idx].owner.damage) && !this.flee) {
                                     this.target = game.cdList[idx].owner;
                                 }
                             }
@@ -456,7 +466,7 @@ class Enemy extends Char {
                     }
                     if (this.chunk.checkCD(game.cdList[idx].position, 5)) {
                         if (game.cdList[idx].owner.base_type == "weapon") {
-                            if (this.weapon == 0) {
+                            if (this.weapon == null) {
                                 this.addWeapon(game.cdList[idx].owner);
                                 this.loadWeapon();
                                 this.target = 0;
@@ -544,22 +554,19 @@ class Enemy extends Char {
     };
 
 }
-Enemy.prototype = new Char;
-Enemy.prototype.constructor = Enemy;
 
 //////////////////////////////////////////////////////////////////////
 // Enemy type: Dudo
 //
 //////////////////////////////////////////////////////////////////////
-function Dudo(x, y, z) {
-    Enemy.call(this);
-    this.obj_type = "dudo";
-    this.run_speed = 30;
-    this.walk_speed = 15;
-    this.y_offset = 5;
+export class Dudo extends Char {
+    obj_type = "dudo";
+    run_speed = 30;
+    walk_speed = 15;
+    y_offset = 5;
 
     create(x, y, z) {
-        Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z);
+        //Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z);
         this.chunk.mesh.rotation.order = 'YXZ';
         if (get_rand() > 0.4) {
             this.addWeapon(new Shotgun());
@@ -584,20 +591,18 @@ function Dudo(x, y, z) {
         }
     };
 }
-Dudo.prototype = new Enemy;
-Dudo.prototype.constructor = Dudo;
 
 //////////////////////////////////////////////////////////////////////
 // Enemy type: AgentBlack
 //
 //////////////////////////////////////////////////////////////////////
-function AgentBlack(x, y, z) {
-    Enemy.call(this);
-    this.y_offset = 7;
-    this.run_speed = 40;
-    this.walk_speed = 15;
-    this.obj_type = "agentblack";
-    this.shoot_ability = 0.5;
+export class AgentBlack extends Enemy {
+    y_offset = 7;
+    run_speed = 40;
+    walk_speed = 15;
+    obj_type = "agentblack";
+    shoot_ability = 0.5;
+
     // this.create(this.obj_type, x, game.maps.ground+5, z); // Add space from floor
     //
     die() {
@@ -634,20 +639,17 @@ function AgentBlack(x, y, z) {
         }
     };
 }
-AgentBlack.prototype = new Enemy;
-AgentBlack.prototype.constructor = AgentBlack;
 
 //////////////////////////////////////////////////////////////////////
 // Enemy type: Agent
 //
 //////////////////////////////////////////////////////////////////////
-function Agent(x, y, z) {
-    Enemy.call(this);
-    this.y_offset = 7;
-    this.run_speed = 40;
-    this.walk_speed = 15;
-    this.obj_type = "agent";
-    this.shoot_ability = 0.5;
+export class Agent extends Enemy {
+    y_offset = 7;
+    run_speed = 40;
+    walk_speed = 15;
+    obj_type = "agent";
+    shoot_ability = 0.5;
     // this.create(this.obj_type, x, game.maps.ground+5, z); // Add space from floor
     //
     die() {
@@ -684,19 +686,16 @@ function Agent(x, y, z) {
         }
     };
 }
-Agent.prototype = new Enemy;
-Agent.prototype.constructor = Agent;
 
 //////////////////////////////////////////////////////////////////////
 // Enemy type: Greenie
 //
 //////////////////////////////////////////////////////////////////////
-function Greenie(x, y, z) {
-    Enemy.call(this);
-    this.y_offset = 5;
-    this.run_speed = 40;
-    this.walk_speed = 15;
-    this.obj_type = "greenie";
+export class Greenie extends Char {
+    y_offset = 5;
+    run_speed = 40;
+    walk_speed = 15;
+    obj_type = "greenie";
     // this.create(this.obj_type, x, game.maps.ground+5, z); // Add space from floor
 
     create(x, y, z) {
@@ -729,23 +728,20 @@ function Greenie(x, y, z) {
         }
     };
 }
-Greenie.prototype = new Enemy;
-Greenie.prototype.constructor = Greenie;
 
 //////////////////////////////////////////////////////////////////////
 // Enemy type: Hearty
 //
 //////////////////////////////////////////////////////////////////////
-function Hearty(x, y, z) {
-    Enemy.call(this);
-    this.obj_type = "hearty";
-    this.run_speed = 50;
-    this.walk_speed = 15;
-    this.y_offset = 6;
+export class Hearty extends Enemy {
+    obj_type = "hearty";
+    run_speed = 50;
+    walk_speed = 15;
+    y_offset = 6;
     //   this.create(this.obj_type, x, game.maps.ground+6, z); // Add space from floor
 
     create(x, y, z) {
-        Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z);
+        // Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z);
         this.chunk.mesh.rotation.order = 'YXZ';
         if (get_rand() > 0.4) {
             this.addWeapon(new Sniper());
@@ -772,35 +768,32 @@ function Hearty(x, y, z) {
         }
     };
 }
-Hearty.prototype = new Enemy;
-Hearty.prototype.constructor = Hearty;
 
 //////////////////////////////////////////////////////////////////////
 // Player class
 //////////////////////////////////////////////////////////////////////
-function Player(x, y, z) {
-    Char.call(this);
-    this.obj_type = "player";
-    this.base_type = "player";
-    this.run_speed = 50;
-    this.keyboard = 0;
-    this.y_offset = 6;
-    this.weapons = [];
-    this.can_switch = true;
-    this.falling = false;
-    this.flashlight = new THREE.SpotLight(0xFFFFFF);
-    this.footsteps = false;
+export class Player extends Char {
+    public obj_type = "player";
+    public base_type = "player";
+    public run_speed = 50;
+    public keyboard: any;
+    public y_offset = 6;
+    public weapons: Weapon[] = [];
+    public can_switch = true;
+    public falling = false;
+    public flashlight = new THREE.SpotLight(0xFFFFFF);
+    public footsteps = false;
+    public shooting = false;
 
     reset() {
-        this.removeBindings();
         this.weapons = [];
         game.scene.remove(this.flashlight);
         this.keyboard = null;
     };
 
     create(x, y, z) {
-        Char.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z);
-        this.keyboard = new THREEx.KeyboardState();
+        // Char.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z);
+        //this.keyboard = new THREEx.KeyboardState();
         this.chunk.mesh.rotation.order = 'YXZ';
         game.player = this;
         var targetObject = new THREE.Object3D();
@@ -835,7 +828,7 @@ function Player(x, y, z) {
         //        t.position.set(0, 150, 0);
 
 
-        this.addBindings();
+        // this.addBindings();
         // game.camera.position.set(0,0,0);
         // game.camera.rotation.set(0,0,0);
         //game.camera.matrix.copy(this.chunk.mesh.matrix);
@@ -884,7 +877,7 @@ function Player(x, y, z) {
     };
 
     getWeaponId() {
-        if (this.weapon == 0) {
+        if (this.weapon == null) {
             return -1;
         }
         for (var i = 0; i < this.weapons.length; i++) {
@@ -895,24 +888,27 @@ function Player(x, y, z) {
         return -1;
     };
 
+    // @ts-ignore
     loadWeapon(id) {
         for (var i = 0; i < this.weapons.length; i++) {
             if (id != i) {
                 this.unloadWeapon(i);
             }
         }
-        this.weapon = this.weapons[id];
+        this.weapon = this.weapons[id]!;
         this.weapon.setPosition(2.5, -0.5, 2.5);
         this.weapon.setRotation(Math.PI, Math.PI / 2, 0);
         this.can_shoot = true;
         this.loaded = true;
     };
 
+    // @ts-ignore
     unloadWeapon(id) {
-        if (this.weapon != 0) {
+        if (this.weapon != null) {
             this.weapon.setPosition(0, 2, -1.5);
             this.weapon.setRotation(0, 0, Math.PI / 3);
-            this.weapon = 0;
+            // @ts-ignore
+            this.weapon = null;
             this.can_shoot = false;
             this.loaded = false;
         }
@@ -929,26 +925,13 @@ function Player(x, y, z) {
     };
 
     dropWeapon() {
-        if (this.weapon != 0) {
+        if (this.weapon != null) {
             var wid = this.getWeaponId();
             this.unloadWeapon(wid);
             this.weapons[wid].detach(this.chunk.mesh, this.chunk.mesh.position);
             this.weapons.splice(wid, 1);
         }
     };
-
-    addBindings() {
-        $(document).mouseup(this.mouseUp.bind(this));
-        $(document).mousemove(this.mouseMove.bind(this));
-        $(document).mousedown(this.mouseDown.bind(this));
-    };
-
-    removeBindings() {
-        $(document).unbind('mouseup');
-        $(document).unbind('mousemove');
-        $(document).unbind('mousedown');
-    };
-
 
     mouseUp() {
         if (!this.alive) {
@@ -975,8 +958,8 @@ function Player(x, y, z) {
 
     update(time, delta) {
         if (!this.alive) {
-            game.sounds.StopSound("footsteps");
-            game.sounds.StopSound("heartbeat");
+            game.sounds.stopSound("footsteps");
+            game.sounds.stopSound("heartbeat");
             return;
         }
         this.speed = this.run_speed;
@@ -1025,7 +1008,7 @@ function Player(x, y, z) {
 
         if (this.moving) {
             if (!game.sounds.isPlaying("footsteps")) {
-                game.sounds.PlaySound("footsteps", this.chunk.mesh.position, 800);
+                game.sounds.playSound("footsteps", this.chunk.mesh.position, 800);
             }
             //this.chunk.mesh.rotation.z = 0.2*Math.sin(time*speed);
             if (this.cd_check > 0.05) {
@@ -1093,12 +1076,12 @@ function Player(x, y, z) {
                     }
 
                     if (this.falling) {
-                        game.sounds.StopSound("footsteps");
+                        game.sounds.stopSound("footsteps");
 
                         if (get_rand() > 0.5) {
-                            game.sounds.PlaySound("fall", this.chunk.mesh.position, 400);
+                            game.sounds.playSound("fall", this.chunk.mesh.position, 400);
                         } else {
-                            game.sounds.PlaySound("fall2", this.chunk.mesh.position, 400);
+                            game.sounds.playSound("fall2", this.chunk.mesh.position, 400);
                         }
                         game.maps.ambient_light.color.r = 0;
                         game.maps.ambient_light.color.g = 0;
@@ -1214,7 +1197,7 @@ function Player(x, y, z) {
 
 
         //   if(this.moving && !this.footsteps) {
-        //       game.sounds.PlaySound("footsteps", this.chunk.mesh.position, 300);
+        //       game.sounds.playSound("footsteps", this.chunk.mesh.position, 300);
         //       this.footsteps = true;
         //   }
         //   if(!this.moving && this.footsteps) {
@@ -1224,6 +1207,4 @@ function Player(x, y, z) {
 
     };
 }
-Player.prototype = new Char;
-Player.prototype.constructor = Player;
 

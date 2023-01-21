@@ -1,6 +1,7 @@
-import * as THREE from 'three';
+import THREE from 'three';
 import { game } from "./main";
 import { FFChunk } from './objects';
+import { get_rand } from './utils';
 
 //////////////////////////////////////////////////////////////////////
 // chunk if unit of rendering. Loaded from vox
@@ -591,6 +592,7 @@ export class Chunk {
             this.geometry.attributes.color.needsUpdate = true;
             this.geometry.computeVertexNormals();
             if (this.type != "world") {
+                // @ts-ignore
                 this.geometry.translate(this.offset.x, this.offset.y, this.offset.z);
             }
         } else {
@@ -630,6 +632,7 @@ export class Chunk {
             } else {
                 this.mesh.geometry = this.geometry;
                 if (this.type != "world") {
+                    // @ts-ignore
                     this.geometry.translate(this.offset.x, this.offset.y, this.offset.z);
                 }
             }
@@ -793,14 +796,14 @@ export class Chunk {
         if (this.blocks == null) {
             return;
         }
-        let x = 0;
+        var x = 0;
         var y = 0;
         var z = 0;
         var vx = 0, vy = 0, vz = 0, val = 0, offset = 0;
         var ff = new Array();
         power = power * (1 / this.blockSize);
         var pow = power * power;
-        let rx = 0, ry = 0, ry = 0;
+        var rx = 0, ry = 0, rz = 0;
 
         var max = 0.5;
         if (this.total_blocks > 3000) {

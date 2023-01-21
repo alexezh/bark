@@ -1,7 +1,7 @@
+import THREE from 'three';
 import { ModelLoader } from "./model_loader";
 import { SoundLoader } from "./sound";
 import { Textures } from "./textures";
-import * as THREE from 'three';
 import { World } from "./world";
 import { Ammo, AmmoP90, AmmoSniper, Heart, Shell } from "./objects";
 import { Level1, Maps } from "./map";
@@ -255,6 +255,7 @@ export class Main {
             }
         }
         this.update_objects = [];
+        // @ts-ignore
         this.maps.init();
     };
 

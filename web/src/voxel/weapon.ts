@@ -1,13 +1,15 @@
 //////////////////////////////////////////////////////////////////////
 // Weapon base class
 
+import THREE from 'three';
 import { game } from "./main";
+import { get_rand } from './utils';
 
 //////////////////////////////////////////////////////////////////////
 export class Weapon {
     public ammo = 0;
     public base_type = "weapon";
-    public chunk = 0;
+    public chunk: any;
     public name = "";
     public fire_rate = 0; // in ms between each
     public reloading = 0;
@@ -18,6 +20,7 @@ export class Weapon {
     public relative_speed = 0;
     public shoot_light = new THREE.PointLight(0xFFAA00, 3, 10);
     public damage = 1;
+    public obj_type: any;
 
     create(model, size) {
         game.scene.add(this.shoot_light);
@@ -69,6 +72,10 @@ export class Weapon {
         }
         return false;
     };
+
+
+    fire(q, id, shooter, speed) {
+    }
 
     shoot(dir, id, mesh, speed) {
         if (this.reloading <= 0) {
@@ -271,15 +278,14 @@ export class P90 extends Weapon {
 //////////////////////////////////////////////////////////////////////
 // Minigun class
 //////////////////////////////////////////////////////////////////////
-function Minigun() {
-    Weapon.call(this);
-    this.obj_type = "minigun";
-    this.fire_rate = 0.1;
-    this.create("minigun", 0.1);
-    this.recoil = 0.2;
-    this.damage = 2;
+export class Minigun extends Weapon {
+    obj_type = "minigun";
+    fire_rate = 0.1;
+    recoil = 0.2;
+    damage = 2;
 
     create(model, size) {
+        this.create("minigun", 0.1);
         Weapon.prototype.create.call(this, model, size);
     };
 
@@ -298,8 +304,6 @@ function Minigun() {
     };
 
 }
-Minigun.prototype = new Weapon;
-Minigun.prototype.constructor = Minigun;
 
 
 //////////////////////////////////////////////////////////////////////

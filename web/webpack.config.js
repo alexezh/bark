@@ -72,11 +72,11 @@ module.exports = {
         secure: false,
         changeOrigin: true
       },
-      "/assets": {
-        target: 'http://localhost:5082',
-        secure: false,
-        changeOrigin: true
-      },
+      //"/assets": {
+      //  target: 'http://localhost:5082',
+      //  secure: false,
+      //  changeOrigin: true
+      //},
       '/updates': {
         target: 'ws://localhost:5082',
         ws: true

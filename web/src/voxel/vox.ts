@@ -54,17 +54,25 @@ export class Vox {
             var buffer = new Uint8Array(data);
 
             var i = 0;
+            // @ts-ignore
             var type = String.fromCharCode(parseInt(buffer[i++])) +
+                // @ts-ignore
                 String.fromCharCode(parseInt(buffer[i++])) +
+                // @ts-ignore
                 String.fromCharCode(parseInt(buffer[i++])) +
+                // @ts-ignore
                 String.fromCharCode(parseInt(buffer[i++]));
             var version = this.readInt(buffer, i);
             i += 4;
 
             while (i < buffer.length) {
+                // @ts-ignore
                 var id = String.fromCharCode(parseInt(buffer[i++])) +
+                    // @ts-ignore
                     String.fromCharCode(parseInt(buffer[i++])) +
+                    // @ts-ignore
                     String.fromCharCode(parseInt(buffer[i++])) +
+                    // @ts-ignore
                     String.fromCharCode(parseInt(buffer[i++]));
 
                 var chunkSize = this.readInt(buffer, i) & 0xFF;
@@ -137,7 +145,7 @@ export class Vox {
             }
             for (var n = 0; n < voxelData.length; n++) {
                 if (colors2 == undefined) {
-                    var c = voxColors[voxelData[n].color - 1];
+                    var c = this.voxColors[voxelData[n].color - 1];
                     var r = (c & 0xff0000) >> 16;
                     var g = (c & 0x00ff00) >> 8;
                     var b = (c & 0x0000ff);

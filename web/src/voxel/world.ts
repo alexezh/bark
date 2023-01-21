@@ -5,6 +5,7 @@ import { Chunk } from "./chunk";
 import { game } from "./main";
 import { Textures } from "./textures";
 import * as THREE from 'three';
+import { get_rand } from "./utils";
 
 //////////////////////////////////////////////////////////////////////
 export class World {

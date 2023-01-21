@@ -1,6 +1,10 @@
 //////////////////////////////////////////////////////////////////////
 // Random number generator (faster than Math.random())
 // https://en.wikipedia.org/wiki/Linear_feedback_shift_register
+
+import THREE from "three";
+import { game } from "./main";
+
 //////////////////////////////////////////////////////////////////////
 var lfsr = (function () {
     var max = Math.pow(2, 16),
@@ -22,7 +26,7 @@ var lfsr = (function () {
 }());
 
 // Set seed
-lfsr.setSeed();
+lfsr.setSeed(undefined);
 
 //////////////////////////////////////////////////////////////////////
 // Static random numbers used where repetition is not an issue
@@ -60,7 +64,7 @@ var stat_num_map = [
     0.72035, 0.38357, 0.26547
 ];
 var cnt = 0;
-function get_rand() {
+export function get_rand() {
     if (cnt < stat_num_map.length - 1) {
         cnt++;
     } else {
@@ -73,11 +77,10 @@ function get_rand() {
 //////////////////////////////////////////////////////////////////////
 // Load image files to pixel map
 //////////////////////////////////////////////////////////////////////
-function loadImageFile(file, callback) {
+export function loadImageFile(file, callback) {
     var image = new Image();
     image.src = file;
-    var ctx = document.createElement('canvas').getContext('2d');
-    var that = this;
+    var ctx = document.createElement('canvas').getContext('2d')!;
     image.onload = function () {
         ctx.canvas.width = image.width;
         ctx.canvas.height = image.height;
@@ -112,9 +115,8 @@ function loadImageFile(file, callback) {
 function lockPointer() {
     var e = document.body;
     //var e = document.getElementById('container');
-    e.requestPointerLock = e.requestPointerLock ||
-        e.mozRequestPointerLock ||
-        e.webkitRequestPointerLock;
+    // @ts-ignore
+    e.requestPointerLock = e.requestPointerLock || e.mozRequestPointerLock || e.webkitRequestPointerLock;
 
     e.requestPointerLock();
 }
