@@ -130,9 +130,9 @@ export class Shotgun extends Weapon {
     recoil = 1;
     damage = 1;
 
-    create(model, size) {
+    public constructor() {
+        super();
         this.create("shotgun", 0.1);
-        Weapon.prototype.create.call(this, model, size);
     };
 
     fire(q, id, shooter, speed) {
@@ -161,9 +161,9 @@ export class Sniper extends Weapon {
     recoil = 5;
     damage = 5;
 
-    create(model, size) {
+    public constructor() {
+        super();
         this.create("sniper", 0.1);
-        Weapon.prototype.create.call(this, model, size);
     };
 
     fire(q, id, shooter, speed) {
@@ -192,9 +192,9 @@ export class Pistol extends Weapon {
     recoil = 0.2;
     damage = 1;
 
-    create(model, size) {
+    public constructor() {
+        super();
         this.create("pistol", 0.1);
-        Weapon.prototype.create.call(this, model, size);
     };
 
     fire(q, id, shooter, speed) {
@@ -222,9 +222,9 @@ export class GrenadeLauncher extends Weapon {
     public recoil = 0.2;
     public damage = 8;
 
-    create(model, size) {
-        this.create("grenadelauncher", 0.1);
-        Weapon.prototype.create.call(this, model, size);
+    public constructor() {
+        super();
+        super.create("grenadelauncher", 0.1);
     };
 
     fire(q, id, shooter, speed) {
@@ -251,9 +251,9 @@ export class P90 extends Weapon {
     public recoil = 0.2;
     public damage = 1;
 
-    create(model, size) {
-        this.create("p90", 0.1);
-        Weapon.prototype.create.call(this, model, size);
+    public constructor() {
+        super();
+        super.create("p90", 0.1);
     };
 
     fire(q, id, shooter, speed) {
@@ -281,9 +281,9 @@ export class Minigun extends Weapon {
     recoil = 0.2;
     damage = 2;
 
-    create(model, size) {
-        this.create("minigun", 0.1);
-        Weapon.prototype.create.call(this, model, size);
+    public constructor() {
+        super();
+        super.create("minigun", 0.1);
     };
 
     fire(q, id, shooter, speed) {
@@ -313,7 +313,7 @@ export class Ak47 extends Weapon {
     public damage = 2;
 
     create(model, size) {
-        this.create("ak47", 0.1);
+        super.create("ak47", 0.1);
         Weapon.prototype.create.call(this, model, size);
     };
 
@@ -343,9 +343,9 @@ export class RocketLauncher extends Weapon {
     public recoil = 4;
     public damage = 6;
 
-    create(model, size) {
-        this.create("rocketlauncher", 0.1);
-        Weapon.prototype.create.call(this, model, size);
+    public constructor() {
+        super();
+        super.create("rocketlauncher", 0.1);
     };
 
     fire(q, id, shooter, speed) {

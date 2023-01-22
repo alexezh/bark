@@ -3,6 +3,7 @@
 
 import { Matrix4, Object3D, PointLight, SpotLight, Vector3 } from "three";
 import { Chunk } from "./chunk";
+import { KeyboardState } from "./keyboardstate";
 import { game } from "./main";
 import { get_rand } from "./utils";
 import { Minigun, P90, Pistol, RocketLauncher, Shotgun, Sniper, Weapon } from "./weapon";
@@ -33,6 +34,18 @@ export class Char {
     public green_light = new PointLight(0x00FF00, 2, 10);
     public radiation_light!: PointLight;
 
+    create(model, x, y, z, size?) {
+        if (!size) { size = 1; }
+        // Load model.
+        this.chunk = game.modelLoader.getModel(model, size, this);
+
+        // Set initial position
+        this.init_pos.x = x;
+        this.init_pos.y = y;
+        this.init_pos.z = z;
+        this.chunk.mesh.position.set(x, y, z);
+    };
+
     sound_hit() {
         var r = get_rand();
         var s: string;
@@ -51,18 +64,6 @@ export class Char {
                     500);
             }
         }
-    };
-
-    create(model, x, y, z, size) {
-        if (!size) { size = 1; }
-        // Load model.
-        this.chunk = game.modelLoader.getModel(model, size, this);
-
-        // Set initial position
-        this.init_pos.x = x;
-        this.init_pos.y = y;
-        this.init_pos.z = z;
-        this.chunk.mesh.position.set(x, y, z);
     };
 
     addWeapon(weapon) {
@@ -566,7 +567,7 @@ export class Dudo extends Char {
     y_offset = 5;
 
     create(x, y, z) {
-        //Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z);
+        Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z, null);
         this.chunk.mesh.rotation.order = 'YXZ';
         if (get_rand() > 0.4) {
             this.addWeapon(new Shotgun());
@@ -650,8 +651,7 @@ export class Agent extends Enemy {
     walk_speed = 15;
     obj_type = "agent";
     shoot_ability = 0.5;
-    // this.create(this.obj_type, x, game.maps.ground+5, z); // Add space from floor
-    //
+
     die() {
         this.chunk.mesh.position.y = game.maps.ground + 1;
     };
@@ -741,7 +741,7 @@ export class Hearty extends Enemy {
     //   this.create(this.obj_type, x, game.maps.ground+6, z); // Add space from floor
 
     create(x, y, z) {
-        // Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z);
+        Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z, null);
         this.chunk.mesh.rotation.order = 'YXZ';
         if (get_rand() > 0.4) {
             this.addWeapon(new Sniper());
@@ -792,8 +792,9 @@ export class Player extends Char {
     };
 
     create(x, y, z) {
-        // Char.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z);
-        //this.keyboard = new THREEx.KeyboardState();
+        Char.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z);
+
+        this.keyboard = new KeyboardState(game.container!);
         this.chunk.mesh.rotation.order = 'YXZ';
         game.player = this;
         var targetObject = new Object3D();

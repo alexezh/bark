@@ -33,15 +33,17 @@ export class Main {
     public objects: any = {};
     public ff_objects = [];
     public sounds = new SoundLoader();
+    public container: HTMLElement | undefined;
 
     // Particle stuff.
     public box_material = new MeshPhongMaterial({ color: 0xffffff });
     public sprite_material = new SpriteMaterial({ color: 0xffffff });
-    // @ts-ignore
-    public chunk_material = new MeshPhongMaterial({ vertexColors: VertexColors, wireframe: false });
+    public chunk_material = new MeshPhongMaterial({ vertexColors: true, wireframe: false });
     public p_light = new PointLight(0xFFAA00, 1, 10);
 
     init(container: HTMLElement) {
+        this.container = container;
+
         this.sounds.Add({ name: "sniper", file: "assets/sounds/sniper.wav.mp3" });
         this.sounds.Add({ name: "take_heart", file: "assets/sounds/heart.wav.mp3" });
         this.sounds.Add({ name: "walk1", file: "assets/sounds/walk1.wav.mp3" });
@@ -226,6 +228,7 @@ export class Main {
             }, 500);
         } else {
             this.maps = new Level1();
+            this.maps.init();
             //game.maps.init("Level 1", "assets/maps/map3_ground.png", "assets/maps/map3_objects.png");
             // Load objects here to reduce overhead of multiple objects of same type.
             this.objects["shell"] = new Shell();
@@ -333,7 +336,7 @@ export class Main {
 
         //this.controls.update(delta);
 
-        this.stats.update();
+        // this.stats.update();
         this.particles.update(time, delta);
         this.particles_box.update(time, delta);
         this.world.update(time, delta);

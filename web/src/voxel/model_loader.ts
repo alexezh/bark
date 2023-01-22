@@ -3,45 +3,53 @@ import { game } from "./main";
 import { loadImageFile } from "./utils";
 import { Vox } from "./vox";
 
+export type Model = {
+    name: string;
+    scale: number;
+    kind: string;
+    chunk?: Chunk;
+    blob?: any;
+}
+
 //////////////////////////////////////////////////////////////////////
 export class ModelLoader {
-    models: any = []
+    models: Model[] = []
     files: any = [];
 
 
     public constructor() {
-        this.models["greenie"] = ["/assets/vox/greenie.vox", 1, "object"];
-        this.models["agent"] = ["/assets/vox/agent.vox", 0.1, "object"];
-        this.models["agentblack"] = ["/assets/vox/agent_black.vox", 0.1, "object"];
-        this.models["hearty"] = ["/assets/vox/hearty.vox", 1, "object"];
-        this.models["dead_hearty"] = ["/assets/vox/dead_hearty.vox", 1, "object"];
-        this.models["player"] = ["/assets/vox/player.vox", 1, "object"];
-        this.models["dudo"] = ["/assets/vox/dudo.vox", 1, "object"];
-        this.models["lamp1"] = ["/assets/vox/lamp1.vox", 1, "object"];
-        this.models["shotgun"] = ["/assets/pixelart/shotgun.png", 8, "object"];
-        this.models["shell"] = ["/assets/pixelart/shell.png", 20, "object"];
-        this.models["heart"] = ["/assets/pixelart/heart.png", 3, "object"];
-        this.models["ammo"] = ["/assets/pixelart/ammo.png", 20, "object"];
-        this.models["ak47"] = ["/assets/pixelart/ak47.png", 5, "object"];
-        this.models["p90"] = ["/assets/pixelart/p90.png", 5, "object"];
-        this.models["pistol"] = ["/assets/pixelart/pistol.png", 5, "object"];
-        this.models["sniper"] = ["/assets/pixelart/sniper.png", 5, "object"];
-        this.models["minigun"] = ["/assets/pixelart/minigun.png", 10, "object"];
-        this.models["rocketlauncher"] = ["/assets/pixelart/rocketlauncher.png", 8, "object"];
-        this.models["grenadelauncher"] = ["/assets/pixelart/grenadelauncher.png", 8, "object"];
-        this.models["spiderweb"] = ["/assets/pixelart/spiderweb.png", 1, "object"];
-        this.models["painkillers"] = ["/assets/pixelart/painkillers.jpg", 1, "object"];
-        this.models["radiation_sign"] = ["/assets/pixelart/radiation_sign.png", 1, "object"];
-        this.models["ufo_sign"] = ["/assets/pixelart/sign_ufo.png", 1, "object"];
-        this.models["barrel"] = ["/assets/vox/barrel.vox", 0.1, "object"];
-        this.models["barrel_fire"] = ["/assets/vox/barrel_fire.vox", 0.1, "object"];
-        this.models["fbihq"] = ["/assets/vox/fbi_hq.vox", 5, "object"];
-        this.models["tree"] = ["/assets/vox/tree.vox", 1, "object"];
-        this.models["streetlamp"] = ["/assets/vox/StreetLamp.vox", 1, "object"];
-        this.models["tree"] = ["/assets/vox/test1.vox", 1, "object"];
-        this.models["paperagent"] = ["/assets/vox/paperagent.vox", 1, "object"];
-        this.models["paperpolicecar"] = ["/assets/vox/policecar.vox", 1, "object"];
-        //this.models["fbihq"] = ["/assets/vox/demon.vox", 1, "object"];
+        this.models["greenie"] = { name: "/assets/vox/greenie.vox", scale: 1, kind: "object" };
+        this.models["agent"] = { name: "/assets/vox/agent.vox", scale: 0.1, kind: "object" };
+        this.models["agentblack"] = { name: "/assets/vox/agent_black.vox", scale: 0.1, kind: "object" };
+        this.models["hearty"] = { name: "/assets/vox/hearty.vox", scale: 1, kind: "object" };
+        this.models["dead_hearty"] = { name: "/assets/vox/dead_hearty.vox", scale: 1, kind: "object" };
+        this.models["player"] = { name: "/assets/vox/player.vox", scale: 1, kind: "object" };
+        this.models["dudo"] = { name: "/assets/vox/dudo.vox", scale: 1, kind: "object" };
+        this.models["lamp1"] = { name: "/assets/vox/lamp1.vox", scale: 1, kind: "object" };
+        this.models["shotgun"] = { name: "/assets/pixelart/shotgun.png", scale: 8, kind: "object" };
+        this.models["shell"] = { name: "/assets/pixelart/shell.png", scale: 20, kind: "object" };
+        this.models["heart"] = { name: "/assets/pixelart/heart.png", scale: 3, kind: "object" };
+        this.models["ammo"] = { name: "/assets/pixelart/ammo.png", scale: 20, kind: "object" };
+        this.models["ak47"] = { name: "/assets/pixelart/ak47.png", scale: 5, kind: "object" };
+        this.models["p90"] = { name: "/assets/pixelart/p90.png", scale: 5, kind: "object" };
+        this.models["pistol"] = { name: "/assets/pixelart/pistol.png", scale: 5, kind: "object" };
+        this.models["sniper"] = { name: "/assets/pixelart/sniper.png", scale: 5, kind: "object" };
+        this.models["minigun"] = { name: "/assets/pixelart/minigun.png", scale: 10, kind: "object" };
+        this.models["rocketlauncher"] = { name: "/assets/pixelart/rocketlauncher.png", scale: 8, kind: "object" };
+        this.models["grenadelauncher"] = { name: "/assets/pixelart/grenadelauncher.png", scale: 8, kind: "object" };
+        this.models["spiderweb"] = { name: "/assets/pixelart/spiderweb.png", scale: 1, kind: "object" };
+        this.models["painkillers"] = { name: "/assets/pixelart/painkillers.jpg", scale: 1, kind: "object" };
+        this.models["radiation_sign"] = { name: "/assets/pixelart/radiation_sign.png", scale: 1, kind: "object" };
+        this.models["ufo_sign"] = { name: "/assets/pixelart/sign_ufo.png", scale: 1, kind: "object" };
+        this.models["barrel"] = { name: "/assets/vox/barrel.vox", scale: 0.1, kind: "object" };
+        this.models["barrel_fire"] = { name: "/assets/vox/barrel_fire.vox", scale: 0.1, kind: "object" };
+        this.models["fbihq"] = { name: "/assets/vox/fbi_hq.vox", scale: 5, kind: "object" };
+        this.models["tree"] = { name: "/assets/vox/tree.vox", scale: 1, kind: "object" };
+        this.models["streetlamp"] = { name: "/assets/vox/StreetLamp.vox", scale: 1, kind: "object" };
+        this.models["tree"] = { name: "/assets/vox/test1.vox", scale: 1, kind: "object" };
+        this.models["paperagent"] = { name: "/assets/vox/paperagent.vox", scale: 1, kind: "object" };
+        this.models["paperpolicecar"] = { name: "/assets/vox/policecar.vox", scale: 1, kind: "object" };
+        //this.models["fbihq"] = { name: "/assets/vox/demon.vox", 1, kind: "object"};
     }
 
     init() {
@@ -60,22 +68,21 @@ export class ModelLoader {
         }
 
         var that = this;
-        if (this.models[key][0].indexOf("vox") != -1) {
+        if (this.models[key].name.indexOf("vox") != -1) {
             var oReq = new XMLHttpRequest();
-            oReq.open("GET", this.models[key][0], true);
+            oReq.open("GET", this.models[key].name, true);
             oReq.responseType = "arraybuffer";
 
             var that = this;
             oReq.send(null);
             oReq.onload = function () {
-                that.models[key][0] = oReq.response;
+                that.models[key].blob = oReq.response;
                 that.loadModel(key);
                 that.loadFiles();
             };
-        } else if (this.models[key][0].indexOf("png") != 1) {
-            loadImageFile(this.models[key][0], function (data, width, height) {
-                var chunk = new Chunk(0, 0, 0, width, height, that.models[key][1], key, 1, that.models[key][2]);
-                chunk.init();
+        } else if (this.models[key].name.indexOf("png") != 1) {
+            loadImageFile(this.models[key].name, function (data, width, height) {
+                var chunk = new Chunk(0, 0, 0, width, height, that.models[key].scale, key, 1, that.models[key].kind);
                 // var data2 = [];
                 for (var i = 0; i < data.length; i++) {
                     for (var y = 0; y < that.models[key][1]; y++) {
@@ -85,11 +92,7 @@ export class ModelLoader {
                 }
                 chunk.blockSize = 1;
                 chunk.build();
-                //chunk.batch_points = data2;
-                //chunk.bp = data2.length;
-                //chunk.addBatch();
-                that.models[key] = chunk;
-                // Remove mesh from scene (cloned later)
+                that.models[key].chunk = chunk;
                 chunk.mesh.visible = false;
                 that.loadFiles();
             });
@@ -98,12 +101,10 @@ export class ModelLoader {
 
     loadModel(name) {
         var vox = new Vox();
-        var model = vox.loadModel(this.models[name][0], name);
+        var model = vox.loadModel(this.models[name].blob, name);
         var p: any;
         let r = 0, g = 0, b = 0;
-        var chunk = new Chunk(0, 0, 0, model.sx, model.sz, model.sy, name, this.models[name][1], this.models[name][2]);
-        chunk.blockSize = this.models[name][1];
-        chunk.init();
+        var chunk = new Chunk(0, 0, 0, model.sx, model.sz, model.sy, name, this.models[name].scale, this.models[name].kind);
         for (var i = 0; i < model.data.length; i++) {
             p = model.data[i];
             r = (p.val >> 24) & 0xFF;
@@ -118,18 +119,18 @@ export class ModelLoader {
         // Remove mesh from scene (cloned later)
         chunk.build();
         chunk.mesh.visible = false;
-        this.models[name] = chunk;
+        this.models[name].chunk = chunk;
     };
 
     getModel(name, size, obj, only_mesh?) {
         if (size == null) { size = 1; }
         if (only_mesh == null) { only_mesh = false; }
-        // Depp copy chunk
-        var new_obj;
         if (only_mesh) {
+            // Depp copy chunk
+            let new_obj;
             new_obj = {};
             new_obj.owner = obj;
-            new_obj.mesh = this.models[name].mesh.clone();
+            new_obj.mesh = this.models[name].chunk!.mesh.clone();
             new_obj.mesh.owner = obj;
             //   new_obj.bb = this.models[name].bb.clone();
             // new_obj.bb.owner = obj;
@@ -138,9 +139,10 @@ export class ModelLoader {
             new_obj.mesh.scale.set(size, size, size);
             game.scene.add(new_obj.mesh);
             game.addToCD(new_obj.mesh);
+            return new_obj;
         } else {
-            var new_obj: any = {};
-            Object.assign(new_obj, this.models[name]);
+            let new_obj = this.models[name].chunk!.clone();
+
             new_obj.owner = obj;
             new_obj.blockSize = size;
             // new_obj.bb = undefined;
@@ -154,8 +156,8 @@ export class ModelLoader {
             // new_obj.mesh.geometry.center();
             new_obj.mesh.visible = true;
             game.scene.add(new_obj.mesh);
+            return new_obj;
         }
-        return new_obj;
     };
 }
 

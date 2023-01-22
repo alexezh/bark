@@ -2,7 +2,7 @@
 // Random number generator (faster than Math.random())
 // https://en.wikipedia.org/wiki/Linear_feedback_shift_register
 
-import THREE from "three";
+import { Vector3 } from "three";
 import { game } from "./main";
 
 //////////////////////////////////////////////////////////////////////
@@ -122,7 +122,7 @@ function lockPointer() {
 }
 
 function isFrontOfPlayer(v1) {
-    var targetPosition = new THREE.Vector3();
+    var targetPosition = new Vector3();
     targetPosition = targetPosition.setFromMatrixPosition(v1.matrixWorld);
     var lookAt = game.player.chunk.mesh.getWorldDirection();
     var pos = targetPosition.sub(game.player.chunk.mesh.position);

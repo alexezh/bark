@@ -972,7 +972,7 @@ export class Particle {
     };
 
     isVisible(pos) {
-        if (game.player != 0) {
+        if (game.player != undefined) {
             if (pos.distanceTo(game.player.chunk.mesh.position) > game.visible_distance) {
                 return false;
             }

@@ -23,7 +23,7 @@ export class Chunk {
     // public bb = undefined; // boundingbox
     //public batch_points = [];
     //public bp = 0; // batch_points pointer
-    public blocks: any;
+    public blocks: any = {};
     public wireframe = false;
     public triangles = 0;
     //public shadow_blocks = [];
@@ -56,31 +56,12 @@ export class Chunk {
         this.chunk_size_y = cy;
         this.chunk_size_z = cz;
         this.blockSize = bs;
-    }
-    //    console.log("X:",this.from_x, this.to_x, "Z:", this.from_z, this.to_z, "Y: ", this.from_y, this.to_y );
 
-    destroy() {
-        game.scene.remove(this.mesh);
-        //    game.scene.remove(this.bb);
-        //    game.removeFromCD(this.bb);
-        //        this.mesh.geometry.dispose();
-        //        this.mesh.material.dispose();
-        //        this.bb.geometry.dispose();
-        //        this.bb.material.dispose();
-        this.blocks = null;
-    };
-
-    sameColor(block1, block2) {
-        if (((block1 >> 8) & 0xFFFFFF) == ((block2 >> 8) & 0xFFFFFF) && block1 != 0 && block2 != 0) {
-            return true;
-        }
-        return false;
-    };
-
-    init() {
         this.material = game.chunk_material;
-        //this.material = new MeshLambertMaterial({vertexColors: VertexColors, wireframe: this.wireframe});
-        //        this.material = new MeshPhongMaterial({bumpMap: bump, vertexColors: VertexColors, wireframe: this.wireframe});
+        this.initBlocks();
+    }
+
+    private initBlocks() {
         this.blocks = new Array(this.chunk_size_x);
         for (var x = 0; x < this.chunk_size_x; x++) {
             this.blocks[x] = new Array(this.chunk_size_y);
@@ -91,6 +72,46 @@ export class Chunk {
                 }
             }
         }
+    }
+
+    public clone(): Chunk {
+        let chunk = new Chunk(this.from_x, this.from_y, this.from_z,
+            this.chunk_size_x, this.chunk_size_y, this.chunk_size_z,
+            this.id, this.blockSize, this.type);
+        /*
+                chunk.owner = this.owner;
+                chunk.mesh: any = undefined;
+                chunk.blocks: any;
+                chunk.wireframe = false;
+                chunk.triangles = 0;
+                chunk.total_blocks = 0;
+                chunk.skips = 0;
+                chunk.starting_blocks = 0;
+                chunk.current_blocks = 0;
+                chunk.blood_positions: Vector3[] = [];
+                chunk.health = 100;
+                chunk.dirty = true;
+                chunk.positions = 0;
+                chunk.colors = 0;
+                chunk.geometry!: BufferGeometry;
+                chunk.v: any;
+                chunk.c: any;
+                chunk.prev_len = 0;
+                chunk.offset!: BufferGeometry;
+                chunk.material!: MeshPhongMaterial;
+                */
+        return chunk;
+    }
+    destroy() {
+        game.scene.remove(this.mesh);
+        this.blocks = null;
+    };
+
+    sameColor(block1, block2) {
+        if (((block1 >> 8) & 0xFFFFFF) == ((block2 >> 8) & 0xFFFFFF) && block1 != 0 && block2 != 0) {
+            return true;
+        }
+        return false;
     };
 
     build() {
@@ -604,8 +625,8 @@ export class Chunk {
             }
             this.geometry = new BufferGeometry();
             //this.geometry.dynamic = true;
-            this.geometry.addAttribute('position', this.v);
-            this.geometry.addAttribute('color', this.c);
+            this.geometry.setAttribute('position', this.v);
+            this.geometry.setAttribute('color', this.c);
             //this.geometry.attributes.position.dynamic = true;
             //this.geometry.attributes.color.dynamic = true;
             this.geometry.computeBoundingBox();
@@ -1054,7 +1075,6 @@ export class Chunk {
         if (result.length > 0 && result.length != this.current_blocks) {
             // console.log("CHUNK GND:", ground, "RES:",result.length, "CUR:", this.current_blocks);
             var chunk = new Chunk(0, 0, 0, max_x, max_y, max_z, "ff_object", this.blockSize, false);
-            chunk.init();
             for (var i = 0; i < result.length; i++) {
                 var p = result[i][0];
                 chunk.addBlock(p.x, p.y, p.z, (result[i][1] >> 24) & 0xFF, (result[i][1] >> 16) & 0xFF, (result[i][1] >> 8) & 0xFF);

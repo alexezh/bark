@@ -3,6 +3,7 @@ import { WALL2, WOOD_WALL } from "./textures";
 import { Chunk } from "./chunk";
 import { loadImageFile } from './utils';
 import { AmbientLight, Vector3 } from "three";
+import { Player } from "./char";
 
 //////////////////////////////////////////////////////////////////////
 // Maps class - Loading of maps from images
@@ -85,7 +86,11 @@ export class Maps {
         }
     };
 
-    public initMap(name, ground, objects) {
+    public init() {
+        throw Error('Not implemented');
+    }
+
+    protected initMap(name, ground, objects) {
         this.name = name;
         var that = this;
 
@@ -228,7 +233,6 @@ export class Maps {
 
                 // Now find all blocks within the range.
                 var chunk = new Chunk(x, 0, z, max_x, game.maps.ground, max_z, "floor", 1, "world");
-                chunk.init();
                 for (var i = 0; i < floor.length; i++) {
                     if (floor[i].x >= x && floor[i].x < x + max_x &&
                         floor[i].z >= z && floor[i].z < z + max_z) {
@@ -298,7 +302,6 @@ export class Maps {
                 } else {
                     chunk = new Chunk(x - that.wall_thickness, that.ground, z, max_x + that.wall_thickness, that.wall_height, max_z + that.wall_thickness, "x", 1, "world");
                 }
-                chunk.init();
                 for (var i = 0; i < walls.length; i++) {
                     if (walls[i].x >= x && walls[i].x <= x + max_x &&
                         walls[i].z >= z && walls[i].z <= z + max_z) {
@@ -317,10 +320,10 @@ export class Maps {
                     var found = 0;
                     for (var k in that.objects) {
                         if (data[i].r == that.objects[k].r && data[i].g == that.objects[k].g && data[i].b == that.objects[k].b) {
-                            var o = new window[k]();
-                            o.create(data[i].y, 0, data[i].x);
-                            that.loaded.push(o);
                             if (k == "Player") {
+                                let o = new Player();
+                                o.create(data[i].y, 0, data[i].x);
+                                that.loaded.push(o);
                                 game.player = o;
                             }
                             found = 0;
@@ -361,6 +364,7 @@ export class Level1 extends Maps {
 
     public init() {
         this.initMap("Level1", "assets/maps/map3_ground.png", "assets/maps/map3_objects.png");
+
         this.set_lightning();
         game.sounds.playSound("ambient_horror", null, 800, true);
     };

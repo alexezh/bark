@@ -75,7 +75,6 @@ export class World {
                 pos_z * this.obj_size_z,
                 this.obj_size_x, this.obj_size_y, this.obj_size_z,
                 "CREATED", 1, "world");
-            chunk.init();
             var i = this.addChunk(chunk);
             return [i];
         }
@@ -270,7 +269,7 @@ export class World {
     // };
 
     update(time, delta) {
-        if (!game.player.chunk) {
+        if (!game.player?.chunk) {
             return;
         }
 
