@@ -227,13 +227,13 @@ export class StreetLamp extends Obj {
         // Check rotation depending on wall
         this.chunk.mesh.position.set(x, game.maps.ground + 10, z);
         //this.chunk.mesh.position.set(x, game.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
-        var res = game.world.checkExists(new Vector3(x - 1, game.maps.ground + 10, z));
+        var res = game.chunkScene.checkExists(new Vector3(x - 1, game.maps.ground + 10, z));
         if (res.length > 0) {
             //     this.chunk.mesh.rotation.y = -Math.PI*2;
             this.chunk.mesh.position.x += 10;
             //    this.light.position.set(7, 18, 0);
         }
-        res = game.world.checkExists(new Vector3(x, game.maps.ground + 10, z - 1));
+        res = game.chunkScene.checkExists(new Vector3(x, game.maps.ground + 10, z - 1));
         //if(res.length > 0) {
         //    this.chunk.mesh.rotation.y = -Math.PI;
         //}
@@ -243,7 +243,7 @@ export class StreetLamp extends Obj {
         //   // this.chunk.mesh.position.x -= 10;
         //}
         for (var i = 0; i < 10; i++) {
-            res = game.world.checkExists(new Vector3(x + i, game.maps.ground + 10, z));
+            res = game.chunkScene.checkExists(new Vector3(x + i, game.maps.ground + 10, z));
             if (res.length > 0) {
                 //        this.chunk.mesh.rotation.y = Math.PI;
                 this.chunk.mesh.position.x -= 10;
@@ -282,15 +282,15 @@ export class UfoSign extends Obj {
         this.chunk.mesh.rotation.y = Math.PI / 2;
         //     this.chunk.mesh.rotation.x = -Math.PI;
         // Check rotation depending on wall
-        var res = game.world.checkExists(new Vector3(x - 1, game.maps.ground + 10, z));
+        var res = game.chunkScene.checkExists(new Vector3(x - 1, game.maps.ground + 10, z));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = -Math.PI / 2;
         }
-        res = game.world.checkExists(new Vector3(x, game.maps.ground + 10, z - 1));
+        res = game.chunkScene.checkExists(new Vector3(x, game.maps.ground + 10, z - 1));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = 2 * Math.PI;
         }
-        res = game.world.checkExists(new Vector3(x, game.maps.ground + 10, z + 2));
+        res = game.chunkScene.checkExists(new Vector3(x, game.maps.ground + 10, z + 2));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = -Math.PI;
         }
@@ -317,15 +317,15 @@ export class RadiationSign extends Obj {
         this.chunk.mesh.rotation.y = Math.PI / 2;
         this.chunk.mesh.rotation.x = -Math.PI;
         // Check rotation depending on wall
-        var res = game.world.checkExists(new Vector3(x - 1, game.maps.ground + 10, z));
+        var res = game.chunkScene.checkExists(new Vector3(x - 1, game.maps.ground + 10, z));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = -Math.PI / 2;
         }
-        res = game.world.checkExists(new Vector3(x, game.maps.ground + 10, z - 1));
+        res = game.chunkScene.checkExists(new Vector3(x, game.maps.ground + 10, z - 1));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = 2 * Math.PI;
         }
-        res = game.world.checkExists(new Vector3(x, game.maps.ground + 10, z + 2));
+        res = game.chunkScene.checkExists(new Vector3(x, game.maps.ground + 10, z + 2));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = Math.PI;
         }

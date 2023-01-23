@@ -8,13 +8,23 @@ export class VoxelData {
     y;
     z;
     color;
+}
 
-    Create(buffer, i) {
-        this.x = buffer[i++] & 0xFF;
-        this.y = buffer[i++] & 0xFF;
-        this.z = buffer[i++] & 0xFF;
-        this.color = buffer[i] & 0xFF;
+function makeVoxelData(buffer: Uint8Array, i: number) {
+    return {
+        x: buffer[i++] & 0xFF,
+        y: buffer[i++] & 0xFF,
+        z: buffer[i++] & 0xFF,
+        color: buffer[i] & 0xFF
     };
+}
+
+export type VoxModel = {
+    name: string;
+    data: VoxelData[],
+    sx: number,
+    sy: number,
+    sz: number
 }
 
 export class Vox {
@@ -100,26 +110,8 @@ export class Vox {
                     i += 4;
                     voxelData = new Array(numVoxels);
                     for (var n = 0; n < voxelData.length; n++) {
-                        voxelData[n] = new VoxelData();
-                        voxelData[n].Create(buffer, i); // Read 4 bytes
+                        voxelData[n] = makeVoxelData(buffer, i);
                         i += 4;
-                        // if(voxelData[n].x > sizex || voxelData[n].y > sizey || voxelData[n].z > sizez) {
-                        //     console.log("VOXELS:",numVoxels, "N:",n);
-                        //     voxelData.length = n;
-                        //     break;
-                        // }
-                        //   // Workaround for some issues I can't figure out!?
-                        //   // numVoxels are not correct in some particular case and I can't see anything wrong
-                        //   // towards the .vox specification.
-                        //    var id = String.fromCharCode(parseInt(buffer[i++]))+
-                        //        String.fromCharCode(parseInt(buffer[i++]))+
-                        //        String.fromCharCode(parseInt(buffer[i++]))+
-                        //        String.fromCharCode(parseInt(buffer[i++]));
-                        //    if(id == "RGBA") {
-                        //        i -= 4;
-                        //        continue;
-                        //    }
-                        //}
                     }
                 } else if (id == "MAIN") {
                 } else if (id == "PACK") {

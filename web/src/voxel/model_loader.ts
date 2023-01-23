@@ -144,9 +144,9 @@ export class ModelLoader {
             let new_obj = this.models[name].chunk!.clone();
 
             new_obj.owner = obj;
-            new_obj.blockSize = size;
+            // new_obj.blockSize = size;
             // new_obj.bb = undefined;
-            new_obj.mesh = undefined;
+            // new_obj.mesh = undefined;
             new_obj.build();
             // clone mesh and add to scene.
             // new_obj.mesh = this.models[name].mesh.clone();

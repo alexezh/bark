@@ -1110,14 +1110,14 @@ export class Particle {
 
             // Add blocks to ground
             if ((this.type == "snow" || this.type == "virtual_debris" || this.type == "debris" || this.type == "world_debris") && this.stay == true) {
-                if (game.world.checkExists(this.mesh.position.clone()).length != 0) {
+                if (game.chunkScene.checkExists(this.mesh.position.clone()).length != 0) {
                     if ((this.type == "debris" && this.bounces == 0) || this.type == "world_debris") {
                         //if(this.size >= 1) {
-                        game.world.addBlock(this.mesh.position.x, this.mesh.position.y + 1, this.mesh.position.z, this.r, this.g, this.b);
+                        game.chunkScene.addBlock(this.mesh.position.x, this.mesh.position.y + 1, this.mesh.position.z, this.r, this.g, this.b);
                         //}
                         this.active = 0;
                     } else if (this.type == "snow") {
-                        game.world.addBlock(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.r, this.g, this.b);
+                        game.chunkScene.addBlock(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.r, this.g, this.b);
                     }
                 }
             } else if (this.type == "empty_shell" || this.type == "chunk_debris") {
@@ -1143,14 +1143,14 @@ export class Particle {
                     break;
                 case "grenade":
                     game.particles.explosion(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.power, this.type);
-                    game.world.explode(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.damage, this.type);
+                    game.chunkScene.explode(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.damage, this.type);
                     game.sounds.playSound("rocket_explode", this.mesh.position, 1000);
                     break;
                 case "missile":
                     //game.world.explode(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.power);
                     if (!this.hit) {
                         game.particles.explosion(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.power, this.type);
-                        game.world.explode(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.damage, this.type);
+                        game.chunkScene.explode(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.damage, this.type);
                     }
                     game.sounds.playSound("rocket_explode", this.mesh.position, 800);
                     break;
@@ -1175,58 +1175,58 @@ export class Particle {
     };
 
     keepOnGround() {
-        if (game.world.checkExists(this.mesh.position.clone()).length != 0) {
+        if (game.chunkScene.checkExists(this.mesh.position.clone()).length != 0) {
             this.active = 0;
             this.mesh.position.y = game.maps.ground;
         }
     };
 
     addRadiationToGround() {
-        if (game.world.checkExists(this.mesh.position.clone()).length != 0) {
-            game.world.addColorBlock(this.mesh.position.x, this.mesh.position.y - 1, this.mesh.position.z, this.r, this.g, this.b);
+        if (game.chunkScene.checkExists(this.mesh.position.clone()).length != 0) {
+            game.chunkScene.addColorBlock(this.mesh.position.x, this.mesh.position.y - 1, this.mesh.position.z, this.r, this.g, this.b);
             if (get_rand() > 0.5) {
-                game.world.addColorBlock(this.mesh.position.x + 1, this.mesh.position.y - 1, this.mesh.position.z + 1, this.r, this.g, this.b);
+                game.chunkScene.addColorBlock(this.mesh.position.x + 1, this.mesh.position.y - 1, this.mesh.position.z + 1, this.r, this.g, this.b);
             }
             if (get_rand() > 0.5) {
-                game.world.addColorBlock(this.mesh.position.x - 1, this.mesh.position.y - 1, this.mesh.position.z + 1, this.r, this.g, this.b);
+                game.chunkScene.addColorBlock(this.mesh.position.x - 1, this.mesh.position.y - 1, this.mesh.position.z + 1, this.r, this.g, this.b);
             }
             if (get_rand() > 0.5) {
-                game.world.addColorBlock(this.mesh.position.x, this.mesh.position.y - 1, this.mesh.position.z + 1, this.r, this.g, this.b);
+                game.chunkScene.addColorBlock(this.mesh.position.x, this.mesh.position.y - 1, this.mesh.position.z + 1, this.r, this.g, this.b);
             }
             if (get_rand() > 0.5) {
-                game.world.addColorBlock(this.mesh.position.x, this.mesh.position.y - 1, this.mesh.position.z - 1, this.r, this.g, this.b);
+                game.chunkScene.addColorBlock(this.mesh.position.x, this.mesh.position.y - 1, this.mesh.position.z - 1, this.r, this.g, this.b);
             }
             if (get_rand() > 0.5) {
-                game.world.addColorBlock(this.mesh.position.x - 1, this.mesh.position.y - 1, this.mesh.position.z - 1, this.r, this.g, this.b);
+                game.chunkScene.addColorBlock(this.mesh.position.x - 1, this.mesh.position.y - 1, this.mesh.position.z - 1, this.r, this.g, this.b);
             }
             this.active = 0;
         }
     };
 
     addBloodToGround() {
-        if (game.world.checkExists(this.mesh.position.clone()).length != 0) {
-            game.world.addColorBlock(this.mesh.position.x, this.mesh.position.y - 1, this.mesh.position.z, 138, 7, 7);
+        if (game.chunkScene.checkExists(this.mesh.position.clone()).length != 0) {
+            game.chunkScene.addColorBlock(this.mesh.position.x, this.mesh.position.y - 1, this.mesh.position.z, 138, 7, 7);
             if (get_rand() > 0.5) {
-                game.world.addColorBlock(this.mesh.position.x + 1, this.mesh.position.y - 1, this.mesh.position.z + 1, 128, 7, 7);
+                game.chunkScene.addColorBlock(this.mesh.position.x + 1, this.mesh.position.y - 1, this.mesh.position.z + 1, 128, 7, 7);
             }
             if (get_rand() > 0.5) {
-                game.world.addColorBlock(this.mesh.position.x - 1, this.mesh.position.y - 1, this.mesh.position.z + 1, 158, 7, 7);
+                game.chunkScene.addColorBlock(this.mesh.position.x - 1, this.mesh.position.y - 1, this.mesh.position.z + 1, 158, 7, 7);
             }
             if (get_rand() > 0.5) {
-                game.world.addColorBlock(this.mesh.position.x, this.mesh.position.y - 1, this.mesh.position.z + 1, 158, 7, 7);
+                game.chunkScene.addColorBlock(this.mesh.position.x, this.mesh.position.y - 1, this.mesh.position.z + 1, 158, 7, 7);
             }
             if (get_rand() > 0.5) {
-                game.world.addColorBlock(this.mesh.position.x, this.mesh.position.y - 1, this.mesh.position.z - 1, 158, 20, 20);
+                game.chunkScene.addColorBlock(this.mesh.position.x, this.mesh.position.y - 1, this.mesh.position.z - 1, 158, 20, 20);
             }
             if (get_rand() > 0.5) {
-                game.world.addColorBlock(this.mesh.position.x - 1, this.mesh.position.y - 1, this.mesh.position.z - 1, 128, 20, 20);
+                game.chunkScene.addColorBlock(this.mesh.position.x - 1, this.mesh.position.y - 1, this.mesh.position.z - 1, 128, 20, 20);
             }
             this.active = 0;
         }
     };
 
     splatterRain(time?, delta?) {
-        if (game.world.checkExists(this.mesh.position.clone()).length != 0) {
+        if (game.chunkScene.checkExists(this.mesh.position.clone()).length != 0) {
             game.particles.debris(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, 0.2, this.r, this.g, this.b, false, null, null, null, false);
             game.particles.debris(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, 0.2, this.r, this.g, this.b, false, null, null, null, false);
             this.active = 0;
@@ -1261,8 +1261,8 @@ export class Particle {
                 }
             }
         }
-        if (game.world.checkExists(this.mesh.position.clone()).length > 0) {
-            game.world.explode(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.damage, this.type);
+        if (game.chunkScene.checkExists(this.mesh.position.clone()).length > 0) {
+            game.chunkScene.explode(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.damage, this.type);
             if (this.type == "missile") {
                 game.particles.explosion(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.power, this.type);
                 game.sounds.playSound("rocket_explode", this.mesh.position, 800);

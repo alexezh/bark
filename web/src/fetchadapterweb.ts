@@ -1,7 +1,7 @@
 import { IFetchAdapter } from "./fetchadapter";
 
 export class FetchAdapterWeb implements IFetchAdapter {
-  get(uri: string): Promise<any> {
+  get(uri: string): Promise<Response> {
     return fetch(uri);
   }
   post(uri: string, body: string): Promise<any> {

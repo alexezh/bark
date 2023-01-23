@@ -1,11 +1,11 @@
 import { ModelLoader } from "./model_loader";
 import { SoundLoader } from "./sound";
 import { Textures } from "./textures";
-import { World } from "./world";
-import { Ammo, AmmoP90, AmmoSniper, Heart, Shell } from "./objects";
-import { Level1, Maps } from "./map";
+import { ChunkScene } from "./chunkscene";
+import { Ammo, AmmoP90, AmmoSniper, Heart, Obj, Shell } from "./objects";
+import { Level1, MapD, Maps } from "./map";
 import { ParticlePool } from "./particles";
-import { Clock, Fog, MeshPhongMaterial, PCFSoftShadowMap, PerspectiveCamera, PointLight, Scene, SpriteMaterial, WebGLRenderer } from "three";
+import { Camera, Clock, Fog, GridHelper, MeshPhongMaterial, PCFSoftShadowMap, PerspectiveCamera, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
 
 //if (!Detector.webgl) Detector.addGetWebGLMessage();
 //////////////////////////////////////////////////////////////////////
@@ -14,7 +14,7 @@ import { Clock, Fog, MeshPhongMaterial, PCFSoftShadowMap, PerspectiveCamera, Poi
 export class Main {
     public renderer!: WebGLRenderer;
     public controls: any;
-    public camera: any;
+    public camera!: PerspectiveCamera;
     public scene!: Scene;
     public stats: any;
     public clock!: Clock;
@@ -24,13 +24,14 @@ export class Main {
     public t_start = Date.now();
     public modelLoader = new ModelLoader();
     public maps!: Maps;
-    public world = new World();
+    public map!: MapD;
+    public chunkScene = new ChunkScene();
     public update_objects: any = [];
     public cdList: any = [];
     public player: any;
     public visible_distance = 250; // from player to hide chunks + enemies.
     public textures = new Textures();
-    public objects: any = {};
+    public objects: Obj[] = [];
     public ff_objects = [];
     public sounds = new SoundLoader();
     public container: HTMLElement | undefined;
@@ -43,6 +44,7 @@ export class Main {
 
     init(container: HTMLElement) {
         this.container = container;
+        container.setAttribute('tabindex', '0');
 
         this.sounds.Add({ name: "sniper", file: "assets/sounds/sniper.wav.mp3" });
         this.sounds.Add({ name: "take_heart", file: "assets/sounds/heart.wav.mp3" });
@@ -185,29 +187,50 @@ export class Main {
         //container.appendChild(this.stats.dom);
 
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
+        window.addEventListener('mousedown', this.onMouseDown.bind(this), false);
 
         // Load models
-        this.modelLoader.init();
-        this.modelLoader.loadFiles();
+        //this.modelLoader.init();
+        //this.modelLoader.loadFiles();
 
         // Init world.
-        this.world.init();
+        this.chunkScene.init(this.scene);
 
 
         // Init particle engine
-        this.particles = new ParticlePool(2000, 0);
-        this.particles_box = new ParticlePool(1000, 1);
+        //this.particles = new ParticlePool(2000, 0);
+        //this.particles_box = new ParticlePool(1000, 1);
 
         // DEBUG STUFF
-        // var gridHelper = new GridHelper( 5000, 100);
-        // gridHelper.position.set(0,0,0);
-        // game.scene.add( gridHelper );
+        var gridHelper = new GridHelper(5000, 100);
+        gridHelper.position.set(0, 0, 0);
+        game.scene.add(gridHelper);
 
         // Wait for all resources to be loaded before loading map.
         this.textures.prepare();
-        this.waitForLoadTextures();
+        //this.waitForLoadTextures();
 
+        setTimeout(async () => {
+            await this.loadMap();
+        });
     };
+
+
+    private async loadMap(): Promise<boolean> {
+        this.map = new MapD();
+        await this.map.init();
+
+        this.render();
+
+        var point = new Vector3(0, 0, 0);
+        game.camera.lookAt(point);
+        game.camera.rotation.z = Math.PI;
+        game.camera.rotation.x = -Math.PI / 1.4;
+        game.camera.position.y = 150;
+        game.camera.position.z = -120;
+
+        return true;
+    }
 
     waitForLoadTextures() {
         if (!game.textures.isLoaded()) {
@@ -248,7 +271,7 @@ export class Main {
 
     reset() {
         this.camera = new PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, this.visible_distance);
-        this.world.reset();
+        this.chunkScene.reset();
         this.maps.reset();
         this.player.reset();
         this.cdList = [];
@@ -268,6 +291,25 @@ export class Main {
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
 
+    };
+
+    onMouseDown(evt: MouseEvent) {
+        let coords = {
+            x: (evt.clientX / window.innerWidth) * 2 - 1,
+            y: -(evt.clientY / window.innerHeight) * 2 + 1
+        }
+
+        let raycaster = new Raycaster();
+        raycaster.setFromCamera(coords, this.camera);
+
+        var intersects = raycaster.intersectObjects(this.scene.children, false);
+
+        if (intersects.length > 0) {
+            var object = intersects[0].object;
+            // @ts-ignore
+            object.material.color.set(Math.random() * 0xffffff);
+            //object.geometry.setAttribute('color', Math.random() * 0xffffff);
+        }
     };
 
     animate() {
@@ -337,10 +379,11 @@ export class Main {
         //this.controls.update(delta);
 
         // this.stats.update();
-        this.particles.update(time, delta);
-        this.particles_box.update(time, delta);
-        this.world.update(time, delta);
-        this.maps.update(time, delta);
+        //this.particles.update(time, delta);
+        //this.particles_box.update(time, delta);
+        this.chunkScene.update(time, delta);
+        //this.maps.update(time, delta);
+        this.map?.update(time, delta);
         this.renderer.render(this.scene, this.camera);
     };
 }

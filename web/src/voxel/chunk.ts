@@ -19,7 +19,7 @@ export class Chunk {
     public chunk_size_z: number;
     public blockSize: number;
     public owner: any;
-    public mesh: any = undefined;
+    public mesh!: Mesh;
     // public bb = undefined; // boundingbox
     //public batch_points = [];
     //public bp = 0; // batch_points pointer
@@ -37,13 +37,18 @@ export class Chunk {
     public positions = 0;
     public colors = 0;
     public geometry!: BufferGeometry;
-    public v: any;
-    public c: any;
+    public v!: BufferAttribute;
+    public c!: BufferAttribute;
     public prev_len = 0;
     public offset!: BufferGeometry;
     public material!: MeshPhongMaterial;
 
-    public constructor(x, y, z, cx, cy, cz, id, bs, type) {
+    public constructor(
+        x: number, y: number, z: number,
+        cx: number, cy: number, cz: number,
+        id: string, bs: number, type: string,
+        init: boolean = true) {
+
         this.type = type;
         this.id = id;
         this.from_x = x;
@@ -58,7 +63,9 @@ export class Chunk {
         this.blockSize = bs;
 
         this.material = game.chunk_material;
-        this.initBlocks();
+        if (init) {
+            this.initBlocks();
+        }
     }
 
     private initBlocks() {
@@ -74,32 +81,27 @@ export class Chunk {
         }
     }
 
+    public clone2(x: number, y: number, z: number): Chunk {
+        let chunk = new Chunk(x, y, z,
+            this.chunk_size_x, this.chunk_size_y, this.chunk_size_z,
+            this.id, this.blockSize, this.type,
+            false);
+
+        chunk.blocks = this.blocks;
+        chunk.dirty = true;
+
+        return chunk;
+    }
+    
     public clone(): Chunk {
         let chunk = new Chunk(this.from_x, this.from_y, this.from_z,
             this.chunk_size_x, this.chunk_size_y, this.chunk_size_z,
-            this.id, this.blockSize, this.type);
-        /*
-                chunk.owner = this.owner;
-                chunk.mesh: any = undefined;
-                chunk.blocks: any;
-                chunk.wireframe = false;
-                chunk.triangles = 0;
-                chunk.total_blocks = 0;
-                chunk.skips = 0;
-                chunk.starting_blocks = 0;
-                chunk.current_blocks = 0;
-                chunk.blood_positions: Vector3[] = [];
-                chunk.health = 100;
-                chunk.dirty = true;
-                chunk.positions = 0;
-                chunk.colors = 0;
-                chunk.geometry!: BufferGeometry;
-                chunk.v: any;
-                chunk.c: any;
-                chunk.prev_len = 0;
-                chunk.offset!: BufferGeometry;
-                chunk.material!: MeshPhongMaterial;
-                */
+            this.id, this.blockSize, this.type,
+            false);
+
+        chunk.blocks = this.blocks;
+        chunk.dirty = true;
+
         return chunk;
     }
     destroy() {
@@ -155,7 +157,7 @@ export class Chunk {
                     } else {
                         if (this.type == "world") {
                             // Check hit towards other chunks.
-                            if (game.world.checkExists(
+                            if (game.chunkScene.checkExists(
                                 new Vector3(
                                     (x + this.from_x * this.chunk_size_x) | 0,
                                     (y + this.from_y * this.chunk_size_y) | 0,
@@ -174,7 +176,7 @@ export class Chunk {
                     } else {
                         if (this.type == "world") {
                             // Check hit towards other chunks.
-                            if (game.world.checkExists(
+                            if (game.chunkScene.checkExists(
                                 new Vector3(
                                     ((x - 1) + this.from_x * this.chunk_size_x) | 0,
                                     (y + this.from_y * this.chunk_size_y) | 0,
@@ -192,7 +194,7 @@ export class Chunk {
                         }
                     } else {
                         if (this.type == "world") {
-                            if (game.world.checkExists(
+                            if (game.chunkScene.checkExists(
                                 new Vector3(
                                     (x + 1 + this.from_x * this.chunk_size_x) | 0,
                                     (y + this.from_y * this.chunk_size_y) | 0,
@@ -221,7 +223,7 @@ export class Chunk {
                     } else {
                         if (this.type == "world") {
                             // Check hit towards other chunks.
-                            if (game.world.checkExists(
+                            if (game.chunkScene.checkExists(
                                 new Vector3(
                                     (x + this.from_x * this.chunk_size_x) | 0,
                                     ((y + 1) + this.from_y * this.chunk_size_y) | 0,
@@ -240,7 +242,7 @@ export class Chunk {
                     } else {
                         if (this.type == "world") {
                             // Check hit towards other chunks.
-                            if (game.world.checkExists(
+                            if (game.chunkScene.checkExists(
                                 new Vector3(
                                     (x + this.from_x * this.chunk_size_x) | 0,
                                     (y + this.from_y * this.chunk_size_y) | 0,
@@ -645,6 +647,7 @@ export class Chunk {
 
                 if (this.type != "world") {
                     this.offset = this.geometry.center();
+                    // @ts-ignore
                     this.mesh.owner = this.owner;
                     if (this.owner) {
                         game.addToCD(this.mesh);
@@ -1074,7 +1077,7 @@ export class Chunk {
 
         if (result.length > 0 && result.length != this.current_blocks) {
             // console.log("CHUNK GND:", ground, "RES:",result.length, "CUR:", this.current_blocks);
-            var chunk = new Chunk(0, 0, 0, max_x, max_y, max_z, "ff_object", this.blockSize, false);
+            var chunk = new Chunk(0, 0, 0, max_x, max_y, max_z, "ff_object", this.blockSize, 'object');
             for (var i = 0; i < result.length; i++) {
                 var p = result[i][0];
                 chunk.addBlock(p.x, p.y, p.z, (result[i][1] >> 24) & 0xFF, (result[i][1] >> 16) & 0xFF, (result[i][1] >> 8) & 0xFF);
@@ -1123,7 +1126,7 @@ export class Chunk {
                 for (var z = 0; z < this.chunk_size_z; z++) {
                     if (this.blocks[x][y][z] != 0) {
                         var c = this.blocks[x][y][z];
-                        game.world.addBlock(
+                        game.chunkScene.addBlock(
                             this.mesh.position.x + x,
                             this.mesh.position.y + y,
                             this.mesh.position.z + z,

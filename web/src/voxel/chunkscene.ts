@@ -1,14 +1,15 @@
 //////////////////////////////////////////////////////////////////////
 // World class - Helper for world chunks
 
-import { Vector3 } from "three";
+import { Scene, Vector3 } from "three";
 import { Chunk } from "./chunk";
 import { game } from "./main";
 import { Textures } from "./textures";
 import { get_rand } from "./utils";
 
 //////////////////////////////////////////////////////////////////////
-export class World {
+export class ChunkScene {
+    private scene!: Scene;
     // Generic chunk
     public obj_size_x = 16;
     public obj_size_z = 16;
@@ -27,7 +28,7 @@ export class World {
     reset() {
         for (var i = 0; i < this.chunks.length; i++) {
             if (this.chunks[i].mesh) {
-                game.scene.remove(this.chunks[i].mesh);
+                this.scene.remove(this.chunks[i].mesh);
             }
         }
         this.radioactive_blocks = [];
@@ -38,7 +39,8 @@ export class World {
         this.rpc_max = 0;
     };
 
-    init() {
+    init(scene: Scene) {
+        this.scene = scene;
         this.textures = new Textures();
         this.textures.prepare();
     };
@@ -163,9 +165,7 @@ export class World {
         pos.x |= 0;
         pos.y |= 0;
         pos.z |= 0;
-        // console.log("CHECK:",pos);
         var c = this.getChunkId(pos.x, pos.y, pos.z, false);
-        // console.log("ID: ",c);
         if (c.length == 0) {
             return [];
         }
@@ -269,9 +269,6 @@ export class World {
     // };
 
     update(time, delta) {
-        if (!game.player?.chunk) {
-            return;
-        }
 
         for (var i = 0; i < this.chunks.length; i++) {
             if (this.chunks[i].dirty) {
@@ -281,6 +278,10 @@ export class World {
                     break;
                 }
             }
+        }
+
+        if (!game.player?.chunk) {
+            return;
         }
 
         if (this.radioactive_blocks.length > 0) {
@@ -303,49 +304,6 @@ export class World {
                 }
             }
         }
-
-
-        //   this.debug_update += delta;
-        // if(this.debug_update > 2) {
-        //     this.debug_update = 0;
-        //     var tris = 0;
-        //     var blocks = 0;
-        //     var skips = 0;
-        //     var visible = 0;
-        //     var all_blocks = 0;
-        //     for(var i = 0; i < this.chunks.length; i++) {
-        //         if(this.chunks[i].mesh) {
-        //             if(this.chunks[i].mesh.visible) {
-        //                 visible++;
-        //             }
-        //         }
-        //         tris += this.chunks[i].triangles;
-        //         blocks += this.chunks[i].total_blocks;
-        //         all_blocks += this.chunks[i].chunk_size_x * this.chunks[i].chunk_size_y * this.chunks[i].chunk_size_z;
-        //         skips += this.chunks[i].skips;
-        //         //this.chunks[i].applyShadow();
-        //     }
-        //     $('#blocks').html("Blocks:"+blocks+ " (Chunks: "+this.chunks.length+") (Visible: "+visible+") (ALL: "+all_blocks+")");
-        //     $('#triangles').html("Triangles:"+tris);
-        //     $('#skipped').html("Triangles skipped:"+skips);
-        //     //$('#particles').html("Particles Total: "+(game.particles.size+game.particles_box.size)+ "  Free: "+(game.particles.free.length+game.particles_box.free.length) + " Active: "+(game.particles.active.length+game.particles_box.active.length)+ " Queue: "+(game.particles.queue.length+game.particles_box.queue.length));
-        //     var active1 = 0;
-        //     for(var i = 0; i < game.particles_box.particles.length; i++) {
-        //         if(game.particles_box.particles[i].active == 1) {
-        //             active1++;
-        //         }
-        //     }
-        //     var free = game.particles_box.size - active1;
-        //     var free_boxes = free;
-        //     var active2 = 0;
-        //     for(var i = 0; i < game.particles.particles.length; i++) {
-        //         if(game.particles.particles[i].active == 1) {
-        //             active2++;
-        //         }
-        //     }
-        //     free += game.particles.size - active2;
-        //     $('#particles').html("Particles Total: "+(game.particles.size+game.particles_box.size)+ "  Free: "+(free) + " Active: " + (active2+active1) + " Free Block: "+free_boxes);
-        // }
     };
 
 }

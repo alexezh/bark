@@ -8,7 +8,7 @@ import { WireSpawnCharacterRequest, WireSpawnPokemonRequest } from "./world/game
 import { WireAvatarProps } from "./world/iavatar";
 
 export interface IFetchAdapter {
-  get(uri: string): Promise<any>;
+  get(uri: string): Promise<Response>;
   post(uri: string, body: string): Promise<any>
 }
 
@@ -22,6 +22,10 @@ export function currentWorldId(): string {
 
 export function setFetchAdapter(adapter: IFetchAdapter) {
   fetchAdapter = adapter;
+}
+
+export async function fetchResource(url: string): Promise<ArrayBuffer> {
+  return await (await (await fetchAdapter!.get(url)).blob()).arrayBuffer();
 }
 
 export async function fetchWorld(id: string): Promise<WorldProps> {

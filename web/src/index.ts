@@ -6,6 +6,7 @@ import { createVoxelGame, game } from "./voxel/main";
 //gameApp.run();
 export function initGame(canvas: HTMLElement) {
   //createDefaultEngine(canvas);
+  setFetchAdapter(new FetchAdapterWeb());
   createVoxelGame(canvas);
 }
 

@@ -202,7 +202,7 @@ export class Char {
             if (this.add_blood > 0 && this.moving) {
                 this.add_blood--;
                 // Add blood footsteps
-                game.world.addColorBlock(
+                game.chunkScene.addColorBlock(
                     this.chunk.mesh.position.x + (2 - get_rand() * 4),
                     game.maps.ground - 1,
                     this.chunk.mesh.position.z + (2 - get_rand() * 4),
@@ -214,7 +214,7 @@ export class Char {
             if (this.add_radioactive > 0 && this.moving) {
                 this.add_radioactive--;
                 // Add radioactive footsteps
-                game.world.addColorBlock(
+                game.chunkScene.addColorBlock(
                     this.chunk.mesh.position.x + (2 - get_rand() * 4),
                     game.maps.ground - 1,
                     this.chunk.mesh.position.z + (2 - get_rand() * 4),
@@ -270,7 +270,7 @@ export class Char {
 
         var res = true;
         for (var i = 0; i < points.length; i++) {
-            if (game.world.checkExists(points[i]).length > 0) {
+            if (game.chunkScene.checkExists(points[i]).length > 0) {
                 res = false;
             }
         }
@@ -298,11 +298,11 @@ export class Char {
             // this.alive = false; 
             if (this.base_type == "player") {
                 this.chunk.mesh.remove(game.camera);
-                var pos = this.chunk.mesh.position.clone();
-                pos.y = game.maps.ground;
+                var pos2 = this.chunk.mesh.position.clone();
+                pos2.y = game.maps.ground;
                 game.scene.add(game.camera);
-                game.camera.position.z = pos.z;
-                game.camera.position.x = pos.x;
+                game.camera.position.z = pos2.z;
+                game.camera.position.x = pos2.x;
                 game.camera.position.y = 150; //120; 150
                 game.camera.rotation.x = -Math.PI / 2;
                 setTimeout(function () {
@@ -489,7 +489,7 @@ class Enemy extends Char {
             this.chunk.mesh.rotation.y -= (1 - get_rand() * 2) * Math.sin(delta * 3);
             var pos = this.chunk.mesh.position.clone();
             pos.y = game.maps.ground;
-            var res = game.world.checkExists(pos);
+            var res = game.chunkScene.checkExists(pos);
             if (res.length != 0) {
                 this.chunk.mesh.translateZ(delta * this.speed);
                 if (!this.cd()) {
@@ -776,7 +776,7 @@ export class Player extends Char {
     public obj_type = "player";
     public base_type = "player";
     public run_speed = 50;
-    public keyboard: any;
+    public keyboard: KeyboardState | undefined;
     public y_offset = 6;
     public weapons: Weapon[] = [];
     public can_switch = true;
@@ -788,11 +788,11 @@ export class Player extends Char {
     reset() {
         this.weapons = [];
         game.scene.remove(this.flashlight);
-        this.keyboard = null;
+        this.keyboard = undefined;
     };
 
     create(x, y, z) {
-        Char.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z);
+        super.create(this.obj_type, x, game.maps.ground + this.y_offset, z);
 
         this.keyboard = new KeyboardState(game.container!);
         this.chunk.mesh.rotation.order = 'YXZ';
@@ -964,7 +964,7 @@ export class Player extends Char {
             return;
         }
         this.speed = this.run_speed;
-        Char.prototype.update.call(this, time, delta);
+        super.update(time, delta);
         if (this.shooting && this.weapon.obj_type != "sniper") {
             this.shoot();
         } else if (this.shooting && this.weapon.obj_type == "sniper") {
@@ -1005,7 +1005,7 @@ export class Player extends Char {
             }
             return;
         }
-        this.KeyDown(time, delta);
+        this.keyDown(time, delta);
 
         if (this.moving) {
             if (!game.sounds.isPlaying("footsteps")) {
@@ -1016,7 +1016,7 @@ export class Player extends Char {
                 this.cd_check = 0;
                 var pos = this.chunk.mesh.position.clone();
                 pos.y = game.maps.ground;
-                var res = game.world.checkExists(pos);
+                var res = game.chunkScene.checkExists(pos);
                 for (var i = 0; i < res.length; i++) {
                     if (((res[i] >> 24) & 0xFF) > 100 &&
                         ((res[i] >> 16) & 0xFF) < 25 &&
@@ -1061,7 +1061,7 @@ export class Player extends Char {
                                 post.x += ofx;
                                 post.y = ofy;
                                 post.z += ofz;
-                                var r = game.world.checkExists(post);
+                                var r = game.chunkScene.checkExists(post);
                                 if (r.length != 0) {
                                     this.falling = false;
                                     break;
@@ -1135,8 +1135,12 @@ export class Player extends Char {
     };
 
 
-    KeyDown(time, delta) {
+    keyDown(time, delta) {
         this.moving = false;
+
+        if (this.keyboard === undefined) {
+            return;
+        }
 
         if (this.keyboard.pressed("space")) {
             this.shoot();
