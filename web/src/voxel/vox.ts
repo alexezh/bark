@@ -3,29 +3,8 @@
 // http://webgl.nu
 // Date: 2014-11-17
 //==============================================================================
-export class VoxelData {
-    x;
-    y;
-    z;
-    color;
-}
 
-function makeVoxelData(buffer: Uint8Array, i: number) {
-    return {
-        x: buffer[i++] & 0xFF,
-        y: buffer[i++] & 0xFF,
-        z: buffer[i++] & 0xFF,
-        color: buffer[i] & 0xFF
-    };
-}
-
-export type VoxModel = {
-    name: string;
-    data: VoxelData[],
-    sx: number,
-    sy: number,
-    sz: number
-}
+import { makeVoxelPoint, VoxelData } from "./voxelmodel";
 
 export class Vox {
     voxColors = [
@@ -52,7 +31,7 @@ export class Vox {
         return buffer[from] | (buffer[from + 1] << 8) | (buffer[from + 2] << 16) | (buffer[from + 3] << 24);
     };
 
-    loadModel(data: ArrayBuffer, name: string): any {
+    loadModel(data: ArrayBuffer, name: string): VoxelData | undefined {
         var colors = [];
         var colors2: any = undefined;
         var voxelData: any = [];
@@ -110,7 +89,7 @@ export class Vox {
                     i += 4;
                     voxelData = new Array(numVoxels);
                     for (var n = 0; n < voxelData.length; n++) {
-                        voxelData[n] = makeVoxelData(buffer, i);
+                        voxelData[n] = makeVoxelPoint(buffer, i);
                         i += 4;
                     }
                 } else if (id == "MAIN") {
@@ -133,7 +112,7 @@ export class Vox {
             }
 
             if (voxelData == null || voxelData.length == 0) {
-                return null;
+                return undefined;
             }
             for (var n = 0; n < voxelData.length; n++) {
                 if (colors2 == undefined) {

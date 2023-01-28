@@ -133,7 +133,7 @@ export class Char {
                 if (this.dying_counter == max) {
                     this.alive = false;
                     this.chunk.mesh.rotation.z = Math.PI / 2;
-                    this.chunk.mesh.position.y = game.maps.ground;
+                    this.chunk.mesh.position.y = game.maps_ground;
                 }
             } else if (this.dying == 2) {
                 if (this.chunk.mesh.rotation.z < -Math.PI / 2) {
@@ -144,7 +144,7 @@ export class Char {
                 if (this.dying_counter == max) {
                     this.alive = false;
                     this.chunk.mesh.rotation.z = -Math.PI / 2;
-                    this.chunk.mesh.position.y = game.maps.ground;
+                    this.chunk.mesh.position.y = game.maps_ground;
                 }
             } else if (this.dying == 3) {
                 if (this.chunk.mesh.rotation.x < -Math.PI / 2) {
@@ -155,7 +155,7 @@ export class Char {
                 if (this.dying_counter == max) {
                     this.alive = false;
                     this.chunk.mesh.rotation.x = -Math.PI / 2;
-                    this.chunk.mesh.position.y = game.maps.ground;
+                    this.chunk.mesh.position.y = game.maps_ground;
                 }
             } else if (this.dying == 4) {
                 if (this.chunk.mesh.rotation.x < Math.PI / 2) {
@@ -166,7 +166,7 @@ export class Char {
                 if (this.dying_counter == max) {
                     this.alive = false;
                     this.chunk.mesh.rotation.x = Math.PI / 2;
-                    this.chunk.mesh.position.y = game.maps.ground;
+                    this.chunk.mesh.position.y = game.maps_ground;
                 }
             }
         }
@@ -204,7 +204,7 @@ export class Char {
                 // Add blood footsteps
                 game.chunkScene.addColorBlock(
                     this.chunk.mesh.position.x + (2 - get_rand() * 4),
-                    game.maps.ground - 1,
+                    game.maps_ground - 1,
                     this.chunk.mesh.position.z + (2 - get_rand() * 4),
                     138 + get_rand() * 20,
                     8 + get_rand() * 10,
@@ -216,7 +216,7 @@ export class Char {
                 // Add radioactive footsteps
                 game.chunkScene.addColorBlock(
                     this.chunk.mesh.position.x + (2 - get_rand() * 4),
-                    game.maps.ground - 1,
+                    game.maps_ground - 1,
                     this.chunk.mesh.position.z + (2 - get_rand() * 4),
                     get_rand() * 50 | 0,
                     200 + get_rand() * 55 | 0,
@@ -299,7 +299,7 @@ export class Char {
             if (this.base_type == "player") {
                 this.chunk.mesh.remove(game.camera);
                 var pos2 = this.chunk.mesh.position.clone();
-                pos2.y = game.maps.ground;
+                pos2.y = game.maps_ground;
                 game.scene.add(game.camera);
                 game.camera.position.z = pos2.z;
                 game.camera.position.x = pos2.x;
@@ -347,7 +347,7 @@ class Enemy extends Char {
     shoot_ability = 0.5;
 
     die() {
-        this.chunk.mesh.position.y = game.maps.ground + 1;
+        this.chunk.mesh.position.y = game.maps_ground + 1;
     };
 
     hit(damage, dir, type, pos) {
@@ -488,7 +488,7 @@ class Enemy extends Char {
             //if (res.length > 0) {
             this.chunk.mesh.rotation.y -= (1 - get_rand() * 2) * Math.sin(delta * 3);
             var pos = this.chunk.mesh.position.clone();
-            pos.y = game.maps.ground;
+            pos.y = game.maps_ground;
             var res = game.chunkScene.checkExists(pos);
             if (res.length != 0) {
                 this.chunk.mesh.translateZ(delta * this.speed);
@@ -543,7 +543,7 @@ class Enemy extends Char {
             }
 
             if (get_rand() < 0.4) {
-                game.particles.walkSmoke(this.chunk.mesh.position.x, game.maps.ground + 1, this.chunk.mesh.position.z);
+                game.particles.walkSmoke(this.chunk.mesh.position.x, game.maps_ground + 1, this.chunk.mesh.position.z);
             }
         }
     };
@@ -567,7 +567,7 @@ export class Dudo extends Char {
     y_offset = 5;
 
     create(x, y, z) {
-        Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z, null);
+        Enemy.prototype.create.call(this, this.obj_type, x, game.maps_ground + this.y_offset, z, null);
         this.chunk.mesh.rotation.order = 'YXZ';
         if (get_rand() > 0.4) {
             this.addWeapon(new Shotgun());
@@ -604,14 +604,14 @@ export class AgentBlack extends Enemy {
     obj_type = "agentblack";
     shoot_ability = 0.5;
 
-    // this.create(this.obj_type, x, game.maps.ground+5, z); // Add space from floor
+    // this.create(this.obj_type, x, game.maps_ground+5, z); // Add space from floor
     //
     die() {
-        this.chunk.mesh.position.y = game.maps.ground + 1;
+        this.chunk.mesh.position.y = game.maps_ground + 1;
     };
 
     create(x, y, z) {
-        Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z, 0.5);
+        Enemy.prototype.create.call(this, this.obj_type, x, game.maps_ground + this.y_offset, z, 0.5);
         this.chunk.mesh.rotation.order = 'YXZ';
         if (get_rand() > 0.8) {
             this.addWeapon(new Shotgun());
@@ -653,11 +653,11 @@ export class Agent extends Enemy {
     shoot_ability = 0.5;
 
     die() {
-        this.chunk.mesh.position.y = game.maps.ground + 1;
+        this.chunk.mesh.position.y = game.maps_ground + 1;
     };
 
     create(x, y, z) {
-        Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z, 0.5);
+        Enemy.prototype.create.call(this, this.obj_type, x, game.maps_ground + this.y_offset, z, 0.5);
         this.chunk.mesh.rotation.order = 'YXZ';
         if (get_rand() > 0.8) {
             this.addWeapon(new Pistol());
@@ -696,10 +696,10 @@ export class Greenie extends Char {
     run_speed = 40;
     walk_speed = 15;
     obj_type = "greenie";
-    // this.create(this.obj_type, x, game.maps.ground+5, z); // Add space from floor
+    // this.create(this.obj_type, x, game.maps_ground+5, z); // Add space from floor
 
     create(x, y, z) {
-        Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z, 1);
+        Enemy.prototype.create.call(this, this.obj_type, x, game.maps_ground + this.y_offset, z, 1);
         this.chunk.mesh.rotation.order = 'YXZ';
         if (get_rand() > 0.4) {
             this.addWeapon(new P90());
@@ -738,10 +738,10 @@ export class Hearty extends Enemy {
     run_speed = 50;
     walk_speed = 15;
     y_offset = 6;
-    //   this.create(this.obj_type, x, game.maps.ground+6, z); // Add space from floor
+    //   this.create(this.obj_type, x, game.maps_ground+6, z); // Add space from floor
 
     create(x, y, z) {
-        Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z, null);
+        Enemy.prototype.create.call(this, this.obj_type, x, game.maps_ground + this.y_offset, z, null);
         this.chunk.mesh.rotation.order = 'YXZ';
         if (get_rand() > 0.4) {
             this.addWeapon(new Sniper());
@@ -792,7 +792,7 @@ export class Player extends Char {
     };
 
     create(x, y, z) {
-        super.create(this.obj_type, x, game.maps.ground + this.y_offset, z);
+        super.create(this.obj_type, x, game.maps_ground + this.y_offset, z);
 
         this.keyboard = new KeyboardState(game.container!);
         this.chunk.mesh.rotation.order = 'YXZ';
@@ -980,20 +980,20 @@ export class Player extends Char {
             }
         }
         if (this.falling) {
-            if (game.camera.position.y < game.maps.ground - 5) {
+            if (game.camera.position.y < game.maps_ground - 5) {
                 this.chunk.mesh.position.y -= 1;
                 this.chunk.mesh.rotation.z -= Math.sin(time) / 20;
                 this.chunk.mesh.rotation.x -= Math.sin(time) / 20;
-                game.maps.ambient_light.color.r += 0.1;
-                game.maps.ambient_light.color.g -= 0.01;
-                game.maps.ambient_light.color.b -= 0.01;
+                //game.maps.ambient_light.color.r += 0.1;
+                //game.maps.ambient_light.color.g -= 0.01;
+                //game.maps.ambient_light.color.b -= 0.01;
             } else {
-                if (game.maps.ambient_light.intensity < 0.8) {
-                    game.maps.ambient_light.intensity += 0.1;
-                }
-                game.maps.ambient_light.color.r += 0.01;
-                game.maps.ambient_light.color.g += 0.01;
-                game.maps.ambient_light.color.b += 0.01;
+                //if (game.maps.ambient_light.intensity < 0.8) {
+                //    game.maps.ambient_light.intensity += 0.1;
+                //}
+                //game.maps.ambient_light.color.r += 0.01;
+                //game.maps.ambient_light.color.g += 0.01;
+                //game.maps.ambient_light.color.b += 0.01;
                 this.chunk.mesh.position.y -= 1;
                 this.chunk.mesh.rotation.z -= Math.sin(time) / 10;
                 this.chunk.mesh.rotation.x -= Math.sin(time) / 10;
@@ -1015,7 +1015,7 @@ export class Player extends Char {
             if (this.cd_check > 0.05) {
                 this.cd_check = 0;
                 var pos = this.chunk.mesh.position.clone();
-                pos.y = game.maps.ground;
+                pos.y = game.maps_ground;
                 var res = game.chunkScene.checkExists(pos);
                 for (var i = 0; i < res.length; i++) {
                     if (((res[i] >> 24) & 0xFF) > 100 &&
@@ -1056,7 +1056,7 @@ export class Player extends Char {
                     // Only fall if hole is big enough to fit in :)
                     for (var ofx = -1; ofx <= 1; ofx++) {
                         for (var ofz = -1; ofz <= 1; ofz++) {
-                            for (var ofy = game.maps.ground; ofy >= 0; ofy--) {
+                            for (var ofy = game.maps_ground; ofy >= 0; ofy--) {
                                 var post = this.chunk.mesh.position.clone();
                                 post.x += ofx;
                                 post.y = ofy;
@@ -1084,9 +1084,9 @@ export class Player extends Char {
                         } else {
                             game.sounds.playSound("fall2", this.chunk.mesh.position, 400);
                         }
-                        game.maps.ambient_light.color.r = 0;
-                        game.maps.ambient_light.color.g = 0;
-                        game.maps.ambient_light.color.b = 0;
+                        //game.maps.ambient_light.color.r = 0;
+                        //game.maps.ambient_light.color.g = 0;
+                        //game.maps.ambient_light.color.b = 0;
                         // Fall down!
                         this.chunk.mesh.remove(game.camera);
                         game.scene.add(game.camera);
@@ -1179,19 +1179,19 @@ export class Player extends Char {
         }
         if (this.keyboard.pressed("R")) {
             this.flashlight.visible = false;
-            for (var i = 0; i < game.maps.loaded.length; i++) {
-                if (game.maps.loaded[i].base_type == "enemy") {
-                    game.maps.loaded[i].current_view_range = game.maps.loaded[i].view_range;
-                }
-            }
+            //for (var i = 0; i < game.maps.loaded.length; i++) {
+            //   if (game.maps.loaded[i].base_type == "enemy") {
+            //      game.maps.loaded[i].current_view_range = game.maps.loaded[i].view_range;
+            // }
+            //}
         }
         if (this.keyboard.pressed("T")) {
-            this.flashlight.visible = true;
-            for (var i = 0; i < game.maps.loaded.length; i++) {
-                if (game.maps.loaded[i].base_type == "enemy") {
-                    game.maps.loaded[i].current_view_range = game.maps.loaded[i].view_range * 2;
-                }
-            }
+            //this.flashlight.visible = true;
+            //for (var i = 0; i < game.maps.loaded.length; i++) {
+            //    if (game.maps.loaded[i].base_type == "enemy") {
+            //        game.maps.loaded[i].current_view_range = game.maps.loaded[i].view_range * 2;
+            //    }
+            //}
         }
         if (this.keyboard.pressed("E")) {
             this.dropWeapon();

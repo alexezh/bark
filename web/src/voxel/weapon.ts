@@ -112,7 +112,7 @@ export class Weapon {
         }
         // Animate dropped weapon
         if (!this.attached) {
-            this.chunk.mesh.position.y = game.maps.ground + 6 + Math.sin(time * 2.5);
+            this.chunk.mesh.position.y = game.maps_ground + 6 + Math.sin(time * 2.5);
             this.chunk.mesh.rotation.y += Math.sin(delta);
         }
         if (this.shoot_light.visible) {

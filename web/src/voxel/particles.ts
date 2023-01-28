@@ -43,7 +43,7 @@ export class ParticlePool {
                     continue;
                 }
                 this.old_shells[i].position.y -= 0.06;
-                if (this.old_shells[i].position.y < game.maps.ground - 1) {
+                if (this.old_shells[i].position.y < game.maps_ground - 1) {
                     //game.scene.remove(this.old_shells[i]);
                     this.old_shells[i].visible = false;
                     //   this.old_shells[i].geometry.dispose();
@@ -426,8 +426,8 @@ export class ParticlePool {
     };
 
     rain() {
-        var rand1 = Math.random() * game.maps.width;
-        var rand2 = Math.random() * game.maps.height;
+        var rand1 = Math.random() * game.map.width;
+        var rand2 = Math.random() * game.map.height;
         this.get({
             type: "rain",
             size: 0.5,
@@ -449,8 +449,8 @@ export class ParticlePool {
     };
 
     snow() {
-        var rand1 = Math.random() * game.maps.width;
-        var rand2 = Math.random() * game.maps.height;
+        var rand1 = Math.random() * game.map.width;
+        var rand2 = Math.random() * game.map.height;
         this.get({
             type: "snow",
             size: 0.8,
@@ -1164,7 +1164,7 @@ export class Particle {
     };
 
     bounce() {
-        if (this.bounces > 0 && this.mesh.position.y <= game.maps.ground + 1) {
+        if (this.bounces > 0 && this.mesh.position.y <= game.maps_ground + 1) {
             this.mesh.position.y += this.bounces;
             this.bounces--;
             this.vy *= this.e;
@@ -1177,7 +1177,7 @@ export class Particle {
     keepOnGround() {
         if (game.chunkScene.checkExists(this.mesh.position.clone()).length != 0) {
             this.active = 0;
-            this.mesh.position.y = game.maps.ground;
+            this.mesh.position.y = game.maps_ground;
         }
     };
 

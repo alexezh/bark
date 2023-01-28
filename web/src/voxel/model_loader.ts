@@ -102,6 +102,9 @@ export class ModelLoader {
     loadModel(name) {
         var vox = new Vox();
         var model = vox.loadModel(this.models[name].blob, name);
+        if (model === undefined) {
+            throw Error('cannot load model');
+        }
         var p: any;
         let r = 0, g = 0, b = 0;
         var chunk = new Chunk(0, 0, 0, model.sx, model.sz, model.sy, name, this.models[name].scale, this.models[name].kind);

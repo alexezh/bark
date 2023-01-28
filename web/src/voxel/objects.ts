@@ -50,8 +50,9 @@ export class FFChunk extends Obj {
         this.base_type = chunk.owner.base_type;
         this.chunk.owner = this;
         this.chunk.build();
-        game.maps.loaded.push(this);
-        game.addToCD(this.chunk.mesh);
+
+        //game.maps.loaded.push(this);
+        //game.addToCD(this.chunk.mesh);
         //game.addToCD(this.chunk.bb);
 
     }
@@ -78,7 +79,7 @@ export class Portal extends Obj {
         for (var a = 0; a < Math.PI * 2; a += Math.PI / 4) {
             x = this.x + r * Math.cos(a)
             z = this.z + r * Math.sin(a)
-            game.particles.portalMagic(x, game.maps.ground, z);
+            game.particles.portalMagic(x, game.maps_ground, z);
         }
     };
 }
@@ -105,7 +106,7 @@ export class PainKillers extends Obj {
         this.chunk.owner = this;
         this.chunk.mesh.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, game.maps.ground + 1, z);
+        this.chunk.mesh.position.set(x, game.maps_ground + 1, z);
         game.addToCD(this.chunk.mesh);
     };
 
@@ -113,10 +114,10 @@ export class PainKillers extends Obj {
         //Obj.prototype.update.call();
         if (!this.taken) {
             this.chunk.mesh.rotation.y += Math.sin(delta);
-            this.chunk.mesh.position.y = game.maps.ground + 6 + Math.sin(time * 2.5);
+            this.chunk.mesh.position.y = game.maps_ground + 6 + Math.sin(time * 2.5);
         } else {
             this.chunk.mesh.position.y += 0.5;
-            if (this.chunk.mesh.position.y > game.maps.ground + 30) {
+            if (this.chunk.mesh.position.y > game.maps_ground + 30) {
                 this.chunk.virtual_explode(this.chunk.mesh.position);
                 this.chunk.destroy();
                 this.alive = false;
@@ -138,7 +139,7 @@ export class PaperPoliceCar extends Obj {
         this.chunk = game.modelLoader.getModel("paperpolicecar", 0.6, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, game.maps.ground + (this.chunk.chunk_size_y * this.chunk.blockSize) / 2, z);
+        this.chunk.mesh.position.set(x, game.maps_ground + (this.chunk.chunk_size_y * this.chunk.blockSize) / 2, z);
     };
 }
 
@@ -155,7 +156,7 @@ export class PaperAgent extends Obj {
         this.chunk = game.modelLoader.getModel("paperagent", 0.2, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, game.maps.ground + (this.chunk.chunk_size_y * this.chunk.blockSize) / 2, z);
+        this.chunk.mesh.position.set(x, game.maps_ground + (this.chunk.chunk_size_y * this.chunk.blockSize) / 2, z);
     };
 }
 
@@ -173,7 +174,7 @@ export class Tree extends Obj {
         this.chunk = game.modelLoader.getModel("tree", 0.5, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, game.maps.ground + (this.chunk.chunk_size_y * this.chunk.blockSize) / 2, z);
+        this.chunk.mesh.position.set(x, game.maps_ground + (this.chunk.chunk_size_y * this.chunk.blockSize) / 2, z);
     };
 }
 
@@ -225,25 +226,25 @@ export class StreetLamp extends Obj {
         // this.light.position.set(0, 15, 0);
         //     this.chunk.mesh.rotation.x = -Math.PI;
         // Check rotation depending on wall
-        this.chunk.mesh.position.set(x, game.maps.ground + 10, z);
-        //this.chunk.mesh.position.set(x, game.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
-        var res = game.chunkScene.checkExists(new Vector3(x - 1, game.maps.ground + 10, z));
+        this.chunk.mesh.position.set(x, game.maps_ground + 10, z);
+        //this.chunk.mesh.position.set(x, game.maps_ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
+        var res = game.chunkScene.checkExists(new Vector3(x - 1, game.maps_ground + 10, z));
         if (res.length > 0) {
             //     this.chunk.mesh.rotation.y = -Math.PI*2;
             this.chunk.mesh.position.x += 10;
             //    this.light.position.set(7, 18, 0);
         }
-        res = game.chunkScene.checkExists(new Vector3(x, game.maps.ground + 10, z - 1));
+        res = game.chunkScene.checkExists(new Vector3(x, game.maps_ground + 10, z - 1));
         //if(res.length > 0) {
         //    this.chunk.mesh.rotation.y = -Math.PI;
         //}
-        //res = game.world.checkExists(new Vector3(x+1,game.maps.ground+10,z+2));
+        //res = game.world.checkExists(new Vector3(x+1,game.maps_ground+10,z+2));
         //if(res.length > 0) {
         //    this.chunk.mesh.rotation.y = -Math.PI;
         //   // this.chunk.mesh.position.x -= 10;
         //}
         for (var i = 0; i < 10; i++) {
-            res = game.chunkScene.checkExists(new Vector3(x + i, game.maps.ground + 10, z));
+            res = game.chunkScene.checkExists(new Vector3(x + i, game.maps_ground + 10, z));
             if (res.length > 0) {
                 //        this.chunk.mesh.rotation.y = Math.PI;
                 this.chunk.mesh.position.x -= 10;
@@ -282,20 +283,20 @@ export class UfoSign extends Obj {
         this.chunk.mesh.rotation.y = Math.PI / 2;
         //     this.chunk.mesh.rotation.x = -Math.PI;
         // Check rotation depending on wall
-        var res = game.chunkScene.checkExists(new Vector3(x - 1, game.maps.ground + 10, z));
+        var res = game.chunkScene.checkExists(new Vector3(x - 1, game.maps_ground + 10, z));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = -Math.PI / 2;
         }
-        res = game.chunkScene.checkExists(new Vector3(x, game.maps.ground + 10, z - 1));
+        res = game.chunkScene.checkExists(new Vector3(x, game.maps_ground + 10, z - 1));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = 2 * Math.PI;
         }
-        res = game.chunkScene.checkExists(new Vector3(x, game.maps.ground + 10, z + 2));
+        res = game.chunkScene.checkExists(new Vector3(x, game.maps_ground + 10, z + 2));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = -Math.PI;
         }
 
-        this.chunk.mesh.position.set(x, game.maps.ground + 10, z);
+        this.chunk.mesh.position.set(x, game.maps_ground + 10, z);
     };
 }
 
@@ -317,20 +318,20 @@ export class RadiationSign extends Obj {
         this.chunk.mesh.rotation.y = Math.PI / 2;
         this.chunk.mesh.rotation.x = -Math.PI;
         // Check rotation depending on wall
-        var res = game.chunkScene.checkExists(new Vector3(x - 1, game.maps.ground + 10, z));
+        var res = game.chunkScene.checkExists(new Vector3(x - 1, game.maps_ground + 10, z));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = -Math.PI / 2;
         }
-        res = game.chunkScene.checkExists(new Vector3(x, game.maps.ground + 10, z - 1));
+        res = game.chunkScene.checkExists(new Vector3(x, game.maps_ground + 10, z - 1));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = 2 * Math.PI;
         }
-        res = game.chunkScene.checkExists(new Vector3(x, game.maps.ground + 10, z + 2));
+        res = game.chunkScene.checkExists(new Vector3(x, game.maps_ground + 10, z + 2));
         if (res.length > 0) {
             this.chunk.mesh.rotation.y = Math.PI;
         }
 
-        this.chunk.mesh.position.set(x, game.maps.ground + 10, z);
+        this.chunk.mesh.position.set(x, game.maps_ground + 10, z);
     };
 }
 
@@ -362,7 +363,7 @@ export class DeadHearty extends Obj {
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
         this.chunk.mesh.rotation.y = Math.random() * Math.PI * 2;
-        this.chunk.mesh.position.set(x, game.maps.ground + 1, z);
+        this.chunk.mesh.position.set(x, game.maps_ground + 1, z);
         this.light = this.green_light.clone();
         this.light.position.set(0, 3, 0);
         this.chunk.mesh.add(this.light);
@@ -388,7 +389,7 @@ export class BarrelFire extends Obj {
 
     update(time, delta) {
         var pos = this.chunk.mesh.position;
-        game.particles.fire(pos.x + (4 - get_rand() * 8), game.maps.ground + 6 + this.chunk.to_y * 2, pos.z + (4 - get_rand() * 8));
+        game.particles.fire(pos.x + (4 - get_rand() * 8), game.maps_ground + 6 + this.chunk.to_y * 2, pos.z + (4 - get_rand() * 8));
         if (get_rand() > 0.9) {
             this.light.intensity = 2 - get_rand() * 0.1;
             this.light.distance = (20 + get_rand() * 5);
@@ -397,7 +398,7 @@ export class BarrelFire extends Obj {
 
     create(x, y, z) {
         this.chunk = game.modelLoader.getModel("barrel_fire", 0.5, this);
-        this.chunk.mesh.position.set(x, game.maps.ground + this.chunk.to_y * (1 / this.chunk.blockSize), z);
+        this.chunk.mesh.position.set(x, game.maps_ground + this.chunk.to_y * (1 / this.chunk.blockSize), z);
         this.light = this.yellow_light.clone();
         this.light.position.set(0, 10, 0);
         this.chunk.mesh.add(this.light);
@@ -426,7 +427,7 @@ export class Barrel extends Obj {
 
     update(time, delta) {
         var pos = this.chunk.mesh.position;
-        game.particles.radiation(pos.x + (1 - get_rand() * 2), game.maps.ground + 4 + this.chunk.to_y * 2, pos.z + (1 - get_rand() * 2));
+        game.particles.radiation(pos.x + (1 - get_rand() * 2), game.maps_ground + 4 + this.chunk.to_y * 2, pos.z + (1 - get_rand() * 2));
         if (get_rand() > 0.9) {
             this.light.intensity = 2 - get_rand() * 0.1;
             this.light.distance = (20 + get_rand() * 5);
@@ -439,7 +440,7 @@ export class Barrel extends Obj {
         //this.chunk.mesh.visible = true;
         //  this.chunk.mesh.rotation.y = Math.random()*Math.PI*2;
         // this.chunk.mesh.rotation.y = -Math.PI;
-        this.chunk.mesh.position.set(x, game.maps.ground + this.chunk.to_y * (1 / this.chunk.blockSize), z);
+        this.chunk.mesh.position.set(x, game.maps_ground + this.chunk.to_y * (1 / this.chunk.blockSize), z);
         this.light = this.green_light.clone();
         this.light.position.set(0, 10, 0);
         this.chunk.mesh.add(this.light);
@@ -458,7 +459,7 @@ export class FBIHQ extends Obj {
     create(x, y, z) {
         this.chunk = game.modelLoader.getModel("fbihq", 1, this);
         //this.chunk.mesh.rotation.y = -Math.PI;
-        this.chunk.mesh.position.set(x, game.maps.ground + this.chunk.chunk_size_y * this.chunk.blockSize / 2, z);
+        this.chunk.mesh.position.set(x, game.maps_ground + this.chunk.chunk_size_y * this.chunk.blockSize / 2, z);
     };
 }
 
@@ -478,7 +479,7 @@ export class SpiderWeb extends Obj {
         this.chunk = game.modelLoader.getModel("spiderweb", 0.2, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, game.maps.ground + 1, z);
+        this.chunk.mesh.position.set(x, game.maps_ground + 1, z);
     };
 }
 
@@ -507,7 +508,7 @@ export class Lamp1 extends Obj {
         this.chunk.type = "object";
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, game.maps.ground + 7, z);
+        this.chunk.mesh.position.set(x, game.maps_ground + 7, z);
         this.light = this.yellow_light.clone();
         this.light.position.set(0, 12, 0);
         this.chunk.mesh.add(this.light);
@@ -645,7 +646,7 @@ export class Heart extends Obj {
         for (var i = 0; i < this.active.length; i++) {
             if (this.active[i].alive) {
                 this.active[i].rotation.y += Math.sin(delta);
-                this.active[i].position.y = game.maps.ground + 6 + Math.sin(time * 2.5);
+                this.active[i].position.y = game.maps_ground + 6 + Math.sin(time * 2.5);
                 if (get_rand() > 0.5) {
                     game.particles.blueMagic(
                         this.active[i].position.x,
@@ -654,7 +655,7 @@ export class Heart extends Obj {
                     );
                 }
             } else {
-                if (this.active[i].position.y < game.maps.ground + 20) {
+                if (this.active[i].position.y < game.maps_ground + 20) {
                     //this.active[i].rotation.y += time*10;
                     this.active[i].position.y += 0.3;
                 } else {

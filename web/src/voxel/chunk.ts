@@ -89,10 +89,11 @@ export class Chunk {
 
         chunk.blocks = this.blocks;
         chunk.dirty = true;
+        chunk.material = game.chunk_material.clone();
 
         return chunk;
     }
-    
+
     public clone(): Chunk {
         let chunk = new Chunk(this.from_x, this.from_y, this.from_z,
             this.chunk_size_x, this.chunk_size_y, this.chunk_size_z,
@@ -1095,7 +1096,7 @@ export class Chunk {
 
             game.particles.chunkDebris(
                 this.mesh.position.x,
-                game.maps.ground + max_y * this.blockSize,
+                game.maps_ground + max_y * this.blockSize,
                 this.mesh.position.z,
                 ffc.chunk,
                 dir.x,

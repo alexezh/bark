@@ -3,9 +3,9 @@ import { SoundLoader } from "./sound";
 import { Textures } from "./textures";
 import { ChunkScene } from "./chunkscene";
 import { Ammo, AmmoP90, AmmoSniper, Heart, Obj, Shell } from "./objects";
-import { Level1, MapD, Maps } from "./map";
+import { MapD } from "./map";
 import { ParticlePool } from "./particles";
-import { Camera, Clock, Fog, GridHelper, MeshPhongMaterial, PCFSoftShadowMap, PerspectiveCamera, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
+import { Camera, Clock, Fog, GridHelper, Material, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
 
 //if (!Detector.webgl) Detector.addGetWebGLMessage();
 //////////////////////////////////////////////////////////////////////
@@ -23,7 +23,6 @@ export class Main {
     public particles_box!: ParticlePool;
     public t_start = Date.now();
     public modelLoader = new ModelLoader();
-    public maps!: Maps;
     public map!: MapD;
     public chunkScene = new ChunkScene();
     public update_objects: any = [];
@@ -35,12 +34,19 @@ export class Main {
     public ff_objects = [];
     public sounds = new SoundLoader();
     public container: HTMLElement | undefined;
+    private selected: Object3D | undefined;
 
     // Particle stuff.
     public box_material = new MeshPhongMaterial({ color: 0xffffff });
     public sprite_material = new SpriteMaterial({ color: 0xffffff });
     public chunk_material = new MeshPhongMaterial({ vertexColors: true, wireframe: false });
     public p_light = new PointLight(0xFFAA00, 1, 10);
+
+    public maps_ground = 6;
+
+    public createChunkMaterial(): Material {
+        return new MeshPhongMaterial({ vertexColors: true, wireframe: false });
+    }
 
     init(container: HTMLElement) {
         this.container = container;
@@ -111,68 +117,6 @@ export class Main {
         //this.scene.fog = new Fog( 0xFFA1C1, 180, this.visible_distance );
         this.scene.fog = new Fog(0x000000, 180, this.visible_distance);
 
-        //   this.controls = new FlyControls( this.camera );
-        //   this.controls.movementSpeed = 700;
-        //   this.controls.domElement = container;
-        //   this.controls.rollSpeed = Math.PI / 10;
-        //   this.controls.autoForward = false;
-        //   this.controls.dragToLook = false;
-
-
-        //
-        //       var hemiLight = new HemisphereLight( 0xffffff, 0xffffff, 1.1 );
-        //     //  hemiLight.color.setHSL( 0.6, 0.6, 0.6 );
-        //      // hemiLight.groundColor.setHSL( 0.095, 0.5, 0.75 );
-        //       hemiLight.position.set( 0, 10, 0 );
-        //       this.scene.add( hemiLight );
-
-        // var dirLight = new DirectionalLight( 0xffffff, 0.6 );
-        // dirLight.position.set(0, 50, 40);
-        // this.scene.add( dirLight );
-        // var dirLight2 = new DirectionalLight( 0xffffff, 0.6 );
-        // dirLight2.position.set(0, 50, -40);
-        // this.scene.add( dirLight2 );
-        // var dirLight2 = new DirectionalLight( 0xffffff, 0.6 );
-        // dirLight2.position.set(-1000, 0, -40);
-        // this.scene.add( dirLight2 );
-        // var dirLight2 = new DirectionalLight( 0xffffff, 0.6 );
-        // dirLight2.position.set(1000, 0, -40);
-        // this.scene.add( dirLight2 );
-        //
-        //
-        //   var dirLight = new DirectionalLight( 0x000000, 1.2 );
-        //   dirLight.color.setHSL( 0.5, 0.9, 0.95 );
-        //   dirLight.position.set( 20, 10, -20 );
-        //   dirLight.position.multiplyScalar( 10);
-
-        //   dirLight.castShadow = true;
-
-        //   dirLight.shadow.mapSize.width = 2048;
-        //   dirLight.shadow.mapSize.height = 2048; // 2048
-
-        //   var d = 1500;
-
-        //   dirLight.shadow.camera.left = -d;
-        //   dirLight.shadow.camera.right = d;
-        //   dirLight.shadow.camera.top = d;
-        //   dirLight.shadow.camera.bottom = -d;
-
-        //   dirLight.shadow.camera.far = 1500;
-        // //  dirLight.shadow.bias = -0.00001;
-        //   this.light1 = dirLight;
-        //   this.scene.add(dirLight);
-
-        //   this.controls = new FirstPersonControls(this.camera);
-        //   this.controls.lookSpeed = 0.4;
-        //   this.controls.noFly = true;
-        //   this.controls.lookVertical = false;
-        //   this.controls.constrainVertical = true;
-        //   this.controls.verticalMin = Math.PI/2;
-        //   //this.controls.verticalMax = 2.0;
-        //   this.controls.lon = -150;
-        //   this.controls.lat = 120;
-        //   this.controls.movementSpeed = 70;
-
         this.renderer = new WebGLRenderer({ antialias: false });
         //   console.log(window.devicePixelRatio);
         this.renderer.setPixelRatio(1);
@@ -188,6 +132,8 @@ export class Main {
 
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
         window.addEventListener('mousedown', this.onMouseDown.bind(this), false);
+        window.addEventListener('mouseup', this.onMouseUp.bind(this), false);
+        window.addEventListener('mousemove', this.onMouseMove.bind(this), false);
 
         // Load models
         //this.modelLoader.init();
@@ -202,9 +148,9 @@ export class Main {
         //this.particles_box = new ParticlePool(1000, 1);
 
         // DEBUG STUFF
-        var gridHelper = new GridHelper(5000, 100);
-        gridHelper.position.set(0, 0, 0);
-        game.scene.add(gridHelper);
+        //var gridHelper = new GridHelper(5000, 100);
+        //gridHelper.position.set(0, 0, 0);
+        //game.scene.add(gridHelper);
 
         // Wait for all resources to be loaded before loading map.
         this.textures.prepare();
@@ -220,7 +166,11 @@ export class Main {
         this.map = new MapD();
         await this.map.init();
 
-        this.render();
+        const geometry = new PlaneGeometry(1000, 1000);
+        geometry.rotateX(- Math.PI / 2);
+
+        let plane = new Mesh(geometry, new MeshBasicMaterial({ visible: false }));
+        this.scene.add(plane);
 
         var point = new Vector3(0, 0, 0);
         game.camera.lookAt(point);
@@ -228,6 +178,8 @@ export class Main {
         game.camera.rotation.x = -Math.PI / 1.4;
         game.camera.position.y = 150;
         game.camera.position.z = -120;
+
+        this.render();
 
         return true;
     }
@@ -250,8 +202,6 @@ export class Main {
                 game.waitForLoadMap();
             }, 500);
         } else {
-            this.maps = new Level1();
-            this.maps.init();
             //game.maps.init("Level 1", "assets/maps/map3_ground.png", "assets/maps/map3_objects.png");
             // Load objects here to reduce overhead of multiple objects of same type.
             this.objects["shell"] = new Shell();
@@ -272,7 +222,6 @@ export class Main {
     reset() {
         this.camera = new PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, this.visible_distance);
         this.chunkScene.reset();
-        this.maps.reset();
         this.player.reset();
         this.cdList = [];
         for (var i = 0; i < this.update_objects.length; i++) {
@@ -308,6 +257,53 @@ export class Main {
             var object = intersects[0].object;
             // @ts-ignore
             object.material.color.set(Math.random() * 0xffffff);
+            this.selected = object;
+            //object.geometry.setAttribute('color', Math.random() * 0xffffff);
+        }
+    };
+
+    onMouseUp(evt: MouseEvent) {
+        /*
+        let coords = {
+            x: (evt.clientX / window.innerWidth) * 2 - 1,
+            y: -(evt.clientY / window.innerHeight) * 2 + 1
+        }
+
+        let raycaster = new Raycaster();
+        raycaster.setFromCamera(coords, this.camera);
+
+        var intersects = raycaster.intersectObjects(this.scene.children, false);
+
+        if (intersects.length > 0) {
+            var object = intersects[0].object;
+            // @ts-ignore
+            object.material.color.set(Math.random() * 0xffffff);
+            this.selected = object;
+            //object.geometry.setAttribute('color', Math.random() * 0xffffff);
+        }
+        */
+    };
+
+    onMouseMove(evt: MouseEvent) {
+        if (this.selected === undefined) {
+            return;
+        }
+
+        let coords = {
+            x: (evt.clientX / window.innerWidth) * 2 - 1,
+            y: -(evt.clientY / window.innerHeight) * 2 + 1
+        }
+
+        let raycaster = new Raycaster();
+        raycaster.setFromCamera(coords, this.camera);
+
+        var intersects = raycaster.intersectObjects(this.scene.children, false);
+
+        if (intersects.length > 0) {
+            let intersect = intersects[0];
+
+            this.selected.position.copy(intersect.point).add(intersect!.face!.normal);
+            this.selected.position.divideScalar(16).floor().multiplyScalar(16).addScalar(8);
             //object.geometry.setAttribute('color', Math.random() * 0xffffff);
         }
     };
