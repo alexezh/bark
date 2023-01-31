@@ -4,7 +4,7 @@
 // Date: 2014-11-17
 //==============================================================================
 
-import { makeVoxelPoint, VoxelData } from "./voxelmodel";
+import { makeVoxelPoint, VoxelData, VoxelPoint } from "./voxelmodel";
 
 export class Vox {
     voxColors = [
@@ -34,7 +34,7 @@ export class Vox {
     loadModel(data: ArrayBuffer, name: string): VoxelData | undefined {
         var colors = [];
         var colors2: any = undefined;
-        var voxelData: any = [];
+        var voxelData: VoxelPoint[] = [];
 
         var map = new Array();
         var sizex = 0, sizey = 0, sizez = 0;
@@ -120,10 +120,10 @@ export class Vox {
                     var r = (c & 0xff0000) >> 16;
                     var g = (c & 0x00ff00) >> 8;
                     var b = (c & 0x0000ff);
-                    voxelData[n].val = (r & 0xFF) << 24 | (g & 0xFF) << 16 | (b & 0xFF) << 8;
+                    voxelData[n].color = (r & 0xFF) << 24 | (g & 0xFF) << 16 | (b & 0xFF) << 8;
                 } else {
                     var color = colors2[voxelData[n].color];
-                    voxelData[n].val = (color.r & 0xFF) << 24 | (color.g & 0xFF) << 16 | (color.b & 0xFF) << 8;
+                    voxelData[n].color = (color.r & 0xFF) << 24 | (color.g & 0xFF) << 16 | (color.b & 0xFF) << 8;
                 }
             }
             return { name: name, data: voxelData, sx: sizex + 1, sy: sizey + 1, sz: sizez + 1 };

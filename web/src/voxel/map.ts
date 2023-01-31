@@ -2,45 +2,46 @@ import { game } from "./main";
 import { WALL2, WOOD_WALL } from "./textures";
 import { Chunk } from "./chunk";
 import { loadImageFile } from './utils';
-import { AmbientLight, Vector3 } from "three";
+import { AmbientLight, BufferAttribute, BufferGeometry, Mesh, MeshPhongMaterial, Vector3 } from "three";
 import { Player } from "./char";
 import { Vox } from "./vox";
 import { fetchResource } from "../fetchadapter";
+import { VoxelGeometryWriter, VoxelModel } from "./voxelmodel";
 
-export class ModelCache {
-    private readonly chunks: Map<string, Chunk> = new Map<string, Chunk>();
+export class VoxelModelCache {
+    private readonly models: Map<string, VoxelModel> = new Map<string, VoxelModel>();
 
-    public async getChunk(url: string): Promise<Chunk> {
-        let chunk = this.chunks.get(url);
-        if (chunk !== undefined) {
-            return chunk;
+    public async getVoxelModel(url: string): Promise<VoxelModel> {
+        let model = this.models.get(url);
+        if (model !== undefined) {
+            return model;
         }
 
         let chunkBlob = await fetchResource(url);
         let vox = new Vox();
-        let model = vox.loadModel(chunkBlob, url);
-        if (model === undefined) {
+        let voxelData = vox.loadModel(chunkBlob, url);
+        if (voxelData === undefined) {
             throw Error('cannpt load model');
         }
-        let p: any;
-        let r = 0, g = 0, b = 0;
-        chunk = new Chunk(0, 0, 0, model.sx, model.sz, model.sy, url, 1, 'world');
-        for (let i = 0; i < model.data.length; i++) {
-            p = model.data[i];
-            r = (p.val >> 24) & 0xFF;
-            g = (p.val >> 16) & 0xFF;
-            b = (p.val >> 8) & 0xFF;
-            if (p.y > model.sy || p.x > model.sx || p.z > model.sz) {
-                continue;
-            }
-            chunk.addBlock(p.x, p.z, p.y, r, g, b);
-        }
-        this.chunks.set(url, chunk);
-        return chunk;
+        model = new VoxelModel(url, voxelData);
+        //model.build();
+
+        this.models.set(url, model);
+        return model;
     };
 }
 
-export let modelCache: ModelCache = new ModelCache();
+export let modelCache: VoxelModelCache = new VoxelModelCache();
+
+export class MeshModel {
+    public mesh!: Mesh;
+    public geometry!: BufferGeometry;
+    public material!: MeshPhongMaterial;
+
+    public constructor(geo: BufferGeometry) {
+        this.mesh = new Mesh(geo, this.material);
+    }
+}
 
 //////////////////////////////////////////////////////////////////////
 // Maps class - Loading of maps from images
@@ -51,6 +52,9 @@ export class MapD {
     public height = 100;
     // Objects loaded 
     public loaded: Chunk[] = [];
+    private staticMap: MeshModel | undefined;
+    private dynamicObjects: Map<string, MeshModel> = new Map<string, MeshModel>();
+
 
     public ambient_light!: AmbientLight;
 
@@ -103,15 +107,18 @@ export class MapD {
     };
 
     public async init(): Promise<boolean> {
+        let writer = new VoxelGeometryWriter();
         for (let i = 0; i < 100; i++) {
-            let chunk = await modelCache.getChunk('./assets/vox/ground.vox');
+            let vm = await modelCache.getVoxelModel('./assets/vox/ground.vox');
 
-            chunk = chunk.clone2(((i / 10) | 0) * 16, 3 * 16, (i % 10) * 16);
-            chunk.build();
-            chunk.mesh.visible = true;
-            game.chunkScene.addChunk(chunk);
-            //game.scene.add()
+            writer.setPosition(((i / 10) | 0) * 16, 3 * 16, (i % 10) * 16);
+            vm.build(writer);
         }
+
+        let geo = writer.getGeometry();
+        let mm = new MeshModel(geo);
+
+        game.scene.add(mm.mesh);
 
         this.ambient_light = new AmbientLight(0xFFFFFF, 0.8);
         game.scene.add(this.ambient_light);
