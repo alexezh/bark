@@ -108,10 +108,10 @@ export class MapD {
 
     public async init(): Promise<boolean> {
         let writer = new VoxelGeometryWriter();
-        for (let i = 0; i < 100; i++) {
-            let vm = await modelCache.getVoxelModel('./assets/vox/ground.vox');
+        let vm = await modelCache.getVoxelModel('./assets/vox/ground.vox');
 
-            writer.setPosition(((i / 10) | 0) * 16, 3 * 16, (i % 10) * 16);
+        for (let i = 0; i < 100; i++) {
+            writer.setPosition(((i / 10) | 0) * 32 - 100, (i % 10) * 32 - 100, 3 * 32 - 100);
             vm.build(writer);
         }
 
