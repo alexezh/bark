@@ -59,6 +59,8 @@
     "pixijs": "^7.0.5",
     "prettier": "2.5.1",
     "three": "^0.148.0",
+    "three-orbit-controls": "^82.1.0",
+    "three-orbitcontrols-ts": "^0.1.2",
     "ts-node": "^10.4.0",
     "types-webpack-bundler": "^1.0.2",
     "typescript-declaration-webpack-plugin": "^0.2.2",

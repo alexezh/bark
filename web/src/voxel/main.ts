@@ -6,6 +6,7 @@ import { Ammo, AmmoP90, AmmoSniper, Heart, Obj, Shell } from "./objects";
 import { MapD } from "./map";
 import { ParticlePool } from "./particles";
 import { Camera, Clock, Fog, GridHelper, Material, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
+import { OrbitControls } from 'three-orbitcontrols-ts';
 
 //if (!Detector.webgl) Detector.addGetWebGLMessage();
 //////////////////////////////////////////////////////////////////////
@@ -35,6 +36,7 @@ export class Main {
     public sounds = new SoundLoader();
     public container: HTMLElement | undefined;
     private selected: Object3D | undefined;
+    private isDown: boolean = false;
 
     // Particle stuff.
     public box_material = new MeshPhongMaterial({ color: 0xffffff });
@@ -103,13 +105,11 @@ export class Main {
         this.clock = new Clock();
 
         // Iosmetric view
-        // var aspect = window.innerWidth / window.innerHeight;
-        // var d = 70;
-        // var aspect = window.innerWidth/window.innerHeight;
-        // this.camera = new OrthographicCamera( - d * aspect, d * aspect, d, -d, 1, 3000 );
         this.camera = new PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, this.visible_distance);
         // this.camera.applyMatrix( new Matrix4().makeTranslation( 300, 150, 300 ) );
         // this.camera.applyMatrix( new Matrix4().makeRotationX( -0.8 ) );
+        this.camera.up.set(0, 1, 0);
+        Object3D.DefaultUp = new Vector3(0, 1, 0);
 
         //this.camera.position.set( 200, 300, 700 ); 
 
@@ -130,17 +130,21 @@ export class Main {
         //this.stats = new Stats();
         //container.appendChild(this.stats.dom);
 
+        const controls = new OrbitControls(this.camera, this.renderer.domElement);
+        controls.target.set(0, 1, 0);
+        controls.update();
+
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
-        window.addEventListener('mousedown', this.onMouseDown.bind(this), false);
-        window.addEventListener('mouseup', this.onMouseUp.bind(this), false);
-        window.addEventListener('mousemove', this.onMouseMove.bind(this), false);
+        //window.addEventListener('mousedown', this.onMouseDown.bind(this), false);
+        //window.addEventListener('mouseup', this.onMouseUp.bind(this), false);
+        //window.addEventListener('mousemove', this.onMouseMove.bind(this), false);
 
         // Load models
         //this.modelLoader.init();
         //this.modelLoader.loadFiles();
 
         // Init world.
-        this.chunkScene.init(this.scene);
+        //this.chunkScene.init(this.scene);
 
 
         // Init particle engine
@@ -174,10 +178,10 @@ export class Main {
 
         var point = new Vector3(0, 0, 0);
         game.camera.lookAt(point);
-        game.camera.rotation.z = Math.PI;
-        game.camera.rotation.x = -Math.PI / 1.4;
-        game.camera.position.y = 150;
-        game.camera.position.z = -120;
+        //game.camera.rotation.y = Math.PI;
+        //game.camera.rotation.x = -Math.PI / 1.4;
+        game.camera.position.z = 150;
+        //game.camera.position.y = -120;
 
         this.render();
 
@@ -243,6 +247,9 @@ export class Main {
     };
 
     onMouseDown(evt: MouseEvent) {
+        this.isDown = true;
+        return;
+
         let coords = {
             x: (evt.clientX / window.innerWidth) * 2 - 1,
             y: -(evt.clientY / window.innerHeight) * 2 + 1
@@ -263,6 +270,7 @@ export class Main {
     };
 
     onMouseUp(evt: MouseEvent) {
+        this.isDown = false;
         /*
         let coords = {
             x: (evt.clientX / window.innerWidth) * 2 - 1,
@@ -285,27 +293,34 @@ export class Main {
     };
 
     onMouseMove(evt: MouseEvent) {
-        if (this.selected === undefined) {
+        if (this.isDown === false) {
             return;
         }
 
-        let coords = {
-            x: (evt.clientX / window.innerWidth) * 2 - 1,
-            y: -(evt.clientY / window.innerHeight) * 2 + 1
-        }
-
-        let raycaster = new Raycaster();
-        raycaster.setFromCamera(coords, this.camera);
-
-        var intersects = raycaster.intersectObjects(this.scene.children, false);
-
-        if (intersects.length > 0) {
-            let intersect = intersects[0];
-
-            this.selected.position.copy(intersect.point).add(intersect!.face!.normal);
-            this.selected.position.divideScalar(16).floor().multiplyScalar(16).addScalar(8);
-            //object.geometry.setAttribute('color', Math.random() * 0xffffff);
-        }
+        return;
+        /*
+                if (this.selected === undefined) {
+                    return;
+                }
+        
+                let coords = {
+                    x: (evt.clientX / window.innerWidth) * 2 - 1,
+                    y: -(evt.clientY / window.innerHeight) * 2 + 1
+                }
+        
+                let raycaster = new Raycaster();
+                raycaster.setFromCamera(coords, this.camera);
+        
+                var intersects = raycaster.intersectObjects(this.scene.children, false);
+        
+                if (intersects.length > 0) {
+                    let intersect = intersects[0];
+        
+                    this.selected.position.copy(intersect.point).add(intersect!.face!.normal);
+                    this.selected.position.divideScalar(16).floor().multiplyScalar(16).addScalar(8);
+                    //object.geometry.setAttribute('color', Math.random() * 0xffffff);
+                }
+               */
     };
 
     animate() {

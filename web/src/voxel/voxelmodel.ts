@@ -7,7 +7,7 @@ export type VoxelPoint = {
   x: number;
   y: number;
   z: number;
-  color;
+  color: number;
 }
 
 export type VoxelData = {
@@ -45,11 +45,16 @@ export class VoxelGeometryWriter {
   private start_x: number = 0;
   private start_y: number = 0;
   private start_z: number = 0;
+  private flip_z: number = 0;
 
   public appendVertice(x: number, y: number, z: number) {
     this.v.push(x + this.start_x);
     this.v.push(y + this.start_y);
-    this.v.push(z + this.start_z);
+    if (this.flip_z > 0) {
+      this.v.push(this.flip_z - z + this.start_z);
+    } else {
+      this.v.push(z + this.start_z);
+    }
   }
 
   public appendColor(n: number, r: number, g: number, b: number) {
@@ -66,6 +71,10 @@ export class VoxelGeometryWriter {
     this.start_z = z;
   }
 
+  public setFlipZ(max_z: number) {
+    this.flip_z = max_z;
+  }
+
   public getGeometry(): BufferGeometry {
     let vertices = this.v;
     let colors = this.c;
@@ -77,7 +86,7 @@ export class VoxelGeometryWriter {
     for (var i = 0; i < m; i++) {
       let idx = i * 3;
       v.setXYZ(i, vertices[idx], vertices[idx + 1], vertices[idx + 2]);
-      c.setXYZW(i, colors[idx], colors[idx + 1], colors[idx + 2], 1);
+      c.setXYZ(i, colors[idx], colors[idx + 1], colors[idx + 2]);
     }
     //for (var i = 0; i < vertices.length; i += 3) {
     //  v.setXYZ((i / 3) | 0, vertices[i], vertices[i + 1], vertices[i + 2]);
@@ -188,6 +197,7 @@ export class VoxelModel {
 
     // this.shadow_blocks = [];
     this.total_blocks = 0;
+    writer.setFlipZ(this.chunk_sz * this.blockSize);
 
     for (var x = 0; x < this.chunk_sx; x++) {
       for (var y = 0; y < this.chunk_sy; y++) {

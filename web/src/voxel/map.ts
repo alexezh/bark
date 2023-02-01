@@ -1,9 +1,6 @@
 import { game } from "./main";
-import { WALL2, WOOD_WALL } from "./textures";
 import { Chunk } from "./chunk";
-import { loadImageFile } from './utils';
 import { AmbientLight, BufferAttribute, BufferGeometry, Mesh, MeshPhongMaterial, Vector3 } from "three";
-import { Player } from "./char";
 import { Vox } from "./vox";
 import { fetchResource } from "../fetchadapter";
 import { VoxelGeometryWriter, VoxelModel } from "./voxelmodel";
@@ -36,9 +33,10 @@ export let modelCache: VoxelModelCache = new VoxelModelCache();
 export class MeshModel {
     public mesh!: Mesh;
     public geometry!: BufferGeometry;
-    public material!: MeshPhongMaterial;
+    public material: MeshPhongMaterial = new MeshPhongMaterial({ color: 0xffffff, vertexColors: true });
 
     public constructor(geo: BufferGeometry) {
+        this.geometry = geo;
         this.mesh = new Mesh(geo, this.material);
     }
 }
@@ -110,8 +108,9 @@ export class MapD {
         let writer = new VoxelGeometryWriter();
         let vm = await modelCache.getVoxelModel('./assets/vox/ground.vox');
 
-        for (let i = 0; i < 100; i++) {
-            writer.setPosition(((i / 10) | 0) * 32 - 100, (i % 10) * 32 - 100, 3 * 32 - 100);
+        for (let i = 0; i < 10; i++) {
+            //            writer.setPosition(((i / 10) | 0) * 16, 3 * 16 - 50, (i % 10) * 16 - 100);
+            writer.setPosition(3 * 16 - 50, 3 * 16 - 100, i * 16);
             vm.build(writer);
         }
 
