@@ -22,8 +22,8 @@ export type VoxelData = {
 export function makeVoxelPoint(buffer: Uint8Array, i: number): VoxelPoint {
   return {
     x: buffer[i++] & 0xFF,
-    z: buffer[i++] & 0xFF,
     y: buffer[i++] & 0xFF,
+    z: buffer[i++] & 0xFF,
     color: buffer[i] & 0xFF
   };
 }
