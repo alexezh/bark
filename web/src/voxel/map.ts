@@ -112,6 +112,8 @@ export class MapD {
             //            writer.setPosition(((i / 10) | 0) * 16, 3 * 16 - 50, (i % 10) * 16 - 100);
             writer.setPosition(3 * 16 - 50, 3 * 16 - 100, i * 16);
             vm.build(writer);
+            writer.setPosition(2 * 16 - 50, 3 * 16 - 100, i * 16);
+            vm.build(writer);
         }
 
         let geo = writer.getGeometry();

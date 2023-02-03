@@ -27,8 +27,20 @@ export class Vox {
     ];
 
 
-    readInt(buffer, from) {
+    readInt(buffer, from): number {
         return buffer[from] | (buffer[from + 1] << 8) | (buffer[from + 2] << 16) | (buffer[from + 3] << 24);
+    };
+
+    readId(buffer, i): string {
+        var type = String.fromCharCode(buffer[i++]) +
+            // @ts-ignore
+            String.fromCharCode(buffer[i++]) +
+            // @ts-ignore
+            String.fromCharCode(buffer[i++]) +
+            // @ts-ignore
+            String.fromCharCode(buffer[i++]);
+
+        return type;
     };
 
     loadModel(data: ArrayBuffer, name: string): VoxelData | undefined {
@@ -44,25 +56,15 @@ export class Vox {
 
             var i = 0;
             // @ts-ignore
-            var type = String.fromCharCode(parseInt(buffer[i++])) +
-                // @ts-ignore
-                String.fromCharCode(parseInt(buffer[i++])) +
-                // @ts-ignore
-                String.fromCharCode(parseInt(buffer[i++])) +
-                // @ts-ignore
-                String.fromCharCode(parseInt(buffer[i++]));
+            var type = this.readId(buffer, i);
+            i += 4;
             var version = this.readInt(buffer, i);
             i += 4;
 
             while (i < buffer.length) {
                 // @ts-ignore
-                var id = String.fromCharCode(parseInt(buffer[i++])) +
-                    // @ts-ignore
-                    String.fromCharCode(parseInt(buffer[i++])) +
-                    // @ts-ignore
-                    String.fromCharCode(parseInt(buffer[i++])) +
-                    // @ts-ignore
-                    String.fromCharCode(parseInt(buffer[i++]));
+                var id = this.readId(buffer, i);
+                i += 4;
 
                 var chunkSize = this.readInt(buffer, i) & 0xFF;
                 i += 4;

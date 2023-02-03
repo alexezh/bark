@@ -180,7 +180,7 @@ export class Main {
         game.camera.lookAt(point);
         //game.camera.rotation.y = Math.PI;
         //game.camera.rotation.x = -Math.PI / 1.4;
-        game.camera.position.z = 150;
+        game.camera.position.z = 300;
         //game.camera.position.y = -120;
 
         this.render();
