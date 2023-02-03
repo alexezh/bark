@@ -105,17 +105,17 @@ export class Main {
         this.clock = new Clock();
 
         // Iosmetric view
-        this.camera = new PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, this.visible_distance);
+        this.camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, this.visible_distance);
         // this.camera.applyMatrix( new Matrix4().makeTranslation( 300, 150, 300 ) );
         // this.camera.applyMatrix( new Matrix4().makeRotationX( -0.8 ) );
-        this.camera.up.set(0, 1, 0);
-        Object3D.DefaultUp = new Vector3(0, 1, 0);
+        this.camera.up.set(0, 0, 1);
+        Object3D.DefaultUp = new Vector3(0, 0, 1);
 
         //this.camera.position.set( 200, 300, 700 ); 
 
         //  this.scene.fog = new FogExp2( 0xFFA1C1, 0.0059 );
         //this.scene.fog = new Fog( 0xFFA1C1, 180, this.visible_distance );
-        this.scene.fog = new Fog(0x000000, 180, this.visible_distance);
+        this.scene.fog = new Fog(0x000000, 240, this.visible_distance);
 
         this.renderer = new WebGLRenderer({ antialias: false });
         //   console.log(window.devicePixelRatio);
@@ -131,7 +131,7 @@ export class Main {
         //container.appendChild(this.stats.dom);
 
         const controls = new OrbitControls(this.camera, this.renderer.domElement);
-        controls.target.set(0, 1, 0);
+        controls.target.set(0, 0, 1);
         controls.update();
 
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
@@ -180,7 +180,7 @@ export class Main {
         game.camera.lookAt(point);
         //game.camera.rotation.y = Math.PI;
         //game.camera.rotation.x = -Math.PI / 1.4;
-        game.camera.position.z = 300;
+        game.camera.position.z = 240;
         //game.camera.position.y = -120;
 
         this.render();
