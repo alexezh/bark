@@ -4,7 +4,7 @@
 // Date: 2014-11-17
 //==============================================================================
 
-import { makeVoxelPoint, VoxelData, VoxelPoint } from "./voxelmodel";
+import { makeVoxelPoint, VoxelFile, VoxelFileFrame, VoxelPoint } from "./voxelmodel";
 
 export class Vox {
     voxColors = [
@@ -43,13 +43,13 @@ export class Vox {
         return type;
     };
 
-    loadModel(data: ArrayBuffer, name: string): VoxelData | undefined {
-        var colors = [];
-        var colors2: any = undefined;
-        var voxelData: VoxelPoint[] = [];
+    loadModel(data: ArrayBuffer, name: string): VoxelFile | undefined {
+        let colors = [];
+        let colors2: any = undefined;
+        let file: VoxelFile = { name: name, frames: [] };
 
-        var map = new Array();
-        var sizex = 0, sizey = 0, sizez = 0;
+        //var map = new Array();
+        let sizex = 0, sizey = 0, sizez = 0;
 
         if (data) {
             var buffer = new Uint8Array(data);
@@ -78,22 +78,21 @@ export class Vox {
                     i += 4;
                     sizez = this.readInt(buffer, i) & 0xFF;
                     i += 4;
-
-                    for (var x = 0; x < sizex; x++) {
-                        map[x] = new Array();
-                        for (var y = 0; y < sizey; y++) {
-                            map[x][y] = new Array();
-                        }
-                    }
-                    // i += chunkSize - 4 * 3;
                 } else if (id == "XYZI") {
-                    var numVoxels = this.readInt(buffer, i);
+                    let numVoxels = this.readInt(buffer, i);
                     i += 4;
-                    voxelData = new Array(numVoxels);
-                    for (var n = 0; n < voxelData.length; n++) {
-                        voxelData[n] = makeVoxelPoint(buffer, i);
+                    let voxelPoints = new Array(numVoxels);
+                    for (var n = 0; n < voxelPoints.length; n++) {
+                        voxelPoints[n] = makeVoxelPoint(buffer, i);
                         i += 4;
                     }
+
+                    file.frames.push({
+                        sx: sizex + 1,
+                        sy: sizey + 1,
+                        sz: sizez + 1,
+                        data: voxelPoints
+                    })
                 } else if (id == "MAIN") {
                 } else if (id == "PACK") {
                     var numModels = this.readInt(buffer, i);
@@ -113,22 +112,25 @@ export class Vox {
                 }
             }
 
-            if (voxelData == null || voxelData.length == 0) {
-                return undefined;
-            }
-            for (var n = 0; n < voxelData.length; n++) {
-                if (colors2 == undefined) {
-                    var c = this.voxColors[voxelData[n].color - 1];
-                    var r = (c & 0xff0000) >> 16;
-                    var g = (c & 0x00ff00) >> 8;
-                    var b = (c & 0x0000ff);
-                    voxelData[n].color = (r & 0xFF) << 24 | (g & 0xFF) << 16 | (b & 0xFF) << 8;
-                } else {
-                    var color = colors2[voxelData[n].color];
-                    voxelData[n].color = (color.r & 0xFF) << 24 | (color.g & 0xFF) << 16 | (color.b & 0xFF) << 8;
+            // update color data
+            for (let i = 0; i < file.frames.length; i++) {
+                let voxelPoints = file.frames[i].data;
+
+                for (let n = 0; n < voxelPoints.length; n++) {
+                    if (colors2 == undefined) {
+                        let c = this.voxColors[voxelPoints[n].color - 1];
+                        let r = (c & 0xff0000) >> 16;
+                        let g = (c & 0x00ff00) >> 8;
+                        let b = (c & 0x0000ff);
+                        voxelPoints[n].color = (r & 0xFF) << 24 | (g & 0xFF) << 16 | (b & 0xFF) << 8;
+                    } else {
+                        let color = colors2[voxelPoints[n].color];
+                        voxelPoints[n].color = (color.r & 0xFF) << 24 | (color.g & 0xFF) << 16 | (color.b & 0xFF) << 8;
+                    }
                 }
             }
-            return { name: name, data: voxelData, sx: sizex + 1, sy: sizey + 1, sz: sizez + 1 };
+
+            return file;
         }
     };
 }

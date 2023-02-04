@@ -3,32 +3,10 @@ import { Chunk } from "./chunk";
 import { AmbientLight, BufferAttribute, BufferGeometry, Mesh, MeshPhongMaterial, Vector3 } from "three";
 import { Vox } from "./vox";
 import { fetchResource } from "../fetchadapter";
-import { VoxelGeometryWriter, VoxelModel } from "./voxelmodel";
+import { VoxelModel, VoxelModelFrame } from "./voxelmodel";
+import { VoxelGeometryWriter } from "./voxelgeometrywriter";
+import { modelCache } from "./voxelmodelcache";
 
-export class VoxelModelCache {
-    private readonly models: Map<string, VoxelModel> = new Map<string, VoxelModel>();
-
-    public async getVoxelModel(url: string): Promise<VoxelModel> {
-        let model = this.models.get(url);
-        if (model !== undefined) {
-            return model;
-        }
-
-        let chunkBlob = await fetchResource(url);
-        let vox = new Vox();
-        let voxelData = vox.loadModel(chunkBlob, url);
-        if (voxelData === undefined) {
-            throw Error('cannpt load model');
-        }
-        model = new VoxelModel(url, voxelData);
-        //model.build();
-
-        this.models.set(url, model);
-        return model;
-    };
-}
-
-export let modelCache: VoxelModelCache = new VoxelModelCache();
 
 export class MeshModel {
     public mesh!: Mesh;
@@ -105,15 +83,33 @@ export class MapD {
     };
 
     public async init(): Promise<boolean> {
+        let vmm = await modelCache.getVoxelModel('./assets/vox/monky.vox');
+        let idx = 0;
+
+        for (let f of vmm.frames) {
+            let writer = new VoxelGeometryWriter();
+
+            writer.setScale(0.6);
+
+            f.build(writer);
+
+            let geo = writer.getGeometry();
+            let mm = new MeshModel(geo);
+            mm.mesh.position.set(2 * 16 - 30, idx * 16 - 100, 60);
+            idx++;
+
+            game.scene.add(mm.mesh);
+        }
+
         let writer = new VoxelGeometryWriter();
         let vm = await modelCache.getVoxelModel('./assets/vox/ground.vox');
 
         for (let i = 0; i < 10; i++) {
             //            writer.setPosition(((i / 10) | 0) * 16, 3 * 16 - 50, (i % 10) * 16 - 100);
             writer.setPosition(2 * 16 - 50, i * 16 - 100, 50);
-            vm.build(writer);
+            vm.frames[0].build(writer);
             writer.setPosition(3 * 16 - 50, i * 16 - 100, 50);
-            vm.build(writer);
+            vm.frames[0].build(writer);
         }
 
         let geo = writer.getGeometry();

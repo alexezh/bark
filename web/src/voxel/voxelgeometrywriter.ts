@@ -1,0 +1,95 @@
+import { BufferAttribute, BufferGeometry } from "three";
+
+export class VoxelGeometryWriter {
+  private triangles = 0;
+  //public shadow_blocks = [];
+  private total_blocks = 0;
+  public dirty = true;
+  private positions = 0;
+  // number of colors
+  private colors = 0;
+  //public geometry!: BufferGeometry;
+  //public v!: BufferAttribute;
+  //public c!: BufferAttribute;
+  //public prev_len = 0;
+  //private idx: number = 0;
+  private v: number[] = [];
+  private c: number[] = [];
+  private start_x: number = 0;
+  private start_y: number = 0;
+  private start_z: number = 0;
+  private flip_z: number = 0;
+  private scale: number = 1;
+
+  public appendVertice(x: number, y: number, z: number) {
+    let block_size = this.scale;
+    this.v.push(x * block_size + this.start_x);
+    this.v.push(y * block_size + this.start_y);
+    if (this.flip_z > 0) {
+      this.v.push((this.flip_z - z) * block_size + this.start_z);
+    } else {
+      this.v.push(z * block_size + this.start_z);
+    }
+  }
+
+  public appendColor(n: number, r: number, g: number, b: number) {
+    for (let i = 0; i < n; i++) {
+      this.c.push(r);
+      this.c.push(g);
+      this.c.push(b);
+    }
+  }
+
+  public setPosition(x: number, y: number, z: number) {
+    this.start_x = x;
+    this.start_y = y;
+    this.start_z = z;
+  }
+
+  public setFlipZ(max_z: number) {
+    this.flip_z = max_z;
+  }
+
+  public setScale(scale: number) {
+    this.scale = scale;
+  }
+
+  public getGeometry(): BufferGeometry {
+    let vertices = this.v;
+    let colors = this.c;
+
+    let v = new BufferAttribute(new Float32Array(vertices.length), 3);
+    let c = new BufferAttribute(new Float32Array(colors.length), 3);
+
+    let m = ((vertices.length / 3) | 0);
+    for (var i = 0; i < m; i++) {
+      let idx = i * 3;
+      v.setXYZ(i, vertices[idx], vertices[idx + 1], vertices[idx + 2]);
+      c.setXYZ(i, colors[idx], colors[idx + 1], colors[idx + 2]);
+    }
+    //for (var i = 0; i < vertices.length; i += 3) {
+    //  v.setXYZ((i / 3) | 0, vertices[i], vertices[i + 1], vertices[i + 2]);
+    //  c.setXYZW((i / 3) | 0, colors[i], colors[i + 1], colors[i + 2], 1);
+    //}
+
+    let geometry = new BufferGeometry();
+    geometry.setAttribute('position', v);
+    geometry.setAttribute('color', c);
+    geometry.computeBoundingBox();
+    geometry.computeVertexNormals();
+    return geometry;
+  }
+
+  /*
+      if (this.geometry != undefined && this.prev_len >= vertices.length) {
+      for (var i = 0; i < vertices.length; i++) {
+        this.v.setXYZ(i, vertices[i][0], vertices[i][1], vertices[i][2]);
+        this.c.setXYZW(i, colors[i][0], colors[i][1], colors[i][2], 1);
+      }
+
+      this.geometry.setDrawRange(0, vertices.length);
+      this.geometry.attributes.position.needsUpdate = true;
+      this.geometry.attributes.color.needsUpdate = true;
+      this.geometry.computeVertexNormals();
+ */
+}
