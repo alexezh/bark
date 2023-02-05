@@ -168,7 +168,7 @@ export class Main {
 
     private async loadMap(): Promise<boolean> {
         this.map = new MapD();
-        await this.map.init();
+        await this.map.load();
 
         const geometry = new PlaneGeometry(1000, 1000);
         geometry.rotateX(- Math.PI / 2);

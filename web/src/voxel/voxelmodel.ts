@@ -73,7 +73,7 @@ export class VoxelModelFrame {
     for (let i = 0; i < this.data.data.length; i++) {
       let d = this.data.data[i];
       let blockIdx = (d.x | 0) + ((d.y | 0) * this.chunk_sx) + ((d.z | 0) * this.stride_z);
-      this.voxels[blockIdx] = d.color;
+      this.voxels[blockIdx] = d.color | 0x00000080;
     }
   }
 
@@ -94,16 +94,13 @@ export class VoxelModelFrame {
     var g = 0;
     var b = 0;
 
-    // Block structure
-    // BLOCK: [R-color][G-color][B-color][0][00][back_left_right_above_front]
-    //           8bit    8bit     8it   2bit(floodfill)     6bit(faces)
-
     // Reset faces
     for (var x = 0; x < this.chunk_sx; x++) {
       for (var y = 0; y < this.chunk_sy; y++) {
         for (var z = 0; z < this.chunk_sz; z++) {
           let blockIdx = this.getIdx(x, y, z);
-          this.voxels[blockIdx] &= 0xFFFFFF00;
+          // use 8th bit to indicate that there is block
+          this.voxels[blockIdx] &= 0xFFFFFF80;
         }
       }
     }
