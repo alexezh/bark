@@ -5,7 +5,7 @@ import { ChunkScene } from "./chunkscene";
 import { Ammo, AmmoP90, AmmoSniper, Heart, Obj, Shell } from "./objects";
 import { MapD } from "./map";
 import { ParticlePool } from "./particles";
-import { Camera, Clock, Fog, GridHelper, Material, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
+import { Camera, Clock, Fog, GridHelper, Material, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, OrthographicCamera, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
 import { OrbitControls } from 'three-orbitcontrols-ts';
 
 //if (!Detector.webgl) Detector.addGetWebGLMessage();
@@ -15,7 +15,7 @@ import { OrbitControls } from 'three-orbitcontrols-ts';
 export class Main {
     public renderer!: WebGLRenderer;
     public controls: any;
-    public camera!: PerspectiveCamera;
+    public camera!: Camera;
     public scene!: Scene;
     public stats: any;
     public clock!: Clock;
@@ -29,7 +29,7 @@ export class Main {
     public update_objects: any = [];
     public cdList: any = [];
     public player: any;
-    public visible_distance = 250; // from player to hide chunks + enemies.
+    public visible_distance = 500; // from player to hide chunks + enemies.
     public textures = new Textures();
     public objects: Obj[] = [];
     public ff_objects = [];
@@ -105,13 +105,8 @@ export class Main {
         this.clock = new Clock();
 
         // Iosmetric view
-        this.camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, this.visible_distance);
-        // this.camera.applyMatrix( new Matrix4().makeTranslation( 300, 150, 300 ) );
-        // this.camera.applyMatrix( new Matrix4().makeRotationX( -0.8 ) );
-        this.camera.up.set(0, 0, 1);
         Object3D.DefaultUp = new Vector3(0, 0, 1);
-
-        //this.camera.position.set( 200, 300, 700 ); 
+        this.createCamera(window.innerWidth / 10, window.innerHeight / 10);
 
         //  this.scene.fog = new FogExp2( 0xFFA1C1, 0.0059 );
         //this.scene.fog = new Fog( 0xFFA1C1, 180, this.visible_distance );
@@ -130,12 +125,12 @@ export class Main {
         //this.stats = new Stats();
         //container.appendChild(this.stats.dom);
 
-        const controls = new OrbitControls(this.camera, this.renderer.domElement);
-        controls.target.set(0, 0, 1);
-        controls.update();
+        //const controls = new OrbitControls(this.camera, this.renderer.domElement);
+        //controls.target.set(0, 0, 1);
+        //controls.update();
 
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
-        //window.addEventListener('mousedown', this.onMouseDown.bind(this), false);
+        window.addEventListener('mousedown', this.onMouseDown.bind(this), false);
         //window.addEventListener('mouseup', this.onMouseUp.bind(this), false);
         //window.addEventListener('mousemove', this.onMouseMove.bind(this), false);
 
@@ -165,6 +160,43 @@ export class Main {
         });
     };
 
+    private createCamera(w: number, h: number) {
+        /*
+        let viewSize = h;
+        let aspectRatio = w / h;
+
+        let viewport = {
+            viewSize: viewSize,
+            aspectRatio: aspectRatio,
+            left: (-aspectRatio * viewSize) / 2,
+            right: (aspectRatio * viewSize) / 2,
+            top: viewSize / 2,
+            bottom: -viewSize / 2,
+            near: -100,
+            far: 10
+        }
+
+        this.camera = new OrthographicCamera(
+            viewport.left,
+            viewport.right,
+            viewport.top,
+            viewport.bottom,
+            viewport.near,
+            viewport.far
+        );
+*/
+        this.camera = new PerspectiveCamera(45, w / h, 1, this.visible_distance);
+        this.camera.up.set(0, 0, 1);
+
+        var point = new Vector3(0, 0, -1);
+        game.camera.lookAt(point);
+        let angleY = Math.PI / 4;
+        game.camera.rotation.y = angleY;
+        //game.camera.rotation.x = -Math.PI / 1.4;
+        game.camera.position.set(100 + 100 * Math.tan(angleY), 100, 100);
+        //game.camera.position.y = 120;
+        (game.camera as PerspectiveCamera).updateProjectionMatrix();
+    }
 
     private async loadMap(): Promise<boolean> {
         this.map = new MapD();
@@ -175,13 +207,6 @@ export class Main {
 
         let plane = new Mesh(geometry, new MeshBasicMaterial({ visible: false }));
         this.scene.add(plane);
-
-        var point = new Vector3(0, 0, 0);
-        game.camera.lookAt(point);
-        //game.camera.rotation.y = Math.PI;
-        //game.camera.rotation.x = -Math.PI / 1.4;
-        game.camera.position.z = 240;
-        //game.camera.position.y = -120;
 
         this.render();
 
@@ -239,8 +264,8 @@ export class Main {
     };
 
     onWindowResize() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
-        this.camera.updateProjectionMatrix();
+        //this.camera.aspect = window.innerWidth / window.innerHeight;
+        //this.camera.updateProjectionMatrix();
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -248,6 +273,9 @@ export class Main {
 
     onMouseDown(evt: MouseEvent) {
         this.isDown = true;
+
+        game.camera.position.set(game.camera.position.x + 1, game.camera.position.y + 1, 2);
+
         return;
 
         let coords = {
@@ -392,7 +420,7 @@ export class Main {
         // this.stats.update();
         //this.particles.update(time, delta);
         //this.particles_box.update(time, delta);
-        this.chunkScene.update(time, delta);
+        //this.chunkScene.update(time, delta);
         //this.maps.update(time, delta);
         this.map?.update(time, delta);
         this.renderer.render(this.scene, this.camera);
