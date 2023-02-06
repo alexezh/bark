@@ -1,8 +1,7 @@
 import { Terminal } from "./ui/terminal";
 import { createGameState, GameState } from "./world/gamestate";
-import { WorldProps } from "./world/gamemap";
 import { resourceLib } from "./graphics/resourceLib";
-import { fetchWorld } from "./fetchadapter";
+import { fetchWorld, WorldProps } from "./fetchadapter";
 import { setTerminal, terminal } from "./ui/igameterminal";
 import { IGameState } from "./world/igamestate";
 

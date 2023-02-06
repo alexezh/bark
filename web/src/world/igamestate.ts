@@ -1,12 +1,11 @@
 import { GridPos } from "../posh/pos";
-import { AvatarCollection } from "./avatarcollection";
 import { IAvatar } from "./iavatar";
 import { IGameMap } from "./igamemap";
 import { Pokemon } from "./pokemon";
 
 export interface IGameState {
   gameMap?: IGameMap;
-  avatarCollection: AvatarCollection;
+  //avatarCollection: AvatarCollection;
   onLoaded: boolean;
   load(): Promise<boolean>;
   spawnPokemon(pokedexId: string, layerId: string, pos: GridPos): Promise<IAvatar>;

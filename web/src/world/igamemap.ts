@@ -1,5 +1,4 @@
 import { GridRect, PxRect } from "../posh/pos";
-import { IGameLayer } from "./gamelayer";
 import { IGameMechanics } from "../mechanics/igamemechanics";
 import { IGamePhysics } from "../graphics/igamephysics";
 import { ILocationCode, LocationAPI } from "../mechanics/locationcode";
@@ -70,6 +69,6 @@ export interface IGameMap {
   readonly physics: IGamePhysics;
   readonly mechanics: IGameMechanics;
   setViewport(pxRect: PxRect): void;
-  getLayer(id: string | undefined): IGameLayer | undefined;
-  forEachLayer(startLayer: string | undefined, func: (layer: IGameLayer) => void): void;
+  getLayer(id: string | undefined): any | undefined;
+  forEachLayer(startLayer: string | undefined, func: (layer: any) => void): void;
 }

@@ -1,4 +1,3 @@
-import { ModelLoader } from "./model_loader";
 import { SoundLoader } from "./sound";
 import { Textures } from "./textures";
 import { MapD } from "./map";
@@ -21,10 +20,8 @@ export class Main {
     //public particles!: ParticlePool;
     //public particles_box!: ParticlePool;
     public t_start = Date.now();
-    public modelLoader = new ModelLoader();
     public map!: MapD;
     public update_objects: any = [];
-    public cdList: any = [];
     public player: any;
     public visible_distance = 500; // from player to hide chunks + enemies.
     public textures = new Textures();
@@ -201,7 +198,6 @@ export class Main {
     reset() {
         this.camera = new PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, this.visible_distance);
         this.player.reset();
-        this.cdList = [];
         for (var i = 0; i < this.update_objects.length; i++) {
             if (this.update_objects[i].chunk) {
                 this.scene.remove(this.update_objects[i].chunk.mesh);
@@ -227,40 +223,6 @@ export class Main {
 
     addObject(obj) {
         this.update_objects.push(obj);
-    };
-
-    addToCD(obj) {
-        if (obj.owner == null || obj.owner == "") {
-            var err = new Error();
-            console.log(err.stack);
-        }
-        if (obj != undefined) {
-            this.cdList.push(obj);
-        }
-    };
-
-    spliceCDList(index) {
-        var len = this.cdList.length;
-        if (!len) { return; }
-        while (index < len) {
-            this.cdList[index] = this.cdList[index + 1];
-            index++
-        }
-        this.cdList.length--;
-    };
-
-    removeFromCD(obj) {
-        for (var i = 0; i < this.cdList.length; i++) {
-            // if(this.cdList[i] == null) { continue; }
-            if (this.cdList[i] != undefined) {
-                if (this.cdList[i].id == obj.id) {
-                    //this.cdList.splice(i, 1);
-                    this.spliceCDList(i);
-                    //this.cdList[i].r ;
-                    return;
-                }
-            }
-        }
     };
 
     render() {

@@ -3,12 +3,9 @@ import { Repl } from "./repl";
 import { CutRegionDef, CopyRegionDef, FillRegionDef, GetRegionInfoDef, PasteRegionDef, withRegionAsync, withRegion } from "./regioncommands";
 import { mapEditorState, MapEditorState } from "./mapeditorstate";
 import { HideLayerDef, SelectLayerDef, ShowLayerDef } from "./layercommands";
-import { AddTileCategoryDef, RemoveTileCategoryDef } from "./tilecommands";
 import { BindKeyDef, ShowKeyBindingsDef } from "./keybindcommands";
 import { addEditorShortcuts } from "../ui/mapeditor";
 import { addCameraShortcuts } from "../ui/cameralayer";
-import { GenerateMapDef } from "../mapgen/generatemapcommands";
-import { AddPokemonTypeDef } from "./pokemoncommands";
 import { SpawnCharacterDef } from "./charactercommands";
 import { PoshFunction, printEditModeError, printHelp, printNoRegion, registerFunction } from "./poshregistry";
 import { resourceLib } from "../graphics/resourceLib";
@@ -29,13 +26,9 @@ export function populateMapEditCommands(repl: Repl, mapEditorState: MapEditorSta
   repl.addFunc(new SelectLayerDef(mapEditorState));
   repl.addFunc(new ShowLayerDef(mapEditorState));
   repl.addFunc(new HideLayerDef(mapEditorState));
-  repl.addFunc(new AddTileCategoryDef(mapEditorState));
-  repl.addFunc(new RemoveTileCategoryDef(mapEditorState));
   repl.addFunc(new BindKeyDef(mapEditorState));
   repl.addFunc(showKeyBindingsDef);
-  repl.addFunc(new GenerateMapDef(mapEditorState, repl));
 
-  repl.addFunc(new AddPokemonTypeDef(mapEditorState));
   repl.addFunc(new SpawnCharacterDef(mapEditorState));
 
   addEditorShortcuts(showKeyBindingsDef);

@@ -1,4 +1,3 @@
-import { PokemonProxy } from "./avatarcode";
 import { CodeAction, IAvatarAPI } from "./iavatarapi";
 import { BattleAction, IBattleAPI } from "./ibattleapi";
 import { CatchAction, ICatchAPI } from "./icatchapi";
@@ -37,19 +36,10 @@ export interface IAvatarProxy {
   get name(): string;
 }
 
-export interface IPokemonProxy extends IAvatarProxy {
-  get kind(): PokemonKind;
-  get hp(): number;
-  get hpMax(): number;
-  get ownerId(): string | undefined;
-  get movesCount(): number;
-  moveAt(idx: number): PokemonMove;
-}
-
 export interface ICharacterProxy extends IAvatarProxy {
   // total number of pokemons 
   get pokemonCount(): number;
-  pokemonAt(idx: number): PokemonProxy;
+  pokemonAt(idx: number): any;
 
   // get number of balls of each color
   ballCount(name: string): number;
@@ -59,8 +49,5 @@ export interface ICharacterProxy extends IAvatarProxy {
 
 // need batter name. It is really a step code. 
 export interface IAvatarCode {
-  next(self: IPokemonProxy, abi: IAvatarAPI): CodeAction | undefined;
-  battleTurn(self: IPokemonProxy, opponent: IPokemonProxy, api: IBattleAPI): Promise<BattleAction>;
-  catchTurn(self: ICharacterProxy, opponent: IPokemonProxy, api: ICatchAPI): Promise<CatchAction>;
 }
 

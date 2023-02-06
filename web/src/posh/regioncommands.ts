@@ -1,6 +1,4 @@
 import { storeFile } from "../fetchadapter";
-import { gameState } from "../world/igamestate";
-import { TileLayer } from "../world/tilelayer";
 import { ParamType, ParamDef, combineParams } from "./funcdef";
 import { CoordinateParams, coordinateParamsToRect, createCoordinateParams, GenericEditorFuncDef } from "./genericeditorfuncdef";
 import { mapEditorState, MapEditorState } from "./mapeditorstate";
@@ -245,7 +243,7 @@ export class GetRegionInfoDef extends GenericEditorFuncDef {
 }
 
 export function saveRegion(args: { name: string }) {
-  withRegionAsync(async (layer: TileLayer, region: GridRect) => {
+  withRegionAsync(async (layer: any, region: GridRect) => {
     let tileBuffer = layer.getRegion(region);
     await storeFile('regions/' + name, JSON.stringify(tileBuffer));
     return true;
@@ -253,7 +251,7 @@ export function saveRegion(args: { name: string }) {
 }
 
 export function loadRegion(args: { name: string }) {
-  withRegionAsync(async (layer: TileLayer, region: GridRect) => {
+  withRegionAsync(async (layer: any, region: GridRect) => {
     let tileBuffer = layer.getRegion(region);
     await storeFile('regions/' + name, JSON.stringify(tileBuffer));
     return true;
@@ -264,7 +262,7 @@ export function registerRegionCommands() {
   registerFunction('saveRegion', ['name:string'], saveRegion);
 }
 
-export function withRegionAsync(func: (layer: TileLayer, region: GridRect) => Promise<boolean>): boolean {
+export function withRegionAsync(func: (layer: any, region: GridRect) => Promise<boolean>): boolean {
   let layer = mapEditorState.currentTileLayer;
   if (layer === undefined) {
     printEditModeError();
@@ -283,7 +281,7 @@ export function withRegionAsync(func: (layer: TileLayer, region: GridRect) => Pr
   return true;
 }
 
-export function withRegion(func: (layer: TileLayer, region: GridRect) => void): boolean {
+export function withRegion(func: (layer: any, region: GridRect) => void): boolean {
   let layer = mapEditorState.currentTileLayer;
   if (layer === undefined) {
     printEditModeError();

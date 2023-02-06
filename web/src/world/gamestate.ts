@@ -5,17 +5,14 @@ import { Repl } from "../posh/repl";
 import { Avatar } from "./avatar";
 import { Pokemon } from "./pokemon";
 import { GridPos, gridPosToPxPos } from "../posh/pos";
-import { currentWorldId, fetchAvatars, fetchMap, removeAvatar, spawnCharacter, spawnPokemon } from "../fetchadapter";
-import { GameMap } from "./gamemap";
+import { currentWorldId, fetchAvatars, removeAvatar, spawnCharacter, spawnPokemon } from "../fetchadapter";
 import { IAvatar } from "./iavatar";
 import { printNetworkError } from "../ui/errorreport";
-import { Character } from "./character";
 import { terminal } from "../ui/igameterminal";
 import { gameState, IGameState, setGameState } from "./igamestate";
 import { IGameMap } from "./igamemap";
 import { printCodeException } from "../mechanics/codeloader";
 import { SpriteMoveAnimation } from "./spritemoveanimation";
-import { AvatarCollection } from "./avatarcollection";
 
 export type WireSpawnPokemonRequest = {
   pokedexId: string;
@@ -60,7 +57,7 @@ export class GameState {
   public readonly repl: Repl;
   public onLoaded: boolean = false;
 
-  public readonly avatarCollection: AvatarCollection = new AvatarCollection();
+  //public readonly avatarCollection: AvatarCollection = new AvatarCollection();
 
   constructor() {
     this.repl = new Repl();
@@ -75,32 +72,32 @@ export class GameState {
   }
 
   public async load(): Promise<boolean> {
-
-    this.gameMap = await GameMap.load("default");
-
-    let wireAvatars = await fetchAvatars();
-    for (let avatarProps of wireAvatars) {
-      if (avatarProps.character !== undefined && avatarProps.character !== null) {
-        let character = new Character(avatarProps.character, this.onAvatarPosChanged);
-        try {
-          await character.load();
-          this.addAvatar(character);
+    /*
+        this.gameMap = await GameMap.load("default");
+    
+        let wireAvatars = await fetchAvatars();
+        for (let avatarProps of wireAvatars) {
+          if (avatarProps.character !== undefined && avatarProps.character !== null) {
+            let character = new Character(avatarProps.character, this.onAvatarPosChanged);
+            try {
+              await character.load();
+              this.addAvatar(character);
+            }
+            catch (e) {
+              terminal?.printError(`Failed to load character ${character.id}`);
+            }
+          } else if (avatarProps.pokemon !== undefined && avatarProps.pokemon !== null) {
+            let pokemon = new Pokemon(avatarProps.pokemon, this.onAvatarPosChanged);
+            try {
+              await pokemon.load();
+              this.addAvatar(pokemon);
+            }
+            catch (e) {
+              terminal?.printError(`Failed to load pokemon ${pokemon.id}`);
+            }
+          }
         }
-        catch (e) {
-          terminal?.printError(`Failed to load character ${character.id}`);
-        }
-      } else if (avatarProps.pokemon !== undefined && avatarProps.pokemon !== null) {
-        let pokemon = new Pokemon(avatarProps.pokemon, this.onAvatarPosChanged);
-        try {
-          await pokemon.load();
-          this.addAvatar(pokemon);
-        }
-        catch (e) {
-          terminal?.printError(`Failed to load pokemon ${pokemon.id}`);
-        }
-      }
-    }
-
+    */
     this.onLoaded = true;
 
     return true;
@@ -134,38 +131,30 @@ export class GameState {
   }
 
   public spawnCharacter(name: string, skinUrl: string) {
-    setTimeout(async () => {
-      let existintAvatar = this.avatarCollection.getAvatar(name);
-      if (existintAvatar !== undefined) {
-        terminal?.printError(`Character ${name} already exists`);
-        return;
-      }
-
-      let wireSpawnCharacter = {
-        name: name,
-        skinUrl: skinUrl,
-      }
-      let wireAvatar = await spawnCharacter(wireSpawnCharacter);
-      if (wireAvatar === undefined || wireAvatar.character === undefined) {
-        printNetworkError('spawnCharacter');
-        return;
-      }
-
-      let character = new Character(wireAvatar.character, this.onAvatarPosChanged);
-      await character.load();
-
-      this.addAvatar(character);
-    });
-  }
-
-  public removePokemon(p: Pokemon): void {
-    this.avatarCollection.removeAvatar(p);
-    if (p.layer !== undefined) {
-      p.layer.removeAvatar(p);
-    }
-    setTimeout(async () => {
-      await removeAvatar(p.id);
-    });
+    /*
+        setTimeout(async () => {
+          let existintAvatar = this.avatarCollection.getAvatar(name);
+          if (existintAvatar !== undefined) {
+            terminal?.printError(`Character ${name} already exists`);
+            return;
+          }
+    
+          let wireSpawnCharacter = {
+            name: name,
+            skinUrl: skinUrl,
+          }
+          let wireAvatar = await spawnCharacter(wireSpawnCharacter);
+          if (wireAvatar === undefined || wireAvatar.character === undefined) {
+            printNetworkError('spawnCharacter');
+            return;
+          }
+    
+          let character = new Character(wireAvatar.character, this.onAvatarPosChanged);
+          await character.load();
+    
+          this.addAvatar(character);
+        });
+        */
   }
 
   private onAvatarPosChanged(avatar: IAvatar, oldPos: GridPos | undefined, newPos: GridPos | undefined) {
@@ -180,15 +169,16 @@ export class GameState {
   }
 
   private addAvatar(avatar: Avatar) {
-    this.avatarCollection.addAvatar(avatar);
-
-    if (avatar.props.layerId !== undefined) {
-      let layer = this.gameMap!.getLayer(avatar.props.layerId);
-      if (layer === undefined) {
-        throw 'unknown layer';
-      }
-      layer.addAvatar(avatar);
-    }
+    /*
+        this.avatarCollection.addAvatar(avatar);
+    
+        if (avatar.props.layerId !== undefined) {
+          let layer = this.gameMap!.getLayer(avatar.props.layerId);
+          if (layer === undefined) {
+            throw 'unknown layer';
+          }
+          layer.addAvatar(avatar);
+        }*/
   }
 
   private connectSignalR() {
@@ -215,6 +205,7 @@ export class GameState {
   }
 
   private onUpdateAvatarPositionRtc(sessionId: string, message: string): void {
+    /*
     if (sessionId === this.sessionId) {
       return;
     }
@@ -228,11 +219,12 @@ export class GameState {
     avatar.onRemoteUpdateCurrentPos(updateMsg.newPos);
     //this.gameMap?.physics.moveAvatarRemote(avatar, updateMsg.newPos!, (props) => { return SpriteMoveAnimation.create(props) });
     terminal?.refresh();
+    */
   }
 }
 
 export function createGameState(): IGameState {
-  setGameState(new GameState());
+  //setGameState(new GameState());
   return gameState;
 }
 

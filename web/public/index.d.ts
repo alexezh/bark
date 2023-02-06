@@ -9,14 +9,14 @@ export default class AsyncEventSource<T> {
 }
 
 export interface IFetchAdapter {
-    get(uri: string): Promise<any>;
+    get(uri: string): Promise<Response>;
     post(uri: string, body: string): Promise<any>;
 }
 export declare function currentWorldId(): string;
 export declare function setFetchAdapter(adapter: IFetchAdapter): void;
+export declare function fetchResource(url: string): Promise<ArrayBuffer>;
 export declare function fetchWorld(id: string): Promise<WorldProps>;
-export declare function fetchAtlases(): Promise<SpriteSheetProps[]>;
-export declare function fetchTiles(): Promise<WireTileCollectionProps>;
+export declare function fetchSpriteSheets(): Promise<SpriteSheetProps[]>;
 export declare function addTileSet(tileSetProps: SpriteSheetProps): Promise<void>;
 export declare function storeFile(name: string, data: string): Promise<boolean>;
 export declare function storeFileBackground(name: string, data: string): void;
@@ -25,19 +25,15 @@ export type WireFile = {
     data: string;
 };
 export declare function fetchFiles(pattern: string): Promise<WireFile[]>;
-export declare function updateTile(tileProps: WireTileDefProps): Promise<void>;
-export declare function fetchMap(mapId: string): Promise<WireMapData>;
 export declare function fetchAvatars(): Promise<WireAvatarProps[]>;
-export declare function updateTileLayer(updateMsg: WireTileLayerUpdate): Promise<void>;
-export declare function addCompositeTile(tileProps: WireTileDefProps): Promise<WireAddCompositeTileResponse>;
 export declare function updateAvatarRuntimeProps(avatarId: string, rt: any): void;
-export declare function fetchText(uri: string): Promise<any>;
+export declare function fetchText(uri: string): Promise<string>;
 export declare function spawnPokemon(params: WireSpawnPokemonRequest): Promise<WireAvatarProps>;
 export declare function spawnCharacter(params: WireSpawnCharacterRequest): Promise<WireAvatarProps>;
 export declare function removeAvatar(id: string): Promise<boolean>;
 
 export declare class FetchAdapterWeb implements IFetchAdapter {
-    get(uri: string): Promise<any>;
+    get(uri: string): Promise<Response>;
     post(uri: string, body: string): Promise<any>;
 }
 
@@ -54,7 +50,7 @@ export declare class GameApp {
     private resizeCanvas;
 }
 
-export declare var gameApp: GameApp;
+export declare function initGame(canvas: HTMLElement): void;
 
 export declare class QueueTTT<T> {
     private items;
@@ -135,6 +131,8 @@ export declare class PropertyAnimationManager {
 }
 export declare var animator: PropertyAnimationManager;
 
+export declare function numberArrayToString(v: number[]): string;
+
 export type MoveAnimationToken = {
     animation: IAnimatable;
     nextMove: MoveAvatarParams | undefined;
@@ -149,9 +147,6 @@ export declare class GamePhysics implements IGamePhysics {
     moveAvatar(params: MoveAvatarParams): boolean;
     private moveAvatarWorker;
     moveAvatarRemote(avatar: IAvatar, pos: GridPos, func: (props: SpriteMoveAnimationProps) => IAnimatable): boolean;
-    private handleAvatarCollision;
-    private canMoveToMapPos;
-    private onCompleteMove;
 }
 
 export type MoveAvatarParams = {
@@ -167,6 +162,7 @@ export interface IGamePhysics {
 }
 export interface IGameCollisionHandler {
     onCollision(a1: IAvatar, a2: IAvatar): void;
+    onLocation(a: IAvatar, loc: MapLocation): boolean;
 }
 
 export type SpriteSheetProps = {
@@ -179,30 +175,65 @@ export type SpriteSheetProps = {
     startTileId: number;
 };
 
+export type WirePokedexEntry = {
+    id: string;
+    value: string;
+};
+export declare enum PokemonKind {
+    grass = "grass",
+    water = "water",
+    fire = "fire"
+}
+export type PokedexProps = {
+    id: string;
+    name: string;
+    kind: PokemonKind;
+    battlerFrontUrl: string;
+    battlerBackUrl: string;
+    iconUrl: string;
+    skinUrl: string;
+    hp: number;
+    hpMax: number;
+    code: string;
+    moves: string[];
+};
+export declare class PokedexEntry {
+    props: PokedexProps;
+    constructor(props: PokedexProps);
+}
+export interface IPokedex {
+    loadPokedex(): Promise<boolean>;
+    addPokedexEntry(id: any, props: PokedexProps): void;
+    updatePokedexEntry(id: any, props: PokedexProps): void;
+    getPokedexEntry(id: any): PokedexEntry | undefined;
+}
+
+export declare class Pokedex implements IPokedex {
+    private pokedex;
+    loadPokedex(): Promise<boolean>;
+    private makePokedexId;
+    addPokedexEntry(id: any, props: PokedexProps): undefined;
+    updatePokedexEntry(id: any, props: PokedexProps): undefined;
+    getPokedexEntry(id: any): PokedexEntry | undefined;
+    updatePokedexCode(entry: PokedexEntry, text: string): void;
+    getPokedexCode(entry: PokedexEntry): string;
+}
+
 export declare class ResourceLibrary {
     private _grammar?;
     private _parser?;
     private spriteSheets;
-    private tiles;
-    private composedTiles;
-    private pokedex;
+    private code;
     get grammar(): string | undefined;
     get parser(): object | undefined;
+    readonly pokedex: Pokedex;
     load(worldId: string): Promise<void>;
+    private loadTileCode;
+    private loadSpriteSheets;
     addSpriteSheet(spriteSheet: SpriteSheet): void;
     getSpriteSheetById(id: string): SpriteSheet;
     loadSpriteSheet(props: SpriteSheetProps): Promise<SpriteSheet>;
     forEachSpriteSheet(func: (x: SpriteSheet) => void): void;
-    createTileSprite(tile: TileDef | undefined, pos: PxPos): PixiSprite | undefined;
-    getTileById(n: number): TileDef | undefined;
-    deleteTile(tile: number): void;
-    findTile(pred: (tile: TileDef) => boolean): TileDef | undefined;
-    findTiles(pred: (tile: TileDef) => boolean): IterableIterator<TileDef>;
-    updateTile(tile: TileDef): void;
-    getTileById2(n: number | undefined): TileDef | undefined;
-    findOrAddTile(currentTile: TileDef, addOnTile: TileDef): Promise<TileDef>;
-    updatePokedexEntry(id: string, e: any): void;
-    getPokedexEntry(id: string): any;
 }
 export declare var resourceLib: ResourceLibrary;
 
@@ -213,296 +244,41 @@ export type TileBuffer = {
 };
 export declare class SpriteSheet {
     readonly props: SpriteSheetProps;
-    private texture?;
-    private spriteSheet?;
     private startFrameId;
     private static nextId;
     get id(): string;
     private constructor();
     static load(props: SpriteSheetProps): Promise<SpriteSheet>;
     private load;
-    createSprite(idx: number, pos: PxPos): PixiSprite;
-    getTexture(idx: number): PixiTexture<import("pixijs").Resource>;
+    createSprite(idx: number, pos: PxPos): any;
+    getTexture(idx: number): any;
     getRegion(rect: GridRect): TileBuffer;
 }
 
 export declare var SimplexNoise: (gen: any) => void;
 
-export type GenerateMapParams = {
-    command: string;
-    p1: string;
-    p2: string;
-    p3: string;
-    p4: string;
-};
-export type BiomeProps = {
-    level: number;
-    perlinBase: number;
-    seed: number;
-};
-export type TileReplacementPattern = {
-    category: string;
-    w: number;
-    h: number;
-    current: number[];
-    replace: number[];
-};
-export type HouseDef = {
-    id: number;
-    w: number;
-    h: number;
-    tiles: number[];
-};
-export type GenerateMapProps = {
-    mapWidth: number;
-    mapHeight: number;
-    seed: number;
-    perlinBase: number;
-    waterLevel: number;
-    sandLevel: number;
-    grassLevel: number;
-    mountainLevel: number;
-    clip: PxRect;
-    detailsBase: number;
-    detailsScale: number;
-    ground: BiomeProps;
-    tree: BiomeProps;
-    city: BiomeProps;
-    replacePatterns: TileReplacementPattern[];
-    houseDefs: HouseDef[];
-};
-export type RGB = {
-    r: number;
-    g: number;
-    b: number;
-};
-export declare enum GroundKind {
-    water = 0,
-    sand = 1,
-    ground = 2,
-    grass = 3,
-    mountain = 4,
-    tree = 5,
-    bush = 6,
-    city = 7,
-    houseContinue = 99,
-    houseStart = 100
-}
-export declare class GenerateMapDef extends GenericEditorFuncDef {
-    static funcName: string;
-    private repl;
-    private loaded;
-    private props?;
-    private height?;
-    private tree?;
-    private bush?;
-    private ground?;
-    private city?;
-    private groundDef?;
-    mapEditorState: any;
-    constructor(mapEditorState: MapEditorState, repl: Repl);
-    createParamDefs(): ParamDef[];
-    help(): string;
-    private ensureLoaded;
-    private loadBuffer;
-    private saveBuffer;
-    private saveProps;
-    protected evalCore(params: any): string | undefined;
-    private setVar;
-    private getVar;
-    private generateHeight;
-    private generateHeightDetails;
-    private generateBiome;
-    private generateBiomeParams;
-    private generateHouses;
-    private getColorByHeight;
-    private generateTiles;
-    private addPattern;
-    private addHouse;
-    private clearPattern;
-    private displayHeightMap;
-    private clipHeight;
-    private sinkLand;
-    private sinkLine;
-    private print;
-}
-export declare function tileToColor(tileId: number): RGB;
-
-export declare class HouseWriter {
-    rnd: any;
-    houses: HouseDef[];
-    ground: Uint8Array;
-    width: number;
-    height: number;
-    constructor(rnd: any, buildings: HouseDef[], groundDef: Uint8Array, width: number, height: number);
-    generate(pos: GridPos, houseCount: number): void;
-    private buildHouse;
-}
-
-export declare function getIslandGenerationConfig(): {
-    landName: string;
-    cityNames: string;
-    genType: string;
-    rivers: number;
-    mountains: number;
-    cities: number;
-    forests: number;
-    beaches: number;
-    generationSpeed: number;
-    sprawlingRivers: boolean;
-    wDecorations: boolean;
-    lDecorations: boolean;
-    ribbon: boolean;
-    worldSteps: number;
-    detailSteps: number;
-};
-export declare function getChance(max: any, isLower: any): boolean;
-
 export declare function perlinNoise(perilinW: number, perilinH: number, baseX: number, baseY: number, seed: number): Uint8ClampedArray;
 
 export declare function PRNG(): any;
 
-export declare class TileLayerWriter {
-    ground: TileDef;
-    grass: TileDef;
-    tree: TileDef;
-    mountain: TileDef;
-    water: TileDef;
-    sand: TileDef;
-    grassVar: TileDef[];
-    buildings: HouseDef[];
-    constructor(buildings: HouseDef[]);
-    generateTiles(props: GenerateMapProps, layer: TileLayer, groundDef: Uint8Array, usePatterns: boolean): void;
-    private fillGroundTiles;
-    private fillHouseTiles;
-    private replacePatterns;
-    private replacePatternsWorker;
-    private generateTrees;
-}
 
-export declare function CAWorld(options: any): void;
-
-export declare class Markov {
-    constructor(type?: string);
-    addStates(state: any): void;
-    clearChain(): void;
-    clearState(): void;
-    clearPossibilities(): void;
-    getStates(): any;
-    setOrder(order?: number): void;
-    getOrder(): any;
-    getPossibilities(possibility: any): any;
-    train(order: any): void;
-    generateRandom(chars?: number): any;
-    random(obj: any, type: any): any;
-    predict(value: any): any;
-    getType(): any;
-    setType(type?: string): void;
-}
-
-export declare class AvatarAPI implements IAvatarAPI {
-    self?: IAvatar;
-    private map;
-    private avatarCollection;
-    constructor(avatarCollection: AvatarCollection, map: IGameMap);
-    look(func: (x: WObject) => boolean): boolean;
-    canMove(dir: MoveDirection): boolean;
-    lookFor(id: string): GridPos | null;
-    makeMove(dir: MoveDirection): MoveAction;
-    makeRelMove(dir: RelMoveDirection): MoveAction;
-    makeIdle(): CodeAction;
-    say(s: string): SayAction;
-}
-
-export declare class PokemonProxy implements IPokemonProxy {
-    private props;
-    constructor(obj: PokemonProps);
-    get id(): string;
-    get name(): string;
-    get kind(): PokemonKind;
-    get hp(): number;
-    get hpMax(): number;
-    get ownerId(): string | undefined;
-    get movesCount(): number;
-    moveAt(idx: number): PokemonMove;
-}
-export declare class CharacterProxy implements ICharacterProxy {
-    private props;
-    constructor(obj: CharacterProps);
-    get id(): string;
-    get name(): string;
-    get pokemonCount(): number;
-    pokemonAt(idx: number): PokemonProxy;
-    ballCount(name: string): number;
-    balls(): IterableIterator<string>;
-}
-
-export type BattleToken = {
-    a1: Pokemon;
-    a2: Pokemon;
-    p1: PokemonProxy;
-    p2: PokemonProxy;
-    pending: Promise<BattleAction> | undefined;
-    currentMover: PokemonProxy | undefined;
-};
-export declare function startBattle(a1: IAvatar, a2: IAvatar): void;
-export declare function runBattles(): void;
-
-export declare class CatchAPI implements ICatchAPI {
-    makeLeaveAction(): CatchAction;
-    makeCatchAction(ball: string): ThrowBallAction;
-    makeFeedAction(item: string): FeedAction;
-    prompt(s: string): Promise<string>;
-    promptMenu(s: string): Promise<string>;
-}
-export type CatchToken = {
-    character: Character;
-    pokemon: Pokemon;
-    p1: CharacterProxy;
-    p2: PokemonProxy;
-    pending: Promise<CatchAction> | undefined;
-    currentMover: PokemonProxy | CharacterProxy | undefined;
-};
-export declare function startCatch(character: Character, pokemon: Pokemon): void;
-export declare function runCatch(): void;
-
-export type CodeLoaderEntry = {
+export type CodeModule = {
     code: string;
     codeObj: any;
     enabled: boolean;
 };
 export declare class CodeLoader {
     private codeLib;
+    private functionLib;
     battleCode?: IBattleCode;
     getCode(id: string): IAvatarCode | undefined;
     updateCode(id: string, code: string): void;
-    getCodeObject(id: string): CodeLoaderEntry | undefined;
-    loadCode(category: CodeCategory, code: string): any;
+    getCodeModule(id: string): CodeModule | undefined;
+    loadFunction(id: string, ...args: string[]): boolean;
+    invokeFunction<T>(id: string, ...args: any): T;
 }
 export declare function printCodeException(avatar: string, e: any): void;
 export declare let codeLoader: CodeLoader;
-
-export declare class BattleAPI implements IBattleAPI {
-    prompt(s: string): Promise<string>;
-    makeRunAction(): BattleAction;
-    makeAttackAction(moveId: string): BattleAttackAction;
-}
-export declare class GameMechanics implements IGameMechanics, IGameCollisionHandler {
-    private ticker?;
-    private lastMoveTick;
-    private physics;
-    private map;
-    private readonly avatarCollection;
-    private readonly liveAvatars;
-    constructor(map: IGameMap, physics: IGamePhysics, avatarCollection: AvatarCollection);
-    start(ticker: PixiTicker): void;
-    addLiveAvatar(avatar: IAvatar): void;
-    removeLiveAvatar(avatar: IAvatar): void;
-    onCollision(a1: IAvatar, a2: IAvatar): void;
-    private runStep;
-    private runMoveStep;
-    private executeAction;
-}
 
 export declare enum WObjectKind {
     character = "character",
@@ -558,37 +334,38 @@ export type MoveAction = CodeAction & {
 export type SayAction = CodeAction & {
     text: string;
 };
+export type TeleportAction = CodeAction & {
+    mapId: string | undefined;
+    layerId: string | undefined;
+    pos: GridPos;
+};
 export declare const maxLookDistance = 5;
 export declare function dirByRelDirection(dir: MoveDirection, newDir: RelMoveDirection): MoveDirection;
 export declare function deltaByAbsDirection(dir: MoveDirection): GridPos;
 
 export declare enum CodeCategory {
     avatar = "avatar",
+    pokedex = "pokedex",
     battle = "battle"
 }
-export declare function describeCodeCategory(): string;
-export interface IPokemonProxy {
-    get id(): string;
-    get name(): string;
-    get kind(): PokemonKind;
-    get hp(): number;
-    get hpMax(): number;
-    get ownerId(): string | undefined;
-    get movesCount(): number;
-    moveAt(idx: number): PokemonMove;
+export declare enum FileCategory {
+    avatar = "avatar",
+    pokedex = "pokedex",
+    location = "location",
+    tile = "tile"
 }
-export interface ICharacterProxy {
+export declare function describeCodeCategory(): string;
+export interface IAvatarProxy {
     get id(): string;
     get name(): string;
+}
+export interface ICharacterProxy extends IAvatarProxy {
     get pokemonCount(): number;
-    pokemonAt(idx: number): PokemonProxy;
+    pokemonAt(idx: number): any;
     ballCount(name: string): number;
     balls(): IterableIterator<string>;
 }
 export interface IAvatarCode {
-    next(self: IPokemonProxy, abi: IAvatarAPI): CodeAction | undefined;
-    battleTurn(self: IPokemonProxy, opponent: IPokemonProxy, api: IBattleAPI): Promise<BattleAction>;
-    catchTurn(self: ICharacterProxy, opponent: IPokemonProxy, api: ICatchAPI): Promise<CatchAction>;
 }
 
 export interface IBattleCode {
@@ -647,8 +424,17 @@ export interface IGameMechanics {
     addLiveAvatar(avatar: IAvatar): void;
     removeLiveAvatar(avatar: IAvatar): void;
 }
-export declare let gameMechanics: IGameMechanics;
-export declare function createGameMechanics(map: IGameMap, physics: IGamePhysics, avatarCollection: AvatarCollection): IGameMechanics;
+
+export interface ILocationAPI {
+    makeTeleportAction(mapId: string | undefined, layerId: string | undefined, x: number, y: number): TeleportAction;
+}
+export interface ILocationCode {
+    onEnter(avatar: IAvatarProxy): CodeAction;
+    onExit(avatar: IAvatarProxy): CodeAction;
+}
+export declare class LocationAPI implements ILocationAPI {
+    makeTeleportAction(mapId: string | undefined, layerId: string | undefined, x: number, y: number): TeleportAction;
+}
 
 export type PtObj = {
     kind: string;
@@ -698,7 +484,8 @@ export declare function viewCode(args: {
     category: string;
     id: string;
 }): void;
-export declare function editJson(args: {
+export declare function editObject(args: {
+    category: string;
     id: string;
 }): void;
 export declare function registerCodeCommands(): void;
@@ -746,18 +533,12 @@ export declare class GenericFuncDef extends FuncDef {
 export declare function combineParams(a: ParamDef[], b: ParamDef[]): ParamDef[];
 export declare function buildFuncAst(ptCall: PtCall): AstNode;
 
-export type TeleportParams = {
+export declare function teleport(args: {
     id: string;
     x: number;
     y: number;
-};
-export declare class TeleportDef extends GenericEditorFuncDef {
-    static funcName: string;
-    constructor(mapEditorState: MapEditorState);
-    createParamDefs(): ParamDef[];
-    help(): string;
-    protected evalCore(params: any): string | undefined;
-}
+}): undefined;
+export declare function registerMoveCommands(): void;
 
 export declare class GenericEditorFuncDef extends GenericFuncDef {
     mapEditorState: MapEditorState;
@@ -831,6 +612,13 @@ export declare class HideLayerDef extends ShowLayerCoreDef {
 export declare let fillRegionDef: FillRegionDef | undefined;
 export declare let showKeyBindingsDef: ShowKeyBindingsDef | undefined;
 export declare function populateMapEditCommands(repl: Repl, mapEditorState: MapEditorState): void;
+export declare function addLocation(args: {
+    id: string;
+}): undefined;
+export declare function deleteLocation(args: {
+    id: string;
+}): undefined;
+export declare function registerMapCommands(): void;
 
 export type MapBitmap = {
     w: number;
@@ -844,7 +632,7 @@ export type MapEditorUpdate = {
     tileClipboard?: TileBuffer;
     region?: GridRect;
     scrollSize?: PxSize;
-    map?: GameMap;
+    map?: any;
     mapBitmap?: MapBitmap;
     tileListSheet?: SpriteSheet;
     invalidator?: ICameraControl | null;
@@ -861,15 +649,15 @@ export declare class MapEditorState {
     private _tileListSheet?;
     private eventSource;
     get isEditMode(): boolean;
-    get currentLayer(): IGameLayer | undefined;
+    get currentLayer(): any | undefined;
     get tileClipboard(): TileBuffer | undefined;
     get region(): GridRect | undefined;
     get cameraSize(): PxSize | undefined;
-    get world(): GameMap | undefined;
+    get world(): any | undefined;
     get cameraControl(): ICameraControl | undefined;
     get mapBitmap(): MapBitmap | undefined;
     get tileListSheet(): SpriteSheet | undefined;
-    get currentTileLayer(): TileLayer | undefined;
+    get currentTileLayer(): any | undefined;
     static unknownLayerError: string;
     constructor();
     onChanged(target: any, func: (evt: MapEditorChangeEvent) => void): void;
@@ -880,32 +668,6 @@ export declare class MapEditorState {
 }
 export declare let mapEditorState: MapEditorState;
 export declare function createMapEditorState(): void;
-
-export type AddPokemonTypeParams = {
-    id: string;
-    name: string;
-    kind: string;
-};
-export declare class AddPokemonTypeDef extends GenericEditorFuncDef {
-    private static funcName;
-    constructor(mapEditorState: MapEditorState);
-    help(): string;
-    createParamDefs(): ParamDef[];
-    protected evalCore(params: any): string | undefined;
-}
-export type SpawnPokemonParams = {
-    pokedexId: number;
-    name: string;
-};
-export declare function spawnPokemon(args: {
-    pokedexId: number;
-    x: number;
-    y: number;
-}): void;
-export declare function printAvatarInfo(args: {
-    id: string;
-}): void;
-export declare function registerPokemonCommands(): void;
 
 export type GridPos = {
     x: number;
@@ -951,11 +713,13 @@ export declare function isRectOverlap(r1: GridRect, r2: GridRect): boolean;
 
 export type PoshFunction = {
     params: ParamDef[];
+    help: string | undefined;
     (args: any): void;
 };
-export declare function registerFunction(name: string, args: string[], func: (args: any) => void): void;
+export declare function registerFunction(name: string, args: string[], func: (args: any) => void, help?: string | undefined): void;
 export declare function getFunction(name: string): PoshFunction | undefined;
 export declare function evalFunction(ast: AstNode): string | undefined;
+export declare function printHelp(func: PoshFunction): void;
 export declare function printEditModeError(): void;
 export declare function printNoRegion(): void;
 
@@ -1012,7 +776,8 @@ export declare function loadRegion(args: {
     name: string;
 }): void;
 export declare function registerRegionCommands(): void;
-export declare function withRegion(func: (layer: TileLayer, region: GridRect) => Promise<boolean>): boolean;
+export declare function withRegionAsync(func: (layer: any, region: GridRect) => Promise<boolean>): boolean;
+export declare function withRegion(func: (layer: any, region: GridRect) => void): boolean;
 
 export interface IRepl {
     getFunc(s: string): FuncDef;
@@ -1050,20 +815,11 @@ export declare class Repl implements IRepl {
 export type LoginParams = {
     name: string;
 };
-export declare class LoginDef extends GenericFuncDef {
-    private func;
-    constructor(func: (x: string) => void);
-    createParamDefs(): ParamDef[];
-    help(): string;
-    protected evalCore(params: any): string | undefined;
-}
-export declare class LogoutDef extends GenericFuncDef {
-    private func;
-    constructor(func: () => void);
-    createParamDefs(): ParamDef[];
-    help(): string;
-    protected evalCore(params: any): string | undefined;
-}
+export declare function login(args: {
+    name: string;
+}): void;
+export declare function logout(): void;
+export declare function registerSystemCommands(): void;
 
 export declare const resetColor = "\u001B[0m";
 export declare const greenText = "\u001B[1;3;32m";
@@ -1071,67 +827,94 @@ export declare const redText = "\u001B[1;3;31m";
 export declare function decorateCommand(s: string): string;
 export declare function decorateSay(s: string): string;
 
-export type AddTileCategoryParams = CoordinateParams & {
-    category: string;
-};
-export declare class AddTileCategoryDef extends GenericEditorFuncDef {
-    private static funcName;
-    constructor(mapEditorState: MapEditorState);
-    help(): string;
-    createParamDefs(): ParamDef[];
-    protected evalCore(params: any): string | undefined;
-    private addCategory;
+export interface CircleGeometry {
+    x: number;
+    y: number;
+    r: number;
 }
-export declare class RemoveTileCategoryDef extends GenericEditorFuncDef {
-    private static funcName;
-    constructor(mapEditorState: MapEditorState);
-    help(): string;
-    createParamDefs(): ParamDef[];
-    protected evalCore(params: any): string | undefined;
-    private removeCategory;
+export interface CircleProps<CustomDataType = void> extends CircleGeometry {
+    data?: CustomDataType;
 }
-export type DeleteTileParams = {
-    tile: number;
-};
-export declare class DeleteTileDef extends GenericEditorFuncDef {
-    private static funcName;
-    constructor(mapEditorState: MapEditorState);
-    help(): string;
-    createParamDefs(): ParamDef[];
-    protected evalCore(params: any): string | undefined;
+export declare class Circle<CustomDataType = void> implements CircleGeometry, Indexable {
+    x: number;
+    y: number;
+    r: number;
+    data?: CustomDataType;
+    constructor(props: CircleProps<CustomDataType>);
+    qtIndex(node: NodeGeometry): number[];
+    static intersectRect(x: number, y: number, r: number, minX: number, minY: number, maxX: number, maxY: number): boolean;
 }
-export type AddTileSetParams = {
-    id: string;
-    url: string;
-    w: number;
-    h: number;
-};
-export declare class AddTileSetDef extends GenericEditorFuncDef {
-    private static funcName;
-    private repl;
-    private image?;
-    constructor(mapEditorState: MapEditorState, repl: Repl);
-    help(): string;
-    createParamDefs(): ParamDef[];
-    protected evalCore(params: any): string | undefined;
-    private onImageError;
-    private onImageLoaded;
+
+export interface LineGeometry {
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
 }
-export declare class ListTileSetsDef extends GenericEditorFuncDef {
-    private static funcName;
-    private repl;
-    constructor(mapEditorState: MapEditorState, repl: Repl);
-    help(): string;
-    createParamDefs(): ParamDef[];
-    protected evalCore(params: any): string | undefined;
+export interface LineProps<CustomDataType = void> extends LineGeometry {
+    data?: CustomDataType;
 }
-export declare class SelectTileSetDef extends GenericEditorFuncDef {
-    private static funcName;
-    private repl;
-    constructor(mapEditorState: MapEditorState, repl: Repl);
-    help(): string;
-    createParamDefs(): ParamDef[];
-    protected evalCore(params: any): string | undefined;
+export declare class Line<CustomDataType = void> implements LineGeometry, Indexable {
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+    data?: CustomDataType;
+    constructor(props: LineProps<CustomDataType>);
+    qtIndex(node: NodeGeometry): number[];
+    static intersectRect(x1: number, y1: number, x2: number, y2: number, minX: number, minY: number, maxX: number, maxY: number): boolean;
+}
+
+export interface QuadtreeProps {
+    width: number;
+    height: number;
+    x?: number;
+    y?: number;
+    maxObjects?: number;
+    maxLevels?: number;
+}
+export declare class Quadtree<ObjectsType extends Rectangle | Circle | Line | Indexable> {
+    bounds: NodeGeometry;
+    maxObjects: number;
+    maxLevels: number;
+    level: number;
+    objects: ObjectsType[];
+    nodes: Quadtree<ObjectsType>[];
+    constructor(props: QuadtreeProps, level?: number);
+    getIndex(obj: ObjectsType): number[];
+    split(): void;
+    insert(obj: ObjectsType): void;
+    retrieve(obj: ObjectsType): ObjectsType[];
+    clear(): void;
+}
+
+export interface RectangleGeometry {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+export interface RectangleProps<CustomDataType = void> extends RectangleGeometry {
+    data?: CustomDataType;
+}
+export declare class Rectangle<CustomDataType = void> implements RectangleGeometry, Indexable {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    data?: CustomDataType;
+    constructor(props: RectangleProps<CustomDataType>);
+    qtIndex(node: NodeGeometry): number[];
+}
+
+export interface Indexable {
+    qtIndex(node: NodeGeometry): number[];
+}
+export interface NodeGeometry {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
 }
 
 export interface Highlighter {
@@ -1379,6 +1162,7 @@ export declare class CodeEditor extends UiLayer2<CodeEditorProps> {
     private saveButton;
     constructor(props: CodeEditorProps);
     load(text: string | null | undefined, onSave: ((text: string) => void) | undefined, onCancel: () => void): void;
+    private onMacro;
 }
 
 export type CommandBarProps = UiLayerProps & {
@@ -1422,6 +1206,8 @@ export interface ICameraLayer {
 }
 
 export interface IGameTerminal {
+    login(name: string): void;
+    logout(): void;
     refresh(): void;
     setGameMap(map: IGameMap): void;
     printError(s: string): void;
@@ -1468,26 +1254,7 @@ export declare class KeyBinder {
     registerKeyUp(key: string, func?: () => void): void;
 }
 
-export type MapViewerProps = UiLayerProps & {
-    mapEditorState: MapEditorState;
-};
-export declare class MapBitmapViewer extends UiLayer2<MapViewerProps> {
-    selectedRect?: GridRect;
-    private isViewDirty;
-    private canvas;
-    private imageData?;
-    constructor(props: MapViewerProps);
-    private get canvasWidth();
-    private get canvasHeight();
-    private updateMap;
-    onMouseDown(htmlEvt: MouseEvent): boolean;
-    refresh(): void;
-    private _repaint;
-    private drawContent;
-}
-
 export type MapEditorProps = UiLayerProps & {
-    world: GameMap;
     mapEditorState: MapEditorState;
     repl: IRepl;
 };
@@ -1515,21 +1282,6 @@ export declare class MapEditor implements IMapEditor {
     onMouseMove(evt: MEvent): boolean;
 }
 
-type NewType = {
-    mapEditorState: MapEditorState;
-    repl: IRepl;
-};
-export type MapInfoLayerProps = UiLayerProps & NewType;
-export declare class MapInfoLayer extends UiLayer2<MapInfoLayerProps> {
-    private xElem;
-    private yElem;
-    private layerElem;
-    private tileElem;
-    private catElem;
-    constructor(props: MapInfoLayerProps);
-    onUpdateMapEditorState(): void;
-}
-
 export declare class TerminalProps {
     width: number;
     height: number;
@@ -1545,19 +1297,17 @@ export declare class TerminalProps {
     mediumButtonHeight: number;
 }
 export declare class Terminal implements IGameTerminal {
+    private map;
     private container;
-    private map?;
     camera?: CameraLayer;
     private compositor2;
     private props;
     private interactiveAvatar?;
     private barLayer;
     private terminalLayer;
-    private mapInfoLayer;
     private mapEditor?;
     private codeEditor?;
     private tileViewer?;
-    private mapViewer?;
     private keyboardHandler?;
     private repl;
     constructor(gameContainer: HTMLDivElement);
@@ -1568,12 +1318,12 @@ export declare class Terminal implements IGameTerminal {
     promptMenu(s: string): Promise<string>;
     editFile(text: string | null | undefined, onSave: ((text: string) => void) | undefined): void;
     printException(e: any): void;
-    setGameMap(map: GameMap): void;
+    setGameMap(map: any): void;
     private setInteractiveAvatar;
     private populateBasicCommands;
     private loginCached;
-    private onLogin;
-    private onLogout;
+    login(name: string): void;
+    logout(): void;
     private onToggleTerm;
     private onOpenTerm;
     private onCloseTerm;
@@ -1684,6 +1434,263 @@ export declare class UiLayer2<T extends UiLayerProps> implements IUiLayer2 {
     protected updateElementSize(): void;
 }
 
+export declare class KeyboardState {
+    private domElement;
+    private keyCodes;
+    private modifiers;
+    private _onKeyDown;
+    private _onKeyUp;
+    private _onBlur;
+    constructor(domElement: HTMLElement);
+    destroy(): void;
+    MODIFIERS: string[];
+    ALIAS: {
+        left: number;
+        up: number;
+        right: number;
+        down: number;
+        space: number;
+        pageup: number;
+        pagedown: number;
+        tab: number;
+        escape: number;
+    };
+    _onKeyChange(event: any): void;
+    pressed(keyDesc: any): boolean;
+    eventMatches(event: any, keyDesc: any): boolean;
+}
+
+export declare class Main {
+    renderer: WebGLRenderer;
+    controls: any;
+    camera: Camera;
+    scene: Scene;
+    stats: any;
+    clock: Clock;
+    light1: any;
+    t_start: number;
+    map: MapD;
+    update_objects: any;
+    player: any;
+    visible_distance: number;
+    textures: Textures;
+    ff_objects: never[];
+    sounds: SoundLoader;
+    container: HTMLElement | undefined;
+    private selected;
+    private isDown;
+    box_material: MeshPhongMaterial;
+    sprite_material: SpriteMaterial;
+    chunk_material: MeshPhongMaterial;
+    p_light: PointLight;
+    maps_ground: number;
+    createChunkMaterial(): Material;
+    init(container: HTMLElement): void;
+    private createCamera;
+    private loadMap;
+    reset(): void;
+    onWindowResize(): void;
+    animate(): void;
+    addObject(obj: any): void;
+    render(): void;
+}
+export declare let game: Main;
+export declare function createVoxelGame(container: HTMLElement): void;
+
+export declare class MeshModel {
+    mesh: Mesh;
+    geometry: BufferGeometry;
+    material: MeshPhongMaterial;
+    constructor(geo: BufferGeometry);
+}
+export type MapBlock = {
+    model: VoxelModel;
+    frame: number;
+};
+export declare class MapLayer {
+    private size;
+    private blockSize;
+    private layerZ;
+    private blocks;
+    private _mesh;
+    private geometry;
+    private material;
+    get staticMesh(): Mesh;
+    constructor(material: MeshPhongMaterial);
+    load(): void;
+    fill(tile: VoxelModel): void;
+    build(): void;
+}
+export declare class Character {
+    private model;
+    private meshFrames;
+    private url;
+    private currentFrame;
+    private scale;
+    material: MeshPhongMaterial;
+    constructor(url: string, material: MeshPhongMaterial);
+    load(): Promise<boolean>;
+    getMesh(): Mesh;
+}
+export declare class MapD {
+    name: string;
+    objects: any;
+    width: number;
+    height: number;
+    private layers;
+    private char;
+    ambient_light: AmbientLight;
+    material: MeshPhongMaterial;
+    constructor();
+    reset(): void;
+    update(time: any, delta: any): void;
+    load(): Promise<boolean>;
+}
+
+export declare class MapEditor {
+    private container;
+    private camera;
+    private scene;
+    private isDown;
+    constructor(container: HTMLElement, scene: Scene, camera: Camera);
+    onMouseDown(evt: MouseEvent): void;
+    onMouseUp(evt: MouseEvent): void;
+    onMouseMove(evt: MouseEvent): void;
+}
+
+export declare class ParticlePool {
+}
+
+export declare class SoundLoader {
+    sounds: any[];
+    context: any;
+    muted: boolean;
+    isPlaying(name: any): boolean;
+    stopSound(name: any): void;
+    playSound(name: any, position: any, radius: any, loop?: any): void;
+    Add(args: any): void;
+    Load(name: any, buffer: any): void;
+}
+export declare class BufferLoader {
+    context: any;
+    urlList: any;
+    onload: any;
+    bufferList: any[];
+    loadCount: number;
+    constructor(context: any, urlList: any, callback: any);
+    loadBuffer(url: any, index: any): void;
+    load(): void;
+}
+
+export declare const MAP1 = 0;
+export declare const WALL1 = 1;
+export declare const ROAD1 = 2;
+export declare const GRASS1 = 3;
+export declare const TREE1 = 4;
+export declare const DIRT1 = 5;
+export declare const STONE_WALL = 6;
+export declare const WALL2 = 7;
+export declare const FLOOR1 = 8;
+export declare const RADIOACTIVE_BARREL = 9;
+export declare const LEVEL1_WALL = 10;
+export declare const WOOD_WALL = 11;
+export declare const LEVEL1_WALL2 = 12;
+export declare class Textures {
+    files: (string | number)[][];
+    tex: any;
+    loaded: number;
+    heightMap: {};
+    clean(): void;
+    getMap(map_id: any): any;
+    isLoaded(): boolean;
+    prepare(): void;
+    getPixel(x: any, y: any, tex_id: any): {
+        r: any;
+        g: any;
+        b: any;
+    };
+    loadHeightMap(filename: any, id: any): void;
+    load(filename: any, id: any): void;
+}
+
+export declare function get_rand(): number;
+export declare function loadImageFile(file: any, callback: any): void;
+
+export declare class Vox {
+    voxColors: number[];
+    readInt(buffer: any, from: any): number;
+    readId(buffer: any, i: any): string;
+    loadModel(data: ArrayBuffer, name: string): VoxelFile | undefined;
+}
+
+export declare class VoxelGeometryWriter {
+    private triangles;
+    private total_blocks;
+    dirty: boolean;
+    private positions;
+    private colors;
+    private v;
+    private c;
+    private start_x;
+    private start_y;
+    private start_z;
+    private flip_z;
+    private scale;
+    appendVertice(x: number, y: number, z: number): void;
+    appendColor(n: number, r: number, g: number, b: number): void;
+    setPosition(x: number, y: number, z: number): void;
+    setFlipZ(max_z: number): void;
+    setScale(scale: number): void;
+    getGeometry(): BufferGeometry;
+}
+
+export type VoxelPoint = {
+    x: number;
+    y: number;
+    z: number;
+    color: number;
+};
+export type VoxelFile = {
+    name: string;
+    frames: VoxelFileFrame[];
+};
+export type VoxelFileFrame = {
+    data: VoxelPoint[];
+    sx: number;
+    sy: number;
+    sz: number;
+};
+export declare function makeVoxelPoint(buffer: Uint8Array, i: number): VoxelPoint;
+export declare class VoxelModel {
+    id: string;
+    frames: VoxelModelFrame[];
+    constructor(id: string);
+}
+export declare class VoxelModelFrame {
+    private readonly data;
+    chunk_sx: number;
+    chunk_sy: number;
+    chunk_sz: number;
+    stride_z: number;
+    voxels: Uint32Array;
+    wireframe: boolean;
+    geometry: BufferGeometry;
+    v: BufferAttribute;
+    c: BufferAttribute;
+    prev_len: number;
+    material: MeshPhongMaterial;
+    constructor(data: VoxelFileFrame);
+    static sameColor(block1: number, block2: number): boolean;
+    private getIdx;
+    build(writer: VoxelGeometryWriter): void;
+}
+
+export declare class VoxelModelCache {
+    private readonly models;
+    getVoxelModel(url: string): Promise<VoxelModel>;
+}
+export declare let modelCache: VoxelModelCache;
+
 export interface IGameKeyboardHandler {
     handleKeyboard(input: KeyBinder): void;
 }
@@ -1691,11 +1698,11 @@ export type AvatarPosChanged = (avatar: IAvatar, oldPos: GridPos | undefined, ne
 export declare class Avatar implements IAvatar {
     readonly props: AvatarProps;
     get rt(): any;
+    set rt(val: any);
     skin?: Sprite;
     nextPos?: GridPos;
     dir: MoveDirection;
     private _currentPosVersion;
-    private _gameMode;
     get gameState(): AvatarGameState;
     set gameState(mode: AvatarGameState);
     private readonly posChanged;
@@ -1705,158 +1712,16 @@ export declare class Avatar implements IAvatar {
     get currentPos(): GridPos | undefined;
     set currentPos(pos: GridPos | undefined);
     get currentPosVersion(): number;
-    layer?: IGameLayer;
-    get tileLayer(): TileLayer;
+    layer?: any;
+    get tileLayer(): any;
     constructor(props: AvatarProps, posChanged: AvatarPosChanged);
     onRemoteUpdateCurrentPos(pos: GridPos | undefined): void;
     updateRuntimeProps(props: any): void;
+    getCode(): string;
     updateCode(code: string): void;
     attachCamera(func: AvatarPosChanged | undefined): void;
     protected getAvatarCodeFile(): string;
-}
-
-export type BallBag = {
-    red: number;
-    blue: number;
-    black: number;
-};
-export declare function createBallBag(): BallBag;
-export type FoodBag = {
-    berry: number;
-    banana: number;
-};
-export declare function createFoodBag(): FoodBag;
-export type CharacterRuntimeProps = {
-    name: string;
-    balls: BallBag;
-    food: FoodBag;
-    activePokemons: string[];
-    restingPokemons: string[];
-    code: string;
-};
-export type CharacterProps = AvatarProps & {
-    skinUrl: string;
-    rt: CharacterRuntimeProps;
-};
-export declare class Character extends Avatar {
-    get rt(): CharacterRuntimeProps;
-    get characterProps(): CharacterProps;
-    constructor(wireProps: WireCharacterProps, posChanged: AvatarPosChanged);
-    load(): Promise<void>;
-    updateRuntimeProps(props: any): void;
-    updateCode(code: string): void;
-    restPokemon(a2: Pokemon): void;
-    caughtPokemon(pokemon: Pokemon): void;
-    private clearLayer;
-}
-
-export type WireTileLayerSegment = {
-    id: number;
-    rect: GridRect;
-    tiles: number[];
-};
-export type WireWorldLayerProps = {
-    id: string;
-    pxX: number;
-    pxY: number;
-    pxWidth: number;
-    pxHeight: number;
-};
-export type WireTileLayerProps = WireWorldLayerProps & {
-    gridWidth: number;
-    gridHeight: number;
-    cellWidth: number;
-    cellHeight: number;
-    segmentWidth: number;
-    segmentHeight: number;
-};
-export type WireWorldLayer = {
-    tileProps: WireTileLayerProps;
-    props: WireWorldLayerProps;
-    segments: WireTileLayerSegment[];
-};
-export type GameLayerProps = {
-    mapId: string;
-    id: string;
-    pxX: number;
-    pxY: number;
-    pxWidth: number;
-    pxHeight: number;
-};
-export type WireMapData = {
-    props: MapProps;
-    codeLib: MapCodeLib;
-    layers: WireWorldLayer[];
-};
-export declare function GameLayerProps_fromWireProps(mapId: string, props: WireWorldLayerProps): GameLayerProps;
-export declare enum WordLayerKind {
-    unknown = 0,
-    tile = 1,
-    sprite = 2
-}
-export interface IGameLayer {
-    get id(): string;
-    get x(): number;
-    get y(): number;
-    get w(): number;
-    get h(): number;
-    get visible(): boolean;
-    set visible(val: boolean);
-    renderArea(rect: GridRect): void;
-    prefetchArea(rect: GridRect): void;
-    get container(): PixiContainer | undefined;
-    addAvatar(avatar: IAvatar): void;
-    removeAvatar(avatar: IAvatar): void;
-    startEdit(): void;
-    endEdit(): void;
-    onAvatarPosChanged(avatar: IAvatar, oldPos: GridPos | undefined, newPos: GridPos | undefined): void;
-}
-export declare class GameLayer<T extends GameLayerProps> implements IGameLayer {
-    readonly props: T;
-    protected isVisible: boolean;
-    constructor(props: T);
-    get id(): string;
-    get x(): number;
-    get y(): number;
-    get w(): number;
-    get h(): number;
-    set visible(val: boolean);
-    get visible(): boolean;
-    get container(): PixiContainer | undefined;
-    addAvatar(avatar: IAvatar): void;
-    removeAvatar(avatar: IAvatar): void;
-    renderArea(rect: GridRect): void;
-    prefetchArea(rect: GridRect): void;
-    startEdit(): void;
-    endEdit(): void;
-    onAvatarPosChanged(avatar: IAvatar, oldPos: GridPos | undefined, newPos: GridPos | undefined): void;
-}
-
-export type PixelSize = {
-    x: number;
-    y: number;
-};
-export type WorldProps = {
-    id: string;
-    maps: string[];
-};
-export declare class GameMap implements IGameMap {
-    readonly props: MapProps;
-    readonly codeLib: MapCodeLib;
-    private readonly layers;
-    private viewportArea?;
-    private prefetchArea?;
-    private prefetchSize;
-    private layerMap;
-    readonly physics: GamePhysics;
-    readonly mechanics: IGameMechanics;
-    constructor(data: WireMapData);
-    updateCode(category: CodeCategory, code: string): void;
-    addLayer(layer: IGameLayer, insertAfter?: string | undefined): void;
-    removeLayer(id: string): void;
-    getLayer(id: string | undefined): IGameLayer | undefined;
-    setViewport(pxRect: PxRect): void;
-    forEachLayer(startLayer: string | undefined, func: (layer: IGameLayer) => void): void;
+    clearLayer(): void;
 }
 
 export type WireSpawnPokemonRequest = {
@@ -1893,12 +1758,10 @@ export declare class GameState {
     gameMap?: IGameMap;
     readonly repl: Repl;
     onLoaded: boolean;
-    readonly avatarCollection: AvatarCollection;
     constructor();
     load(): Promise<boolean>;
     spawnPokemon(pokedexId: string, layerId: string, pos: GridPos): Promise<IAvatar>;
     spawnCharacter(name: string, skinUrl: string): void;
-    removePokemon(p: Pokemon): void;
     private onAvatarPosChanged;
     private addAvatar;
     private connectSignalR;
@@ -1935,8 +1798,8 @@ export type WireAvatarProps = {
     pokemon?: WirePokemonProps;
 };
 export declare enum AvatarGameState {
-    removed = 0,
-    move = 1,
+    move = 0,
+    removed = 1,
     battle = 2,
     catch = 3,
     resting = 4,
@@ -1945,6 +1808,7 @@ export declare enum AvatarGameState {
 export interface IAvatar {
     get props(): AvatarProps;
     get rt(): any;
+    set rt(val: any);
     get id(): string;
     get stepDuration(): number;
     dir: MoveDirection;
@@ -1953,20 +1817,12 @@ export interface IAvatar {
     set currentPos(pos: GridPos | undefined);
     nextPos?: GridPos;
     gameState: AvatarGameState;
-    layer?: IGameLayer;
-    get tileLayer(): TileLayer;
     skin?: Sprite;
     onRemoteUpdateCurrentPos(pos: GridPos | undefined): void;
+    getCode(): string;
     updateCode(code: string): void;
     updateRuntimeProps(props: any): void;
     attachCamera(func: ((avatar: IAvatar) => void) | undefined): void;
-}
-export declare class AvatarCollection {
-    private avatars;
-    getAvatar(id: number | string | null | undefined): IAvatar | undefined;
-    findCharacterByName(name: string): IAvatar | undefined;
-    removeAvatar(avatar: IAvatar): void;
-    addAvatar(avatar: IAvatar): void;
 }
 
 export type MapProps = {
@@ -1980,20 +1836,32 @@ export type MapProps = {
 export type MapCodeLib = {
     battle: string | null | undefined;
 };
+export type MapLocationProps = {
+    mapId: string;
+    layerId: string;
+    id: string;
+    rect: GridRect;
+    code: string | null | undefined;
+};
+export declare class MapLocation {
+    readonly props: MapLocationProps;
+    code: ILocationCode;
+    constructor(props: MapLocationProps);
+    get codeFileName(): string;
+    updateCode(text: string): void;
+}
 export interface IGameMap {
     readonly props: MapProps;
     readonly codeLib: MapCodeLib;
     readonly physics: IGamePhysics;
     readonly mechanics: IGameMechanics;
     setViewport(pxRect: PxRect): void;
-    getLayer(id: string | undefined): IGameLayer | undefined;
-    forEachLayer(startLayer: string | undefined, func: (layer: IGameLayer) => void): void;
-    updateCode(category: CodeCategory, code: string): void;
+    getLayer(id: string | undefined): any | undefined;
+    forEachLayer(startLayer: string | undefined, func: (layer: any) => void): void;
 }
 
 export interface IGameState {
     gameMap?: IGameMap;
-    avatarCollection: AvatarCollection;
     onLoaded: boolean;
     load(): Promise<boolean>;
     spawnPokemon(pokedexId: string, layerId: string, pos: GridPos): Promise<IAvatar>;
@@ -2055,6 +1923,7 @@ export declare enum BattleMoveType {
     water = "water"
 }
 export type PokemonMove = {
+    gameMode: AvatarGameState;
     name: string;
     moveType: BattleMoveType;
     power: number;
@@ -2062,6 +1931,7 @@ export type PokemonMove = {
     pp: number;
 };
 export type PokemonRuntimeProps = {
+    gameState: AvatarGameState;
     name: string;
     ownerId: string | null | undefined;
     hp: number;
@@ -2074,27 +1944,6 @@ export type PokemonProps = AvatarProps & {
     kind: PokemonKind;
     rt: PokemonRuntimeProps;
 };
-export declare enum PokemonKind {
-    grass = "grass",
-    water = "water",
-    fire = "fire"
-}
-export type WirePokedexEntry = {
-    id: string;
-    value: string;
-};
-export type PokedexEntry = {
-    id: string;
-    name: string;
-    kind: PokemonKind;
-    battlerFrontUrl: string;
-    battlerBackUrl: string;
-    iconUrl: string;
-    skinUrl: string;
-    hp: number;
-    hpMax: number;
-    moves: string[];
-};
 export declare enum DamageResult {
     minor = 0,
     effective = 1,
@@ -2102,12 +1951,12 @@ export declare enum DamageResult {
 }
 export declare class Pokemon extends Avatar {
     get rt(): PokemonRuntimeProps;
+    set rt(val: PokemonRuntimeProps);
     get pokemonProps(): PokemonProps;
     get hasOwner(): boolean;
     constructor(wireProps: WirePokemonProps, posChanged: AvatarPosChanged);
     load(): Promise<void>;
-    updateRuntimeProps(props: any): void;
-    updateCode(code: string): void;
+    updatePokemonRuntimeProps(func: (pokemon: Pokemon) => void): void;
     takeDamage(power: number): DamageResult;
     tryCatch(ball: BallKind): boolean;
 }
@@ -2139,121 +1988,4 @@ export declare class InteractivePlayerAnimation extends Animatable {
     private constructor();
     onComplete(): void;
     animate(elapsed: number): boolean;
-}
-
-export declare enum TileCategory {
-    ground = "ground",
-    barrier = "barrier",
-    water = "water",
-    sand = "sand",
-    grass = "grass",
-    drygrass = "drygrass",
-    bush = "bush",
-    tree = "tree",
-    mountain = "mountain",
-    house = "house",
-    addon = "addon",
-    ladder = "ladder",
-    gen0 = "gen0",
-    custom = "custom"
-}
-export declare function describeTileCategories(): string;
-export type WireTileDefProps = {
-    atlasId?: string;
-    idx?: number;
-    id: number;
-    categories?: {
-        [id: string]: boolean;
-    };
-    baseTile?: number;
-    addOnTile?: number;
-    onEnter?: string;
-    onLeave?: string;
-    onTimer?: string;
-    timerIntervalSec?: number;
-};
-export type WireAddCompositeTileResponse = {
-    tileId: number;
-};
-export declare function isAddOn(props: WireTileDefProps): boolean;
-export declare function getComposedTileId(base: number | undefined, addon: number | undefined): string;
-export type WireTileCollectionProps = {
-    tiles: WireTileDefProps[];
-};
-export declare class TileDef {
-    readonly props: WireTileDefProps;
-    readonly sheet?: SpriteSheet;
-    readonly baseTile: TileDef | undefined;
-    readonly addOnTile: TileDef | undefined;
-    constructor(props: WireTileDefProps, sheet: SpriteSheet | undefined, baseTile: TileDef | undefined, addOnTile: TileDef | undefined);
-    categoriesAsString(): string;
-}
-
-export declare function numberArrayToString(v: number[]): string;
-export type TileLayerProps = GameLayerProps & {
-    gridWidth: number;
-    gridHeight: number;
-    cellWidth: number;
-    cellHeight: number;
-    segmentWidth: number;
-    segmentHeight: number;
-};
-export declare function TileLayerProps_fromWireProps(mapId: string, props: WireTileLayerProps): TileLayerProps;
-export type WireTileUpdate = {
-    x: number;
-    y: number;
-    tileId: number;
-};
-export type WireTileLayerUpdate = {
-    mapId: string;
-    layerId: string;
-    tiles: WireTileUpdate[];
-};
-export declare class TileLayerSegment {
-    data: WireTileLayerSegment;
-    private tileContainer?;
-    private avatars;
-    get loaded(): boolean;
-    constructor(data: WireTileLayerSegment);
-    load(parent: PixiContainer): void;
-    unload(parent: PixiContainer): void;
-    private loadTiles;
-    getTile(x: number, y: number): number;
-    setTile(x: number, y: number, tileId: number): void;
-    addAvatar(avatar: IAvatar): void;
-    removeAvatar(avatar: IAvatar): void;
-    getAvatarByPos(x: number, y: number): IAvatar | undefined;
-}
-export declare class TileLayer extends GameLayer<TileLayerProps> {
-    private pendingChange?;
-    private dirty;
-    private _segments;
-    private _segmentPrefetchRect?;
-    private readonly layerContainer;
-    private readonly segmentContainer;
-    private segmentStride;
-    private readonly spriteContainer;
-    constructor(props: TileLayerProps);
-    get container(): PixiContainer | undefined;
-    loadSegments(segments: WireTileLayerSegment[]): void;
-    prefetchArea(prefetchRect: GridRect): void;
-    private prefetchSegments;
-    addAvatar(avatar: IAvatar): void;
-    removeAvatar(avatar: IAvatar): void;
-    onAvatarPosChanged(avatar: IAvatar, oldPos: GridPos | undefined, newPos: GridPos | undefined): void;
-    getAvatarToPos(x: number, y: number): IAvatar | undefined;
-    setTile(x: number, y: number, tileId: number | undefined): void;
-    getTile(x: number, y: number): TileDef | undefined;
-    private _getSegment;
-    private _getTile;
-    private _setTile;
-    forEachTile(reg: GridRect, func: (tileId: number) => void): void;
-    clearRegion(reg: GridRect): void;
-    fillRegion(reg: GridRect, tileId: number): void;
-    updateRegion(pos: GridPos, tileBuffer: TileBuffer): Promise<boolean>;
-    getRegion(rect: GridRect): TileBuffer;
-    startEdit(): void;
-    endEdit(): void;
-    private updateTile;
-    private flushPendingQueueIf;
 }

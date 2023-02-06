@@ -239,12 +239,13 @@ export class Terminal implements IGameTerminal {
 
     let avatar: IAvatar | undefined;
     let id = parseInt(name);
+    /*
     if (isNaN(id)) {
       avatar = gameState.avatarCollection.findCharacterByName(name);
     } else {
       avatar = gameState.avatarCollection.getAvatar(id.toString());
     }
-
+*/
     if (avatar === undefined) {
       this.printError(`Avatar ${name} not found`);
       return;

@@ -20,28 +20,29 @@ function editCodeWorker(args: { category: string, id: string }, allowEdit: boole
   if (args.category === undefined) {
     terminal?.printError('Category is not defined ' + args.category);
   }
-
-  if (args.category === FileCategory.avatar) {
-    let avatar = gameState.avatarCollection.getAvatar(args.id);
-    if (avatar === undefined) {
-      terminal?.printError('Avatar not found ' + args.id);
-      return;
+  /*
+    if (args.category === FileCategory.avatar) {
+      let avatar = gameState.avatarCollection.getAvatar(args.id);
+      if (avatar === undefined) {
+        terminal?.printError('Avatar not found ' + args.id);
+        return;
+      }
+  
+      let code = avatar.getCode();
+  
+      let onSave = (allowEdit) ? (text: string) => { avatar!.updateCode(text); } : undefined;
+  
+      terminal?.editFile(code, onSave);
+    } else if (args.category === FileCategory.pokedex) {
+      editPokedexCode(args.id, allowEdit);
+    } else if (args.category === FileCategory.location) {
+      editLocationCode(args.id, allowEdit);
+    } else if (args.category === FileCategory.tile) {
+      editTileCode(args.id, allowEdit);
+    } else {
+      terminal?.printError('Unknown category ' + args.category);
     }
-
-    let code = avatar.getCode();
-
-    let onSave = (allowEdit) ? (text: string) => { avatar!.updateCode(text); } : undefined;
-
-    terminal?.editFile(code, onSave);
-  } else if (args.category === FileCategory.pokedex) {
-    editPokedexCode(args.id, allowEdit);
-  } else if (args.category === FileCategory.location) {
-    editLocationCode(args.id, allowEdit);
-  } else if (args.category === FileCategory.tile) {
-    editTileCode(args.id, allowEdit);
-  } else {
-    terminal?.printError('Unknown category ' + args.category);
-  }
+    */
 }
 
 function editPokedexCode(name: string, allowEdit: boolean) {
@@ -84,6 +85,7 @@ function editLocationCode(name: string, allowEdit: boolean) {
 }
 
 function editTileCode(id: string, allowEdit: boolean) {
+  /*
   withRegion((layer, region) => {
     let buffer = layer.getRegion(region);
     let codeFile: string | undefined;
@@ -97,7 +99,7 @@ function editTileCode(id: string, allowEdit: boolean) {
         terminal?.printError('tiles use different files; clear ')
       }
     }
-  });
+  });*/
 }
 
 export function editObject(args: { category: string, id: string }) {
@@ -111,6 +113,7 @@ export function editObject(args: { category: string, id: string }) {
     return;
   }
 
+  /*
   if (args.category === FileCategory.avatar) {
     let avatar = gameState.avatarCollection.getAvatar(args.id);
     if (avatar === undefined) {
@@ -151,6 +154,7 @@ export function editObject(args: { category: string, id: string }) {
   } else {
     terminal?.printError('Unknown category ' + args.category);
   }
+  */
 }
 
 export function registerCodeCommands() {

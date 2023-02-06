@@ -1,5 +1,4 @@
 import { animator } from './animator';
-import { GameLayer, GameLayerProps } from '../world/gamelayer';
 import { PxPos, PxSize } from '../posh/pos';
 import { SpriteSheet } from './spritesheet';
 import { Sprite as PixiSprite } from 'pixijs';

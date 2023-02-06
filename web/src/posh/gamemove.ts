@@ -10,15 +10,15 @@ export function teleport(args: { id: string, x: number, y: number }) {
     printHelp(teleport as PoshFunction);
     return;
   }
-
-  let avatar = gameState.avatarCollection.getAvatar(args.id);
-  if (avatar === undefined) {
-    terminal?.printError('Invalid avatar:' + args.id);
-    return;
-  }
-
-  avatar.currentPos = { x: args.x, y: args.y };
-  terminal?.refresh();
+  /*
+    let avatar = gameState.avatarCollection.getAvatar(args.id);
+    if (avatar === undefined) {
+      terminal?.printError('Invalid avatar:' + args.id);
+      return;
+    }
+  */
+  //avatar.currentPos = { x: args.x, y: args.y };
+  //terminal?.refresh();
 
   return undefined;
 }

@@ -1,9 +1,6 @@
 import { idText } from "typescript";
 import AsyncEventSource from "../AsyncEventSource";
 import { ICameraControl } from "../ui/cameralayer";
-import { TileLayer } from "../world/tilelayer";
-import { GameMap } from "../world/gamemap";
-import { IGameLayer } from "../world/gamelayer";
 import { GridRect, PxPos, PxSize } from "./pos";
 import { SpriteSheet, TileBuffer } from "../graphics/spritesheet";
 import { Sprite } from "../graphics/Sprite";
@@ -52,7 +49,7 @@ export type MapEditorUpdate = {
   tileClipboard?: TileBuffer;
   region?: GridRect;
   scrollSize?: PxSize;
-  map?: GameMap;
+  map?: any;
   mapBitmap?: MapBitmap;
   tileListSheet?: SpriteSheet;
   invalidator?: ICameraControl | null;
@@ -62,32 +59,28 @@ export type MapEditorUpdate = {
 export class MapEditorState {
   private _isEditMode: boolean = false;
   private _region?: GridRect;
-  private _currentLayer?: IGameLayer;
+  private _currentLayer?: any;
   private _tileClipboard?: TileBuffer;
   private _scrollSize: PxSize | undefined;
-  private _world: GameMap | undefined;
+  private _world: any;
   private _cameraControl: ICameraControl | undefined;
   private _mapBitmap?: MapBitmap;
   private _tileListSheet?: SpriteSheet;
   private eventSource: AsyncEventSource<MapEditorChangeEvent> = new AsyncEventSource<MapEditorChangeEvent>();
 
   public get isEditMode(): boolean { return this._isEditMode; }
-  public get currentLayer(): IGameLayer | undefined { return this._currentLayer; }
+  public get currentLayer(): any | undefined { return this._currentLayer; }
   public get tileClipboard(): TileBuffer | undefined { return this._tileClipboard; }
   public get region(): GridRect | undefined { return this._region; }
   public get cameraSize(): PxSize | undefined { return this._scrollSize; }
-  public get world(): GameMap | undefined { return this._world; }
+  public get world(): any | undefined { return this._world; }
   public get cameraControl(): ICameraControl | undefined { return this._cameraControl; }
   public get mapBitmap(): MapBitmap | undefined { return this._mapBitmap; }
   public get tileListSheet(): SpriteSheet | undefined { return this._tileListSheet; }
 
-  public get currentTileLayer(): TileLayer | undefined {
+  public get currentTileLayer(): any | undefined {
     if (this._currentLayer === undefined) {
       return undefined;
-    }
-
-    if (this._currentLayer instanceof TileLayer) {
-      return this._currentLayer as TileLayer;
     }
 
     return undefined;

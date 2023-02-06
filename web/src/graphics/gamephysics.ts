@@ -1,5 +1,4 @@
 import { animator, IAnimatable } from "./animator";
-import { TileCategory } from "../world/tiledef";
 import { GridPos } from "../posh/pos";
 import { IAvatar } from "../world/iavatar";
 import { deltaByAbsDirection } from "../mechanics/iavatarapi";
@@ -57,69 +56,71 @@ export class GamePhysics implements IGamePhysics {
   }
 
   private moveAvatarWorker(params: MoveAvatarParams): boolean {
-
-    let skin = params.avatar.skin;
-    if (skin === undefined) {
-      return false;
-    }
-
-    // actually make the move
-    let delta = deltaByAbsDirection(params.dir);
-    let nextPos = {
-      x: params.avatar.currentPos!.x + delta.x,
-      y: params.avatar.currentPos!.y + delta.y,
-    }
-
-    if (nextPos.x >= this.map.props.gridWidth) { nextPos.x = this.map.props.gridWidth - 1; }
-    else if (nextPos.x < 0) { nextPos.x = 0; }
-
-    if (nextPos.y > this.map.props.gridHeight) { nextPos.y = this.map.props.gridHeight; }
-    else if (nextPos.y < 0) { nextPos.y = 0; }
-
-    // first check if block is opened
-    if (!this.canMoveToMapPos(params.avatar, nextPos)) {
-      return false;
-    }
-
-    // we detect collision before move happens and block the move
-    // the other object might move out ... not sure what to do about it
-    if (!this.handleAvatarCollision(params.avatar, nextPos)) {
-      return false;
-    }
-
-    if (params.avatar.layer !== undefined) {
-      let locs = params.avatar.layer?.getLocationsByRect(nextPos);
-      if (locs !== undefined) {
-        for (let loc of locs) {
-          if (!this.collisionHandler?.onLocation(params.avatar, loc)) {
-            return false;
+    return false;
+    /*
+        let skin = params.avatar.skin;
+        if (skin === undefined) {
+          return false;
+        }
+    
+        // actually make the move
+        let delta = deltaByAbsDirection(params.dir);
+        let nextPos = {
+          x: params.avatar.currentPos!.x + delta.x,
+          y: params.avatar.currentPos!.y + delta.y,
+        }
+    
+        if (nextPos.x >= this.map.props.gridWidth) { nextPos.x = this.map.props.gridWidth - 1; }
+        else if (nextPos.x < 0) { nextPos.x = 0; }
+    
+        if (nextPos.y > this.map.props.gridHeight) { nextPos.y = this.map.props.gridHeight; }
+        else if (nextPos.y < 0) { nextPos.y = 0; }
+    
+        // first check if block is opened
+        if (!this.canMoveToMapPos(params.avatar, nextPos)) {
+          return false;
+        }
+    
+        // we detect collision before move happens and block the move
+        // the other object might move out ... not sure what to do about it
+        if (!this.handleAvatarCollision(params.avatar, nextPos)) {
+          return false;
+        }
+    
+        if (params.avatar.layer !== undefined) {
+          let locs = params.avatar.layer?.getLocationsByRect(nextPos);
+          if (locs !== undefined) {
+            for (let loc of locs) {
+              if (!this.collisionHandler?.onLocation(params.avatar, loc)) {
+                return false;
+              }
+            }
           }
         }
-      }
-    }
-
-    params.avatar.nextPos = nextPos;
-    params.avatar.dir = params.dir;
-
-    // for now check bounds
-    // this is not 100% correct but will work
-    let x = nextPos.x * this.map.props.cellWidth;
-    let y = nextPos.y * this.map.props.cellHeight;
-
-    let dx = x - skin.pos.x;
-    let dy = y - skin.pos.y;
-    let posVersion = params.avatar.currentPosVersion;
-
-    let anim = params.animator({
-      sprite: skin,
-      dx: dx, dy: dy, duration: params.avatar.stepDuration,
-      onComplete: (anim: IAnimatable) => {
-        this.onCompleteMove(params.avatar, posVersion);
-      }
-    });
-    animator.animate(anim);
-    this.moveAnimations.set(params.avatar, { animation: anim, nextMove: undefined });
-    return true;
+    
+        params.avatar.nextPos = nextPos;
+        params.avatar.dir = params.dir;
+    
+        // for now check bounds
+        // this is not 100% correct but will work
+        let x = nextPos.x * this.map.props.cellWidth;
+        let y = nextPos.y * this.map.props.cellHeight;
+    
+        let dx = x - skin.pos.x;
+        let dy = y - skin.pos.y;
+        let posVersion = params.avatar.currentPosVersion;
+    
+        let anim = params.animator({
+          sprite: skin,
+          dx: dx, dy: dy, duration: params.avatar.stepDuration,
+          onComplete: (anim: IAnimatable) => {
+            this.onCompleteMove(params.avatar, posVersion);
+          }
+        });
+        animator.animate(anim);
+        this.moveAnimations.set(params.avatar, { animation: anim, nextMove: undefined });
+        return true;
+        */
   }
 
   public moveAvatarRemote(avatar: IAvatar, pos: GridPos, func: (props: SpriteMoveAnimationProps) => IAnimatable): boolean {
@@ -147,7 +148,7 @@ export class GamePhysics implements IGamePhysics {
       sprite: avatar.skin,
       dx: dx, dy: dy, duration: avatar.stepDuration,
       onComplete: (anim: IAnimatable) => {
-        this.onCompleteMove(avatar, posVersion);
+        //this.onCompleteMove(avatar, posVersion);
       }
     });
     animator.animate(anim);
@@ -155,6 +156,7 @@ export class GamePhysics implements IGamePhysics {
     return true;
   }
 
+  /*
   private handleAvatarCollision(avatar: IAvatar, nextPos: GridPos): boolean {
     if (avatar.layer === undefined || nextPos === undefined) {
       return true;
@@ -214,5 +216,6 @@ export class GamePhysics implements IGamePhysics {
     // schedule next move
     this.moveAvatarInteractive(oldAnimToken!.nextMove);
   }
+  */
 }
 
