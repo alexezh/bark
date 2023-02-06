@@ -10,6 +10,7 @@ export type MapBlock = {
 
 export type MapBlockCoord = {
   model: VoxelModel;
+  idx: number;
   x: number;
   y: number;
   z: number;
@@ -22,7 +23,7 @@ export class MapLayer {
   private size!: GridSize;
   private blockSize: number;
   private layerZ: number;
-  private blocks!: MapBlock[];
+  private blocks!: (MapBlock | undefined)[];
   private _mesh!: Mesh;
   private geometry!: BufferGeometry;
   private material: MeshPhongMaterial;
@@ -73,8 +74,13 @@ export class MapLayer {
 
     let pos = y * this.size.w + x;
     let block = this.blocks[pos];
+    if (block == undefined) {
+      return;
+    }
+
     return {
       model: block.model,
+      idx: pos,
       x: x * this.blockSize,
       y: y * this.blockSize,
       z: this.layerZ,
@@ -82,6 +88,10 @@ export class MapLayer {
       sy: this.blockSize,
       sz: this.blockSize,
     };
+  }
+
+  deleteBlock(block: MapBlockCoord) {
+    this.blocks[block.idx] = undefined;
   }
 }
 

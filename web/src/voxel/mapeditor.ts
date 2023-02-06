@@ -1,17 +1,19 @@
 import _ from "lodash";
 import { BufferGeometry, Camera, Line, LineBasicMaterial, Raycaster, Scene, Vector3 } from "three";
+import { KeyBinder } from "../ui/keybinder";
 import { game } from "./main";
-import { MapLayer } from "./maplayer";
+import { MapBlockCoord, MapLayer } from "./maplayer";
 
 export class MapEditor {
   private container: HTMLElement;
   private camera: Camera;
   private scene: Scene;
   private isDown: boolean = false;
+  private selectedBlock: MapBlockCoord | undefined = undefined;
   private selection: Line | undefined = undefined;
   static material = new LineBasicMaterial({ color: 0x0000ff });
 
-  public constructor(container: HTMLElement, scene: Scene, camera: Camera) {
+  public constructor(container: HTMLElement, scene: Scene, camera: Camera, input: KeyBinder) {
     this.container = container;
     this.camera = camera;
     this.scene = scene;
@@ -19,12 +21,19 @@ export class MapEditor {
     _.bindAll(this, [
       'onMouseDown',
       'onMouseUp',
-      'onMouseMove'
+      'onMouseMove',
+      'onCopyBlock',
+      'onPasteBlock',
+      'onClearBlock',
     ])
 
     this.container.addEventListener('mousedown', this.onMouseDown, false);
     this.container.addEventListener('mouseup', this.onMouseUp, false);
     this.container.addEventListener('mousemove', this.onMouseMove, false);
+
+    input.registerKeyUp('KeyC', this.onCopyBlock);
+    input.registerKeyUp('KeyV', this.onPasteBlock);
+    input.registerKeyUp('KeyX', this.onClearBlock);
   }
 
   onMouseDown(evt: MouseEvent) {
@@ -102,6 +111,25 @@ export class MapEditor {
            */
   };
 
+  private onCopyBlock() {
+
+  }
+
+  private onPasteBlock() {
+
+  }
+
+  private onClearBlock() {
+    if (this.selectedBlock === undefined) {
+      return;
+    }
+
+    game.map.deleteBlock(this.selectedBlock);
+    this.selectedBlock = undefined;
+    this.scene.remove(this.selection!);
+    this.selection = undefined;
+  }
+
   private selectBlockFace(point: Vector3) {
     let block = game.map.findBlock(point);
     if (block === undefined) {
@@ -112,17 +140,19 @@ export class MapEditor {
     if (this.selection !== undefined) {
       this.scene.remove(this.selection);
       this.selection = undefined;
+      this.selectedBlock = undefined;
     }
 
     const points: Vector3[] = [];
-    points.push(new Vector3(block.x, block.y, block.z + block.sz + 1));
-    points.push(new Vector3(block.x, block.y + block.sy, block.z + block.sz + 1));
-    points.push(new Vector3(block.x + block.sx, block.y + block.sy, block.z + block.sz + 1));
-    points.push(new Vector3(block.x + block.sx, block.y, block.z + block.sz + 1));
-    points.push(new Vector3(block.x, block.y, block.z + block.sz + 1));
+    points.push(new Vector3(block.x, block.y, block.z + block.sz));
+    points.push(new Vector3(block.x, block.y + block.sy, block.z + block.sz));
+    points.push(new Vector3(block.x + block.sx, block.y + block.sy, block.z + block.sz));
+    points.push(new Vector3(block.x + block.sx, block.y, block.z + block.sz));
+    points.push(new Vector3(block.x, block.y, block.z + block.sz));
 
     const geometry = new BufferGeometry().setFromPoints(points);
 
+    this.selectedBlock = block;
     this.selection = new Line(geometry, MapEditor.material);
     this.scene.add(this.selection);
   }

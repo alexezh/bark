@@ -18,18 +18,13 @@ export class VoxelGeometryWriter {
   private start_x: number = 0;
   private start_y: number = 0;
   private start_z: number = 0;
-  private flip_z: number = 0;
   private scale: number = 1;
 
   public appendVertice(x: number, y: number, z: number) {
     let block_size = this.scale;
     this.v.push(x * block_size + this.start_x);
     this.v.push(y * block_size + this.start_y);
-    if (this.flip_z > 0) {
-      this.v.push((this.flip_z - z) * block_size + this.start_z);
-    } else {
-      this.v.push(z * block_size + this.start_z);
-    }
+    this.v.push(z * block_size + this.start_z);
   }
 
   public appendColor(n: number, r: number, g: number, b: number) {
@@ -44,10 +39,6 @@ export class VoxelGeometryWriter {
     this.start_x = x;
     this.start_y = y;
     this.start_z = z;
-  }
-
-  public setFlipZ(max_z: number) {
-    this.flip_z = max_z;
   }
 
   public setScale(scale: number) {

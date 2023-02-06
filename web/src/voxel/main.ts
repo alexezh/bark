@@ -5,6 +5,7 @@ import { ParticlePool } from "./particles";
 import { Camera, Clock, Fog, GridHelper, Material, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, OrthographicCamera, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
 import { OrbitControls } from 'three-orbitcontrols-ts';
 import { MapEditor } from "./mapeditor";
+import { KeyBinder } from "../ui/keybinder";
 
 //if (!Detector.webgl) Detector.addGetWebGLMessage();
 //////////////////////////////////////////////////////////////////////
@@ -17,6 +18,7 @@ export class Main {
     public scene!: Scene;
     public stats: any;
     public clock!: Clock;
+    private input!: KeyBinder;
 
     //public particles!: ParticlePool;
     //public particles_box!: ParticlePool;
@@ -99,6 +101,8 @@ export class Main {
         //);
         this.scene = new Scene();
         this.clock = new Clock();
+
+        this.input = new KeyBinder(this.container, () => { });
 
         // Iosmetric view
         Object3D.DefaultUp = new Vector3(0, 0, 1);
@@ -187,10 +191,13 @@ export class Main {
         this.map = new MapD();
         await this.map.load();
 
-        this.mapEditor = new MapEditor(this.container, this.scene, this.camera);
+        this.mapEditor = new MapEditor(this.container,
+            this.scene,
+            this.camera,
+            this.input);
 
         const geometry = new PlaneGeometry(1000, 1000);
-        geometry.rotateX(- Math.PI / 2);
+        //geometry.rotateX(- Math.PI / 2);
 
         let plane = new Mesh(geometry, new MeshBasicMaterial({ visible: false }));
         this.scene.add(plane);

@@ -88,37 +88,6 @@ export class MapD {
         let ground = await modelCache.getVoxelModel('./assets/vox/ground.vox');
         this.layers[0].fill(ground);
 
-        /*        
-                for (let f of vmm.frames) {
-                    let writer = new VoxelGeometryWriter();
-        
-                    writer.setScale(0.6);
-        
-                    f.build(writer);
-        
-                    let geo = writer.getGeometry();
-                    let mm = new MeshModel(geo);
-                    mm.mesh.position.set(2 * 16 - 30, idx * 16 - 100, 60);
-                    idx++;
-        
-                    game.scene.add(mm.mesh);
-                }
-        
-                let writer = new VoxelGeometryWriter();
-                let vm = await modelCache.getVoxelModel('./assets/vox/dungeon_entrance.vox');
-        
-                for (let i = 0; i < 10; i++) {
-                    //            writer.setPosition(((i / 10) | 0) * 16, 3 * 16 - 50, (i % 10) * 16 - 100);
-                    writer.setPosition(2 * 16 - 50, i * 16 - 100, 50);
-                    vm.frames[0].build(writer);
-                    writer.setPosition(3 * 16 - 50, i * 16 - 100, 50);
-                    vm.frames[0].build(writer);
-                }
-        
-                let geo = writer.getGeometry();
-                let mm = new MeshModel(geo);
-        */
-
         this.layers[0].build();
         game.scene.add(this.layers[0].staticMesh);
 
@@ -135,6 +104,15 @@ export class MapD {
             return undefined;
         }
         return this.layers[layerIdx].findBlock(point);
+    }
+
+    public deleteBlock(block: MapBlockCoord) {
+        let layerIdx = (block.z / this.blockSize) | 0;
+        let layer = this.layers[layerIdx];
+        game.scene.remove(layer.staticMesh);
+        layer.deleteBlock(block);
+        layer.build();
+        game.scene.add(layer.staticMesh);
     }
 };
 
