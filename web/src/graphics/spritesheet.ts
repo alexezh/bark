@@ -1,4 +1,3 @@
-import { Texture as PixiTexture, Sprite as PixiSprite, Spritesheet as PixiSpritesheet, ISpritesheetData, Assets as PixiAssets } from 'pixijs';
 import { GridRect, PxPos } from '../posh/pos';
 import { SpriteSheetProps } from './imageatlas';
 
@@ -11,8 +10,8 @@ export type TileBuffer = {
 
 export class SpriteSheet {
   public readonly props: SpriteSheetProps;
-  private texture?: PixiTexture;
-  private spriteSheet?: PixiSpritesheet;
+  //private texture?: PixiTexture;
+  //private spriteSheet?: PixiSpritesheet;
   // frames are numbered from startFrameId left to right
   private startFrameId: number = 0;
   private static nextId: number = 1;
@@ -32,6 +31,7 @@ export class SpriteSheet {
   }
 
   private async load() {
+    /*
     this.texture = await PixiAssets.load(this.props.url) as PixiTexture;
 
     let sheetData: ISpritesheetData = {
@@ -67,9 +67,11 @@ export class SpriteSheet {
 
     this.spriteSheet = new PixiSpritesheet(this.texture, sheetData);
     await this.spriteSheet.parse();
+    */
   }
 
-  public createSprite(idx: number, pos: PxPos): PixiSprite {
+  public createSprite(idx: number, pos: PxPos): any {
+    /*
     let texture = this.spriteSheet!.textures[this.startFrameId + idx];
     if (texture === undefined) {
       texture = this.spriteSheet!.textures[1];
@@ -78,10 +80,13 @@ export class SpriteSheet {
     let sprite = new PixiSprite(texture);
     sprite.position = pos;
     return sprite;
+    */
+    return undefined;
   }
 
-  public getTexture(idx: number) {
-    return this.spriteSheet!.textures[this.startFrameId + idx];
+  public getTexture(idx: number): any {
+    // return this.spriteSheet!.textures[this.startFrameId + idx];
+    return undefined;
   }
 
   public getRegion(rect: GridRect): TileBuffer {

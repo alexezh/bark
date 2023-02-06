@@ -1,8 +1,6 @@
 import { GridPos } from "../posh/pos";
-import { IGameLayer } from "./gamelayer";
 import { MoveDirection } from "../mechanics/iavatarapi";
 import { Sprite } from "../graphics/Sprite";
-import { TileLayer } from "./tilelayer";
 
 export type AvatarProps = {
   id: string;
@@ -49,8 +47,6 @@ export interface IAvatar {
   nextPos?: GridPos;
   gameState: AvatarGameState;
 
-  layer?: IGameLayer;
-  get tileLayer(): TileLayer;
   skin?: Sprite;
 
   onRemoteUpdateCurrentPos(pos: GridPos | undefined): void;

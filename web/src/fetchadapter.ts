@@ -1,11 +1,11 @@
 import Queue from "queue";
 import { SpriteSheetProps } from "./graphics/imageatlas";
-import { WireTileCollectionProps, TileDef, WireTileDefProps, WireAddCompositeTileResponse } from "./world/tiledef";
-import { WireTileLayerUpdate } from "./world/tilelayer";
-import { WorldProps } from "./world/gamemap";
-import { WireMapData, WireWorldLayer } from "./world/gamelayer";
 import { WireSpawnCharacterRequest, WireSpawnPokemonRequest } from "./world/gamestate";
 import { WireAvatarProps } from "./world/iavatar";
+
+export type WorldProps = {
+
+}
 
 export interface IFetchAdapter {
   get(uri: string): Promise<Response>;
@@ -53,16 +53,6 @@ export async function fetchSpriteSheets(): Promise<SpriteSheetProps[]> {
   return atlasPropColl;
 }
 
-export async function fetchTiles(): Promise<WireTileCollectionProps> {
-  let tileColl = await (await fetchAdapter!.get(`/api/resource/gettiles/${worldId}`)).json();
-  if (tileColl === undefined) {
-    throw "cannot connect to server";
-  }
-
-  // @ts-ignore
-  return tileColl;
-}
-
 export async function addTileSet(tileSetProps: SpriteSheetProps) {
   updateQueue.push(async () => {
     await fetchAdapter!.post(`/api/resource/addtileset/${worldId}`, JSON.stringify(tileSetProps));
@@ -98,24 +88,6 @@ export async function fetchFiles(pattern: string): Promise<WireFile[]> {
   return files;
 }
 
-export async function updateTile(tileProps: WireTileDefProps) {
-  updateQueue.push(async () => {
-    await fetchAdapter!.post(`/api/resource/updatetile/${worldId}`, JSON.stringify(tileProps));
-    return true;
-  })
-
-  updateQueue.start();
-}
-
-export async function fetchMap(mapId: string): Promise<WireMapData> {
-  let tileColl = await (await fetchAdapter!.get(`/api/world/getmap/${worldId + "!" + mapId}`)).json();
-  if (tileColl === undefined) {
-    throw "cannot connect to server";
-  }
-
-  return tileColl;
-}
-
 export async function fetchAvatars(): Promise<WireAvatarProps[]> {
   let avatarColl = await (await fetchAdapter!.get(`/api/world/getavatars/${worldId}`)).json();
   if (avatarColl === undefined) {
@@ -123,20 +95,6 @@ export async function fetchAvatars(): Promise<WireAvatarProps[]> {
   }
 
   return avatarColl;
-}
-
-export async function updateTileLayer(updateMsg: WireTileLayerUpdate) {
-  updateQueue.push(async () => {
-    await fetchAdapter!.post(`/api/world/updatetilelayer/${worldId}`, JSON.stringify(updateMsg));
-    return true;
-  })
-
-  updateQueue.start();
-}
-
-export async function addCompositeTile(tileProps: WireTileDefProps): Promise<WireAddCompositeTileResponse> {
-  let response = await (await fetchAdapter!.post(`/api/resource/addcompositetile/${worldId}`, JSON.stringify(tileProps))).json();
-  return response;
 }
 
 export function updateAvatarRuntimeProps(avatarId: string, rt: any) {

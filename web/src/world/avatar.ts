@@ -1,8 +1,8 @@
 import { Sprite } from "../graphics/Sprite";
 import { KeyBinder } from "../ui/keybinder";
-import { TileLayer } from "./tilelayer";
+//import { TileLayer } from "./tilelayer";
 import { GridPos, gridPosToPxPos } from "../posh/pos";
-import { IGameLayer } from "./gamelayer";
+//import { IGameLayer } from "./gamelayer";
 import { storeFile, storeFileBackground, updateAvatarRuntimeProps } from "../fetchadapter";
 import { AvatarGameState, AvatarProps, IAvatar } from "./iavatar";
 import { MoveDirection } from "../mechanics/iavatarapi";
@@ -56,8 +56,8 @@ export class Avatar implements IAvatar {
 
   // game layer this avatar is attached to
   // avatar can move from layer to layer during the game
-  public layer?: IGameLayer;
-  public get tileLayer() { return this.layer as TileLayer; }
+  public layer?: any;
+  public get tileLayer() { return this.layer as any; }
 
   public constructor(props: AvatarProps, posChanged: AvatarPosChanged) {
     this.props = props;

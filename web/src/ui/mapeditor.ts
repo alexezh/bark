@@ -1,5 +1,4 @@
 import { UiLayerProps } from "./uilayer";
-import { GameMap } from "../world/gamemap";
 import { KeyBinder, MEvent } from "./keybinder";
 import { CutRegionDef, CopyRegionDef, FillRegionDef, FillRegionParams, PasteRegionDef } from "../posh/regioncommands";
 import { IRepl } from "../posh/repl";
@@ -12,7 +11,6 @@ import { IMapEditor } from "./imapeditor";
 import { CoordinateParams } from "../posh/genericeditorfuncdef";
 
 export type MapEditorProps = UiLayerProps & {
-  world: GameMap;
   mapEditorState: MapEditorState;
   repl: IRepl;
 }
@@ -82,8 +80,10 @@ export class MapEditor implements IMapEditor {
   }
 
   private getGridPos(pxX: number, pxY: number): GridPos {
-    let x = Math.floor(pxX / this.props.world.props.cellWidth);
-    let y = Math.floor(pxY / this.props.world.props.cellHeight);
+    //let x = Math.floor(pxX / this.props.world.props.cellWidth);
+    //let y = Math.floor(pxY / this.props.world.props.cellHeight);
+    let x = 0;
+    let y = 0;
     return {
       x: x,
       y: y

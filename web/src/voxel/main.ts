@@ -1,8 +1,6 @@
 import { ModelLoader } from "./model_loader";
 import { SoundLoader } from "./sound";
 import { Textures } from "./textures";
-import { ChunkScene } from "./chunkscene";
-import { Ammo, AmmoP90, AmmoSniper, Heart, Obj, Shell } from "./objects";
 import { MapD } from "./map";
 import { ParticlePool } from "./particles";
 import { Camera, Clock, Fog, GridHelper, Material, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, OrthographicCamera, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
@@ -20,18 +18,16 @@ export class Main {
     public stats: any;
     public clock!: Clock;
     public light1: any;
-    public particles!: ParticlePool;
-    public particles_box!: ParticlePool;
+    //public particles!: ParticlePool;
+    //public particles_box!: ParticlePool;
     public t_start = Date.now();
     public modelLoader = new ModelLoader();
     public map!: MapD;
-    public chunkScene = new ChunkScene();
     public update_objects: any = [];
     public cdList: any = [];
     public player: any;
     public visible_distance = 500; // from player to hide chunks + enemies.
     public textures = new Textures();
-    public objects: Obj[] = [];
     public ff_objects = [];
     public sounds = new SoundLoader();
     public container: HTMLElement | undefined;
@@ -130,17 +126,6 @@ export class Main {
         //controls.update();
 
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
-        window.addEventListener('mousedown', this.onMouseDown.bind(this), false);
-        //window.addEventListener('mouseup', this.onMouseUp.bind(this), false);
-        //window.addEventListener('mousemove', this.onMouseMove.bind(this), false);
-
-        // Load models
-        //this.modelLoader.init();
-        //this.modelLoader.loadFiles();
-
-        // Init world.
-        //this.chunkScene.init(this.scene);
-
 
         // Init particle engine
         //this.particles = new ParticlePool(2000, 0);
@@ -213,44 +198,8 @@ export class Main {
         return true;
     }
 
-    waitForLoadTextures() {
-        if (!game.textures.isLoaded()) {
-            setTimeout(function () {
-                console.log("waiting for load of textures...");
-                game.waitForLoadTextures();
-            }, 100);
-        } else {
-            game.waitForLoadMap();
-        }
-    };
-
-    waitForLoadMap() {
-        if (game.modelLoader.files.length > 0) {
-            setTimeout(function () {
-                console.log("waiting for load of files...");
-                game.waitForLoadMap();
-            }, 500);
-        } else {
-            //game.maps.init("Level 1", "assets/maps/map3_ground.png", "assets/maps/map3_objects.png");
-            // Load objects here to reduce overhead of multiple objects of same type.
-            this.objects["shell"] = new Shell();
-            this.objects["shell"].create();
-            this.objects["ammo"] = new Ammo();
-            this.objects["ammo"].create();
-            this.objects["ammo_p90"] = new AmmoP90();
-            this.objects["ammo_p90"].create();
-            this.objects["ammo_sniper"] = new AmmoSniper();
-            this.objects["ammo_sniper"].create();
-            this.objects["heart"] = new Heart();
-            this.objects["heart"].create();
-
-            this.render();
-        }
-    };
-
     reset() {
         this.camera = new PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, this.visible_distance);
-        this.chunkScene.reset();
         this.player.reset();
         this.cdList = [];
         for (var i = 0; i < this.update_objects.length; i++) {
@@ -269,86 +218,6 @@ export class Main {
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
 
-    };
-
-    onMouseDown(evt: MouseEvent) {
-        this.isDown = true;
-
-        game.camera.position.set(game.camera.position.x + 1, game.camera.position.y + 1, 2);
-
-        return;
-
-        let coords = {
-            x: (evt.clientX / window.innerWidth) * 2 - 1,
-            y: -(evt.clientY / window.innerHeight) * 2 + 1
-        }
-
-        let raycaster = new Raycaster();
-        raycaster.setFromCamera(coords, this.camera);
-
-        var intersects = raycaster.intersectObjects(this.scene.children, false);
-
-        if (intersects.length > 0) {
-            var object = intersects[0].object;
-            // @ts-ignore
-            object.material.color.set(Math.random() * 0xffffff);
-            this.selected = object;
-            //object.geometry.setAttribute('color', Math.random() * 0xffffff);
-        }
-    };
-
-    onMouseUp(evt: MouseEvent) {
-        this.isDown = false;
-        /*
-        let coords = {
-            x: (evt.clientX / window.innerWidth) * 2 - 1,
-            y: -(evt.clientY / window.innerHeight) * 2 + 1
-        }
-
-        let raycaster = new Raycaster();
-        raycaster.setFromCamera(coords, this.camera);
-
-        var intersects = raycaster.intersectObjects(this.scene.children, false);
-
-        if (intersects.length > 0) {
-            var object = intersects[0].object;
-            // @ts-ignore
-            object.material.color.set(Math.random() * 0xffffff);
-            this.selected = object;
-            //object.geometry.setAttribute('color', Math.random() * 0xffffff);
-        }
-        */
-    };
-
-    onMouseMove(evt: MouseEvent) {
-        if (this.isDown === false) {
-            return;
-        }
-
-        return;
-        /*
-                if (this.selected === undefined) {
-                    return;
-                }
-        
-                let coords = {
-                    x: (evt.clientX / window.innerWidth) * 2 - 1,
-                    y: -(evt.clientY / window.innerHeight) * 2 + 1
-                }
-        
-                let raycaster = new Raycaster();
-                raycaster.setFromCamera(coords, this.camera);
-        
-                var intersects = raycaster.intersectObjects(this.scene.children, false);
-        
-                if (intersects.length > 0) {
-                    let intersect = intersects[0];
-        
-                    this.selected.position.copy(intersect.point).add(intersect!.face!.normal);
-                    this.selected.position.divideScalar(16).floor().multiplyScalar(16).addScalar(8);
-                    //object.geometry.setAttribute('color', Math.random() * 0xffffff);
-                }
-               */
     };
 
     animate() {
@@ -411,17 +280,6 @@ export class Main {
             }
         }
 
-        for (var f in this.objects) {
-            this.objects[f].update(time, delta);
-        }
-
-        //this.controls.update(delta);
-
-        // this.stats.update();
-        //this.particles.update(time, delta);
-        //this.particles_box.update(time, delta);
-        //this.chunkScene.update(time, delta);
-        //this.maps.update(time, delta);
         this.map?.update(time, delta);
         this.renderer.render(this.scene, this.camera);
     };

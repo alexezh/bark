@@ -2,7 +2,6 @@ import _ from "lodash";
 import { Avatar } from "../world/avatar";
 import { MapEditor } from "./mapeditor";
 import { resourceLib } from "../graphics/resourceLib";
-import { GameMap } from "../world/gamemap";
 import { CommandBar } from "./commandBar";
 import { CameraLayer } from "./cameralayer";
 import { TilesetList } from "./tilesetlist";
@@ -11,9 +10,7 @@ import { populateMapEditCommands, registerMapCommands } from "../posh/mapeditcom
 import { Repl } from "../posh/repl";
 import { HelpDef } from "../posh/helpdef";
 import { UiCompositor2 } from "./uicompositor";
-import { MapInfoLayer } from "./mapinfolayer";
 import { createMapEditorState, mapEditorState, MapEditorState } from "../posh/mapeditorstate";
-import { MapBitmapViewer } from "./mapbitmapviewer";
 import { gameState } from "../world/igamestate";
 import { CodeEditor } from "./codeeditor";
 import { HumanKeyboardHandler } from "../world/humankeyboardhandler";
@@ -25,15 +22,12 @@ import { CodeCategory } from "../mechanics/iavatarcode";
 import { registerCodeCommands } from "../posh/codecommands";
 import { printCodeException } from "../mechanics/codeloader";
 import { registerRegionCommands } from "../posh/regioncommands";
-import { registerPokemonCommands } from "../posh/pokemoncommands";
 import { registerMoveCommands } from "../posh/gamemove";
 
 registerCodeCommands();
 registerRegionCommands();
-registerPokemonCommands();
 registerSystemCommands();
 registerMoveCommands();
-registerCodeCommands();
 registerMapCommands();
 
 export class TerminalProps {
@@ -54,19 +48,17 @@ export class TerminalProps {
 }
 
 export class Terminal implements IGameTerminal {
+  private map: any;
   private container: HTMLDivElement;
-  private map?: GameMap;
   public camera?: CameraLayer;
   private compositor2: UiCompositor2;
   private props: TerminalProps;
   private interactiveAvatar?: IAvatar;
   private barLayer: CommandBar;
   private terminalLayer: TextTerminalLayer;
-  private mapInfoLayer: MapInfoLayer;
   private mapEditor?: MapEditor;
   private codeEditor?: CodeEditor;
   private tileViewer?: TilesetList;
-  private mapViewer?: MapBitmapViewer;
   private keyboardHandler?: HumanKeyboardHandler;
   private repl: Repl;
 
@@ -113,16 +105,6 @@ export class Terminal implements IGameTerminal {
       onToggleTile: this.onToggleTile
     });
     this.compositor2.appendLayer(this.barLayer);
-
-    // now add UI layers
-    this.mapInfoLayer = new MapInfoLayer({
-      id: "mapInfo",
-      x: 0, y: this.props.commandPaneHeight + 12, w: 0, h: 0,
-      visible: true,
-      mapEditorState: mapEditorState,
-      repl: this.repl
-    });
-    this.compositor2.appendLayer(this.mapInfoLayer);
 
     // add terminal
     let terminalHeight = this.props.height * this.props.terminalPaneHeightRatio;
@@ -186,7 +168,7 @@ export class Terminal implements IGameTerminal {
     }
   }
 
-  public setGameMap(map: GameMap) {
+  public setGameMap(map: any) {
     this.map = map;
     mapEditorState.update({ map: map });
 
@@ -312,28 +294,29 @@ export class Terminal implements IGameTerminal {
     if (this.map === undefined) {
       return;
     }
-
-    if (this.mapViewer === undefined) {
-      let mapProps = this.map.props;
-      let atlas = resourceLib.getSpriteSheetById("outside3");
-
-      this.mapViewer = new MapBitmapViewer({
-        id: "mapviewer",
-        x: 40,
-        y: 40,
-        w: mapProps.gridWidth,
-        h: mapProps.gridHeight,
-        visible: true,
-        mapEditorState: mapEditorState
-      });
-
-      this.compositor2.insertLayerBefore(this.mapViewer, 'bar');
-    }
-    else {
-      this.mapViewer.visible = !this.mapViewer.visible;
-    }
-
-    this.mapViewer.refresh();
+    /*
+        if (this.mapViewer === undefined) {
+          let mapProps = this.map.props;
+          let atlas = resourceLib.getSpriteSheetById("outside3");
+    
+          this.mapViewer = new MapBitmapViewer({
+            id: "mapviewer",
+            x: 40,
+            y: 40,
+            w: mapProps.gridWidth,
+            h: mapProps.gridHeight,
+            visible: true,
+            mapEditorState: mapEditorState
+          });
+    
+          this.compositor2.insertLayerBefore(this.mapViewer, 'bar');
+        }
+        else {
+          this.mapViewer.visible = !this.mapViewer.visible;
+        }
+    
+        this.mapViewer.refresh();
+        */
   }
 
   private onToggleTile() {
@@ -377,22 +360,22 @@ export class Terminal implements IGameTerminal {
     if (editMode === true) {
       this.terminalLayer.visible = true;
     }
-
-    if (!editMode) {
-      this.mapEditor = undefined;
-      this.camera?.setEditor(undefined);
-    } else {
-      // whole screen
-      this.mapEditor = new MapEditor({
-        id: "mapeditor",
-        x: 0, y: 0, w: this.props.canvasWidth, h: this.props.canvasHeight,
-        world: this.map,
-        mapEditorState: mapEditorState!,
-        repl: this.repl
-      });
-      this.camera?.setEditor(this.mapEditor);
-    }
-
+    /*
+        if (!editMode) {
+          this.mapEditor = undefined;
+          this.camera?.setEditor(undefined);
+        } else {
+          // whole screen
+          this.mapEditor = new MapEditor({
+            id: "mapeditor",
+            x: 0, y: 0, w: this.props.canvasWidth, h: this.props.canvasHeight,
+            world: this.map,
+            mapEditorState: mapEditorState!,
+            repl: this.repl
+          });
+          this.camera?.setEditor(this.mapEditor);
+        }
+    */
     this.camera?.focus();
   }
 
