@@ -1,11 +1,15 @@
 import _ from "lodash";
-import { Camera, Raycaster, Scene } from "three";
+import { BufferGeometry, Camera, Line, LineBasicMaterial, Raycaster, Scene, Vector3 } from "three";
+import { game } from "./main";
+import { MapLayer } from "./maplayer";
 
 export class MapEditor {
   private container: HTMLElement;
   private camera: Camera;
   private scene: Scene;
   private isDown: boolean = false;
+  private selection: Line | undefined = undefined;
+  static material = new LineBasicMaterial({ color: 0x0000ff });
 
   public constructor(container: HTMLElement, scene: Scene, camera: Camera) {
     this.container = container;
@@ -35,9 +39,10 @@ export class MapEditor {
     var intersects = raycaster.intersectObjects(this.scene.children, false);
 
     if (intersects.length > 0) {
-      var object = intersects[0].object;
+      this.selectBlockFace(intersects[0].point);
+      //var object = intersects[0].object;
       // @ts-ignore
-      object.material.color.set(Math.random() * 0xffffff);
+      //object.material.color.set(Math.random() * 0xffffff);
       //this.selected = object;
       //object.geometry.setAttribute('color', Math.random() * 0xffffff);
     }
@@ -97,4 +102,28 @@ export class MapEditor {
            */
   };
 
+  private selectBlockFace(point: Vector3) {
+    let block = game.map.findBlock(point);
+    if (block === undefined) {
+      return;
+    }
+
+    // for now select top face and draw rect
+    if (this.selection !== undefined) {
+      this.scene.remove(this.selection);
+      this.selection = undefined;
+    }
+
+    const points: Vector3[] = [];
+    points.push(new Vector3(block.x, block.y, block.z + block.sz + 1));
+    points.push(new Vector3(block.x, block.y + block.sy, block.z + block.sz + 1));
+    points.push(new Vector3(block.x + block.sx, block.y + block.sy, block.z + block.sz + 1));
+    points.push(new Vector3(block.x + block.sx, block.y, block.z + block.sz + 1));
+    points.push(new Vector3(block.x, block.y, block.z + block.sz + 1));
+
+    const geometry = new BufferGeometry().setFromPoints(points);
+
+    this.selection = new Line(geometry, MapEditor.material);
+    this.scene.add(this.selection);
+  }
 }

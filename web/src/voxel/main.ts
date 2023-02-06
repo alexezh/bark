@@ -4,6 +4,7 @@ import { MapD } from "./map";
 import { ParticlePool } from "./particles";
 import { Camera, Clock, Fog, GridHelper, Material, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, OrthographicCamera, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
 import { OrbitControls } from 'three-orbitcontrols-ts';
+import { MapEditor } from "./mapeditor";
 
 //if (!Detector.webgl) Detector.addGetWebGLMessage();
 //////////////////////////////////////////////////////////////////////
@@ -16,18 +17,20 @@ export class Main {
     public scene!: Scene;
     public stats: any;
     public clock!: Clock;
-    public light1: any;
+
     //public particles!: ParticlePool;
     //public particles_box!: ParticlePool;
     public t_start = Date.now();
     public map!: MapD;
+    public mapEditor!: MapEditor;
+
     public update_objects: any = [];
     public player: any;
     public visible_distance = 500; // from player to hide chunks + enemies.
     public textures = new Textures();
     public ff_objects = [];
     public sounds = new SoundLoader();
-    public container: HTMLElement | undefined;
+    public container!: HTMLElement;
     private selected: Object3D | undefined;
     private isDown: boolean = false;
 
@@ -183,6 +186,8 @@ export class Main {
     private async loadMap(): Promise<boolean> {
         this.map = new MapD();
         await this.map.load();
+
+        this.mapEditor = new MapEditor(this.container, this.scene, this.camera);
 
         const geometry = new PlaneGeometry(1000, 1000);
         geometry.rotateX(- Math.PI / 2);

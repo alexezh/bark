@@ -1,9 +1,8 @@
 import { game } from "./main";
-import { AmbientLight, BufferGeometry, Mesh, MeshPhongMaterial } from "three";
-import { VoxelGeometryWriter } from "./voxelgeometrywriter";
+import { AmbientLight, BufferGeometry, Mesh, MeshPhongMaterial, Vector3 } from "three";
 import { modelCache } from "./voxelmodelcache";
-import { GridSize, PxSize } from "../posh/pos";
-import { VoxelModel } from "./voxelmodel";
+import { Character } from "./character";
+import { MapBlock, MapBlockCoord, MapLayer } from "./maplayer";
 
 
 export class MeshModel {
@@ -17,107 +16,14 @@ export class MeshModel {
     }
 }
 
-export type MapBlock = {
-    model: VoxelModel;
-    frame: number;
-}
-
-export class MapLayer {
-    private size!: GridSize;
-    private blockSize!: PxSize;
-    private layerZ: number;
-    private blocks!: MapBlock[];
-    private _mesh!: Mesh;
-    private geometry!: BufferGeometry;
-    private material: MeshPhongMaterial;
-
-    public get staticMesh(): Mesh { return this._mesh; }
-
-    public constructor(material: MeshPhongMaterial) {
-        this.material = material;
-        this.blockSize = { w: 16, h: 16 }
-        this.size = { w: 10, h: 10 };
-        this.layerZ = 32;
-        this.blocks = new Array(this.size.w * this.size.h);
-    }
-
-    public load() {
-
-    }
-
-    public fill(tile: VoxelModel) {
-        for (let idx = 0; idx < this.blocks.length; idx++) {
-            this.blocks[idx] = { model: tile, frame: 0 }
-        }
-    }
-
-    public build() {
-        let writer = new VoxelGeometryWriter();
-        for (let y = 0; y < this.size.h; y++) {
-            for (let x = 0; x < this.size.w; x++) {
-                let pos = y * this.size.w + x;
-                let block = this.blocks[pos];
-                if (block !== undefined) {
-                    let model = block.model.frames[block.frame];
-                    writer.setScale(this.blockSize.w / model.chunk_sx);
-                    writer.setPosition(this.blockSize.w * x, this.blockSize.h * y, this.layerZ);
-                    model.build(writer);
-                }
-            }
-        }
-
-        this.geometry = writer.getGeometry();
-        this._mesh = new Mesh(this.geometry, this.material);
-    }
-}
-
-export type CharacterAnimation = {
-
-}
-
-export class Character {
-    private model!: VoxelModel;
-    private meshFrames: Mesh[] = [];
-    private url: string;
-    private currentFrame: number = 0;
-    private scale: number = 0.6;
-    public material: MeshPhongMaterial;
-
-    public constructor(url: string, material: MeshPhongMaterial) {
-        this.url = url;
-        this.material = material;
-    }
-
-    public async load(): Promise<boolean> {
-        let vmm = await modelCache.getVoxelModel(this.url);
-
-        for (let f of vmm.frames) {
-            let writer = new VoxelGeometryWriter();
-
-            writer.setScale(this.scale);
-
-            f.build(writer);
-
-            let geo = writer.getGeometry();
-            let mm = new Mesh(geo, this.material);
-            this.meshFrames.push(mm);
-        }
-
-        return true;
-    }
-
-    public getMesh(): Mesh {
-        return this.meshFrames[this.currentFrame];
-    }
-}
 
 //////////////////////////////////////////////////////////////////////
 // Maps class - Loading of maps from images
 export class MapD {
-    public name = "";
     public objects: any = [];
     public width = 100;
     public height = 100;
+    private blockSize = 16;
     // Objects loaded 
     private layers: MapLayer[] = [];
     private char!: Character;
@@ -177,7 +83,7 @@ export class MapD {
         this.char = new Character('./assets/vox/monky.vox', this.material);
         await this.char.load();
 
-        this.layers.push(new MapLayer(this.material));
+        this.layers.push(new MapLayer(this.material, 0, this.blockSize));
 
         let ground = await modelCache.getVoxelModel('./assets/vox/ground.vox');
         this.layers[0].fill(ground);
@@ -220,6 +126,15 @@ export class MapD {
         game.scene.add(this.ambient_light);
 
         return true;
+    }
+
+    public findBlock(point: Vector3): MapBlockCoord | undefined {
+        let layerIdx = (point.z / this.blockSize) | 0;
+        if (layerIdx < 0 || layerIdx >= this.layers.length) {
+            console.log('unknown z layer');
+            return undefined;
+        }
+        return this.layers[layerIdx].findBlock(point);
     }
 };
 
