@@ -3,6 +3,8 @@ import { AmbientLight, BufferGeometry, Mesh, MeshPhongMaterial, Vector3 } from "
 import { modelCache } from "./voxelmodelcache";
 import { Character } from "./character";
 import { MapBlock, MapBlockCoord, MapLayer } from "./maplayer";
+import { VoxelModel } from "./voxelmodel";
+import { GridPos3, GridSize3, WorldCoord3 as WorldPos3, WorldSize3 } from "./pos3";
 
 
 export class MeshModel {
@@ -97,6 +99,22 @@ export class MapD {
         return true;
     }
 
+    gridSizeToWorldSize(gridSize: GridSize3): WorldSize3 {
+        return {
+            sx: gridSize.sx * this.blockSize,
+            sy: gridSize.sy * this.blockSize,
+            sz: gridSize.sz * this.blockSize
+        }
+    }
+
+    gridPosToWorldPos(gridPos: GridPos3) {
+        return {
+            x: gridPos.x * this.blockSize,
+            y: gridPos.y * this.blockSize,
+            z: gridPos.z * this.blockSize
+        }
+    }
+
     public findBlock(point: Vector3): MapBlockCoord | undefined {
         let layerIdx = (point.z / this.blockSize) | 0;
         if (layerIdx < 0 || layerIdx >= this.layers.length) {
@@ -107,10 +125,26 @@ export class MapD {
     }
 
     public deleteBlock(block: MapBlockCoord) {
-        let layerIdx = (block.z / this.blockSize) | 0;
-        let layer = this.layers[layerIdx];
+        let layer = this.layers[block.gridPos.z];
         game.scene.remove(layer.staticMesh);
         layer.deleteBlock(block);
+        layer.build();
+        game.scene.add(layer.staticMesh);
+    }
+
+    public addBlock(pos: GridPos3, block: VoxelModel) {
+        if (pos.z >= this.layers.length) {
+            for (let i = this.layers.length - 1; i < pos.z; i++) {
+                let layer = new MapLayer(this.material, 0, this.blockSize);
+                layer.build();
+                this.layers.push(layer);
+            }
+        }
+
+        let layer = this.layers[pos.z];
+        layer.addBlock(pos, block);
+
+        game.scene.remove(layer.staticMesh);
         layer.build();
         game.scene.add(layer.staticMesh);
     }

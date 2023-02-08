@@ -31,7 +31,6 @@ export class Main {
     public visible_distance = 500; // from player to hide chunks + enemies.
     public textures = new Textures();
     public ff_objects = [];
-    public sounds = new SoundLoader();
     public container!: HTMLElement;
     private selected: Object3D | undefined;
     private isDown: boolean = false;
@@ -52,53 +51,6 @@ export class Main {
         this.container = container;
         container.setAttribute('tabindex', '0');
 
-        this.sounds.Add({ name: "sniper", file: "assets/sounds/sniper.wav.mp3" });
-        this.sounds.Add({ name: "take_heart", file: "assets/sounds/heart.wav.mp3" });
-        this.sounds.Add({ name: "walk1", file: "assets/sounds/walk1.wav.mp3" });
-        this.sounds.Add({ name: "blood1", file: "assets/sounds/blood1.wav.mp3" });
-        this.sounds.Add({ name: "blood2", file: "assets/sounds/blood2.wav.mp3" });
-        this.sounds.Add({ name: "blood3", file: "assets/sounds/blood3.wav.mp3" });
-        this.sounds.Add({ name: "rocket", file: "assets/sounds/rocket_shoot.wav.mp3" });
-        this.sounds.Add({ name: "rocket_explode", file: "assets/sounds/rocket_explode.wav.mp3" });
-        this.sounds.Add({ name: "ak47", file: "assets/sounds/ak47.wav.mp3" });
-        this.sounds.Add({ name: "p90", file: "assets/sounds/p90.wav.mp3" });
-        this.sounds.Add({ name: "pistol", file: "assets/sounds/pistol.mp3" });
-        this.sounds.Add({ name: "grenadelauncher", file: "assets/sounds/grenadelauncher.mp3" });
-        this.sounds.Add({ name: "shotgun", file: "assets/sounds/shotgun_shoot.wav.mp3" });
-        this.sounds.Add({ name: "shotgun_reload", file: "assets/sounds/shotgun_reload.wav.mp3" });
-        this.sounds.Add({ name: "minigun", file: "assets/sounds/gunshot1.wav.mp3" });
-        this.sounds.Add({ name: "fall", file: "assets/sounds/fall.wav.mp3" });
-        this.sounds.Add({ name: "fall2", file: "assets/sounds/scream.wav.mp3" });
-        this.sounds.Add({ name: "footsteps", file: "assets/sounds/footsteps.wav.mp3" });
-        this.sounds.Add({ name: "heartbeat", file: "assets/sounds/heartbeat.wav.mp3" });
-        this.sounds.Add({ name: "painkillers", file: "assets/sounds/painkillers.wav.mp3" });
-        this.sounds.Add({ name: "ambient_horror", file: "assets/sounds/ambient_horror.wav.mp3" });
-        this.sounds.Add({ name: "ambient_street", file: "assets/sounds/ambient_street.mp3" });
-        this.sounds.Add({ name: "hit1", file: "assets/sounds/hit1.wav.mp3" });
-        this.sounds.Add({ name: "hit2", file: "assets/sounds/hit2.wav.mp3" });
-        this.sounds.Add({ name: "hunt1", file: "assets/sounds/kill_you.wav.mp3" });
-        this.sounds.Add({ name: "hunt2", file: "assets/sounds/take_him.wav.mp3" });
-        this.sounds.Add({ name: "ammo_fall", file: "assets/sounds/ammo_fall.wav.mp3" });
-        this.sounds.Add({ name: "reload", file: "assets/sounds/reload.wav.mp3" });
-        this.sounds.Add({ name: "bullet_wall", file: "assets/sounds/bullet_wall.mp3" });
-        this.sounds.Add({ name: "bullet_metal", file: "assets/sounds/bullet_metal.mp3" });
-        // this.sounds.Add({name: "haha1", file: "assets/sounds/haha.wav.mp3"});
-        // this.sounds.Add({name: "haha2", file: "assets/sounds/haha2.wav.mp3"});
-        // this.sounds.Add({name: "haha3", file: "assets/sounds/haha3.wav.mp3"});
-        //
-        //var loader = new TextureLoader();
-        //var that = this;
-        //loader.load(
-        //    'assets/textures/bump.png',
-        //    function (texture) {
-        //        //texture.anisotropy = 4;
-        //        //texture.repeat.set(0.998, 0.998);
-        //        //texture.offset.set(0.001, 0.001);
-        //        //texture.wrapS = texture.wrapT = RepeatWrapping;
-        //        //texture.format = RGBFormat;
-        //        that.bump_map = new MeshPhongMaterial({ map: texture,specularMap: texture, vertexColors: VertexColors, wireframe: false });
-        //    }
-        //);
         this.scene = new Scene();
         this.clock = new Clock();
 
@@ -109,36 +61,17 @@ export class Main {
         this.createCamera(window.innerWidth / 10, window.innerHeight / 10);
 
         //  this.scene.fog = new FogExp2( 0xFFA1C1, 0.0059 );
-        //this.scene.fog = new Fog( 0xFFA1C1, 180, this.visible_distance );
         this.scene.fog = new Fog(0x000000, 240, this.visible_distance);
 
         this.renderer = new WebGLRenderer({ antialias: false });
-        //   console.log(window.devicePixelRatio);
         this.renderer.setPixelRatio(1);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        // this.renderer.setClearColor(0xFFA1C1, 1);
-        //  this.renderer.setClearColor(0xFFA1C1, 1);
         this.renderer.setClearColor(0x000000, 1);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = PCFSoftShadowMap;
         container.appendChild(this.renderer.domElement);
-        //this.stats = new Stats();
-        //container.appendChild(this.stats.dom);
-
-        //const controls = new OrbitControls(this.camera, this.renderer.domElement);
-        //controls.target.set(0, 0, 1);
-        //controls.update();
 
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
-
-        // Init particle engine
-        //this.particles = new ParticlePool(2000, 0);
-        //this.particles_box = new ParticlePool(1000, 1);
-
-        // DEBUG STUFF
-        //var gridHelper = new GridHelper(5000, 100);
-        //gridHelper.position.set(0, 0, 0);
-        //game.scene.add(gridHelper);
 
         // Wait for all resources to be loaded before loading map.
         this.textures.prepare();

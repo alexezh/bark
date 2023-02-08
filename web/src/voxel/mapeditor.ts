@@ -3,6 +3,7 @@ import { BufferGeometry, Camera, Line, LineBasicMaterial, Raycaster, Scene, Vect
 import { KeyBinder } from "../ui/keybinder";
 import { game } from "./main";
 import { MapBlockCoord, MapLayer } from "./maplayer";
+import { modelCache } from "./voxelmodelcache";
 
 export class MapEditor {
   private container: HTMLElement;
@@ -24,6 +25,7 @@ export class MapEditor {
       'onMouseMove',
       'onCopyBlock',
       'onPasteBlock',
+      'pasteBlockWorker',
       'onClearBlock',
     ])
 
@@ -116,7 +118,20 @@ export class MapEditor {
   }
 
   private onPasteBlock() {
+    setTimeout(this.pasteBlockWorker);
 
+  }
+
+  private async pasteBlockWorker(): Promise<boolean> {
+    if (this.selectedBlock === undefined) {
+      return false;
+    }
+
+    let block = await modelCache.getVoxelModel('./assets/vox/dungeon_entrance.vox');
+    let pos = this.selectedBlock.gridPos;
+    game.map.addBlock({ x: pos.x, y: pos.y, z: pos.z + 1 }, block);
+
+    return true;
   }
 
   private onClearBlock() {
@@ -143,12 +158,15 @@ export class MapEditor {
       this.selectedBlock = undefined;
     }
 
+    let pos = game.map.gridPosToWorldPos(block.gridPos);
+    let size = game.map.gridSizeToWorldSize(block.model.gridSize);
+
     const points: Vector3[] = [];
-    points.push(new Vector3(block.x, block.y, block.z + block.sz));
-    points.push(new Vector3(block.x, block.y + block.sy, block.z + block.sz));
-    points.push(new Vector3(block.x + block.sx, block.y + block.sy, block.z + block.sz));
-    points.push(new Vector3(block.x + block.sx, block.y, block.z + block.sz));
-    points.push(new Vector3(block.x, block.y, block.z + block.sz));
+    points.push(new Vector3(pos.x, pos.y, pos.z + size.sz));
+    points.push(new Vector3(pos.x, pos.y + size.sy, pos.z + size.sz));
+    points.push(new Vector3(pos.x + size.sx, pos.y + size.sy, pos.z + size.sz));
+    points.push(new Vector3(pos.x + size.sx, pos.y, pos.z + size.sz));
+    points.push(new Vector3(pos.x, pos.y, pos.z + size.sz));
 
     const geometry = new BufferGeometry().setFromPoints(points);
 

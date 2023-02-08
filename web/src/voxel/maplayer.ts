@@ -1,5 +1,6 @@
 import { BufferGeometry, Mesh, MeshPhongMaterial, Vector3 } from "three";
 import { GridSize } from "../posh/pos";
+import { GridPos3 } from "./pos3";
 import { VoxelGeometryWriter } from "./voxelgeometrywriter";
 import { VoxelModel } from "./voxelmodel";
 
@@ -11,12 +12,7 @@ export type MapBlock = {
 export type MapBlockCoord = {
   model: VoxelModel;
   idx: number;
-  x: number;
-  y: number;
-  z: number;
-  sx: number;
-  sy: number;
-  sz: number;
+  gridPos: GridPos3;
 }
 
 export class MapLayer {
@@ -68,7 +64,7 @@ export class MapLayer {
   }
 
   // the tricky part is boundaries
-  findBlock(point: Vector3): MapBlockCoord | undefined {
+  public findBlock(point: Vector3): MapBlockCoord | undefined {
     let x = (point.x / this.blockSize) | 0;
     let y = (point.y / this.blockSize) | 0;
 
@@ -81,17 +77,21 @@ export class MapLayer {
     return {
       model: block.model,
       idx: pos,
-      x: x * this.blockSize,
-      y: y * this.blockSize,
-      z: this.layerZ,
-      sx: this.blockSize,
-      sy: this.blockSize,
-      sz: this.blockSize,
+      gridPos: {
+        x: x,
+        y: y,
+        z: this.layerZ,
+      }
     };
   }
 
-  deleteBlock(block: MapBlockCoord) {
+  public deleteBlock(block: MapBlockCoord) {
     this.blocks[block.idx] = undefined;
+  }
+
+  public addBlock(pos: GridPos3, block: VoxelModel) {
+    let idx = pos.y * this.size.w + pos.x;
+    this.blocks[idx] = { model: block, frame: 0 };
   }
 }
 

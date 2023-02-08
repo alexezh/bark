@@ -1,6 +1,7 @@
 import { TilingSprite } from "pixijs";
 import { BufferAttribute, BufferGeometry, Mesh, MeshPhongMaterial, Vector3 } from "three";
 import { game } from "./main";
+import { GridSize3 } from "./pos3";
 import { get_rand } from "./utils";
 import { VoxelGeometryWriter } from "./voxelgeometrywriter";
 
@@ -39,6 +40,15 @@ export class VoxelModel {
 
   public constructor(id: string) {
     this.id = id;
+  }
+
+  public get gridSize(): GridSize3 {
+    let frame = this.frames[0];
+    return {
+      sx: 1,
+      sy: 1,
+      sz: 1
+    }
   }
 }
 
