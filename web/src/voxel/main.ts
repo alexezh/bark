@@ -107,7 +107,7 @@ export class Main {
             viewport.far
         );
 */
-        this.camera = new PerspectiveCamera(45, w / h, 1, this.visible_distance);
+        this.camera = new PerspectiveCamera(35, w / h, 1, this.visible_distance);
         this.camera.up.set(0, 0, 1);
 
         var point = new Vector3(0, 0, -1);
@@ -127,7 +127,8 @@ export class Main {
         this.mapEditor = new MapEditor(this.container,
             this.scene,
             this.camera,
-            this.input);
+            this.input,
+            this.map);
 
         const geometry = new PlaneGeometry(1000, 1000);
         //geometry.rotateX(- Math.PI / 2);

@@ -53,7 +53,7 @@ export class MapLayer {
         if (block !== undefined) {
           let model = block.model.frames[block.frame];
           writer.setScale(this.blockSize / model.chunk_sx);
-          writer.setPosition(this.blockSize * x, this.blockSize * y, this.layerZ);
+          writer.setPosition(this.blockSize * x, this.blockSize * y, this.blockSize * this.layerZ);
           model.build(writer);
         }
       }

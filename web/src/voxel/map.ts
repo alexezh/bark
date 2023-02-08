@@ -135,7 +135,7 @@ export class MapD {
     public addBlock(pos: GridPos3, block: VoxelModel) {
         if (pos.z >= this.layers.length) {
             for (let i = this.layers.length - 1; i < pos.z; i++) {
-                let layer = new MapLayer(this.material, 0, this.blockSize);
+                let layer = new MapLayer(this.material, this.layers.length, this.blockSize);
                 layer.build();
                 this.layers.push(layer);
             }

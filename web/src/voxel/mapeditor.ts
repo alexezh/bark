@@ -2,6 +2,7 @@ import _ from "lodash";
 import { BufferGeometry, Camera, Line, LineBasicMaterial, Raycaster, Scene, Vector3 } from "three";
 import { KeyBinder } from "../ui/keybinder";
 import { game } from "./main";
+import { MapD } from "./map";
 import { MapBlockCoord, MapLayer } from "./maplayer";
 import { modelCache } from "./voxelmodelcache";
 
@@ -12,9 +13,16 @@ export class MapEditor {
   private isDown: boolean = false;
   private selectedBlock: MapBlockCoord | undefined = undefined;
   private selection: Line | undefined = undefined;
+  private map: MapD;
   static material = new LineBasicMaterial({ color: 0x0000ff });
 
-  public constructor(container: HTMLElement, scene: Scene, camera: Camera, input: KeyBinder) {
+  public constructor(container: HTMLElement,
+    scene: Scene,
+    camera: Camera,
+    input: KeyBinder,
+    map: MapD) {
+
+    this.map = map;
     this.container = container;
     this.camera = camera;
     this.scene = scene;
