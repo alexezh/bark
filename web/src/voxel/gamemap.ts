@@ -1,5 +1,4 @@
-import { game } from "./main";
-import { AmbientLight, BufferGeometry, Mesh, MeshPhongMaterial, Vector3 } from "three";
+import { AmbientLight, BufferGeometry, Mesh, MeshPhongMaterial, Scene, Vector3 } from "three";
 import { modelCache } from "./voxelmodelcache";
 import { Character } from "./character";
 import { MapBlock, MapBlockCoord, MapLayer } from "./maplayer";
@@ -22,6 +21,7 @@ export class MeshModel {
 //////////////////////////////////////////////////////////////////////
 // Maps class - Loading of maps from images
 export class MapD {
+    private scene: Scene;
     public objects: any = [];
     public width = 100;
     public height = 100;
@@ -33,7 +33,8 @@ export class MapD {
     public ambient_light!: AmbientLight;
     public material: MeshPhongMaterial = new MeshPhongMaterial({ color: 0xffffff, vertexColors: true });
 
-    public constructor() {
+    public constructor(scene: Scene) {
+        this.scene = scene;
     }
 
     reset() {
@@ -91,10 +92,10 @@ export class MapD {
         this.layers[0].fill(ground);
 
         this.layers[0].build();
-        game.scene.add(this.layers[0].staticMesh);
+        this.scene.add(this.layers[0].staticMesh);
 
         this.ambient_light = new AmbientLight(0xFFFFFF, 0.8);
-        game.scene.add(this.ambient_light);
+        this.scene.add(this.ambient_light);
 
         return true;
     }
@@ -126,10 +127,10 @@ export class MapD {
 
     public deleteBlock(block: MapBlockCoord) {
         let layer = this.layers[block.gridPos.z];
-        game.scene.remove(layer.staticMesh);
+        this.scene.remove(layer.staticMesh);
         layer.deleteBlock(block);
         layer.build();
-        game.scene.add(layer.staticMesh);
+        this.scene.add(layer.staticMesh);
     }
 
     public addBlock(pos: GridPos3, block: VoxelModel) {
@@ -144,9 +145,9 @@ export class MapD {
         let layer = this.layers[pos.z];
         layer.addBlock(pos, block);
 
-        game.scene.remove(layer.staticMesh);
+        this.scene.remove(layer.staticMesh);
         layer.build();
-        game.scene.add(layer.staticMesh);
+        this.scene.add(layer.staticMesh);
     }
 };
 

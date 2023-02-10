@@ -1,22 +1,22 @@
-import { SoundLoader } from "./sound";
 import { Textures } from "./textures";
-import { MapD } from "./map";
-import { ParticlePool } from "./particles";
+import { MapD } from "./gamemap";
 import { Camera, Clock, Fog, GridHelper, Material, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, OrthographicCamera, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
-import { OrbitControls } from 'three-orbitcontrols-ts';
 import { MapEditor } from "./mapeditor";
 import { KeyBinder } from "../ui/keybinder";
+import { UiLayer2, UiLayerProps } from "../ui/uilayer";
+import { ICameraControl } from "./icameracontrol";
 
-//if (!Detector.webgl) Detector.addGetWebGLMessage();
-//////////////////////////////////////////////////////////////////////
-// Main class - Where the magic happens
-//////////////////////////////////////////////////////////////////////
-export class Main {
+export type CameraLayerProps = UiLayerProps & {
+    scale: number;
+    onOpenTerminal: () => void;
+    onToggleEdit: () => void;
+    onToggleTile: () => void;
+}
+
+export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraControl {
     public renderer!: WebGLRenderer;
-    public controls: any;
     public camera!: Camera;
     public scene!: Scene;
-    public stats: any;
     public clock!: Clock;
     private input!: KeyBinder;
 
@@ -111,20 +111,21 @@ export class Main {
         this.camera.up.set(0, 0, 1);
 
         var point = new Vector3(0, 0, -1);
-        game.camera.lookAt(point);
+        this.camera.lookAt(point);
         let angleY = Math.PI / 4;
-        game.camera.rotation.y = angleY;
+        this.camera.rotation.y = angleY;
         //game.camera.rotation.x = -Math.PI / 1.4;
-        game.camera.position.set(100 + 100 * Math.tan(angleY), 100, 100);
+        this.camera.position.set(100 + 100 * Math.tan(angleY), 100, 100);
         //game.camera.position.y = 120;
-        (game.camera as PerspectiveCamera).updateProjectionMatrix();
+        (this.camera as PerspectiveCamera).updateProjectionMatrix();
     }
 
     private async loadMap(): Promise<boolean> {
         this.map = new MapD();
         await this.map.load();
 
-        this.mapEditor = new MapEditor(this.container,
+        this.mapEditor = new MapEditor(
+            { w: this.props.w, h: this.props.h },
             this.scene,
             this.camera,
             this.input,
@@ -193,9 +194,3 @@ export class Main {
     };
 }
 
-export let game: Main;
-
-export function createVoxelGame(container: HTMLElement) {
-    game = new Main();
-    game.init(container)
-}

@@ -1,7 +1,6 @@
 import { GridPos } from "../posh/pos";
 import { IAvatar } from "../world/iavatar";
 import { MoveDirection, CodeAction, CodeActionKind, IAvatarAPI, maxLookDistance, RelMoveDirection, WObject, MoveAction, dirByRelDirection, SayAction } from "./iavatarapi";
-import { IGameMap } from "../world/igamemap";
 
 /*
 export class AvatarAPI implements IAvatarAPI {

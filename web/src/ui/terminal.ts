@@ -1,7 +1,6 @@
 import _ from "lodash";
 import { Avatar } from "../world/avatar";
 import { MapEditor } from "./mapeditor";
-import { resourceLib } from "../graphics/resourceLib";
 import { CommandBar } from "./commandBar";
 import { CameraLayer } from "./cameralayer";
 import { TilesetList } from "./tilesetlist";
@@ -23,6 +22,7 @@ import { registerCodeCommands } from "../posh/codecommands";
 import { printCodeException } from "../mechanics/codeloader";
 import { registerRegionCommands } from "../posh/regioncommands";
 import { registerMoveCommands } from "../posh/gamemove";
+import { MapD } from "../voxel/gamemap";
 
 registerCodeCommands();
 registerRegionCommands();
@@ -168,7 +168,7 @@ export class Terminal implements IGameTerminal {
     }
   }
 
-  public setGameMap(map: any) {
+  public setGameMap(map: MapD) {
     this.map = map;
     mapEditorState.update({ map: map });
 

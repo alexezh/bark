@@ -1,8 +1,6 @@
 import { CodeAction, IAvatarAPI } from "./iavatarapi";
 import { BattleAction, IBattleAPI } from "./ibattleapi";
 import { CatchAction, ICatchAPI } from "./icatchapi";
-import { PokemonMove } from "../world/pokemon";
-import { PokemonKind } from "../graphics/ipokedex";
 
 export enum CodeCategory {
   avatar = 'avatar',

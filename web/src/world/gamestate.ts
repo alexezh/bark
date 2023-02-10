@@ -3,9 +3,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { HubConnection, HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
 import { Repl } from "../posh/repl";
 import { Avatar } from "./avatar";
-import { Pokemon } from "./pokemon";
 import { GridPos, gridPosToPxPos } from "../posh/pos";
-import { currentWorldId, fetchAvatars, removeAvatar, spawnCharacter, spawnPokemon } from "../fetchadapter";
+import { currentWorldId } from "../fetchadapter";
 import { IAvatar } from "./iavatar";
 import { printNetworkError } from "../ui/errorreport";
 import { terminal } from "../ui/igameterminal";
@@ -13,15 +12,6 @@ import { gameState, IGameState, setGameState } from "./igamestate";
 import { IGameMap } from "./igamemap";
 import { printCodeException } from "../mechanics/codeloader";
 import { SpriteMoveAnimation } from "./spritemoveanimation";
-
-export type WireSpawnPokemonRequest = {
-  pokedexId: string;
-  layerId: string;
-}
-
-export type WireRemovePokemonRequest = {
-  id: string;
-}
 
 export type WireSpawnCharacterRequest = {
   name: string;
@@ -101,33 +91,6 @@ export class GameState {
     this.onLoaded = true;
 
     return true;
-  }
-
-  public async spawnPokemon(pokedexId: string, layerId: string, pos: GridPos): Promise<IAvatar> {
-    let wireAvatar = await spawnPokemon({
-      pokedexId: pokedexId,
-      layerId: layerId
-    });
-
-    if (wireAvatar.pokemon === undefined) {
-      throw 'something wrong';
-    }
-
-    wireAvatar.pokemon.pos = pos;
-
-    let pokemon = new Pokemon(wireAvatar.pokemon, this.onAvatarPosChanged);
-    try {
-      await pokemon.load();
-    }
-    catch (e) {
-      terminal?.printError(`Failed to load ${pokemon.id}`);
-    }
-
-    pokemon.updateRuntimeProps(pokemon.rt);
-    this.onAvatarPosChanged(pokemon, undefined, pos);
-
-    this.addAvatar(pokemon);
-    return pokemon;
   }
 
   public spawnCharacter(name: string, skinUrl: string) {
@@ -228,3 +191,9 @@ export function createGameState(): IGameState {
   return gameState;
 }
 
+export let game: Main;
+
+export function createVoxelGame(container: HTMLElement) {
+  game = new Main();
+  game.init(container)
+}

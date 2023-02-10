@@ -1,6 +1,6 @@
 import { setFetchAdapter } from "./fetchadapter";
 import { FetchAdapterWeb } from "./fetchadapterweb";
-import { createVoxelGame, game } from "./voxel/main";
+import { createVoxelGame, game } from "./voxel/cameralayer";
 
 //export var gameApp = new GameApp();
 //gameApp.run();

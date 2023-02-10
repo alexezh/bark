@@ -1,5 +1,5 @@
 import { Vector3 } from "three";
-import { game } from "./main";
+import { game } from "./cameralayer";
 
 export class SoundLoader {
     sounds = new Array();

@@ -1,5 +1,4 @@
 import { GridPos } from "../posh/pos";
-import { PokemonMove } from "../world/pokemon";
 
 export enum WObjectKind {
   character = 'character',

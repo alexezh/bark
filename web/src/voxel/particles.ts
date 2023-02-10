@@ -1,5 +1,4 @@
 import { BoxGeometry, Mesh, Sprite, Vector3 } from "three";
-import { game } from "./main";
 import { get_rand } from './utils';
 
 export class ParticlePool {

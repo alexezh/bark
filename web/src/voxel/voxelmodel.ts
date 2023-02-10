@@ -1,8 +1,5 @@
-import { TilingSprite } from "pixijs";
-import { BufferAttribute, BufferGeometry, Mesh, MeshPhongMaterial, Vector3 } from "three";
-import { game } from "./main";
+import { BufferAttribute, BufferGeometry, MeshPhongMaterial } from "three";
 import { GridSize3 } from "./pos3";
-import { get_rand } from "./utils";
 import { VoxelGeometryWriter } from "./voxelgeometrywriter";
 
 export type VoxelPoint = {

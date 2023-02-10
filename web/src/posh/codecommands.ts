@@ -1,12 +1,10 @@
 import { storeFileBackground } from "../fetchadapter";
-import { resourceLib } from "../graphics/resourceLib";
 import { codeLoader, printCodeException } from "../mechanics/codeloader";
 import { CodeCategory, FileCategory } from "../mechanics/iavatarcode";
 import { terminal } from "../ui/igameterminal";
 import { gameState } from "../world/igamestate";
 import { mapEditorState } from "./mapeditorstate";
 import { printEditModeError, printNoRegion, registerFunction } from "./poshregistry";
-import { withRegion } from "./regioncommands";
 
 export function editCode(args: { category: string, id: string }) {
   editCodeWorker(args, true);
@@ -45,44 +43,6 @@ function editCodeWorker(args: { category: string, id: string }, allowEdit: boole
     */
 }
 
-function editPokedexCode(name: string, allowEdit: boolean) {
-  let pd = resourceLib.pokedex.getPokedexEntry(name);
-  if (pd !== undefined) {
-    let code = resourceLib.pokedex.getPokedexCode(pd);
-    let onSave = (allowEdit) ? (text: string) => { resourceLib.pokedex.updatePokedexCode(pd!, text); } : undefined;
-
-    terminal?.editFile(code, onSave);
-  } else {
-    if (name === 'default') {
-      let codeName = 'pokedex/code/' + name;
-      let file = codeLoader.getCodeModule(codeName);
-      let onSave = (allowEdit) ? (text: string) => {
-        codeLoader!.updateCode(codeName, text);
-        storeFileBackground(codeName, text);
-      } : undefined;
-
-      terminal?.editFile(file?.code, onSave);
-    }
-  }
-}
-
-function editLocationCode(name: string, allowEdit: boolean) {
-  if (mapEditorState.currentLayer === undefined) {
-    printEditModeError();
-    return;
-  }
-
-  let loc = mapEditorState.currentLayer.getLocation(name);
-  if (loc === undefined) {
-    terminal?.printError('Unknown location : ' + name);
-  }
-
-  let onSave = (allowEdit) ? (text: string) => {
-    loc!.updateCode(text);
-  } : undefined;
-
-  terminal?.editFile(loc!.props.code, onSave);
-}
 
 function editTileCode(id: string, allowEdit: boolean) {
   /*

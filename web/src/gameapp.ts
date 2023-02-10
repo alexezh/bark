@@ -1,7 +1,7 @@
 import { Terminal } from "./ui/terminal";
 import { createGameState, GameState } from "./world/gamestate";
 import { resourceLib } from "./graphics/resourceLib";
-import { fetchWorld, WorldProps } from "./fetchadapter";
+import { fetchFiles, WorldProps } from "./fetchadapter";
 import { setTerminal, terminal } from "./ui/igameterminal";
 import { IGameState } from "./world/igamestate";
 
@@ -22,7 +22,7 @@ export class GameApp {
   }
 
   public async run() {
-    this.worldProps = await fetchWorld(this.worldId);
+    this.worldProps = await fetchFiles(this.worldId);
 
     this.state = createGameState();
 
@@ -48,7 +48,7 @@ export class GameApp {
       return;
     }
 
-    terminal.setGameMap(this.state.gameMap!);
+    terminal.setGameMap(this.state.map!);
   }
 
   private resizeCanvas() {

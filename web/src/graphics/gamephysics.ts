@@ -1,10 +1,9 @@
 import { animator, IAnimatable } from "./animator";
 import { GridPos } from "../posh/pos";
 import { IAvatar } from "../world/iavatar";
-import { deltaByAbsDirection } from "../mechanics/iavatarapi";
 import { IGameCollisionHandler, IGamePhysics, MoveAvatarParams } from "./igamephysics";
-import { IGameMap } from "../world/igamemap";
 import { SpriteMoveAnimationProps } from "../world/spritemoveanimation";
+import { IGameMap } from "../voxel/igamemap";
 
 export type MoveAnimationToken = {
   animation: IAnimatable;

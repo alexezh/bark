@@ -3,7 +3,6 @@
 // https://en.wikipedia.org/wiki/Linear_feedback_shift_register
 
 import { Vector3 } from "three";
-import { game } from "./main";
 
 //////////////////////////////////////////////////////////////////////
 var lfsr = (function () {
@@ -112,6 +111,7 @@ export function loadImageFile(file, callback) {
     }
 }
 
+/*
 function lockPointer() {
     var e = document.body;
     //var e = document.getElementById('container');
@@ -129,3 +129,4 @@ function isFrontOfPlayer(v1) {
 
     return (pos.angleTo(lookAt)) - 0.4 < (Math.PI / 6);
 }
+*/

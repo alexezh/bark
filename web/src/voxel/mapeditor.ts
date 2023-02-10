@@ -1,13 +1,40 @@
 import _ from "lodash";
 import { BufferGeometry, Camera, Line, LineBasicMaterial, Raycaster, Scene, Vector3 } from "three";
-import { KeyBinder } from "../ui/keybinder";
-import { game } from "./main";
-import { MapD } from "./map";
+import { ShowKeyBindingsDef } from "../posh/keybindcommands";
+import { mapEditorState } from "../posh/mapeditorstate";
+import { PxSize } from "../posh/pos";
+import { IMapEditor } from "../ui/imapeditor";
+import { KeyBinder, MEvent } from "../ui/keybinder";
+import { gameState } from "../world/igamestate";
+import { MapD } from "./gamemap";
+import { ICameraControl } from "./icameracontrol";
 import { MapBlockCoord, MapLayer } from "./maplayer";
 import { modelCache } from "./voxelmodelcache";
 
-export class MapEditor {
-  private container: HTMLElement;
+export function addEditorShortcuts(showKeyBindingsDef: ShowKeyBindingsDef) {
+  let editor = 'Editor'
+
+  // we can late bind later... pass name and bind object
+  showKeyBindingsDef.addKeyBinding('C', 'Copy block of tiles to buffer');
+  showKeyBindingsDef.addKeyBinding('V', 'Paste block of tiles from buffer');
+  showKeyBindingsDef.addKeyBinding('X', 'Clear block from layer');
+  showKeyBindingsDef.addKeyBinding('L', 'Fill block of tiles from buffer');
+
+  showKeyBindingsDef.addKeyBinding('A', 'Move camera up');
+  showKeyBindingsDef.addKeyBinding('S', 'Move camera down');
+  showKeyBindingsDef.addKeyBinding('D', 'Move camera right');
+  showKeyBindingsDef.addKeyBinding('W', 'Move camera left');
+}
+
+export interface IMapEditorHost {
+  //get 
+  // refresh(): void;
+  //    scrollBy(pxSize: PxSize): void;
+  //    ensureVisible(pos: GridPos): void;
+}
+
+export class MapEditor implements IMapEditor {
+  private viewSize: PxSize;
   private camera: Camera;
   private scene: Scene;
   private isDown: boolean = false;
@@ -16,40 +43,40 @@ export class MapEditor {
   private map: MapD;
   static material = new LineBasicMaterial({ color: 0x0000ff });
 
-  public constructor(container: HTMLElement,
+  public constructor(
+    viewSize: PxSize,
     scene: Scene,
     camera: Camera,
     input: KeyBinder,
     map: MapD) {
 
+    mapEditorState.onChanged(this, (evt) => this.onStateChanged())
+
+    this.viewSize = viewSize;
     this.map = map;
-    this.container = container;
     this.camera = camera;
     this.scene = scene;
 
     _.bindAll(this, [
-      'onMouseDown',
-      'onMouseUp',
-      'onMouseMove',
       'onCopyBlock',
       'onPasteBlock',
       'pasteBlockWorker',
       'onClearBlock',
     ])
 
-    this.container.addEventListener('mousedown', this.onMouseDown, false);
-    this.container.addEventListener('mouseup', this.onMouseUp, false);
-    this.container.addEventListener('mousemove', this.onMouseMove, false);
-
     input.registerKeyUp('KeyC', this.onCopyBlock);
     input.registerKeyUp('KeyV', this.onPasteBlock);
     input.registerKeyUp('KeyX', this.onClearBlock);
   }
 
-  onMouseDown(evt: MouseEvent) {
+  private onStateChanged() {
+
+  }
+
+  public onMouseDown(evt: MEvent): boolean {
     let coords = {
-      x: (evt.clientX / window.innerWidth) * 2 - 1,
-      y: -(evt.clientY / window.innerHeight) * 2 + 1
+      x: (evt.x / this.viewSize.w) * 2 - 1,
+      y: -(evt.x / this.viewSize.h) * 2 + 1
     }
 
     let raycaster = new Raycaster();
@@ -65,9 +92,10 @@ export class MapEditor {
       //this.selected = object;
       //object.geometry.setAttribute('color', Math.random() * 0xffffff);
     }
+    return true;
   };
 
-  onMouseUp(evt: MouseEvent) {
+  onMouseUp(evt: MEvent): boolean {
     this.isDown = false;
     /*
     let coords = {
@@ -88,14 +116,15 @@ export class MapEditor {
         //object.geometry.setAttribute('color', Math.random() * 0xffffff);
     }
     */
+    return true;
   };
 
-  onMouseMove(evt: MouseEvent) {
+  onMouseMove(evt: MEvent): boolean {
     if (this.isDown === false) {
-      return;
+      return true;
     }
 
-    return;
+    return true;
     /*
             if (this.selected === undefined) {
                 return;
@@ -127,7 +156,6 @@ export class MapEditor {
 
   private onPasteBlock() {
     setTimeout(this.pasteBlockWorker);
-
   }
 
   private async pasteBlockWorker(): Promise<boolean> {
@@ -147,7 +175,7 @@ export class MapEditor {
       return;
     }
 
-    game.map.deleteBlock(this.selectedBlock);
+    gameState.map.deleteBlock(this.selectedBlock);
     this.selectedBlock = undefined;
     this.scene.remove(this.selection!);
     this.selection = undefined;

@@ -4,6 +4,8 @@ import { ICameraControl } from "../ui/cameralayer";
 import { GridRect, PxPos, PxSize } from "./pos";
 import { SpriteSheet, TileBuffer } from "../graphics/spritesheet";
 import { Sprite } from "../graphics/Sprite";
+import { IMapEditor } from "../ui/imapeditor";
+import { IGameMap } from "../voxel/igamemap";
 
 export type MapBitmap = {
   w: number;
@@ -49,10 +51,8 @@ export type MapEditorUpdate = {
   tileClipboard?: TileBuffer;
   region?: GridRect;
   scrollSize?: PxSize;
-  map?: any;
-  mapBitmap?: MapBitmap;
-  tileListSheet?: SpriteSheet;
   invalidator?: ICameraControl | null;
+  map: IGameMap;
 }
 
 // if we change this to terminal state; things will make more sense
@@ -102,9 +102,6 @@ export class MapEditorState {
     if (val.isEditMode !== undefined) {
       this._isEditMode = val.isEditMode;
     }
-    if (val.map !== undefined) {
-      this._world = val.map;
-    }
     if (val.tileClipboard !== undefined) {
       this._tileClipboard = val.tileClipboard;
     }
@@ -114,43 +111,10 @@ export class MapEditorState {
     if (val.scrollSize !== undefined) {
       this._scrollSize = val.scrollSize;
     }
-    if (val.mapBitmap !== undefined) {
-      this._mapBitmap = val.mapBitmap;
-    }
-    if (val.tileListSheet !== undefined) {
-      this._tileListSheet = val.tileListSheet;
-    }
     if (val.invalidator !== undefined) {
       this._cameraControl = (val.invalidator === null) ? undefined : val.invalidator;
     }
 
-    this.eventSource.invoke({});
-  }
-
-  // selects layer for editing; marks it as visible if needed
-  selectLayer(layerId: string) {
-    let layer = this._world?.getLayer(layerId);
-    if (layer === undefined) {
-      throw `invalid layer name ${layerId}`;
-    }
-
-    if (!layer.visible) {
-      layer.visible = true;
-    }
-
-    this._currentLayer = layer;
-    this.eventSource.invoke({});
-  }
-
-  showLayer(layerId: string, isVisible: boolean) {
-    let layer = this._world?.getLayer(layerId);
-    if (layer === undefined) {
-      throw `invalid layer name ${layerId}`;
-    }
-
-    layer.visible = isVisible;
-
-    this._currentLayer = layer;
     this.eventSource.invoke({});
   }
 }
