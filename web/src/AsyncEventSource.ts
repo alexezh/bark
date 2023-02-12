@@ -8,7 +8,7 @@ export default class AsyncEventSource<T> {
   private gaps: number = 0;
 
   // obj is only used to avoid circular references
-  public add(obj: any, func: T) {
+  public add(obj: any, func: (val: T) => void) {
     // to avoid references, store func on a symbol
     // @ts-ignore
     obj[this.callbackSym] = func;

@@ -79,6 +79,10 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         this.textures.prepare();
         //this.waitForLoadTextures();
 
+        gameState.mapLoaded.add(this, (val: boolean) => {
+            this.loadMap();
+        });
+
         setTimeout(() => this.loadMap());
     };
 
@@ -126,7 +130,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
 
     private loadMap() {
 
-        if (gameState.map === undefined) {
+        if (gameState.map === undefined || this.map !== undefined) {
             return;
         }
 

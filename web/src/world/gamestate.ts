@@ -11,6 +11,7 @@ import { terminal } from "../ui/igameterminal";
 import { gameState, IGameState, setGameState } from "./igamestate";
 import { IGameMap } from "../voxel/igamemap";
 import { GameMap } from "../voxel/gamemap";
+import AsyncEventSource from "../AsyncEventSource";
 
 export type WireSpawnCharacterRequest = {
   name: string;
@@ -37,14 +38,17 @@ export type RtcUpdateAvatarPosition = {
 }
 
 // manages game state (network updates and so on)
-export class GameState {
+export class GameState implements IGameState {
   private sessionId?: string;
   private connection?: HubConnection;
   private connectionStatus: RtcConnectionStatus = RtcConnectionStatus.connected;
 
-  public gameMap?: IGameMap;
+  public map: IGameMap | undefined;
   public readonly repl: Repl;
   public onLoaded: boolean = false;
+
+  public readonly mapLoaded: AsyncEventSource<boolean> = new AsyncEventSource<boolean>();
+  public readonly onMapClosed: AsyncEventSource<boolean> = new AsyncEventSource<boolean>();
 
   //public readonly avatarCollection: AvatarCollection = new AvatarCollection();
 
@@ -62,8 +66,8 @@ export class GameState {
 
   public async load(): Promise<boolean> {
 
-    this.gameMap = new GameMap();
-    await this.gameMap.load();
+    this.map = new GameMap();
+    await this.map.load();
     /*
         let wireAvatars = await fetchAvatars();
         for (let avatarProps of wireAvatars) {
@@ -89,6 +93,7 @@ export class GameState {
         }
     */
     this.onLoaded = true;
+    this.mapLoaded.invoke(true);
 
     return true;
   }
