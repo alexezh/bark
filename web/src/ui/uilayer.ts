@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { IUiCompositor } from "./uicompositor";
 
 export type UiLayerProps = {
@@ -39,11 +40,18 @@ export class UiLayer2<T extends UiLayerProps> implements IUiLayer2 {
     element.id = props.id;
     this.updateElementSize();
 
+    _.bindAll(this, [
+      'onMouseDown',
+      'onMouseUp',
+      'onMouseMove',
+      'onWheel'
+    ]);
+
     let self = this;
-    element.addEventListener('mousedown', (evt) => self.onMouseDown(evt), false);
-    element.addEventListener('mouseup', (evt) => self.onMouseUp(evt), false);
-    element.addEventListener('mousemove', (evt) => self.onMouseMove(evt), false);
-    element.addEventListener('wheel', (evt) => self.onWheel(evt), false);
+    element.addEventListener('mousedown', self.onMouseDown, false);
+    element.addEventListener('mouseup', self.onMouseUp, false);
+    element.addEventListener('mousemove', self.onMouseMove, false);
+    element.addEventListener('wheel', self.onWheel, false);
 
     // update initial visibility
     this.visible = (props.visible !== undefined && props.visible === true);

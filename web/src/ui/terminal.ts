@@ -1,11 +1,9 @@
 import _ from "lodash";
 import { Avatar } from "../world/avatar";
-import { MapEditor } from "./mapeditor";
 import { CommandBar } from "./commandBar";
-import { CameraLayer } from "./cameralayer";
 import { TilesetList } from "./tilesetlist";
 import { TextTerminalLayer } from "./textterminallayer";
-import { populateMapEditCommands, registerMapCommands } from "../posh/mapeditcommands";
+import { populateMapEditCommands } from "../posh/mapeditcommands";
 import { Repl } from "../posh/repl";
 import { HelpDef } from "../posh/helpdef";
 import { UiCompositor2 } from "./uicompositor";
@@ -20,15 +18,16 @@ import { decorateCommand } from "../posh/termcolors";
 import { CodeCategory } from "../mechanics/iavatarcode";
 import { registerCodeCommands } from "../posh/codecommands";
 import { printCodeException } from "../mechanics/codeloader";
-import { registerRegionCommands } from "../posh/regioncommands";
 import { registerMoveCommands } from "../posh/gamemove";
-import { MapD } from "../voxel/gamemap";
+import { GameMap } from "../voxel/gamemap";
+import { MapEditor } from "../voxel/mapeditor";
+import { CameraLayer } from "../voxel/cameralayer";
 
 registerCodeCommands();
-registerRegionCommands();
+//registerRegionCommands();
 registerSystemCommands();
 registerMoveCommands();
-registerMapCommands();
+//registerMapCommands();
 
 export class TerminalProps {
   public width: number = 0;
@@ -122,7 +121,7 @@ export class Terminal implements IGameTerminal {
   }
 
   public refresh() {
-    this.camera?.refresh();
+    //this.camera?.refresh();
   }
 
   public printError(s: string): void {
@@ -168,21 +167,21 @@ export class Terminal implements IGameTerminal {
     }
   }
 
-  public setGameMap(map: MapD) {
+  public setGameMap(map: GameMap) {
     this.map = map;
-    mapEditorState.update({ map: map });
+    //mapEditorState.update({ map: map });
 
     this.camera = new CameraLayer({
-      id: "camera", x: 0, y: 0,
+      id: "camera",
+      x: 0, y: 0,
       w: this.props.width, h: this.props.height,
       scale: this.props.scale,
       visible: true,
-      gameMap: this.map,
-      mapEditorState: mapEditorState,
       onOpenTerminal: this.onOpenTerm,
       onToggleEdit: this.onToggleEdit,
       onToggleTile: this.onToggleTile
-    });
+    }, this.container);
+
     this.compositor2.insertLayerBefore(this.camera, 'bar');
 
     this.loginCached();
@@ -204,12 +203,12 @@ export class Terminal implements IGameTerminal {
         this.map!.props.humanStepDuration);
 
 
-      this.camera!.setAvatar(this.interactiveAvatar, this.keyboardHandler);
+      //this.camera!.setAvatar(this.interactiveAvatar, this.keyboardHandler);
     }
     else {
       this.interactiveAvatar = undefined;
       this.keyboardHandler = undefined;
-      this.camera!.resetAvatar();
+      //this.camera!.resetAvatar();
     }
 
     this.refresh();
@@ -338,9 +337,6 @@ export class Terminal implements IGameTerminal {
 
     if (this.tileViewer === undefined) {
       // set default tileset for view
-      if (mapEditorState.tileListSheet === undefined) {
-        mapEditorState.update({ tileListSheet: resourceLib.getSpriteSheetById("outside3") });
-      }
 
       this.tileViewer = new TilesetList({
         id: "tileviewer",

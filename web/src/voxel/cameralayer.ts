@@ -1,10 +1,12 @@
 import { Textures } from "./textures";
-import { MapD } from "./gamemap";
 import { Camera, Clock, Fog, GridHelper, Material, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, OrthographicCamera, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
 import { MapEditor } from "./mapeditor";
 import { KeyBinder } from "../ui/keybinder";
 import { UiLayer2, UiLayerProps } from "../ui/uilayer";
-import { ICameraControl } from "./icameracontrol";
+import { ICameraLayer } from "./icameracontrol";
+import { GameMap } from "./gamemap";
+import { IGameMap } from "./igamemap";
+import { gameState } from "../world/igamestate";
 
 export type CameraLayerProps = UiLayerProps & {
     scale: number;
@@ -13,7 +15,7 @@ export type CameraLayerProps = UiLayerProps & {
     onToggleTile: () => void;
 }
 
-export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraControl {
+export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLayer {
     public renderer!: WebGLRenderer;
     public camera!: Camera;
     public scene!: Scene;
@@ -23,7 +25,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraCo
     //public particles!: ParticlePool;
     //public particles_box!: ParticlePool;
     public t_start = Date.now();
-    public map!: MapD;
+    public map!: IGameMap;
     public mapEditor!: MapEditor;
 
     public update_objects: any = [];
@@ -43,11 +45,8 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraCo
 
     public maps_ground = 6;
 
-    public createChunkMaterial(): Material {
-        return new MeshPhongMaterial({ vertexColors: true, wireframe: false });
-    }
-
-    init(container: HTMLElement) {
+    public constructor(props: CameraLayerProps, container: HTMLElement) {
+        super(props, container);
         this.container = container;
         container.setAttribute('tabindex', '0');
 
@@ -77,9 +76,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraCo
         this.textures.prepare();
         //this.waitForLoadTextures();
 
-        setTimeout(async () => {
-            await this.loadMap();
-        });
+        setTimeout(() => this.loadMap());
     };
 
     private createCamera(w: number, h: number) {
@@ -120,9 +117,14 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraCo
         (this.camera as PerspectiveCamera).updateProjectionMatrix();
     }
 
-    private async loadMap(): Promise<boolean> {
-        this.map = new MapD();
-        await this.map.load();
+    private loadMap() {
+
+        if (gameState.map === undefined) {
+            return;
+        }
+
+        this.map = gameState.map;
+        this.map.loadScene(this.scene);
 
         this.mapEditor = new MapEditor(
             { w: this.props.w, h: this.props.h },
@@ -138,8 +140,6 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraCo
         this.scene.add(plane);
 
         this.render();
-
-        return true;
     }
 
     reset() {
@@ -189,7 +189,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraCo
             }
         }
 
-        this.map?.update(time, delta);
+        //this.map?.update(time, delta);
         this.renderer.render(this.scene, this.camera);
     };
 }

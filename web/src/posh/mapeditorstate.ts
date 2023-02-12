@@ -1,6 +1,5 @@
 import { idText } from "typescript";
 import AsyncEventSource from "../AsyncEventSource";
-import { ICameraControl } from "../ui/cameralayer";
 import { GridRect, PxPos, PxSize } from "./pos";
 import { SpriteSheet, TileBuffer } from "../graphics/spritesheet";
 import { Sprite } from "../graphics/Sprite";
@@ -51,8 +50,7 @@ export type MapEditorUpdate = {
   tileClipboard?: TileBuffer;
   region?: GridRect;
   scrollSize?: PxSize;
-  invalidator?: ICameraControl | null;
-  map: IGameMap;
+  map?: IGameMap;
 }
 
 // if we change this to terminal state; things will make more sense
@@ -63,9 +61,7 @@ export class MapEditorState {
   private _tileClipboard?: TileBuffer;
   private _scrollSize: PxSize | undefined;
   private _world: any;
-  private _cameraControl: ICameraControl | undefined;
-  private _mapBitmap?: MapBitmap;
-  private _tileListSheet?: SpriteSheet;
+  //  private _cameraControl: ICameraControl | undefined;
   private eventSource: AsyncEventSource<MapEditorChangeEvent> = new AsyncEventSource<MapEditorChangeEvent>();
 
   public get isEditMode(): boolean { return this._isEditMode; }
@@ -74,9 +70,7 @@ export class MapEditorState {
   public get region(): GridRect | undefined { return this._region; }
   public get cameraSize(): PxSize | undefined { return this._scrollSize; }
   public get world(): any | undefined { return this._world; }
-  public get cameraControl(): ICameraControl | undefined { return this._cameraControl; }
-  public get mapBitmap(): MapBitmap | undefined { return this._mapBitmap; }
-  public get tileListSheet(): SpriteSheet | undefined { return this._tileListSheet; }
+  //  public get cameraControl(): ICameraControl | undefined { return this._cameraControl; }
 
   public get currentTileLayer(): any | undefined {
     if (this._currentLayer === undefined) {
@@ -94,9 +88,9 @@ export class MapEditorState {
     this.eventSource.add(target, func);
   }
 
-  public invalidateCamera(): void {
-    this._cameraControl?.refresh();
-  }
+  //  public invalidateCamera(): void {
+  //    this._cameraControl?.refresh();
+  //  }
 
   public update(val: MapEditorUpdate) {
     if (val.isEditMode !== undefined) {
@@ -110,9 +104,6 @@ export class MapEditorState {
     }
     if (val.scrollSize !== undefined) {
       this._scrollSize = val.scrollSize;
-    }
-    if (val.invalidator !== undefined) {
-      this._cameraControl = (val.invalidator === null) ? undefined : val.invalidator;
     }
 
     this.eventSource.invoke({});

@@ -6,8 +6,9 @@ import { PxSize } from "../posh/pos";
 import { IMapEditor } from "../ui/imapeditor";
 import { KeyBinder, MEvent } from "../ui/keybinder";
 import { gameState } from "../world/igamestate";
-import { MapD } from "./gamemap";
-import { ICameraControl } from "./icameracontrol";
+import { GameMap } from "./gamemap";
+import { ICameraLayer } from "./icameracontrol";
+import { IGameMap } from "./igamemap";
 import { MapBlockCoord, MapLayer } from "./maplayer";
 import { modelCache } from "./voxelmodelcache";
 
@@ -40,7 +41,7 @@ export class MapEditor implements IMapEditor {
   private isDown: boolean = false;
   private selectedBlock: MapBlockCoord | undefined = undefined;
   private selection: Line | undefined = undefined;
-  private map: MapD;
+  private map: IGameMap;
   static material = new LineBasicMaterial({ color: 0x0000ff });
 
   public constructor(
@@ -48,7 +49,7 @@ export class MapEditor implements IMapEditor {
     scene: Scene,
     camera: Camera,
     input: KeyBinder,
-    map: MapD) {
+    map: IGameMap) {
 
     mapEditorState.onChanged(this, (evt) => this.onStateChanged())
 
@@ -165,7 +166,7 @@ export class MapEditor implements IMapEditor {
 
     let block = await modelCache.getVoxelModel('./assets/vox/dungeon_entrance.vox');
     let pos = this.selectedBlock.gridPos;
-    game.map.addBlock({ x: pos.x, y: pos.y, z: pos.z + 1 }, block);
+    this.map.addBlock({ x: pos.x, y: pos.y, z: pos.z + 1 }, block);
 
     return true;
   }
@@ -175,14 +176,14 @@ export class MapEditor implements IMapEditor {
       return;
     }
 
-    gameState.map.deleteBlock(this.selectedBlock);
+    this.map.deleteBlock(this.selectedBlock);
     this.selectedBlock = undefined;
     this.scene.remove(this.selection!);
     this.selection = undefined;
   }
 
   private selectBlockFace(point: Vector3) {
-    let block = game.map.findBlock(point);
+    let block = this.map.findBlock(point);
     if (block === undefined) {
       return;
     }
@@ -194,8 +195,8 @@ export class MapEditor implements IMapEditor {
       this.selectedBlock = undefined;
     }
 
-    let pos = game.map.gridPosToWorldPos(block.gridPos);
-    let size = game.map.gridSizeToWorldSize(block.model.gridSize);
+    let pos = this.map.gridPosToWorldPos(block.gridPos);
+    let size = this.map.gridSizeToWorldSize(block.model.gridSize);
 
     const points: Vector3[] = [];
     points.push(new Vector3(pos.x, pos.y, pos.z + size.sz));

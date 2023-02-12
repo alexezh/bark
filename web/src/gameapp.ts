@@ -1,6 +1,5 @@
 import { Terminal } from "./ui/terminal";
 import { createGameState, GameState } from "./world/gamestate";
-import { resourceLib } from "./graphics/resourceLib";
 import { fetchFiles, WorldProps } from "./fetchadapter";
 import { setTerminal, terminal } from "./ui/igameterminal";
 import { IGameState } from "./world/igamestate";
@@ -26,7 +25,7 @@ export class GameApp {
 
     this.state = createGameState();
 
-    await resourceLib.load(this.worldId);
+    //await resourceLib.load(this.worldId);
     await this.state.load();
 
     this.tryOnReady();

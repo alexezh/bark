@@ -9,9 +9,8 @@ import { IAvatar } from "./iavatar";
 import { printNetworkError } from "../ui/errorreport";
 import { terminal } from "../ui/igameterminal";
 import { gameState, IGameState, setGameState } from "./igamestate";
-import { IGameMap } from "./igamemap";
-import { printCodeException } from "../mechanics/codeloader";
-import { SpriteMoveAnimation } from "./spritemoveanimation";
+import { IGameMap } from "../voxel/igamemap";
+import { GameMap } from "../voxel/gamemap";
 
 export type WireSpawnCharacterRequest = {
   name: string;
@@ -62,9 +61,10 @@ export class GameState {
   }
 
   public async load(): Promise<boolean> {
+
+    this.gameMap = new GameMap();
+    await this.gameMap.load();
     /*
-        this.gameMap = await GameMap.load("default");
-    
         let wireAvatars = await fetchAvatars();
         for (let avatarProps of wireAvatars) {
           if (avatarProps.character !== undefined && avatarProps.character !== null) {
@@ -191,9 +191,9 @@ export function createGameState(): IGameState {
   return gameState;
 }
 
-export let game: Main;
+//export let game: Main;
 
-export function createVoxelGame(container: HTMLElement) {
-  game = new Main();
-  game.init(container)
-}
+//export function createVoxelGame(container: HTMLElement) {
+//  game = new Main();
+//  game.init(container)
+//}

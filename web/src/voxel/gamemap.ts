@@ -4,6 +4,7 @@ import { Character } from "./character";
 import { MapBlock, MapBlockCoord, MapLayer } from "./maplayer";
 import { VoxelModel } from "./voxelmodel";
 import { GridPos3, GridSize3, WorldCoord3 as WorldPos3, WorldSize3 } from "./pos3";
+import { IGameMap } from "./igamemap";
 
 
 export class MeshModel {
@@ -20,8 +21,8 @@ export class MeshModel {
 
 //////////////////////////////////////////////////////////////////////
 // Maps class - Loading of maps from images
-export class MapD {
-    private scene: Scene;
+export class GameMap implements IGameMap {
+    private scene!: Scene;
     public objects: any = [];
     public width = 100;
     public height = 100;
@@ -32,10 +33,6 @@ export class MapD {
 
     public ambient_light!: AmbientLight;
     public material: MeshPhongMaterial = new MeshPhongMaterial({ color: 0xffffff, vertexColors: true });
-
-    public constructor(scene: Scene) {
-        this.scene = scene;
-    }
 
     reset() {
         /*
@@ -92,6 +89,11 @@ export class MapD {
         this.layers[0].fill(ground);
 
         this.layers[0].build();
+        return true;
+    }
+
+    public loadScene(scene: Scene) {
+        this.scene = scene;
         this.scene.add(this.layers[0].staticMesh);
 
         this.ambient_light = new AmbientLight(0xFFFFFF, 0.8);
@@ -100,7 +102,7 @@ export class MapD {
         return true;
     }
 
-    gridSizeToWorldSize(gridSize: GridSize3): WorldSize3 {
+    public gridSizeToWorldSize(gridSize: GridSize3): WorldSize3 {
         return {
             sx: gridSize.sx * this.blockSize,
             sy: gridSize.sy * this.blockSize,
@@ -108,7 +110,7 @@ export class MapD {
         }
     }
 
-    gridPosToWorldPos(gridPos: GridPos3) {
+    public gridPosToWorldPos(gridPos: GridPos3) {
         return {
             x: gridPos.x * this.blockSize,
             y: gridPos.y * this.blockSize,
