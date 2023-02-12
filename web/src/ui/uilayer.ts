@@ -40,18 +40,11 @@ export class UiLayer2<T extends UiLayerProps> implements IUiLayer2 {
     element.id = props.id;
     this.updateElementSize();
 
-    _.bindAll(this, [
-      'onMouseDown',
-      'onMouseUp',
-      'onMouseMove',
-      'onWheel'
-    ]);
-
     let self = this;
-    element.addEventListener('mousedown', self.onMouseDown, false);
-    element.addEventListener('mouseup', self.onMouseUp, false);
-    element.addEventListener('mousemove', self.onMouseMove, false);
-    element.addEventListener('wheel', self.onWheel, false);
+    element.addEventListener('mousedown', () => self.onMouseDown, false);
+    element.addEventListener('mouseup', () => self.onMouseUp, false);
+    element.addEventListener('mousemove', () => self.onMouseMove, false);
+    element.addEventListener('wheel', () => self.onWheel, false);
 
     // update initial visibility
     this.visible = (props.visible !== undefined && props.visible === true);

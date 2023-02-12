@@ -21,7 +21,10 @@ export class GameApp {
   }
 
   public async run() {
-    this.worldProps = await fetchFiles(this.worldId);
+    //this.worldProps = await fetchFiles(this.worldId);
+    this.worldProps = {
+
+    }
 
     this.state = createGameState();
 

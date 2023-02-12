@@ -123,6 +123,8 @@ export class GamePhysics implements IGamePhysics {
   }
 
   public moveAvatarRemote(avatar: IAvatar, pos: GridPos, func: (props: SpriteMoveAnimationProps) => IAnimatable): boolean {
+
+    /*
     if (avatar.skin === undefined) {
       return false;
     }
@@ -152,6 +154,7 @@ export class GamePhysics implements IGamePhysics {
     });
     animator.animate(anim);
     this.moveAnimations.set(avatar, { animation: anim, nextMove: undefined });
+    */
     return true;
   }
 

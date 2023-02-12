@@ -1,10 +1,9 @@
 import { Textures } from "./textures";
-import { Camera, Clock, Fog, GridHelper, Material, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, OrthographicCamera, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
+import { Camera, Clock, Fog, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
 import { MapEditor } from "./mapeditor";
 import { KeyBinder } from "../ui/keybinder";
 import { UiLayer2, UiLayerProps } from "../ui/uilayer";
 import { ICameraLayer } from "./icameracontrol";
-import { GameMap } from "./gamemap";
 import { IGameMap } from "./igamemap";
 import { gameState } from "../world/igamestate";
 
@@ -33,7 +32,6 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     public visible_distance = 500; // from player to hide chunks + enemies.
     public textures = new Textures();
     public ff_objects = [];
-    public container!: HTMLElement;
     private selected: Object3D | undefined;
     private isDown: boolean = false;
 
@@ -45,15 +43,20 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
 
     public maps_ground = 6;
 
-    public constructor(props: CameraLayerProps, container: HTMLElement) {
-        super(props, container);
-        this.container = container;
-        container.setAttribute('tabindex', '0');
+    public constructor(props: CameraLayerProps) {
+        super(props, (() => {
+            let dd = document.createElement('div');
+            dd.id = props.id;
+            dd.className = 'gameCanvas';
+            dd.style.visibility = (props.visible) ? 'visible' : 'hidden';
+            dd.setAttribute('tabindex', '0');
+            return dd;
+        })());
 
         this.scene = new Scene();
         this.clock = new Clock();
 
-        this.input = new KeyBinder(this.container, () => { });
+        this.input = new KeyBinder(this.element, () => { });
 
         // Iosmetric view
         Object3D.DefaultUp = new Vector3(0, 0, 1);
@@ -68,7 +71,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         this.renderer.setClearColor(0x000000, 1);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = PCFSoftShadowMap;
-        container.appendChild(this.renderer.domElement);
+        this.element.appendChild(this.renderer.domElement);
 
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
 
@@ -78,6 +81,10 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
 
         setTimeout(() => this.loadMap());
     };
+
+    public refresh() {
+
+    }
 
     private createCamera(w: number, h: number) {
         /*
@@ -160,7 +167,6 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         //this.camera.updateProjectionMatrix();
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-
     };
 
     animate() {

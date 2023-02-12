@@ -1,4 +1,3 @@
-import { ICameraLayer } from "../voxel/icameracontrol";
 import { KeyBinder, MEvent } from "./keybinder";
 
 export interface IMapEditor {

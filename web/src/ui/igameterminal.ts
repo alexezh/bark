@@ -1,5 +1,5 @@
 import { CodeCategory } from "../mechanics/iavatarcode";
-import { IGameMap } from "../world/igamemap";
+import { IGameMap } from "../voxel/igamemap";
 
 export interface IGameTerminal {
   login(name: string): void;

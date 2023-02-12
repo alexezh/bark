@@ -111,13 +111,14 @@ export class TilesetList extends UiLayer2<TilesetListProps> {
       return;
     }
 
+    /*
     if (this.tileSheet === this.props.mapEditorState.tileListSheet) {
       console.log("same spritesheet, ignore")
       return;
     }
 
     this.tileSheet = this.props.mapEditorState.tileListSheet;
-
+*/
     if (this.tileSheet !== undefined) {
       let fullSize = this._compositor!.size;
 

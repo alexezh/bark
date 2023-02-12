@@ -1,5 +1,4 @@
 import { Vector3 } from "three";
-import { game } from "./cameralayer";
 
 export class SoundLoader {
     sounds = new Array();
@@ -31,19 +30,20 @@ export class SoundLoader {
         this.sounds[name].source.onended = function () {
             that.sounds[name].source = null;
         };
-
-        if (position != undefined) {
-            var vector = game.camera.localToWorld(new Vector3(0, 0, 0));
-            var distance = position.distanceTo(vector);
-            if (distance <= radius) {
-                var vol = 1 * (1 - distance / radius);
-                this.sounds[name].gainNode.gain.value = vol;
-            } else {
-                this.sounds[name].gainNode.gain.value = 0;
-            }
-        } else {
-            this.sounds[name].gainNode.gain.value = 1;
-        }
+        /*
+                if (position != undefined) {
+                    var vector = game.camera.localToWorld(new Vector3(0, 0, 0));
+                    var distance = position.distanceTo(vector);
+                    if (distance <= radius) {
+                        var vol = 1 * (1 - distance / radius);
+                        this.sounds[name].gainNode.gain.value = vol;
+                    } else {
+                        this.sounds[name].gainNode.gain.value = 0;
+                    }
+                } else {
+                    this.sounds[name].gainNode.gain.value = 1;
+                }
+                */
     };
 
     Add(args) {

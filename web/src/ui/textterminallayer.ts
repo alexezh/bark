@@ -21,12 +21,14 @@ export class TextTerminalLayer extends UiLayer2<TerminalLayerProps> {
   private mapEditorState?: MapEditorState;
 
   public constructor(props: TerminalLayerProps) {
-    let element = document.createElement('div');
-    element.className = 'terminalLayer';
-    element.id = props.id;
-    element.style.visibility = (props.visible) ? 'visible' : 'hidden';
+    super(props, (() => {
+      let element = document.createElement('div');
+      element.className = 'terminalLayer';
+      element.id = props.id;
+      element.style.visibility = (props.visible) ? 'visible' : 'hidden'
+      return element;
+    })());
 
-    super(props, element);
     this.repl = props.repl;
     this.repl.onPrint = (s: string) => this.rl?.println(s);
 

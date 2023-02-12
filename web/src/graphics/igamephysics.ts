@@ -3,7 +3,6 @@ import { IAvatar } from "../world/iavatar";
 import { MoveDirection } from "../mechanics/iavatarapi";
 import { SpriteMoveAnimationProps } from "../world/spritemoveanimation";
 import { GridPos } from "../posh/pos";
-import { MapLocation } from "../world/igamemap";
 
 export type MoveAvatarParams = {
   avatar: IAvatar;
@@ -21,5 +20,5 @@ export interface IGamePhysics {
 export interface IGameCollisionHandler {
   onCollision(a1: IAvatar, a2: IAvatar): void;
   // return true if we should continue
-  onLocation(a: IAvatar, loc: MapLocation): boolean;
+  //onLocation(a: IAvatar, loc: MapLocation): boolean;
 }

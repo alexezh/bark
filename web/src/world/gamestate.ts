@@ -187,7 +187,7 @@ export class GameState {
 }
 
 export function createGameState(): IGameState {
-  //setGameState(new GameState());
+  setGameState(new GameState());
   return gameState;
 }
 

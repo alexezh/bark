@@ -22,6 +22,7 @@ import { registerMoveCommands } from "../posh/gamemove";
 import { GameMap } from "../voxel/gamemap";
 import { MapEditor } from "../voxel/mapeditor";
 import { CameraLayer } from "../voxel/cameralayer";
+import { IGameMap } from "../voxel/igamemap";
 
 registerCodeCommands();
 //registerRegionCommands();
@@ -47,7 +48,7 @@ export class TerminalProps {
 }
 
 export class Terminal implements IGameTerminal {
-  private map: any;
+  private map!: IGameMap;
   private container: HTMLDivElement;
   public camera?: CameraLayer;
   private compositor2: UiCompositor2;
@@ -167,7 +168,7 @@ export class Terminal implements IGameTerminal {
     }
   }
 
-  public setGameMap(map: GameMap) {
+  public setGameMap(map: IGameMap) {
     this.map = map;
     //mapEditorState.update({ map: map });
 
@@ -180,7 +181,7 @@ export class Terminal implements IGameTerminal {
       onOpenTerminal: this.onOpenTerm,
       onToggleEdit: this.onToggleEdit,
       onToggleTile: this.onToggleTile
-    }, this.container);
+    });
 
     this.compositor2.insertLayerBefore(this.camera, 'bar');
 
@@ -195,13 +196,14 @@ export class Terminal implements IGameTerminal {
 
     if (player !== undefined) {
       this.interactiveAvatar = player;
+      /*
       this.keyboardHandler = new HumanKeyboardHandler(
         player,
         this.map!.physics,
         this.map!.props.cellWidth,
         this.map!.props.cellHeight,
         this.map!.props.humanStepDuration);
-
+*/
 
       //this.camera!.setAvatar(this.interactiveAvatar, this.keyboardHandler);
     }

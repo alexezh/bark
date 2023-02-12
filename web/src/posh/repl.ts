@@ -1,7 +1,6 @@
 import { AstNode, AstNodeKind, formatAst, PtCall, PtObj, PtSequence } from "./ast";
 import AsyncEventSource from "../AsyncEventSource";
 import { buildFuncAst, FuncDef } from "./funcdef";
-import { resourceLib } from "../graphics/resourceLib";
 import { evalFunction } from "./poshregistry";
 
 /*
