@@ -10,7 +10,7 @@ export type MapBlock = {
 }
 
 export type MapBlockCoord = {
-  model: VoxelModel;
+  model: VoxelModel | undefined;
   idx: number;
   gridPos: GridPos3;
 }
@@ -70,12 +70,9 @@ export class MapLayer {
 
     let pos = y * this.size.w + x;
     let block = this.blocks[pos];
-    if (block == undefined) {
-      return;
-    }
 
     return {
-      model: block.model,
+      model: block?.model,
       idx: pos,
       gridPos: {
         x: x,

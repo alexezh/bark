@@ -3,7 +3,7 @@ import { modelCache } from "./voxelmodelcache";
 import { Character } from "./character";
 import { MapBlock, MapBlockCoord, MapLayer } from "./maplayer";
 import { VoxelModel } from "./voxelmodel";
-import { GridPos3, GridSize3, WorldCoord3 as WorldPos3, WorldSize3 } from "./pos3";
+import { GridPos3, GridSize3, WorldCoord3, WorldSize3 } from "./pos3";
 import { IGameMap } from "./igamemap";
 
 
@@ -110,7 +110,7 @@ export class GameMap implements IGameMap {
         }
     }
 
-    public gridPosToWorldPos(gridPos: GridPos3) {
+    public gridPosToWorldPos(gridPos: GridPos3): WorldCoord3 {
         return {
             x: gridPos.x * this.blockSize,
             y: gridPos.y * this.blockSize,

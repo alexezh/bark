@@ -1,7 +1,7 @@
 import { Textures } from "./textures";
 import { Camera, Clock, Fog, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
 import { MapEditor } from "./mapeditor";
-import { KeyBinder } from "../ui/keybinder";
+import { KeyBinder, makeMEvent } from "../ui/keybinder";
 import { UiLayer2, UiLayerProps } from "../ui/uilayer";
 import { ICameraLayer } from "./icameracontrol";
 import { IGameMap } from "./igamemap";
@@ -60,14 +60,14 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
 
         // Iosmetric view
         Object3D.DefaultUp = new Vector3(0, 0, 1);
-        this.createCamera(window.innerWidth / 10, window.innerHeight / 10);
+        this.createCamera(this.props.w / 10, this.props.h / 10);
 
         //  this.scene.fog = new FogExp2( 0xFFA1C1, 0.0059 );
         this.scene.fog = new Fog(0x000000, 240, this.visible_distance);
 
         this.renderer = new WebGLRenderer({ antialias: false });
         this.renderer.setPixelRatio(1);
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(this.props.w, this.props.h);
         this.renderer.setClearColor(0x000000, 1);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = PCFSoftShadowMap;
@@ -172,6 +172,18 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     };
+
+    public onMouseDown(htmlEvt: MouseEvent): boolean {
+        let evt = makeMEvent(htmlEvt, undefined, this.props.scale);
+        this.mapEditor.onMouseDown(evt);
+        return true;
+    }
+
+    public onMouseUp(htmlEvt: MouseEvent): boolean {
+        let evt = makeMEvent(htmlEvt, undefined, this.props.scale);
+        this.mapEditor.onMouseUp(evt);
+        return true;
+    }
 
     animate() {
         //      requestAnimationFrame( this.animate.bind(this) );

@@ -1,5 +1,6 @@
 import _ from "lodash";
 import { BufferGeometry, Camera, Line, LineBasicMaterial, Raycaster, Scene, Vector3 } from "three";
+import { WorldProps } from "../fetchadapter";
 import { ShowKeyBindingsDef } from "../posh/keybindcommands";
 import { mapEditorState } from "../posh/mapeditorstate";
 import { PxSize } from "../posh/pos";
@@ -7,6 +8,7 @@ import { IMapEditor } from "../ui/imapeditor";
 import { KeyBinder, MEvent } from "../ui/keybinder";
 import { IGameMap } from "./igamemap";
 import { MapBlockCoord, MapLayer } from "./maplayer";
+import { GridPos3, GridSize3, WorldCoord3, WorldSize3 } from "./pos3";
 import { modelCache } from "./voxelmodelcache";
 
 export function addEditorShortcuts(showKeyBindingsDef: ShowKeyBindingsDef) {
@@ -36,10 +38,11 @@ export class MapEditor implements IMapEditor {
   private camera: Camera;
   private scene: Scene;
   private isDown: boolean = false;
-  private selectedBlock: MapBlockCoord | undefined = undefined;
-  private selection: Line | undefined = undefined;
   private map: IGameMap;
   static material = new LineBasicMaterial({ color: 0x0000ff });
+
+  private selectedBlock: MapBlockCoord | undefined = undefined;
+  private selection: Line | undefined = undefined;
 
   public constructor(
     viewSize: PxSize,
@@ -74,7 +77,7 @@ export class MapEditor implements IMapEditor {
   public onMouseDown(evt: MEvent): boolean {
     let coords = {
       x: (evt.x / this.viewSize.w) * 2 - 1,
-      y: -(evt.x / this.viewSize.h) * 2 + 1
+      y: -(evt.y / this.viewSize.h) * 2 + 1
     }
 
     let raycaster = new Raycaster();
@@ -84,11 +87,6 @@ export class MapEditor implements IMapEditor {
 
     if (intersects.length > 0) {
       this.selectBlockFace(intersects[0].point);
-      //var object = intersects[0].object;
-      // @ts-ignore
-      //object.material.color.set(Math.random() * 0xffffff);
-      //this.selected = object;
-      //object.geometry.setAttribute('color', Math.random() * 0xffffff);
     }
     return true;
   };
@@ -163,13 +161,17 @@ export class MapEditor implements IMapEditor {
 
     let block = await modelCache.getVoxelModel('./assets/vox/dungeon_entrance.vox');
     let pos = this.selectedBlock.gridPos;
-    this.map.addBlock({ x: pos.x, y: pos.y, z: pos.z + 1 }, block);
+    if (this.selectedBlock.model !== undefined) {
+      this.map.addBlock({ x: pos.x, y: pos.y, z: pos.z + 1 }, block);
+    } else {
+      this.map.addBlock({ x: pos.x, y: pos.y, z: pos.z }, block);
+    }
 
     return true;
   }
 
   private onClearBlock() {
-    if (this.selectedBlock === undefined) {
+    if (this.selectedBlock === undefined || this.selectedBlock.model === undefined) {
       return;
     }
 
@@ -180,7 +182,13 @@ export class MapEditor implements IMapEditor {
   }
 
   private selectBlockFace(point: Vector3) {
-    let block = this.map.findBlock(point);
+    let block: MapBlockCoord | undefined;
+
+    if (point.z <= 0) {
+      point.z = 0;
+    }
+
+    block = this.map.findBlock(point);
     if (block === undefined) {
       return;
     }
@@ -193,8 +201,18 @@ export class MapEditor implements IMapEditor {
     }
 
     let pos = this.map.gridPosToWorldPos(block.gridPos);
-    let size = this.map.gridSizeToWorldSize(block.model.gridSize);
+    let size: GridSize3;
+    if (block.model !== undefined) {
+      size = this.map.gridSizeToWorldSize(block.model.gridSize);
+    } else {
+      size = this.map.gridSizeToWorldSize({ sx: 1, sy: 1, sz: 1 });
+    }
+    this.buildSelectionBox(pos, size);
 
+    this.selectedBlock = block;
+  }
+
+  private buildSelectionBox(pos: WorldCoord3, size: WorldSize3) {
     const points: Vector3[] = [];
     points.push(new Vector3(pos.x, pos.y, pos.z + size.sz));
     points.push(new Vector3(pos.x, pos.y + size.sy, pos.z + size.sz));
@@ -202,9 +220,17 @@ export class MapEditor implements IMapEditor {
     points.push(new Vector3(pos.x + size.sx, pos.y, pos.z + size.sz));
     points.push(new Vector3(pos.x, pos.y, pos.z + size.sz));
 
+    points.push(new Vector3(pos.x + size.sx, pos.y, pos.z + size.sz));
+    points.push(new Vector3(pos.x + size.sx, pos.y, pos.z));
+    points.push(new Vector3(pos.x + size.sx, pos.y + size.sy, pos.z));
+    points.push(new Vector3(pos.x + size.sx, pos.y + size.sy, pos.z + size.sz));
+
+    points.push(new Vector3(pos.x + size.sx, pos.y + size.sy, pos.z));
+    points.push(new Vector3(pos.x, pos.y + size.sy, pos.z));
+    points.push(new Vector3(pos.x, pos.y + size.sy, pos.z + size.sz));
+
     const geometry = new BufferGeometry().setFromPoints(points);
 
-    this.selectedBlock = block;
     this.selection = new Line(geometry, MapEditor.material);
     this.scene.add(this.selection);
   }
