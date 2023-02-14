@@ -4,7 +4,7 @@ import { BindKeyDef, ShowKeyBindingsDef } from "./keybindcommands";
 import { SpawnCharacterDef } from "./charactercommands";
 import { PoshFunction, printEditModeError, printHelp, printNoRegion, registerFunction } from "./poshregistry";
 import { gameState } from "../world/igamestate";
-import { addEditorShortcuts } from "../voxel/mapeditor";
+import { addEditorShortcuts } from "../ui/mapeditor";
 
 export let showKeyBindingsDef: ShowKeyBindingsDef | undefined = undefined;
 

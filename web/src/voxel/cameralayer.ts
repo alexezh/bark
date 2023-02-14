@@ -1,11 +1,12 @@
 import { Textures } from "./textures";
 import { Camera, Clock, Fog, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
-import { MapEditor } from "./mapeditor";
+import { MapEditor } from "../ui/mapeditor";
 import { KeyBinder, makeMEvent } from "../ui/keybinder";
 import { UiLayer2, UiLayerProps } from "../ui/uilayer";
-import { ICameraLayer } from "./icameracontrol";
 import { IGameMap } from "./igamemap";
 import { gameState } from "../world/igamestate";
+import { WorldCoord3 } from "./pos3";
+import { ICameraLayer } from "./icameralayer";
 
 export type CameraLayerProps = UiLayerProps & {
     scale: number;
@@ -90,6 +91,10 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
 
     }
 
+    public scrollBy(delta: WorldCoord3) {
+        this.camera.position.add(new Vector3(delta.x, delta.y, delta.z));
+    }
+
     private createCamera(w: number, h: number) {
         /*
         let viewSize = h;
@@ -138,6 +143,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         this.map.loadScene(this.scene);
 
         this.mapEditor = new MapEditor(
+            this,
             { w: this.props.w, h: this.props.h },
             this.scene,
             this.camera,

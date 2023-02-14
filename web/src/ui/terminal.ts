@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { Avatar } from "../world/avatar";
 import { CommandBar } from "./commandBar";
-import { TilesetList } from "./tilesetlist";
+import { TilesetList } from "./voxelmodelviewer";
 import { TextTerminalLayer } from "./textterminallayer";
 import { populateMapEditCommands } from "../posh/mapeditcommands";
 import { Repl } from "../posh/repl";
@@ -20,7 +20,7 @@ import { registerCodeCommands } from "../posh/codecommands";
 import { printCodeException } from "../mechanics/codeloader";
 import { registerMoveCommands } from "../posh/gamemove";
 import { GameMap } from "../voxel/gamemap";
-import { MapEditor } from "../voxel/mapeditor";
+import { MapEditor } from "./mapeditor";
 import { CameraLayer } from "../voxel/cameralayer";
 import { IGameMap } from "../voxel/igamemap";
 

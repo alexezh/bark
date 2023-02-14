@@ -4,12 +4,13 @@ import { WorldProps } from "../fetchadapter";
 import { ShowKeyBindingsDef } from "../posh/keybindcommands";
 import { mapEditorState } from "../posh/mapeditorstate";
 import { PxSize } from "../posh/pos";
-import { IMapEditor } from "../ui/imapeditor";
-import { KeyBinder, MEvent } from "../ui/keybinder";
-import { IGameMap } from "./igamemap";
-import { MapBlockCoord, MapLayer } from "./maplayer";
-import { GridPos3, GridSize3, WorldCoord3, WorldSize3 } from "./pos3";
-import { modelCache } from "./voxelmodelcache";
+import { IMapEditor } from "./imapeditor";
+import { KeyBinder, MEvent } from "./keybinder";
+import { IGameMap } from "../voxel/igamemap";
+import { MapBlockCoord, MapLayer } from "../voxel/maplayer";
+import { GridPos3, GridSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
+import { modelCache } from "../voxel/voxelmodelcache";
+import { ICameraLayer } from "../voxel/icameralayer";
 
 export function addEditorShortcuts(showKeyBindingsDef: ShowKeyBindingsDef) {
   let editor = 'Editor'
@@ -36,6 +37,7 @@ export interface IMapEditorHost {
 export class MapEditor implements IMapEditor {
   private viewSize: PxSize;
   private camera: Camera;
+  private cameraLayer: ICameraLayer;
   private scene: Scene;
   private isDown: boolean = false;
   private map: IGameMap;
@@ -45,6 +47,7 @@ export class MapEditor implements IMapEditor {
   private selection: Line | undefined = undefined;
 
   public constructor(
+    cameraLayer: ICameraLayer,
     viewSize: PxSize,
     scene: Scene,
     camera: Camera,
@@ -54,6 +57,7 @@ export class MapEditor implements IMapEditor {
     mapEditorState.onChanged(this, (evt) => this.onStateChanged())
 
     this.viewSize = viewSize;
+    this.cameraLayer = cameraLayer;
     this.map = map;
     this.camera = camera;
     this.scene = scene;
@@ -68,10 +72,21 @@ export class MapEditor implements IMapEditor {
     input.registerKeyUp('KeyC', this.onCopyBlock);
     input.registerKeyUp('KeyV', this.onPasteBlock);
     input.registerKeyUp('KeyX', this.onClearBlock);
+
+    input.registerKeyUp('KeyA', () => this.onScroll(0, -1, 0));
+    input.registerKeyUp('KeyS', () => this.onScroll(1, 0, 0));
+    input.registerKeyUp('KeyD', () => this.onScroll(0, 1, 0));
+    input.registerKeyUp('KeyW', () => this.onScroll(-1, 0, 0));
+    input.registerKeyUp('KeyQ', () => this.onScroll(0, 0, 1));
+    input.registerKeyUp('KeyE', () => this.onScroll(0, 0, -1));
   }
 
   private onStateChanged() {
 
+  }
+
+  private onScroll(x: number, y: number, z: number) {
+    this.cameraLayer.scrollBy(this.map.gridPosToWorldPos({ x: x, y: y, z: z }));
   }
 
   public onMouseDown(evt: MEvent): boolean {
@@ -91,7 +106,7 @@ export class MapEditor implements IMapEditor {
     return true;
   };
 
-  onMouseUp(evt: MEvent): boolean {
+  public onMouseUp(evt: MEvent): boolean {
     this.isDown = false;
     /*
     let coords = {
@@ -115,7 +130,7 @@ export class MapEditor implements IMapEditor {
     return true;
   };
 
-  onMouseMove(evt: MEvent): boolean {
+  public onMouseMove(evt: MEvent): boolean {
     if (this.isDown === false) {
       return true;
     }

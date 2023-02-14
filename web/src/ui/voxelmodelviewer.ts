@@ -1,5 +1,4 @@
 import { MapEditorState, updateRect } from "../posh/mapeditorstate";
-import { animator } from "../graphics/animator";
 import { KeyBinder, makeMEvent } from "./keybinder";
 import { GameColors } from "./gamecolors";
 import { UiLayer2, UiLayerProps } from "./uilayer";
@@ -149,10 +148,6 @@ export class TilesetList extends UiLayer2<TilesetListProps> {
   }
 
   private _repaint() {
-    if (!(this.isViewDirty || animator.hasAnimations)) {
-      return;
-    }
-
     console.log('draw list')
     let ctx = this.canvas.getContext('2d')!;
     // let frameTime = performance.now();
