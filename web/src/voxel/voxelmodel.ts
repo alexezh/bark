@@ -122,9 +122,16 @@ export class VoxelModelFrame {
 
           var left = 0, right = 0, above = 0, front = 0, back = 0, below = 0;
           if (z > 0) {
-            if ((this.voxels[blockIdx - this.stride_z] & 0xffffff00) != 0) {
+            if (this.voxels[blockIdx - this.stride_z] != 0) {
               below = 1;
               this.voxels[blockIdx] = this.voxels[blockIdx] | 0x10;
+            }
+          }
+
+          if (z < this.chunk_sz - 1) {
+            if (this.voxels[blockIdx + this.stride_z] != 0) {
+              above = 1;
+              this.voxels[blockIdx] = this.voxels[blockIdx] | 0x1;
             }
           }
 
@@ -155,12 +162,6 @@ export class VoxelModelFrame {
               this.voxels[blockIdx] = this.voxels[blockIdx] | 0x2;
             }
           }
-          if (z < this.chunk_sz - 1) {
-            if ((this.voxels[blockIdx + this.stride_z] & 0xffffff00) != 0) {
-              above = 1;
-              this.voxels[blockIdx] = this.voxels[blockIdx] | 0x1;
-            }
-          }
 
           if (front == 1 && left == 1 && right == 1 && above == 1 && back == 1 && below == 1) {
             continue; // block is hidden (object)
@@ -174,7 +175,6 @@ export class VoxelModelFrame {
             if ((this.voxels[blockIdx] & 0x20) == 0) {
               var maxX = 0;
               var maxZ = 0;
-              var end = 0;
 
               for (var x_ = x; x_ < this.chunk_sx; x_++) {
                 let blockIdx_ = this.getIdx(x_, y, z);
@@ -262,13 +262,13 @@ export class VoxelModelFrame {
                 console.log('zero');
               }
 
-              writer.appendVertice(x + maxX, y, z + maxZ);
-              writer.appendVertice(x, y, z);
-              writer.appendVertice(x, y, z + maxZ);
+              writer.appendVertice(x + maxX, y + 1, z + maxZ);
+              writer.appendVertice(x, y + 1, z);
+              writer.appendVertice(x, y + 1, z + maxZ);
 
-              writer.appendVertice(x + maxX, y, z + maxZ);
-              writer.appendVertice(x + maxX, y, z);
-              writer.appendVertice(x, y, z);
+              writer.appendVertice(x + maxX, y + 1, z + maxZ);
+              writer.appendVertice(x + maxX, y + 1, z);
+              writer.appendVertice(x, y + 1, z);
 
               r = ((this.voxels[blockIdx] >> 24) & 0xFF) / 255;
               g = ((this.voxels[blockIdx] >> 16) & 0xFF) / 255;
@@ -359,13 +359,13 @@ export class VoxelModelFrame {
                 }
               }
 
-              writer.appendVertice(x + maxX, y + maxY, z);
-              writer.appendVertice(x, y + maxY, z);
-              writer.appendVertice(x, y, z);
+              writer.appendVertice(x + maxX, y + maxY, z + 1);
+              writer.appendVertice(x, y + maxY, z + 1);
+              writer.appendVertice(x, y, z + 1);
 
-              writer.appendVertice(x + maxX, y + maxY, z);
-              writer.appendVertice(x, y, z);
-              writer.appendVertice(x + maxX, y, z);
+              writer.appendVertice(x + maxX, y + maxY, z + 1);
+              writer.appendVertice(x, y, z + 1);
+              writer.appendVertice(x + maxX, y, z + 1);
 
               r = ((this.voxels[blockIdx] >> 24) & 0xFF) / 255;
               g = ((this.voxels[blockIdx] >> 16) & 0xFF) / 255;
@@ -406,7 +406,7 @@ export class VoxelModelFrame {
                 }
               }
 
-              if (maxZ === 0) {
+              if (maxZ === 0 || maxY === 0 || maxZ === 2) {
                 console.log('zero');
               }
 
@@ -461,13 +461,13 @@ export class VoxelModelFrame {
                 console.log('zero');
               }
 
-              writer.appendVertice(x, y, z);
-              writer.appendVertice(x, y + maxY, z + maxZ);
-              writer.appendVertice(x, y, z + maxZ);
+              writer.appendVertice(x + 1, y, z);
+              writer.appendVertice(x + 1, y + maxY, z + maxZ);
+              writer.appendVertice(x + 1, y, z + maxZ);
 
-              writer.appendVertice(x, y + maxY, z + maxZ);
-              writer.appendVertice(x, y, z);
-              writer.appendVertice(x, y + maxY, z);
+              writer.appendVertice(x + 1, y + maxY, z + maxZ);
+              writer.appendVertice(x + 1, y, z);
+              writer.appendVertice(x + 1, y + maxY, z);
 
               r = ((this.voxels[blockIdx] >> 24) & 0xFF) / 255;
               g = ((this.voxels[blockIdx] >> 16) & 0xFF) / 255;
