@@ -1,7 +1,7 @@
 import { IAnimatable } from "./animator";
 import { IAvatar } from "../world/iavatar";
 import { MoveDirection } from "../mechanics/iavatarapi";
-import { SpriteMoveAnimationProps } from "../world/spritemoveanimation";
+import { SpriteMoveAnimationProps } from "./spritemoveanimation";
 import { GridPos } from "../posh/pos";
 
 export type MoveAvatarParams = {

@@ -1,6 +1,6 @@
 import { Scene, Vector3 } from "three";
 import { WorldProps } from "../fetchadapter";
-import { MapBlockCoord } from "./maplayer";
+import { MapBlockCoord } from "../engine/maplayer";
 import { GridPos3, GridSize3, WorldCoord3, WorldSize3 } from "./pos3";
 import { VoxelModel } from "./voxelmodel";
 

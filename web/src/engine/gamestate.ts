@@ -10,7 +10,7 @@ import { printNetworkError } from "../ui/errorreport";
 import { terminal } from "../ui/igameterminal";
 import { gameState, IGameState, setGameState } from "./igamestate";
 import { IGameMap } from "../voxel/igamemap";
-import { GameMap } from "../voxel/gamemap";
+import { GameMap } from "../engine/gamemap";
 import AsyncEventSource from "../AsyncEventSource";
 
 export type WireSpawnCharacterRequest = {

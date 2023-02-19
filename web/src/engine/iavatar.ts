@@ -1,6 +1,6 @@
 import { GridPos } from "../posh/pos";
 import { MoveDirection } from "../mechanics/iavatarapi";
-import { Sprite } from "../graphics/Sprite";
+import { Sprite } from "../engine/Sprite";
 
 export type AvatarProps = {
   id: string;

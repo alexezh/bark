@@ -1,8 +1,8 @@
 import { idText } from "typescript";
 import AsyncEventSource from "../AsyncEventSource";
 import { GridRect, PxPos, PxSize } from "./pos";
-import { SpriteSheet, TileBuffer } from "../graphics/spritesheet";
-import { Sprite } from "../graphics/Sprite";
+import { SpriteSheet, TileBuffer } from "../engine/spritesheet";
+import { Sprite } from "../engine/Sprite";
 import { IMapEditor } from "../ui/imapeditor";
 import { IGameMap } from "../voxel/igamemap";
 

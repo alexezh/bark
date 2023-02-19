@@ -3,7 +3,7 @@ import { KeyBinder, makeMEvent } from "./keybinder";
 import { GameColors } from "./gamecolors";
 import { UiLayer2, UiLayerProps } from "./uilayer";
 import { GridRect, gridRectToPxRect, PxSize } from "../posh/pos";
-import { SpriteSheet } from "../graphics/spritesheet";
+import { SpriteSheet } from "../engine/spritesheet";
 import _ from "lodash";
 
 export type TilesetListProps = UiLayerProps & {

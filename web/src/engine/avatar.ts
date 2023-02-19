@@ -1,4 +1,4 @@
-import { Sprite } from "../graphics/Sprite";
+import { Sprite } from "./Sprite";
 import { KeyBinder } from "../ui/keybinder";
 //import { TileLayer } from "./tilelayer";
 import { GridPos, gridPosToPxPos } from "../posh/pos";

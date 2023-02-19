@@ -1,10 +1,10 @@
 import { AmbientLight, BufferGeometry, Mesh, MeshPhongMaterial, Scene, Vector3 } from "three";
-import { modelCache } from "./voxelmodelcache";
+import { modelCache } from "../voxel/voxelmodelcache";
 import { Character } from "./character";
 import { MapBlock, MapBlockCoord, MapLayer } from "./maplayer";
-import { VoxelModel } from "./voxelmodel";
-import { GridPos3, GridSize3, WorldCoord3, WorldSize3 } from "./pos3";
-import { IGameMap } from "./igamemap";
+import { VoxelModel } from "../voxel/voxelmodel";
+import { GridPos3, GridSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
+import { IGameMap } from "../voxel/igamemap";
 
 
 export class MeshModel {

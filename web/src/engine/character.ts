@@ -1,7 +1,7 @@
 import { Mesh, MeshPhongMaterial } from "three";
-import { VoxelGeometryWriter } from "./voxelgeometrywriter";
-import { VoxelModel } from "./voxelmodel";
-import { modelCache } from "./voxelmodelcache";
+import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
+import { VoxelModel } from "../voxel/voxelmodel";
+import { modelCache } from "../voxel/voxelmodelcache";
 
 export type CharacterAnimation = {
 

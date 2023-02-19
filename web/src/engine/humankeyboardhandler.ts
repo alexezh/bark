@@ -1,9 +1,9 @@
-import { IAnimatable } from "../graphics/animator";
+import { IAnimatable } from "../engine/animator";
 import { KeyBinder } from "../ui/keybinder";
 import { Avatar, IGameKeyboardHandler } from "./avatar";
 import { IAvatar } from "./iavatar";
 import { InteractivePlayerAnimation, SpriteMoveAnimationProps } from "./spritemoveanimation";
-import { IGamePhysics } from "../graphics/igamephysics";
+import { IGamePhysics } from "../engine/igamephysics";
 import { MoveDirection } from "../mechanics/iavatarapi";
 
 export class HumanKeyboardHandler implements IGameKeyboardHandler {

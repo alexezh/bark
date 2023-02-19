@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { Avatar } from "../world/avatar";
+import { Avatar } from "../engine/avatar";
 import { CommandBar } from "./commandBar";
 import { TilesetList } from "./voxelmodelviewer";
 import { TextTerminalLayer } from "./textterminallayer";
@@ -19,7 +19,7 @@ import { CodeCategory } from "../mechanics/iavatarcode";
 import { registerCodeCommands } from "../posh/codecommands";
 import { printCodeException } from "../mechanics/codeloader";
 import { registerMoveCommands } from "../posh/gamemove";
-import { GameMap } from "../voxel/gamemap";
+import { GameMap } from "../engine/gamemap";
 import { MapEditor } from "./mapeditor";
 import { CameraLayer } from "../voxel/cameralayer";
 import { IGameMap } from "../voxel/igamemap";

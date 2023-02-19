@@ -7,7 +7,7 @@ import { PxSize } from "../posh/pos";
 import { IMapEditor } from "./imapeditor";
 import { KeyBinder, MEvent } from "./keybinder";
 import { IGameMap } from "../voxel/igamemap";
-import { MapBlockCoord, MapLayer } from "../voxel/maplayer";
+import { MapBlockCoord, MapLayer } from "../engine/maplayer";
 import { GridPos3, GridSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { ICameraLayer } from "../voxel/icameralayer";

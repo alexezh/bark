@@ -1,5 +1,5 @@
-import { Sprite } from "../graphics/Sprite";
-import { Animatable, IAnimatable } from "../graphics/animator";
+import { Sprite } from "./Sprite";
+import { Animatable, IAnimatable } from "./animator";
 
 export type SpriteMoveAnimationProps = {
   sprite: Sprite;

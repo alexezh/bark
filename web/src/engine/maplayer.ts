@@ -1,8 +1,8 @@
 import { BufferGeometry, Mesh, MeshPhongMaterial, Vector3 } from "three";
 import { GridSize } from "../posh/pos";
-import { GridPos3 } from "./pos3";
-import { VoxelGeometryWriter } from "./voxelgeometrywriter";
-import { VoxelModel } from "./voxelmodel";
+import { GridPos3 } from "../voxel/pos3";
+import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
+import { VoxelModel } from "../voxel/voxelmodel";
 
 export type MapBlock = {
   model: VoxelModel;
