@@ -1,24 +1,19 @@
 import { IAnimatable } from "./animator";
-import { IAvatar } from "../world/iavatar";
-import { MoveDirection } from "../mechanics/iavatarapi";
-import { SpriteMoveAnimationProps } from "./spritemoveanimation";
-import { GridPos } from "../posh/pos";
+import { Sprite3 } from "./sprite3";
+import { ICollidable } from "./icollidable";
+import { Vector3 } from "three";
 
-export type MoveAvatarParams = {
-  avatar: IAvatar;
-  dir: MoveDirection;
-  animator: (props: SpriteMoveAnimationProps) => IAnimatable
-}
+export type CreateMoveAnimation = (sprite: Sprite3, pos: Vector3) => IAnimatable;
 
 export interface IGamePhysics {
-  moveAvatarInteractive(params: MoveAvatarParams, canCancel: boolean): void;
-  moveAvatar(params: MoveAvatarParams): boolean;
-  moveAvatarRemote(avatar: IAvatar, pos: GridPos, func: (props: SpriteMoveAnimationProps) => IAnimatable): boolean;
+  moveSpriteInteractive(sprite3: Sprite3, pos: Vector3, animation: CreateMoveAnimation, canCancel: boolean): void;
+  moveSprite(sprite3: Sprite3, pos: Vector3, animation: CreateMoveAnimation): boolean;
+  //moveAvatarRemote(sprite: Sprite3, pos: GridPos, func: (props: SpriteMoveAnimationProps) => IAnimatable): boolean;
   attachCollisionHandler(handler?: IGameCollisionHandler): void;
 }
 
 export interface IGameCollisionHandler {
-  onCollision(a1: IAvatar, a2: IAvatar): void;
+  onCollision(a1: ICollidable, a2: ICollidable): void;
   // return true if we should continue
   //onLocation(a: IAvatar, loc: MapLocation): boolean;
 }

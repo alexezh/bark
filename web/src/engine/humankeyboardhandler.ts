@@ -47,7 +47,7 @@ export class HumanKeyboardHandler implements IGameKeyboardHandler {
     }
 
     if (dir !== MoveDirection.none) {
-      this.physics.moveAvatarInteractive({
+      this.physics.moveSpriteInteractive({
         avatar: this.avatar,
         dir: dir,
         animator: InteractivePlayerAnimation.create

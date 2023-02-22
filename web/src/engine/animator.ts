@@ -1,3 +1,5 @@
+import { Ticker } from "./ticker";
+
 export interface IAnimatable {
   get id(): number;
   get startTime(): number;
@@ -147,7 +149,7 @@ export class PropertyAnimationManager {
   private animations: Map<number, IAnimatable> = new Map<number, IAnimatable>();
   private nextKey: number;
   public onUpdateScene?: (isDirty: boolean) => void;
-  //private ticker?: PixiTicker;
+  private ticker?: Ticker;
   private lastTick: number = 0;
 
   // called on every frame to allow app to update state before rendering
@@ -157,9 +159,18 @@ export class PropertyAnimationManager {
     this.nextKey = 0;
   }
 
-  public start() {
-    //this.ticker = ticker;
-    //ticker.add(() => this.processAnimation());
+  public start(ticker: Ticker) {
+    this.ticker = ticker;
+    ticker.add(this, this.processAnimation.bind(this));
+  }
+
+  public stop() {
+    if(this.ticker === undefined) {
+      return;
+    }
+
+    this.ticker.remove(this);
+    this.ticker = undefined;
   }
 
   // animates property of an object. Object should have "id" property which used as a key

@@ -1,77 +1,58 @@
-import { Mesh, MeshPhongMaterial, Vector3 } from "three";
-import { GameColors } from "../ui/gamecolors";
-import { Character } from "../engine/character";
-import { GameMap } from "../engine/gamemap";
-import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
-import { modelCache } from "../voxel/voxelmodelcache";
+import { GameColors } from "./ui/gamecolors";
+import { Character } from "./engine/character";
+import { GameMap } from "./engine/gamemap";
+import { vm } from "./engine/vm";
+import { IRigitBody, Sprite3 } from "./engine/sprite3";
+import { MapBlock } from "./engine/maplayer";
+import { GamePhysics } from "./engine/gamephysics";
+import { Vector3 } from "three";
 
-class Sprite3 {
-  private meshFrames: Mesh[] = [];
-  private currentFrame: number = 0;
-  private scale: number = 0.6;
-  public readonly material: MeshPhongMaterial;
-  public position: Vector3 = new Vector3();
 
-  public static async create(uri: string): Promise<Sprite3> {
-    let o = new Sprite3();
-    await o.load(uri);
-    return o;
-  }
-
+class Snake {
+  private body: SequenceBody;
   public constructor() {
-    this.material = GameColors.material;
+    vm.onKey(this.onKey.bind(this));
   }
 
-  private async load(uri: string): Promise<void> {
-    let vmm = await modelCache.getVoxelModel(uri)
-    for (let f of vmm.frames) {
-      let writer = new VoxelGeometryWriter();
+  public async onKey(): Promise<void> {
 
-      writer.setScale(this.scale);
-
-      f.build(writer);
-
-      let geo = writer.getGeometry();
-      let mm = new Mesh(geo, this.material);
-      this.meshFrames.push(mm);
-    }
   }
 }
 
-export class VM {
-  private _running: boolean = false;
-
-  public start() {
-    this._running = true;
-  }
-
-  public async forever(func: () => Promise<void>): Promise<void> {
-    while (this._running) {
-      await func();
-    }
-  }
-
-  public sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));    
-  }
-
-  public onStart(func: () => Promise<void>) {
+class Bomb {
+  public sprite: Sprite3;
+  public constructor() {
+    this.sprite = await Sprite3.create('./assets/vox/bomb.vox');
+    this.sprite.position.set(0, 0, 1000);
+    this.sprite.owner = this;
 
   }
-  public onMessage(func: () => Promise<void>) {
-    
-  }
-  public onKey(func: () => Promise<void>) {
-    
+
+  public onCollide(target: MapBlock | Sprite3) {
+
   }
 }
 
-export let vm: VM = new VM();
+class Monky {
+  public sprite: Sprite3;
+  public constructor() {
+    this.sprite = await Sprite3.create('./assets/vox/monky.vox');
+    this.sprite.position.set(0, 0, 1000);
+    this.sprite.owner = this;
+
+    vm.onKey(this.onKey.bind(this));
+  }
+
+  public async onKey(): Promise<void> {
+    vm.physics.moveSprite()
+  }
+}
 
 export class BoxedGame {
   private map!: GameMap;
   private char!: Character;
   private boxed!: Object[];
+  private bombClass!: {};
 
   public async init(): Promise<boolean> {
     this.map = new GameMap();
@@ -79,8 +60,8 @@ export class BoxedGame {
     this.char = new Character('./assets/vox/monky.vox', GameColors.material);
     await this.char.load();
 
-    vm.onStart(this.dropObject.bind(this))
-    vm.start();
+    vm.onStart(this.dropObject.bind(this));
+    vm.start(this.map);
 
     return true;
   }
@@ -88,9 +69,9 @@ export class BoxedGame {
 
   private async dropObject(): Promise<void> {
     vm.forever(async () => {
-      let bomb = await Sprite3.create('./assets/vox/bomb.vox');
-      bomb.position.set(0, 0, 1000);
-      await vm.sleep(100);
+
+      while (bomb.)
+        await vm.sleep(100);
     });
   }
 }
