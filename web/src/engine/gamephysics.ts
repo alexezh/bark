@@ -1,218 +1,68 @@
 import { animator, IAnimatable } from "./animator";
 import { GridPos } from "../posh/pos";
-import { CreateMoveAnimation, IGameCollisionHandler, IGamePhysics } from "./igamephysics";
+import { CreateMoveAnimation, IGameCollisionHandler, IGamePhysics, IGamePhysicsInputController, RigitCollisionHandler } from "./igamephysics";
 import { SpriteMoveAnimationProps } from "./spritemoveanimation";
 import { IGameMap } from "../voxel/igamemap";
 import { Sprite3 } from "./sprite3";
 import { Vector3 } from "three";
-
-export type MoveAnimationToken = {
-  animatable: IAnimatable;
-  animation: CreateMoveAnimation | undefined;
-  sprite: Sprite3;
-  pos: Vector3;
-}
+import { IRigitBody } from "./voxelmeshmodel";
+import _ from "lodash";
 
 // manages movement and collisions between world objects
 export class GamePhysics implements IGamePhysics {
   private map: IGameMap;
+  private bodies: IRigitBody[] = [];
   private collisionHandler?: IGameCollisionHandler;
-  private moveAnimations: WeakMap<Sprite3, MoveAnimationToken> = new WeakMap<Sprite3, MoveAnimationToken>();
+  private lastTick: number = 0;
+  private input?: IGamePhysicsInputController;
+  private static collideHandlerSymbol = Symbol('CollideHandler');
 
   public constructor(map: IGameMap) {
     this.map = map;
+  }
+
+  public attachInputController(handler?: IGamePhysicsInputController) {
+    this.input = handler;
   }
 
   public attachCollisionHandler(handler?: IGameCollisionHandler) {
     this.collisionHandler = handler;
   }
 
-  public moveSpriteInteractive(sprite: Sprite3, pos: Vector3, animation: CreateMoveAnimation, canCancel: boolean = false) {
-
-    // if we running animation, continue after
-    let oldAnimToken = this.moveAnimations.get(sprite);
-    if (oldAnimToken !== undefined) {
-      if (canCancel) {
-        animator.cancel(oldAnimToken.animatable);
-      } else {
-        // cannot cancel animation; save move and wait for completion
-        if (oldAnimToken.nextMove === undefined) {
-          oldAnimToken.nextMove = params;
-        }
-        return;
-      }
-    }
-
-    this.moveAvatarWorker(sprite, pos, animation);
+  public addRigitObject(ro: IRigitBody, onCollide: RigitCollisionHandler | undefined): void {
+    this.bodies.push(ro);
+    this.setCollideHandler(ro, onCollide);
   }
 
-  public moveSprite(sprite: Sprite3, pos: Vector3, animation: CreateMoveAnimation): boolean {
-
-    // if we running animation, retry after animation is done
-    let oldAnimToken = this.moveAnimations.get(sprite);
-    if (oldAnimToken !== undefined) {
-      return false;
-    }
-
-    return this.moveAvatarWorker(sprite, pos, animation);
-  }
-
-  private moveAvatarWorker(sprite: Sprite3, pos: Vector3, animation: CreateMoveAnimation): boolean {
-    // actually make the move
-    let delta = deltaByAbsDirection(params.dir);
-    let nextPos = {
-      x: params.avatar.currentPos!.x + delta.x,
-      y: params.avatar.currentPos!.y + delta.y,
-    }
-
-    if (nextPos.x >= this.map.props.gridWidth) { nextPos.x = this.map.props.gridWidth - 1; }
-    else if (nextPos.x < 0) { nextPos.x = 0; }
-
-    if (nextPos.y > this.map.props.gridHeight) { nextPos.y = this.map.props.gridHeight; }
-    else if (nextPos.y < 0) { nextPos.y = 0; }
-
-    // first check if block is opened
-    if (!this.canMoveToMapPos(params.avatar, nextPos)) {
-      return false;
-    }
-
-    // we detect collision before move happens and block the move
-    // the other object might move out ... not sure what to do about it
-    if (!this.handleSpriteCollision(params.avatar, nextPos)) {
-      return false;
-    }
-
-    if (params.avatar.layer !== undefined) {
-      let locs = params.avatar.layer?.getLocationsByRect(nextPos);
-      if (locs !== undefined) {
-        for (let loc of locs) {
-          if (!this.collisionHandler?.onLocation(params.avatar, loc)) {
-            return false;
-          }
-        }
-      }
-    }
-
-    params.avatar.nextPos = nextPos;
-    params.avatar.dir = params.dir;
-
-    // for now check bounds
-    // this is not 100% correct but will work
-    let x = nextPos.x * this.map.props.cellWidth;
-    let y = nextPos.y * this.map.props.cellHeight;
-
-    let dx = x - skin.pos.x;
-    let dy = y - skin.pos.y;
-    let posVersion = params.avatar.currentPosVersion;
-
-    let anim = params.animator({
-      sprite: skin,
-      dx: dx, dy: dy, duration: params.avatar.stepDuration,
-      onComplete: (anim: IAnimatable) => {
-        this.onCompleteMove(params.avatar, posVersion);
-      }
-    });
-    animator.animate(anim);
-    this.moveAnimations.set(params.avatar, { animation: anim, nextMove: undefined });
-    return true;
-
-  }
-
-  /*
-public moveAvatarRemote(avatar: IAvatar, pos: GridPos, func: (props: SpriteMoveAnimationProps) => IAnimatable): boolean {
-
-  if (avatar.skin === undefined) {
-    return false;
-  }
-
-  let oldAnimToken = this.moveAnimations.get(avatar);
-  if (oldAnimToken !== undefined) {
-    if (oldAnimToken.nextMove === undefined) {
-      oldAnimToken.nextMove = undefined;
-    }
-  }
-
-  // for now check bounds
-  // this is not 100% correct but will work
-  let x = pos.x * this.map.props.cellWidth;
-  let y = pos.y * this.map.props.cellHeight;
-
-  let dx = x - avatar.skin.pos.x;
-  let dy = y - avatar.skin.pos.y;
-  let posVersion = avatar.currentPosVersion;
-
-  let anim = func({
-    sprite: avatar.skin,
-    dx: dx, dy: dy, duration: avatar.stepDuration,
-    onComplete: (anim: IAnimatable) => {
-      //this.onCompleteMove(avatar, posVersion);
-    }
-  });
-  animator.animate(anim);
-  this.moveAnimations.set(avatar, { animation: anim, nextMove: undefined });
-  return true;
-}
-  */
-
-  private handleSpriteCollision(sprite: Sprite3, nextPos: GridPos): boolean {
-    if (avatar.layer === undefined || nextPos === undefined) {
-      return true;
-    }
-
-    let nextAvatar = avatar.tileLayer.getAvatarByPos(nextPos.x, nextPos.y);
-    if (nextAvatar === undefined) {
-      return true;
-    }
-
-    this.collisionHandler?.onCollision(avatar, nextAvatar);
-
-    return true;
-  }
-
-  private canMoveToMapPos(avatar: IAvatar, pos: GridPos): boolean {
-    if (avatar.layer === undefined) {
-      return false;
-    }
-
-    let tile = avatar.tileLayer.getTile(pos.x, pos.y);
-    if (tile === undefined) {
-      return false;
-    }
-
-    if (tile.props.categories === undefined) {
-      return true;
-    }
-
+  public setCollideHandler(ro: IRigitBody, func: RigitCollisionHandler | undefined) {
     // @ts-ignore
-    if (tile.props.categories[TileCategory.barrier] === true) {
-      return false;
-    }
-
-    // @ts-ignore
-    if (tile.props.categories[TileCategory.water] === true) {
-      return false;
-    }
-
-    return true;
+    ro[this.collisionHandler] = onCollide;
   }
 
-  private onCompleteMove(avatar: IAvatar, originalPosVersion: number) {
-    if (originalPosVersion !== avatar.currentPosVersion) {
+  public removeRigitObject(ro: IRigitBody): void {
+    // ATT: we do not expect this happen often
+    _.remove(this.bodies, (x: IRigitBody) => { return x === ro });
+  }
+
+  public async update(tick: number): Promise<void> {
+    let dt = tick - this.lastTick;
+    if (dt <= 0) {
       return;
     }
 
-    // this will trigger actual notification of avatar change
-    avatar.currentPos = avatar.nextPos;
+    await this.input?.onBeforeMove(tick);
 
-    let oldAnimToken = this.moveAnimations.get(avatar);
-    this.moveAnimations.delete(avatar);
-    if (oldAnimToken === undefined || oldAnimToken.nextMove === undefined) {
-      return;
+    dt = dt / 1000;
+
+    for (let o of this.bodies) {
+      let s = o.speed;
+      s.divideScalar(dt);
+      let p = o.position;
+      o.onMove(p.add(s));
     }
 
-    // schedule next move
-    this.moveAvatarInteractive(oldAnimToken!.nextMove);
+    this.lastTick = tick;
+    this.input?.onAfterMove();
   }
-  */
 }
 

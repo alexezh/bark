@@ -3,7 +3,7 @@ import { modelCache } from "../voxel/voxelmodelcache";
 import { Character } from "./character";
 import { MapBlock, MapBlockCoord, MapLayer } from "./maplayer";
 import { VoxelModel } from "../voxel/voxelmodel";
-import { GridPos3, GridSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
+import { VoxelPos3, VoxelSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { IGameMap } from "../voxel/igamemap";
 
 
@@ -102,19 +102,19 @@ export class GameMap implements IGameMap {
         return true;
     }
 
-    public gridSizeToWorldSize(gridSize: GridSize3): WorldSize3 {
+    public voxelSizeToWorldSize(voxelSize: VoxelSize3): WorldSize3 {
         return {
-            sx: gridSize.sx * this.blockSize,
-            sy: gridSize.sy * this.blockSize,
-            sz: gridSize.sz * this.blockSize
+            sx: voxelSize.sx,
+            sy: voxelSize.sy,
+            sz: voxelSize.sz
         }
     }
 
-    public gridPosToWorldPos(gridPos: GridPos3): WorldCoord3 {
+    public voxelPosToWorldPos(voxelPos: VoxelPos3): WorldCoord3 {
         return {
-            x: gridPos.x * this.blockSize,
-            y: gridPos.y * this.blockSize,
-            z: gridPos.z * this.blockSize
+            x: voxelPos.x,
+            y: voxelPos.y,
+            z: voxelPos.z
         }
     }
 
@@ -135,7 +135,7 @@ export class GameMap implements IGameMap {
         this.scene.add(layer.staticMesh);
     }
 
-    public addBlock(pos: GridPos3, block: VoxelModel) {
+    public addBlock(pos: VoxelPos3, block: VoxelModel) {
         if (pos.z >= this.layers.length) {
             for (let i = this.layers.length - 1; i < pos.z; i++) {
                 let layer = new MapLayer(this.material, this.layers.length, this.blockSize);

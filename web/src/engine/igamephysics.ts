@@ -1,19 +1,31 @@
 import { IAnimatable } from "./animator";
 import { Sprite3 } from "./sprite3";
-import { ICollidable } from "./icollidable";
 import { Vector3 } from "three";
+import { IRigitBody } from "./voxelmeshmodel";
 
 export type CreateMoveAnimation = (sprite: Sprite3, pos: Vector3) => IAnimatable;
 
+export interface IGamePhysicsInputController {
+  // called before physics evaluates parameters
+  // good chance for sprite to handle keyboard
+  onBeforeMove(tick: number): Promise<void>;
+  onAfterMove();
+}
+
+export type RigitCollisionHandler = (target: IRigitBody) => void;
+
 export interface IGamePhysics {
-  moveSpriteInteractive(sprite3: Sprite3, pos: Vector3, animation: CreateMoveAnimation, canCancel: boolean): void;
-  moveSprite(sprite3: Sprite3, pos: Vector3, animation: CreateMoveAnimation): boolean;
+  addRigitObject(ro: IRigitBody, onCollide: RigitCollisionHandler | undefined): void;
+  removeRigitObject(ro: IRigitBody): void;
+  update(tick: number): void;
+  attachInputController(handler?: IGamePhysicsInputController);
+  setCollideHandler(ro: IRigitBody, func: RigitCollisionHandler | undefined);
   //moveAvatarRemote(sprite: Sprite3, pos: GridPos, func: (props: SpriteMoveAnimationProps) => IAnimatable): boolean;
-  attachCollisionHandler(handler?: IGameCollisionHandler): void;
+  //attachCollisionHandler(handler?: IGameCollisionHandler): void;
 }
 
 export interface IGameCollisionHandler {
-  onCollision(a1: ICollidable, a2: ICollidable): void;
+  //onCollision(a1: ICollidable, a2: ICollidable): void;
   // return true if we should continue
   //onLocation(a: IAvatar, loc: MapLocation): boolean;
 }

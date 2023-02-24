@@ -1,10 +1,10 @@
-export type GridPos3 = {
+export type VoxelPos3 = {
   x: number,
   y: number,
   z: number;
 }
 
-export type GridSize3 = {
+export type VoxelSize3 = {
   sx: number,
   sy: number,
   sz: number;

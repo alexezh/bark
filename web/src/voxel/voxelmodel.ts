@@ -1,5 +1,5 @@
 import { BufferAttribute, BufferGeometry, MeshPhongMaterial } from "three";
-import { GridSize3 } from "./pos3";
+import { VoxelSize3 } from "./pos3";
 import { VoxelGeometryWriter } from "./voxelgeometrywriter";
 
 export type VoxelPoint = {
@@ -39,12 +39,12 @@ export class VoxelModel {
     this.id = id;
   }
 
-  public get gridSize(): GridSize3 {
+  public get size(): VoxelSize3 {
     let frame = this.frames[0];
     return {
-      sx: 1,
-      sy: 1,
-      sz: 1
+      sx: frame.chunk_sx,
+      sy: frame.chunk_sy,
+      sz: frame.chunk_sz
     }
   }
 }

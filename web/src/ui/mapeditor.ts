@@ -8,7 +8,7 @@ import { IMapEditor } from "./imapeditor";
 import { KeyBinder, MEvent } from "./keybinder";
 import { IGameMap } from "../voxel/igamemap";
 import { MapBlockCoord, MapLayer } from "../engine/maplayer";
-import { GridPos3, GridSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
+import { VoxelPos3, VoxelSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { ICameraLayer } from "../voxel/icameralayer";
 
@@ -86,7 +86,7 @@ export class MapEditor implements IMapEditor {
   }
 
   private onScroll(x: number, y: number, z: number) {
-    this.cameraLayer.scrollBy(this.map.gridPosToWorldPos({ x: x, y: y, z: z }));
+    this.cameraLayer.scrollBy(this.map.voxelPosToWorldPos({ x: x, y: y, z: z }));
   }
 
   public onMouseDown(evt: MEvent): boolean {
@@ -215,12 +215,12 @@ export class MapEditor implements IMapEditor {
       this.selectedBlock = undefined;
     }
 
-    let pos = this.map.gridPosToWorldPos(block.gridPos);
-    let size: GridSize3;
+    let pos = this.map.voxelPosToWorldPos(block.gridPos);
+    let size: VoxelSize3;
     if (block.model !== undefined) {
-      size = this.map.gridSizeToWorldSize(block.model.gridSize);
+      size = this.map.voxelSizeToWorldSize(block.model.gridSize);
     } else {
-      size = this.map.gridSizeToWorldSize({ sx: 1, sy: 1, sz: 1 });
+      size = this.map.voxelSizeToWorldSize({ sx: 1, sy: 1, sz: 1 });
     }
     this.buildSelectionBox(pos, size);
 

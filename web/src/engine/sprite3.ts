@@ -1,48 +1,69 @@
-import { Mesh, MeshPhongMaterial, Vector3 } from "three";
-import { GameColors } from "../ui/gamecolors";
-import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
-import { modelCache } from "../voxel/voxelmodelcache";
+import { Scene, Vector3 } from "three";
+import { vm } from "./vm";
+import { IRigitBody, IRigitModel, VoxelMeshModel } from "./voxelmeshmodel";
 
-export interface IRigitBody {
-
-}
-
-// display object 
-export class Sprite3 {
-  private meshFrames: Mesh[] = [];
-  private currentFrame: number = 0;
-  private scale: number = 0.6;
-  public readonly material: MeshPhongMaterial;
-  public position: Vector3 = new Vector3();
+// main object for compositing content
+export class Sprite3 implements IRigitBody {
+  private meshModels: VoxelMeshModel[] = [];
+  private _rigitBody: IRigitBody | undefined;
   public owner: any;
-  public rigit: IRigitBody | undefined;
+  public rigit: IRigitModel | undefined;
+  private _speed: Vector3 = new Vector3();
+  private _position: Vector3;
 
-  public static async create(uri: string): Promise<Sprite3> {
-    let o = new Sprite3();
-    await o.load(uri);
-    return o;
+  // if true, onCollide will record the array
+  private collisions: IRigitBody[] | undefined;
+
+  public get speed(): Vector3 { return this._speed };
+  public get position(): Vector3 { return this._position };
+
+  public constructor(pos: Vector3, rigit?: IRigitModel) {
+    this.rigit = rigit;
+    this._position = pos;
   }
 
-  public constructor(collidableType?: any) {
-    this.material = GameColors.material;
+  public async load(uri: string): Promise<void> {
+    let m = await VoxelMeshModel.create(uri);
+    this.meshModels.push(m);
   }
 
-  private async load(uri: string): Promise<void> {
-    let vmm = await modelCache.getVoxelModel(uri);
-    for (let f of vmm.frames) {
-      let writer = new VoxelGeometryWriter();
+  public loadSprite(scene: Scene) {
+    for (let m of this.meshModels) {
+      scene.add(m.getMesh());
+    }
 
-      writer.setScale(this.scale);
+    return true;
+  }
 
-      f.build(writer);
+  public setPosition(pos: Vector3) {
 
-      let geo = writer.getGeometry();
-      let mm = new Mesh(geo, this.material);
-      this.meshFrames.push(mm);
+  }
+
+  public setSpeed(speed: Vector3) {
+    this._speed = speed;
+  }
+
+  public onMove(pos: Vector3): void {
+    this._position = pos;
+  }
+
+  public trackCollision(enadle: boolean) {
+    if (enadle) {
+      this.collisions = [];
+    } else {
+      this.collisions = undefined;
     }
   }
 
-  public getMesh(): Mesh {
-    return this.meshFrames[this.currentFrame];
+  public onCollision(obj: IRigitBody): void {
+    if (this.collisions === undefined) {
+      return;
+    }
+
+    this.collisions.push(obj);
+  }
+
+  public collidedWith<T>(): boolean {
+    return false;
   }
 }

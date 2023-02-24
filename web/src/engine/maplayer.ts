@@ -1,6 +1,6 @@
 import { BufferGeometry, Mesh, MeshPhongMaterial, Vector3 } from "three";
 import { GridSize } from "../posh/pos";
-import { GridPos3 } from "../voxel/pos3";
+import { VoxelPos3 } from "../voxel/pos3";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
 import { VoxelModel } from "../voxel/voxelmodel";
 
@@ -12,7 +12,7 @@ export type MapBlock = {
 export type MapBlockCoord = {
   model: VoxelModel | undefined;
   idx: number;
-  gridPos: GridPos3;
+  gridPos: VoxelPos3;
 }
 
 export class MapLayer {
@@ -86,7 +86,7 @@ export class MapLayer {
     this.blocks[block.idx] = undefined;
   }
 
-  public addBlock(pos: GridPos3, block: VoxelModel) {
+  public addBlock(pos: VoxelPos3, block: VoxelModel) {
     let idx = pos.y * this.size.w + pos.x;
     this.blocks[idx] = { model: block, frame: 0 };
   }
