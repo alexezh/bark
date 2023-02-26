@@ -1,7 +1,7 @@
 import { KeyBinder } from "../ui/keybinder";
 import { IGamePhysicsInputController } from "./igamephysics";
 import { Sprite3 } from "./sprite3";
-import { vm } from "./vm";
+import { vm } from "./ivm";
 
 // abstracts actions between keyboard, controllers and mouse
 export enum KeyAction {

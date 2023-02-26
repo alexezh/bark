@@ -2,6 +2,8 @@ import { Terminal } from "./ui/terminal";
 import { fetchFiles, WorldProps } from "./fetchadapter";
 import { setTerminal, terminal } from "./ui/igameterminal";
 import { createVM } from "./engine/vm";
+import { vm } from "./engine/ivm";
+import { BoxedGame } from "./python";
 
 const demoWorldId = "7fa84179-dc58-4939-8678-03370fd137f3";
 
@@ -33,6 +35,10 @@ export class GameApp {
     }
 
     createVM(this.gameContainer);
+    setTimeout(async () => {
+      await vm.loadGame(BoxedGame);
+      vm.start();
+    });
   }
 
   private resizeCanvas() {

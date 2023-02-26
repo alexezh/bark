@@ -1,43 +1,37 @@
-import { GameColors } from "./ui/gamecolors";
-import { Character } from "./engine/character";
-import { GameMap } from "./engine/gamemap";
-import { vm } from "./engine/vm";
+import { vm } from "./engine/ivm";
 import { Sprite3 } from "./engine/sprite3";
-import { MapBlock } from "./engine/maplayer";
-import { GamePhysics } from "./engine/gamephysics";
-import { Bone, Vector3 } from "three";
-import { KeyBinder } from "./ui/keybinder";
-import { IGamePhysicsInputController } from "./engine/igamephysics";
+import { Vector3 } from "three";
 import { RoapModel } from "./engine/sequencebody";
 import { IRigitBody, RigitBodyArray } from "./engine/voxelmeshmodel";
 import { KeyAction, MoveController2D } from "./engine/movecontroller2d";
+import { IDigGame } from "./engine/idiggame";
 
 
-class Snake {
+class Snake extends Sprite3 {
   private sprite!: Sprite3;
 
-  public static async create() {
-    let snake = new Snake();
-    snake.sprite = await vm.createSprite(Snake, './assets/vox/snakehead.', new RoapModel());
+  public static async create(): Promise<Snake> {
+    let snake = await vm.createSprite(Snake, './assets/vox/snakehead.', new Vector3(0, 0, 0), new RoapModel());
 
     //vm.onInput(snake.onKey.bind(this));
 
     // vm.physics.attachInputController(new MoveController2D(this))
-    vm.physics.addRigitObject(snake.sprite, undefined);
+    //vm.physics.addRigitObject(snake.sprite, undefined);
+    return snake;
   }
 }
 
 class Bomb extends Sprite3 {
   public static async create(): Promise<Bomb> {
-    return await vm.createSprite(Bomb, './assets/vox/bomb.vox', new Vector3(0, 0, 1000));
+    return await vm.createSprite(Bomb, './assets/vox/bomb.vox', new Vector3(0, 0, 1000), undefined);
   }
 }
 
 class Monky extends Sprite3 {
   public static async create(): Promise<Monky> {
-    let m = await vm.createSprite(Monky, './assets/vox/monky.vox', new Vector3(0, 0, 1000));
+    let m = await vm.createSprite(Monky, './assets/vox/monky.vox', new Vector3(0, 0, 1000), undefined);
 
-    inputController!.onKeyAction(this.onKey.bind(this));
+    //inputController!.onKeyAction(this.onKey.bind(this));
     return m;
   }
 
@@ -52,21 +46,25 @@ class Monky extends Sprite3 {
 
 let inputController: MoveController2D | undefined;
 
-export class BoxedGame {
+export class BoxedGame implements IDigGame {
   private char!: Monky;
 
-  public async init(): Promise<boolean> {
+  public async init(): Promise<void> {
     // create controller and options such as repeat rate and so on
     inputController = new MoveController2D();
 
-    await vm.loadMap();
+    await vm.loadMap('test');
     this.char = await Monky.create();
 
     vm.onStart(this.moveMonkey.bind(this));
     vm.onStart(this.dropObject.bind(this));
-    vm.start();
+  }
 
-    return true;
+  start(): void {
+    throw new Error("Method not implemented.");
+  }
+  stop(): void {
+    throw new Error("Method not implemented.");
   }
 
   // in digg
@@ -77,7 +75,7 @@ export class BoxedGame {
       if (action !== undefined && action === KeyAction.None) {
         this.char.speed.set(0, 0, 0);
       }
-    }
+    });
   }
 
   // the problem with that loop is that collision detection happens outside

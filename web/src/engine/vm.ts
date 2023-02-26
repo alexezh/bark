@@ -1,9 +1,11 @@
 import { Vector3 } from "three";
+import AsyncEventSource from "../AsyncEventSource";
 import { ICameraLayer } from "../voxel/icameralayer";
 import { IGameMap } from "../voxel/igamemap";
 import { animator } from "./animator";
 import { GameMap } from "./gamemap";
 import { GamePhysics } from "./gamephysics";
+import { IDigGame } from "./idiggame";
 import { IGamePhysics, RigitCollisionHandler } from "./igamephysics";
 import { IVM, setVM } from "./ivm";
 import { Sprite3 } from "./sprite3";
@@ -19,6 +21,8 @@ export class VM implements IVM {
   private _canvas: HTMLElement;
   private _map!: IGameMap;
   private _camera?: ICameraLayer;
+  private _game?: IDigGame;
+  private readonly onMapChanged: AsyncEventSource<boolean> = new AsyncEventSource();
 
   // we are going to copy/write of handler array
   // so it is safe to enumerate even if handler changes it
@@ -36,23 +40,40 @@ export class VM implements IVM {
 
   public attachCamera(camera: ICameraLayer) {
     this._camera = camera;
-    // load map
+
+    if (this._map !== undefined) {
+      this.loadScene();
+    }
   }
 
-  public detachCamera() {
-    this._camera = undefined;
+  public registerMapChanged(target: any, func: (val: boolean) => void) {
+    this.onMapChanged.add(target, func);
+    if (this._map !== undefined) {
+      this.loadScene();
+      this.onMapChanged.invoke(true);
+    }
   }
 
-  registerMapChanged(target: any, func: () => void) {
-
+  public async loadGame(GT: { new(): IDigGame }): Promise<IDigGame> {
+    let game = new GT();
+    await game.init();
+    this._game = game;
+    return game;
   }
 
-  public loadMap() {
+  public async loadMap(id: string): Promise<void> {
     this._map = new GameMap();
-    this._map.load('test');
+    await this._map.load(id);
+
+    this.onMapChanged.invoke(true);
   }
 
   public start() {
+    if (this._game === undefined) {
+      return;
+    }
+    this._game.start();
+
     this._ticker = new Ticker();
     animator.start(this._ticker);
     this._physics = new GamePhysics(this._map);
@@ -61,6 +82,7 @@ export class VM implements IVM {
 
   public stop() {
     animator.stop();
+    this._game!.stop();
   }
 
   public async createSprite<T extends Sprite3>(AT: { new(...args: any[]): T; }, uri: string, pos: Vector3, rm: IRigitModel | undefined = undefined): Promise<T> {
@@ -114,6 +136,14 @@ export class VM implements IVM {
 
   public onCollide(ro: IRigitBody, func: RigitCollisionHandler) {
     this.physics.setCollideHandler(ro, func);
+  }
+
+  private loadScene() {
+    if (this._camera === undefined) {
+      return;
+    }
+
+    this._map.loadScene(this._camera.scene);
   }
 }
 

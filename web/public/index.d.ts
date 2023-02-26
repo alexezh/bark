@@ -2,7 +2,7 @@ export default class AsyncEventSource<T> {
     private callbackSym;
     private handlers;
     private gaps;
-    add(obj: any, func: T): void;
+    add(obj: any, func: (val: T) => void): void;
     private invokeWorker;
     invoke(...args: any[]): void;
     invokeWithCompletion(onInvoke: () => void, ...args: any[]): void;
@@ -32,12 +32,8 @@ export declare class FetchAdapterWeb implements IFetchAdapter {
 }
 
 export declare class GameApp {
-    private worldId;
     private gameContainer;
-    private worldProps?;
-    state?: IGameState;
     get terminal(): Terminal;
-    constructor();
     run(): Promise<void>;
     setContainer(gameContainer: HTMLDivElement): void;
     private tryOnReady;
@@ -47,11 +43,13 @@ export declare class GameApp {
 export declare var gameApp: GameApp;
 export declare function initGame(canvas: HTMLDivElement): void;
 
-export declare class QueueTTT<T> {
-    private items;
-    push(x: T): void;
-    pop(): T;
-    isEmpty(): boolean;
+export declare class BoxedGame implements IDigGame {
+    private char;
+    init(): Promise<void>;
+    start(): void;
+    stop(): void;
+    private moveMonkey;
+    private dropObject;
 }
 
 export type SpriteProps = {
@@ -65,7 +63,6 @@ export declare class Sprite {
     readonly id: number;
     private readonly props;
     private readonly spriteSheet;
-    readonly pixiSprite: PixiSprite;
     private posChanged;
     get pos(): PxPos;
     set pos(newValue: PxPos);
@@ -117,7 +114,8 @@ export declare class PropertyAnimationManager {
     private lastTick;
     onInput?: () => void;
     constructor();
-    start(ticker: PixiTicker): void;
+    start(ticker: Ticker): void;
+    stop(): void;
     animate(anim: IAnimatable): void;
     cancel(anim: IAnimatable): void;
     nextId(): number;
@@ -128,35 +126,205 @@ export declare var animator: PropertyAnimationManager;
 
 export declare function numberArrayToString(v: number[]): string;
 
-export type MoveAnimationToken = {
-    animation: IAnimatable;
-    nextMove: MoveAvatarParams | undefined;
-};
-export declare class GamePhysics implements IGamePhysics {
-    private map;
-    private collisionHandler?;
-    private moveAnimations;
-    constructor(map: IGameMap);
-    attachCollisionHandler(handler?: IGameCollisionHandler): void;
-    moveAvatarInteractive(params: MoveAvatarParams, canCancel?: boolean): void;
-    moveAvatar(params: MoveAvatarParams): boolean;
-    private moveAvatarWorker;
-    moveAvatarRemote(avatar: IAvatar, pos: GridPos, func: (props: SpriteMoveAnimationProps) => IAnimatable): boolean;
+export interface IGameKeyboardHandler {
+    handleKeyboard(input: KeyBinder): void;
+}
+export type AvatarPosChanged = (avatar: IAvatar, oldPos: GridPos | undefined, newPos: GridPos | undefined) => void;
+export declare class Avatar implements IAvatar {
+    readonly props: AvatarProps;
+    get rt(): any;
+    set rt(val: any);
+    skin?: Sprite;
+    nextPos?: GridPos;
+    dir: MoveDirection;
+    private _currentPosVersion;
+    get gameState(): AvatarGameState;
+    set gameState(mode: AvatarGameState);
+    private readonly posChanged;
+    private cameraUpdate;
+    get id(): string;
+    get stepDuration(): number;
+    get currentPos(): GridPos | undefined;
+    set currentPos(pos: GridPos | undefined);
+    get currentPosVersion(): number;
+    layer?: any;
+    get tileLayer(): any;
+    constructor(props: AvatarProps, posChanged: AvatarPosChanged);
+    onRemoteUpdateCurrentPos(pos: GridPos | undefined): void;
+    updateRuntimeProps(props: any): void;
+    getCode(): string;
+    updateCode(code: string): void;
+    attachCamera(func: AvatarPosChanged | undefined): void;
+    protected getAvatarCodeFile(): string;
+    clearLayer(): void;
 }
 
-export type MoveAvatarParams = {
-    avatar: IAvatar;
-    dir: MoveDirection;
-    animator: (props: SpriteMoveAnimationProps) => IAnimatable;
-};
-export interface IGamePhysics {
-    moveAvatarInteractive(params: MoveAvatarParams, canCancel: boolean): void;
-    moveAvatar(params: MoveAvatarParams): boolean;
-    moveAvatarRemote(avatar: IAvatar, pos: GridPos, func: (props: SpriteMoveAnimationProps) => IAnimatable): boolean;
+export declare class Character {
+    private meshFrames;
+    private url;
+    private currentFrame;
+    private scale;
+    material: MeshPhongMaterial;
+    constructor(url: string, material: MeshPhongMaterial);
+    load(): Promise<boolean>;
+    getMesh(): Mesh;
+}
+
+export declare class MeshModel {
+    mesh: Mesh;
+    geometry: BufferGeometry;
+    material: MeshPhongMaterial;
+    constructor(geo: BufferGeometry);
+}
+export declare class GameMap implements IGameMap {
+    private scene;
+    objects: any;
+    width: number;
+    height: number;
+    private blockSize;
+    private layers;
+    private char;
+    ambient_light: AmbientLight;
+    material: MeshPhongMaterial;
+    reset(): void;
+    update(time: any, delta: any): void;
+    load(id: string): Promise<boolean>;
+    loadScene(scene: Scene): boolean;
+    voxelSizeToWorldSize(voxelSize: VoxelSize3): WorldSize3;
+    voxelPosToWorldPos(voxelPos: VoxelPos3): WorldCoord3;
+    findBlock(point: Vector3): MapBlockCoord | undefined;
+    deleteBlock(block: MapBlockCoord): void;
+    addBlock(pos: VoxelPos3, block: VoxelModel): void;
+}
+
+export declare class GamePhysics implements IGamePhysics {
+    private map;
+    private bodies;
+    private collisionHandler?;
+    private lastTick;
+    private input?;
+    private static collideHandlerSymbol;
+    constructor(map: IGameMap);
+    attachInputController(handler?: IGamePhysicsInputController): void;
     attachCollisionHandler(handler?: IGameCollisionHandler): void;
+    addRigitObject(ro: IRigitBody, onCollide: RigitCollisionHandler | undefined): void;
+    setCollideHandler(ro: IRigitBody, func: RigitCollisionHandler | undefined): void;
+    removeRigitObject(ro: IRigitBody): void;
+    update(tick: number): Promise<void>;
+}
+
+export type WireSpawnCharacterRequest = {
+    name: string;
+    skinUrl: string;
+};
+export type WireAvatarMove = {
+    id: string;
+    currentPos: GridPos;
+    newPos: GridPos;
+};
+export declare enum RtcConnectionStatus {
+    pending = 0,
+    connected = 1,
+    error = 2
+}
+export type RtcUpdateAvatarPosition = {
+    worldId: string;
+    avatarId: string;
+    newPos: GridPos | undefined;
+    oldPos: GridPos | undefined;
+};
+export declare class RealtimeClient implements IRealtimeClient {
+    private sessionId?;
+    private connection?;
+    private connectionStatus;
+    constructor();
+    load(): Promise<boolean>;
+    spawnCharacter(name: string, skinUrl: string): void;
+    private onAvatarPosChanged;
+    private addAvatar;
+    private connectSignalR;
+    private onUpdateAvatarPositionRtc;
+}
+
+export declare class HumanKeyboardHandler implements IGameKeyboardHandler {
+    readonly cellWidth: number;
+    readonly cellHeight: number;
+    private readonly stepDuration;
+    private readonly physics;
+    private readonly avatar;
+    constructor(avatar: IAvatar, physics: IGamePhysics, cellW: number, cellH: number, stepDuration: number);
+    handleKeyboard(input: KeyBinder): void;
+}
+
+export type AvatarProps = {
+    id: string;
+    layerId?: string;
+    pos?: GridPos;
+};
+export type WireCharacterProps = AvatarProps & {
+    skinUrl: string;
+    rt: string;
+};
+export type WirePokemonProps = AvatarProps & {
+    pokedexId: string;
+    kind: string;
+    rt: string;
+};
+export type WireAvatarProps = {
+    character?: WireCharacterProps;
+    pokemon?: WirePokemonProps;
+};
+export declare enum AvatarGameState {
+    move = 0,
+    removed = 1,
+    battle = 2,
+    catch = 3,
+    resting = 4,
+    suspended = 5
+}
+export interface IAvatar {
+    get props(): AvatarProps;
+    get rt(): any;
+    set rt(val: any);
+    get id(): string;
+    get stepDuration(): number;
+    dir: MoveDirection;
+    get currentPosVersion(): number;
+    get currentPos(): GridPos | undefined;
+    set currentPos(pos: GridPos | undefined);
+    nextPos?: GridPos;
+    gameState: AvatarGameState;
+    skin?: Sprite;
+    onRemoteUpdateCurrentPos(pos: GridPos | undefined): void;
+    getCode(): string;
+    updateCode(code: string): void;
+    updateRuntimeProps(props: any): void;
+    attachCamera(func: ((avatar: IAvatar) => void) | undefined): void;
+}
+
+export interface IDigGame {
+    init(): Promise<void>;
+    start(): void;
+    stop(): void;
+}
+
+export type CreateMoveAnimation = (sprite: Sprite3, pos: Vector3) => IAnimatable;
+export interface IGamePhysicsInputController {
+    onBeforeMove(tick: number): Promise<void>;
+    onAfterMove(): any;
+}
+export type RigitCollisionHandler = (target: IRigitBody) => void;
+export interface IGamePhysics {
+    addRigitObject(ro: IRigitBody, onCollide: RigitCollisionHandler | undefined): void;
+    removeRigitObject(ro: IRigitBody): void;
+    update(tick: number): void;
+    attachInputController(handler?: IGamePhysicsInputController): any;
+    setCollideHandler(ro: IRigitBody, func: RigitCollisionHandler | undefined): any;
 }
 export interface IGameCollisionHandler {
-    onCollision(a1: IAvatar, a2: IAvatar): void;
+}
+
+export interface IRealtimeClient {
 }
 
 export type SpriteSheetProps = {
@@ -168,6 +336,125 @@ export type SpriteSheetProps = {
     cellHeight: number;
     startTileId: number;
 };
+
+export interface IVM {
+    get map(): IGameMap;
+    get physics(): IGamePhysics;
+    get canvas(): HTMLElement;
+    attachCamera(camera: ICameraLayer): void;
+    registerMapChanged(target: any, func: () => void): void;
+    loadGame(GT: {
+        new (): IDigGame;
+    }): Promise<IDigGame>;
+    loadMap(id: string): Promise<void>;
+    start(): void;
+    stop(): void;
+    createSprite<T extends Sprite3>(AT: {
+        new (...args: any[]): T;
+    }, uri: string, pos: Vector3, rm: IRigitModel | undefined): Promise<T>;
+    removeSprite(sprite: Sprite3): any;
+    forever(func: () => Promise<void>): Promise<void>;
+    waitCollide(sprite: Sprite3, timeout: number, collisions: IRigitBody[]): Promise<boolean>;
+    sleep(ms: number): Promise<void>;
+    send(msg: string): Promise<void>;
+    onStart(func: () => Promise<void>): any;
+    onMessage(func: () => Promise<void>): any;
+}
+export declare let vm: IVM;
+export declare function setVM(val: IVM): void;
+
+export type MapBlock = {
+    model: VoxelModel;
+    frame: number;
+};
+export type MapBlockCoord = {
+    model: VoxelModel | undefined;
+    idx: number;
+    gridPos: VoxelPos3;
+};
+export declare class MapLayer {
+    private size;
+    private blockSize;
+    private layerZ;
+    private blocks;
+    private _mesh;
+    private geometry;
+    private material;
+    get staticMesh(): Mesh;
+    constructor(material: MeshPhongMaterial, layerZ: number, blockSize: number);
+    load(): void;
+    fill(tile: VoxelModel): void;
+    build(): void;
+    findBlock(point: Vector3): MapBlockCoord | undefined;
+    deleteBlock(block: MapBlockCoord): void;
+    addBlock(pos: VoxelPos3, block: VoxelModel): void;
+}
+
+export declare enum KeyAction {
+    None = 0,
+    Left = 1,
+    Right = 2,
+    Forward = 3,
+    Back = 4,
+    Jump = 5,
+    Action = 6
+}
+export declare class MoveController2D implements IGamePhysicsInputController {
+    private pending;
+    private lastAction;
+    private input;
+    constructor();
+    onBeforeMove(tick: number): Promise<void>;
+    onAfterMove(): void;
+    waitAction(sprite: Sprite3, timeout: number): Promise<KeyAction | undefined>;
+    private onKey;
+    onKeyDzz(input: KeyBinder): Promise<void>;
+}
+
+export declare class RoapModel implements IRigitModel {
+    private path;
+    private dir;
+    move(pos: Vector3, parts: VoxelMeshModel): void;
+    update(): void;
+}
+
+export declare class Sprite3 implements IRigitBody {
+    private meshModels;
+    private _rigitBody;
+    owner: any;
+    rigit: IRigitModel | undefined;
+    private _speed;
+    private _position;
+    private collisions;
+    get speed(): Vector3;
+    get position(): Vector3;
+    constructor(pos: Vector3, rigit?: IRigitModel);
+    load(uri: string): Promise<void>;
+    loadSprite(scene: Scene): boolean;
+    setPosition(pos: Vector3): void;
+    setSpeed(speed: Vector3): void;
+    onMove(pos: Vector3): void;
+    trackCollision(enadle: boolean): void;
+    onCollision(obj: IRigitBody): void;
+    collidedWith<T>(): boolean;
+}
+
+export type SpriteMoveAnimationProps = {
+    sprite: Sprite3;
+    delta: Vector3;
+    duration: number;
+    onComplete: ((anim: IAnimatable) => void) | undefined;
+};
+export declare class SpriteMoveAnimation extends Animatable {
+    private props;
+    private x;
+    private y;
+    private sprite;
+    static create(props: SpriteMoveAnimationProps): SpriteMoveAnimation;
+    private constructor();
+    onComplete(): void;
+    animate(elapsed: number): boolean;
+}
 
 export type TileBuffer = {
     w: number;
@@ -185,6 +472,88 @@ export declare class SpriteSheet {
     createSprite(idx: number, pos: PxPos): any;
     getTexture(idx: number): any;
     getRegion(rect: GridRect): TileBuffer;
+}
+
+export declare class Ticker {
+    private inTick;
+    private static tickerSymbol;
+    private handlers;
+    private updates;
+    tick(): void;
+    add(target: any, func: () => void): void;
+    remove(target: any): void;
+    private applyUpdates;
+}
+
+export type MessageHandler = (msg: string) => Promise<void>;
+export declare class VM implements IVM {
+    private _running;
+    private _ticker;
+    private _physics;
+    private _canvas;
+    private _map;
+    private _camera?;
+    private _game?;
+    private readonly onMapChanged;
+    private _messageHandlers;
+    get physics(): IGamePhysics;
+    get map(): IGameMap;
+    constructor(canvas: HTMLElement);
+    get canvas(): HTMLElement;
+    attachCamera(camera: ICameraLayer): void;
+    registerMapChanged(target: any, func: (val: boolean) => void): void;
+    loadGame(GT: {
+        new (): IDigGame;
+    }): Promise<IDigGame>;
+    loadMap(id: string): Promise<void>;
+    start(): void;
+    stop(): void;
+    createSprite<T extends Sprite3>(AT: {
+        new (...args: any[]): T;
+    }, uri: string, pos: Vector3, rm?: IRigitModel | undefined): Promise<T>;
+    removeSprite(sprite: Sprite3): Promise<void>;
+    forever(func: () => Promise<void>): Promise<void>;
+    waitCollide(sprite: Sprite3, timeout: number, collisions: IRigitBody[]): Promise<boolean>;
+    sleep(ms: number): Promise<void>;
+    send(msg: string): Promise<void>;
+    onStart(func: () => Promise<void>): void;
+    onMessage(func: () => Promise<void>): void;
+    onCollide(ro: IRigitBody, func: RigitCollisionHandler): void;
+    private loadScene;
+}
+export declare function createVM(canvas: HTMLCanvasElement): void;
+
+export interface IRigitBody {
+    get owner(): any;
+    get speed(): Vector3;
+    get position(): Vector3;
+    onMove(pos: Vector3): void;
+    onCollision(obj: IRigitBody): void;
+}
+export declare class RigitBodyArray {
+    static contains<T extends Sprite3>(a: IRigitBody[]): boolean;
+}
+export interface IRigitModel {
+    move(pos: Vector3, parts: VoxelMeshModel): void;
+    update(): void;
+}
+export declare class VoxelMeshModel {
+    private frames;
+    private currentFrame;
+    private scale;
+    private _size;
+    private readonly material;
+    get size(): Vector3;
+    static create(uri: string): Promise<VoxelMeshModel>;
+    constructor();
+    private load;
+    getMesh(): Mesh;
+}
+
+export declare class Cube extends Sprite3 {
+}
+
+export declare class Mammal4 extends Sprite3 {
 }
 
 export declare var SimplexNoise: (gen: any) => void;
@@ -972,14 +1341,12 @@ export declare class GameColors {
     static wallHidglight: string;
     static buttonFont: '24px serif';
     static readLineFont: '24px serif';
+    static material: MeshPhongMaterial;
 }
 
 export declare function setElementVisible(elem: HTMLElement, val: boolean): void;
 export declare function createTextDiv(): [HTMLDivElement, HTMLSpanElement];
 export declare function createButton(parent: HTMLElement, text: string, handler: (evt: any) => any): HTMLButtonElement;
-
-export interface ICameraLayer {
-}
 
 export interface IGameTerminal {
     login(name: string): void;
@@ -1028,6 +1395,33 @@ export declare class KeyBinder {
     registerKeyUp(key: string, func?: () => void): void;
 }
 
+export declare function addEditorShortcuts(showKeyBindingsDef: ShowKeyBindingsDef): void;
+export interface IMapEditorHost {
+}
+export declare class MapEditor implements IMapEditor {
+    private viewSize;
+    private camera;
+    private cameraLayer;
+    private scene;
+    private isDown;
+    private map;
+    static material: LineBasicMaterial;
+    private selectedBlock;
+    private selection;
+    constructor(cameraLayer: ICameraLayer, viewSize: PxSize, scene: Scene, camera: Camera, input: KeyBinder, map: IGameMap);
+    private onStateChanged;
+    private onScroll;
+    onMouseDown(evt: MEvent): boolean;
+    onMouseUp(evt: MEvent): boolean;
+    onMouseMove(evt: MEvent): boolean;
+    private onCopyBlock;
+    private onPasteBlock;
+    private pasteBlockWorker;
+    private onClearBlock;
+    private selectBlockFace;
+    private buildSelectionBox;
+}
+
 export declare class TerminalProps {
     width: number;
     height: number;
@@ -1048,13 +1442,11 @@ export declare class Terminal implements IGameTerminal {
     camera?: CameraLayer;
     private compositor2;
     private props;
-    private interactiveAvatar?;
     private barLayer;
     private terminalLayer;
     private mapEditor?;
     private codeEditor?;
     private tileViewer?;
-    private keyboardHandler?;
     private repl;
     constructor(gameContainer: HTMLDivElement);
     refresh(): void;
@@ -1065,7 +1457,6 @@ export declare class Terminal implements IGameTerminal {
     editFile(text: string | null | undefined, onSave: ((text: string) => void) | undefined): void;
     printException(e: any): void;
     setGameMap(map: IGameMap): void;
-    private setInteractiveAvatar;
     private populateBasicCommands;
     private loginCached;
     login(name: string): void;
@@ -1102,31 +1493,6 @@ export declare class TextTerminalLayer extends UiLayer2<TerminalLayerProps> {
     promptMenu(s: string): Promise<string>;
     private readLine;
     private processLine;
-}
-
-export type TilesetListProps = UiLayerProps & {
-    mapEditorState: MapEditorState;
-    scale: number;
-    scrollY?: number;
-};
-export declare class TilesetList extends UiLayer2<TilesetListProps> {
-    selectedRect?: GridRect;
-    private isViewDirty;
-    private keyBinder;
-    private canvas;
-    private tileSheet?;
-    private tileSheetImage?;
-    private pxSize;
-    constructor(props: TilesetListProps);
-    private get canvasWidth();
-    private get canvasHeight();
-    refresh(force?: boolean): void;
-    onMouseDown(htmlEvt: MouseEvent): boolean;
-    onCopyRegion(): void;
-    onWheel(evt: WheelEvent): boolean;
-    private onUpdate;
-    private _repaint;
-    private drawContent;
 }
 
 export interface IUiCompositor {
@@ -1180,6 +1546,31 @@ export declare class UiLayer2<T extends UiLayerProps> implements IUiLayer2 {
     protected updateElementSize(): void;
 }
 
+export type TilesetListProps = UiLayerProps & {
+    mapEditorState: MapEditorState;
+    scale: number;
+    scrollY?: number;
+};
+export declare class TilesetList extends UiLayer2<TilesetListProps> {
+    selectedRect?: GridRect;
+    private isViewDirty;
+    private keyBinder;
+    private canvas;
+    private tileSheet?;
+    private tileSheetImage?;
+    private pxSize;
+    constructor(props: TilesetListProps);
+    private get canvasWidth();
+    private get canvasHeight();
+    refresh(force?: boolean): void;
+    onMouseDown(htmlEvt: MouseEvent): boolean;
+    onCopyRegion(): void;
+    onWheel(evt: WheelEvent): boolean;
+    private onUpdate;
+    private _repaint;
+    private drawContent;
+}
+
 export type CameraLayerProps = UiLayerProps & {
     scale: number;
     onOpenTerminal: () => void;
@@ -1208,58 +1599,23 @@ export declare class CameraLayer extends UiLayer2<CameraLayerProps> implements I
     p_light: PointLight;
     maps_ground: number;
     constructor(props: CameraLayerProps);
+    refresh(): void;
+    scrollBy(delta: WorldCoord3): void;
     private createCamera;
-    private loadMap;
+    private onMapChanged;
     reset(): void;
     onWindowResize(): void;
+    onMouseDown(htmlEvt: MouseEvent): boolean;
+    onMouseUp(htmlEvt: MouseEvent): boolean;
     animate(): void;
     addObject(obj: any): void;
     render(): void;
 }
 
-export declare class Character {
-    private meshFrames;
-    private url;
-    private currentFrame;
-    private scale;
-    material: MeshPhongMaterial;
-    constructor(url: string, material: MeshPhongMaterial);
-    load(): Promise<boolean>;
-    getMesh(): Mesh;
-}
-
-export declare class MeshModel {
-    mesh: Mesh;
-    geometry: BufferGeometry;
-    material: MeshPhongMaterial;
-    constructor(geo: BufferGeometry);
-}
-export declare class GameMap implements IGameMap {
-    private scene;
-    objects: any;
-    width: number;
-    height: number;
-    private blockSize;
-    private layers;
-    private char;
-    ambient_light: AmbientLight;
-    material: MeshPhongMaterial;
-    reset(): void;
-    update(time: any, delta: any): void;
-    load(): Promise<boolean>;
-    loadScene(scene: Scene): boolean;
-    gridSizeToWorldSize(gridSize: GridSize3): WorldSize3;
-    gridPosToWorldPos(gridPos: GridPos3): {
-        x: number;
-        y: number;
-        z: number;
-    };
-    findBlock(point: Vector3): MapBlockCoord | undefined;
-    deleteBlock(block: MapBlockCoord): void;
-    addBlock(pos: GridPos3, block: VoxelModel): void;
-}
-
 export interface ICameraLayer {
+    get scene(): Scene;
+    refresh(): void;
+    scrollBy(pxSize: WorldCoord3): void;
 }
 
 export type MapProps = {
@@ -1271,13 +1627,13 @@ export type MapProps = {
     humanStepDuration: number;
 };
 export interface IGameMap {
-    load(): Promise<boolean>;
+    load(id: string): Promise<boolean>;
     loadScene(scene: Scene): any;
     findBlock(point: Vector3): MapBlockCoord | undefined;
     deleteBlock(block: MapBlockCoord): any;
-    addBlock(pos: GridPos3, block: VoxelModel): any;
-    gridSizeToWorldSize(gridSize: GridSize3): WorldSize3;
-    gridPosToWorldPos(gridPos: GridPos3): any;
+    addBlock(pos: VoxelPos3, block: VoxelModel): any;
+    voxelSizeToWorldSize(gridSize: VoxelSize3): WorldSize3;
+    voxelPosToWorldPos(gridPos: VoxelPos3): WorldCoord3;
 }
 
 export declare class KeyboardState {
@@ -1306,66 +1662,15 @@ export declare class KeyboardState {
     eventMatches(event: any, keyDesc: any): boolean;
 }
 
-export declare function addEditorShortcuts(showKeyBindingsDef: ShowKeyBindingsDef): void;
-export interface IMapEditorHost {
-}
-export declare class MapEditor implements IMapEditor {
-    private viewSize;
-    private camera;
-    private scene;
-    private isDown;
-    private selectedBlock;
-    private selection;
-    private map;
-    static material: LineBasicMaterial;
-    constructor(viewSize: PxSize, scene: Scene, camera: Camera, input: KeyBinder, map: IGameMap);
-    private onStateChanged;
-    onMouseDown(evt: MEvent): boolean;
-    onMouseUp(evt: MEvent): boolean;
-    onMouseMove(evt: MEvent): boolean;
-    private onCopyBlock;
-    private onPasteBlock;
-    private pasteBlockWorker;
-    private onClearBlock;
-    private selectBlockFace;
-}
-
-export type MapBlock = {
-    model: VoxelModel;
-    frame: number;
-};
-export type MapBlockCoord = {
-    model: VoxelModel;
-    idx: number;
-    gridPos: GridPos3;
-};
-export declare class MapLayer {
-    private size;
-    private blockSize;
-    private layerZ;
-    private blocks;
-    private _mesh;
-    private geometry;
-    private material;
-    get staticMesh(): Mesh;
-    constructor(material: MeshPhongMaterial, layerZ: number, blockSize: number);
-    load(): void;
-    fill(tile: VoxelModel): void;
-    build(): void;
-    findBlock(point: Vector3): MapBlockCoord | undefined;
-    deleteBlock(block: MapBlockCoord): void;
-    addBlock(pos: GridPos3, block: VoxelModel): void;
-}
-
 export declare class ParticlePool {
 }
 
-export type GridPos3 = {
+export type VoxelPos3 = {
     x: number;
     y: number;
     z: number;
 };
-export type GridSize3 = {
+export type VoxelSize3 = {
     sx: number;
     sy: number;
     sz: number;
@@ -1488,7 +1793,7 @@ export declare class VoxelModel {
     id: string;
     frames: VoxelModelFrame[];
     constructor(id: string);
-    get gridSize(): GridSize3;
+    get size(): VoxelSize3;
 }
 export declare class VoxelModelFrame {
     private readonly data;
@@ -1514,170 +1819,6 @@ export declare class VoxelModelCache {
     getVoxelModel(url: string): Promise<VoxelModel>;
 }
 export declare let modelCache: VoxelModelCache;
-
-export interface IGameKeyboardHandler {
-    handleKeyboard(input: KeyBinder): void;
-}
-export type AvatarPosChanged = (avatar: IAvatar, oldPos: GridPos | undefined, newPos: GridPos | undefined) => void;
-export declare class Avatar implements IAvatar {
-    readonly props: AvatarProps;
-    get rt(): any;
-    set rt(val: any);
-    skin?: Sprite;
-    nextPos?: GridPos;
-    dir: MoveDirection;
-    private _currentPosVersion;
-    get gameState(): AvatarGameState;
-    set gameState(mode: AvatarGameState);
-    private readonly posChanged;
-    private cameraUpdate;
-    get id(): string;
-    get stepDuration(): number;
-    get currentPos(): GridPos | undefined;
-    set currentPos(pos: GridPos | undefined);
-    get currentPosVersion(): number;
-    layer?: any;
-    get tileLayer(): any;
-    constructor(props: AvatarProps, posChanged: AvatarPosChanged);
-    onRemoteUpdateCurrentPos(pos: GridPos | undefined): void;
-    updateRuntimeProps(props: any): void;
-    getCode(): string;
-    updateCode(code: string): void;
-    attachCamera(func: AvatarPosChanged | undefined): void;
-    protected getAvatarCodeFile(): string;
-    clearLayer(): void;
-}
-
-export type WireSpawnCharacterRequest = {
-    name: string;
-    skinUrl: string;
-};
-export type WireAvatarMove = {
-    id: string;
-    currentPos: GridPos;
-    newPos: GridPos;
-};
-export declare enum RtcConnectionStatus {
-    pending = 0,
-    connected = 1,
-    error = 2
-}
-export type RtcUpdateAvatarPosition = {
-    worldId: string;
-    avatarId: string;
-    newPos: GridPos | undefined;
-    oldPos: GridPos | undefined;
-};
-export declare class GameState {
-    private sessionId?;
-    private connection?;
-    private connectionStatus;
-    gameMap?: IGameMap;
-    readonly repl: Repl;
-    onLoaded: boolean;
-    constructor();
-    load(): Promise<boolean>;
-    spawnCharacter(name: string, skinUrl: string): void;
-    private onAvatarPosChanged;
-    private addAvatar;
-    private connectSignalR;
-    private onUpdateAvatarPositionRtc;
-}
-export declare function createGameState(): IGameState;
-
-export declare class HumanKeyboardHandler implements IGameKeyboardHandler {
-    readonly cellWidth: number;
-    readonly cellHeight: number;
-    private readonly stepDuration;
-    private readonly physics;
-    private readonly avatar;
-    constructor(avatar: IAvatar, physics: IGamePhysics, cellW: number, cellH: number, stepDuration: number);
-    handleKeyboard(input: KeyBinder): void;
-}
-
-export type AvatarProps = {
-    id: string;
-    layerId?: string;
-    pos?: GridPos;
-};
-export type WireCharacterProps = AvatarProps & {
-    skinUrl: string;
-    rt: string;
-};
-export type WirePokemonProps = AvatarProps & {
-    pokedexId: string;
-    kind: string;
-    rt: string;
-};
-export type WireAvatarProps = {
-    character?: WireCharacterProps;
-    pokemon?: WirePokemonProps;
-};
-export declare enum AvatarGameState {
-    move = 0,
-    removed = 1,
-    battle = 2,
-    catch = 3,
-    resting = 4,
-    suspended = 5
-}
-export interface IAvatar {
-    get props(): AvatarProps;
-    get rt(): any;
-    set rt(val: any);
-    get id(): string;
-    get stepDuration(): number;
-    dir: MoveDirection;
-    get currentPosVersion(): number;
-    get currentPos(): GridPos | undefined;
-    set currentPos(pos: GridPos | undefined);
-    nextPos?: GridPos;
-    gameState: AvatarGameState;
-    skin?: Sprite;
-    onRemoteUpdateCurrentPos(pos: GridPos | undefined): void;
-    getCode(): string;
-    updateCode(code: string): void;
-    updateRuntimeProps(props: any): void;
-    attachCamera(func: ((avatar: IAvatar) => void) | undefined): void;
-}
-
-export interface IGameState {
-    map?: IGameMap;
-    onLoaded: boolean;
-    load(): Promise<boolean>;
-    spawnCharacter(name: string, skinUrl: string): void;
-}
-export declare function setGameState(state: IGameState): void;
-export declare var gameState: IGameState;
-
-export declare class Python {
-}
-
-export type SpriteMoveAnimationProps = {
-    sprite: Sprite;
-    dx: number;
-    dy: number;
-    duration: number;
-    onComplete: ((anim: IAnimatable) => void) | undefined;
-};
-export declare class SpriteMoveAnimation extends Animatable {
-    private props;
-    private x;
-    private y;
-    private sprite;
-    private firstCostume;
-    static create(props: SpriteMoveAnimationProps): SpriteMoveAnimation;
-    private constructor();
-    onComplete(): void;
-    animate(elapsed: number): boolean;
-}
-export declare class InteractivePlayerAnimation extends Animatable {
-    private x;
-    private y;
-    private props;
-    private firstCostume;
-    static create(props: SpriteMoveAnimationProps): InteractivePlayerAnimation;
-    private constructor();
-    onComplete(): void;
-    animate(elapsed: number): boolean;
-}
+export declare function getCharacterModelList(): string[];
+export declare function getBlockModelList(): string[];
+export declare function getObjectModelList(): string[];
