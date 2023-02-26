@@ -1,9 +1,6 @@
 import { idText } from "typescript";
 import AsyncEventSource from "../AsyncEventSource";
 import { GridRect, PxPos, PxSize } from "./pos";
-import { SpriteSheet, TileBuffer } from "../engine/spritesheet";
-import { Sprite } from "../engine/Sprite";
-import { IMapEditor } from "../ui/imapeditor";
 import { IGameMap } from "../voxel/igamemap";
 
 export type MapBitmap = {
@@ -47,7 +44,6 @@ export type MapEditorChangeEvent = {
 
 export type MapEditorUpdate = {
   isEditMode?: boolean;
-  tileClipboard?: TileBuffer;
   region?: GridRect;
   scrollSize?: PxSize;
   map?: IGameMap;
@@ -58,7 +54,6 @@ export class MapEditorState {
   private _isEditMode: boolean = false;
   private _region?: GridRect;
   private _currentLayer?: any;
-  private _tileClipboard?: TileBuffer;
   private _scrollSize: PxSize | undefined;
   private _world: any;
   //  private _cameraControl: ICameraControl | undefined;
@@ -66,7 +61,6 @@ export class MapEditorState {
 
   public get isEditMode(): boolean { return this._isEditMode; }
   public get currentLayer(): any | undefined { return this._currentLayer; }
-  public get tileClipboard(): TileBuffer | undefined { return this._tileClipboard; }
   public get region(): GridRect | undefined { return this._region; }
   public get cameraSize(): PxSize | undefined { return this._scrollSize; }
   public get world(): any | undefined { return this._world; }
@@ -96,9 +90,9 @@ export class MapEditorState {
     if (val.isEditMode !== undefined) {
       this._isEditMode = val.isEditMode;
     }
-    if (val.tileClipboard !== undefined) {
-      this._tileClipboard = val.tileClipboard;
-    }
+    //if (val.tileClipboard !== undefined) {
+    // this._tileClipboard = val.tileClipboard;
+    // }
     if (val.region !== undefined) {
       this._region = val.region;
     }

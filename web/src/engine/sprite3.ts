@@ -1,5 +1,4 @@
 import { Scene, Vector3 } from "three";
-import { vm } from "./vm";
 import { IRigitBody, IRigitModel, VoxelMeshModel } from "./voxelmeshmodel";
 
 // main object for compositing content

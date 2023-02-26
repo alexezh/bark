@@ -1,8 +1,5 @@
-import { IAvatar } from "../world/iavatar";
 import { terminal } from "../ui/igameterminal";
 import { redText, resetColor } from "../posh/termcolors";
-import { IBattleCode } from "./ibattleapi";
-import { CodeCategory, IAvatarCode } from "./iavatarcode";
 
 export type CodeModule = {
   code: string,
@@ -13,9 +10,8 @@ export type CodeModule = {
 export class CodeLoader {
   private codeLib: Map<string, CodeModule> = new Map<string, CodeModule>();
   private functionLib: Map<string, Function> = new Map<string, Function>();
-  public battleCode?: IBattleCode;
 
-  public getCode(id: string): IAvatarCode | undefined {
+  public getCode(id: string): any {
     let entry = this.codeLib.get(id);
     if (entry === undefined) {
       return undefined;

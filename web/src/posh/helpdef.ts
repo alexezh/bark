@@ -1,6 +1,5 @@
 import { Repl } from "./repl";
-import { AstNode, createFuncCall } from "./ast";
-import { FuncCategory, FuncDef, GenericFuncDef, ParamDef, ParamType } from "./funcdef";
+import { FuncCategory, GenericFuncDef, ParamDef, ParamType } from "./funcdef";
 import { showKeyBindingsDef } from "./mapeditcommands";
 
 export class HelpDef extends GenericFuncDef {

@@ -1,4 +1,3 @@
-import { CodeCategory } from "../mechanics/iavatarcode";
 import { IGameMap } from "../voxel/igamemap";
 
 export interface IGameTerminal {

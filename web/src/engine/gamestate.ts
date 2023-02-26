@@ -1,10 +1,8 @@
 import _ from "lodash";
 import { v4 as uuidv4 } from 'uuid';
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
-import { Avatar } from "./avatar";
 import { GridPos } from "../posh/pos";
 import { currentWorldId } from "../fetchadapter";
-import { IAvatar } from "./iavatar";
 import { IRealtimeClient } from "./igamestate";
 import { GameMap } from "../engine/gamemap";
 
@@ -111,31 +109,18 @@ export class RealtimeClient implements IRealtimeClient {
         });
         */
   }
-
-  private onAvatarPosChanged(avatar: IAvatar, oldPos: GridPos | undefined, newPos: GridPos | undefined) {
-
-    let msg: RtcUpdateAvatarPosition = {
-      worldId: currentWorldId(),
-      avatarId: avatar.id,
-      newPos: newPos,
-      oldPos: oldPos
+  /*
+    private onAvatarPosChanged(avatar: IAvatar, oldPos: GridPos | undefined, newPos: GridPos | undefined) {
+  
+      let msg: RtcUpdateAvatarPosition = {
+        worldId: currentWorldId(),
+        avatarId: avatar.id,
+        newPos: newPos,
+        oldPos: oldPos
+      }
+      this.connection?.invoke('UpdateAvatarPosition', this.sessionId, JSON.stringify(msg));
     }
-    this.connection?.invoke('UpdateAvatarPosition', this.sessionId, JSON.stringify(msg));
-  }
-
-  private addAvatar(avatar: Avatar) {
-    /*
-        this.avatarCollection.addAvatar(avatar);
-    
-        if (avatar.props.layerId !== undefined) {
-          let layer = this.gameMap!.getLayer(avatar.props.layerId);
-          if (layer === undefined) {
-            throw 'unknown layer';
-          }
-          layer.addAvatar(avatar);
-        }*/
-  }
-
+  */
   private connectSignalR() {
     this.sessionId = uuidv4();
     this.connection = new HubConnectionBuilder()

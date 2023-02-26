@@ -9,14 +9,13 @@ export type CommandBarProps = UiLayerProps & {
   mapEditorState: MapEditorState;
   onToggleEdit: () => void;
   onToggleTerm: () => void;
-  onToggleTile: () => void;
   onToggleMap: () => void;
 }
 
 export class CommandBar extends UiLayer2<CommandBarProps> {
   private editButton: HTMLButtonElement;
   private termButton: HTMLButtonElement;
-  private tileButton: HTMLButtonElement;
+  //private tileButton: HTMLButtonElement;
   private mapButton: HTMLButtonElement;
 
   public constructor(props: CommandBarProps) {
@@ -34,7 +33,7 @@ export class CommandBar extends UiLayer2<CommandBarProps> {
     this.editButton = createButton(this._element, 'EDIT', (evt: any): any => props.onToggleEdit());
     this.termButton = createButton(this._element, 'TERM', (evt: any): any => props.onToggleTerm());
     this.mapButton = createButton(this._element, 'MAP', (evt: any): any => props.onToggleMap());
-    this.tileButton = createButton(this._element, 'TILE', (evt: any): any => props.onToggleTile());
+    //this.tileButton = createButton(this._element, 'TILE', (evt: any): any => props.onToggleTile());
 
     this.onUpdateMapEditorState();
   }
@@ -55,6 +54,6 @@ export class CommandBar extends UiLayer2<CommandBarProps> {
   }
 
   onUpdateMapEditorState() {
-    setElementVisible(this.tileButton, this.props.mapEditorState.isEditMode);
+    // setElementVisible(this.tileButton, this.props.mapEditorState.isEditMode);
   }
 }

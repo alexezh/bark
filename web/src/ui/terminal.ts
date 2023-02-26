@@ -1,30 +1,21 @@
 import _ from "lodash";
-import { Avatar } from "../engine/avatar";
 import { CommandBar } from "./commandBar";
-import { TilesetList } from "./voxelmodelviewer";
 import { TextTerminalLayer } from "./textterminallayer";
 import { populateMapEditCommands } from "../posh/mapeditcommands";
 import { Repl } from "../posh/repl";
 import { HelpDef } from "../posh/helpdef";
 import { UiCompositor2 } from "./uicompositor";
-import { createMapEditorState, mapEditorState, MapEditorState } from "../posh/mapeditorstate";
+import { createMapEditorState, mapEditorState } from "../posh/mapeditorstate";
 import { CodeEditor } from "./codeeditor";
-import { IGameTerminal, terminal } from "./igameterminal";
+import { IGameTerminal } from "./igameterminal";
 import { registerSystemCommands } from "../posh/systemcommands";
 import { decorateCommand } from "../posh/termcolors";
-import { CodeCategory } from "../mechanics/iavatarcode";
-import { registerCodeCommands } from "../posh/codecommands";
-import { printCodeException } from "../mechanics/codeloader";
-import { registerMoveCommands } from "../posh/gamemove";
-import { GameMap } from "../engine/gamemap";
 import { MapEditor } from "./mapeditor";
 import { CameraLayer } from "../voxel/cameralayer";
 import { IGameMap } from "../voxel/igamemap";
 
-registerCodeCommands();
 //registerRegionCommands();
 registerSystemCommands();
-registerMoveCommands();
 //registerMapCommands();
 
 export class TerminalProps {
@@ -54,7 +45,6 @@ export class Terminal implements IGameTerminal {
   private terminalLayer: TextTerminalLayer;
   private mapEditor?: MapEditor;
   private codeEditor?: CodeEditor;
-  private tileViewer?: TilesetList;
   private repl: Repl;
 
   public constructor(gameContainer: HTMLDivElement) {
@@ -96,8 +86,7 @@ export class Terminal implements IGameTerminal {
       mapEditorState: mapEditorState,
       onToggleEdit: this.onToggleEdit,
       onToggleTerm: this.onToggleTerm,
-      onToggleMap: this.onToggleMap,
-      onToggleTile: this.onToggleTile
+      onToggleMap: this.onToggleMap
     });
     this.compositor2.appendLayer(this.barLayer);
 
@@ -174,8 +163,7 @@ export class Terminal implements IGameTerminal {
       scale: this.props.scale,
       visible: true,
       onOpenTerminal: this.onOpenTerm,
-      onToggleEdit: this.onToggleEdit,
-      onToggleTile: this.onToggleTile
+      onToggleEdit: this.onToggleEdit
     });
 
     this.compositor2.insertLayerBefore(this.camera, 'bar');
@@ -294,37 +282,9 @@ export class Terminal implements IGameTerminal {
         */
   }
 
-  private onToggleTile() {
-    if (this.tileViewer === undefined) {
-      return;
-    }
-
-    this.tileViewer.visible = !this.tileViewer.visible;
-    if (this.tileViewer.visible === false) {
-      this.camera?.focus();
-    }
-  }
-
   private onToggleEdit() {
     if (this.map === undefined) {
       return;
-    }
-
-    if (this.tileViewer === undefined) {
-      // set default tileset for view
-
-      this.tileViewer = new TilesetList({
-        id: "tileviewer",
-        x: 0,
-        y: 0,
-        w: this.props.width,
-        h: this.props.height,
-        scale: this.props.scale,
-        visible: false,
-        mapEditorState: mapEditorState
-      });
-
-      this.compositor2.insertLayerBefore(this.tileViewer, 'bar');
     }
 
     let editMode = !mapEditorState.isEditMode;

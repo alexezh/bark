@@ -1,6 +1,5 @@
 import { AmbientLight, BufferGeometry, Mesh, MeshPhongMaterial, Scene, Vector3 } from "three";
 import { modelCache } from "../voxel/voxelmodelcache";
-import { Character } from "./character";
 import { MapBlock, MapBlockCoord, MapLayer } from "./maplayer";
 import { VoxelModel } from "../voxel/voxelmodel";
 import { VoxelPos3, VoxelSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
@@ -29,7 +28,6 @@ export class GameMap implements IGameMap {
     private blockSize = 16;
     // Objects loaded 
     private layers: MapLayer[] = [];
-    private char!: Character;
 
     public ambient_light!: AmbientLight;
     public material: MeshPhongMaterial = new MeshPhongMaterial({ color: 0xffffff, vertexColors: true });

@@ -52,25 +52,6 @@ export declare class BoxedGame implements IDigGame {
     private dropObject;
 }
 
-export type SpriteProps = {
-    pos: PxPos;
-    gridOffset: PxPos;
-    flipH: boolean;
-    costumeIndex: number;
-};
-export type SprivePosChanged = (sprite: Sprite) => void;
-export declare class Sprite {
-    readonly id: number;
-    private readonly props;
-    private readonly spriteSheet;
-    private posChanged;
-    get pos(): PxPos;
-    set pos(newValue: PxPos);
-    constructor(props: SpriteProps, sheet: SpriteSheet);
-    setCostume(idx: number): void;
-    attachCamera(handler: SprivePosChanged | undefined): void;
-}
-
 export interface IAnimatable {
     get id(): number;
     get startTime(): number;
@@ -126,49 +107,22 @@ export declare var animator: PropertyAnimationManager;
 
 export declare function numberArrayToString(v: number[]): string;
 
-export interface IGameKeyboardHandler {
-    handleKeyboard(input: KeyBinder): void;
+export type CodeModule = {
+    code: string;
+    codeObj: any;
+    enabled: boolean;
+};
+export declare class CodeLoader {
+    private codeLib;
+    private functionLib;
+    getCode(id: string): any;
+    updateCode(id: string, code: string): void;
+    getCodeModule(id: string): CodeModule | undefined;
+    loadFunction(id: string, ...args: string[]): boolean;
+    invokeFunction<T>(id: string, ...args: any): T;
 }
-export type AvatarPosChanged = (avatar: IAvatar, oldPos: GridPos | undefined, newPos: GridPos | undefined) => void;
-export declare class Avatar implements IAvatar {
-    readonly props: AvatarProps;
-    get rt(): any;
-    set rt(val: any);
-    skin?: Sprite;
-    nextPos?: GridPos;
-    dir: MoveDirection;
-    private _currentPosVersion;
-    get gameState(): AvatarGameState;
-    set gameState(mode: AvatarGameState);
-    private readonly posChanged;
-    private cameraUpdate;
-    get id(): string;
-    get stepDuration(): number;
-    get currentPos(): GridPos | undefined;
-    set currentPos(pos: GridPos | undefined);
-    get currentPosVersion(): number;
-    layer?: any;
-    get tileLayer(): any;
-    constructor(props: AvatarProps, posChanged: AvatarPosChanged);
-    onRemoteUpdateCurrentPos(pos: GridPos | undefined): void;
-    updateRuntimeProps(props: any): void;
-    getCode(): string;
-    updateCode(code: string): void;
-    attachCamera(func: AvatarPosChanged | undefined): void;
-    protected getAvatarCodeFile(): string;
-    clearLayer(): void;
-}
-
-export declare class Character {
-    private meshFrames;
-    private url;
-    private currentFrame;
-    private scale;
-    material: MeshPhongMaterial;
-    constructor(url: string, material: MeshPhongMaterial);
-    load(): Promise<boolean>;
-    getMesh(): Mesh;
-}
+export declare function printCodeException(avatar: string, e: any): void;
+export declare let codeLoader: CodeLoader;
 
 export declare class MeshModel {
     mesh: Mesh;
@@ -183,7 +137,6 @@ export declare class GameMap implements IGameMap {
     height: number;
     private blockSize;
     private layers;
-    private char;
     ambient_light: AmbientLight;
     material: MeshPhongMaterial;
     reset(): void;
@@ -240,66 +193,8 @@ export declare class RealtimeClient implements IRealtimeClient {
     constructor();
     load(): Promise<boolean>;
     spawnCharacter(name: string, skinUrl: string): void;
-    private onAvatarPosChanged;
-    private addAvatar;
     private connectSignalR;
     private onUpdateAvatarPositionRtc;
-}
-
-export declare class HumanKeyboardHandler implements IGameKeyboardHandler {
-    readonly cellWidth: number;
-    readonly cellHeight: number;
-    private readonly stepDuration;
-    private readonly physics;
-    private readonly avatar;
-    constructor(avatar: IAvatar, physics: IGamePhysics, cellW: number, cellH: number, stepDuration: number);
-    handleKeyboard(input: KeyBinder): void;
-}
-
-export type AvatarProps = {
-    id: string;
-    layerId?: string;
-    pos?: GridPos;
-};
-export type WireCharacterProps = AvatarProps & {
-    skinUrl: string;
-    rt: string;
-};
-export type WirePokemonProps = AvatarProps & {
-    pokedexId: string;
-    kind: string;
-    rt: string;
-};
-export type WireAvatarProps = {
-    character?: WireCharacterProps;
-    pokemon?: WirePokemonProps;
-};
-export declare enum AvatarGameState {
-    move = 0,
-    removed = 1,
-    battle = 2,
-    catch = 3,
-    resting = 4,
-    suspended = 5
-}
-export interface IAvatar {
-    get props(): AvatarProps;
-    get rt(): any;
-    set rt(val: any);
-    get id(): string;
-    get stepDuration(): number;
-    dir: MoveDirection;
-    get currentPosVersion(): number;
-    get currentPos(): GridPos | undefined;
-    set currentPos(pos: GridPos | undefined);
-    nextPos?: GridPos;
-    gameState: AvatarGameState;
-    skin?: Sprite;
-    onRemoteUpdateCurrentPos(pos: GridPos | undefined): void;
-    getCode(): string;
-    updateCode(code: string): void;
-    updateRuntimeProps(props: any): void;
-    attachCamera(func: ((avatar: IAvatar) => void) | undefined): void;
 }
 
 export interface IDigGame {
@@ -411,13 +306,6 @@ export declare class MoveController2D implements IGamePhysicsInputController {
     onKeyDzz(input: KeyBinder): Promise<void>;
 }
 
-export declare class RoapModel implements IRigitModel {
-    private path;
-    private dir;
-    move(pos: Vector3, parts: VoxelMeshModel): void;
-    update(): void;
-}
-
 export declare class Sprite3 implements IRigitBody {
     private meshModels;
     private _rigitBody;
@@ -437,41 +325,6 @@ export declare class Sprite3 implements IRigitBody {
     trackCollision(enadle: boolean): void;
     onCollision(obj: IRigitBody): void;
     collidedWith<T>(): boolean;
-}
-
-export type SpriteMoveAnimationProps = {
-    sprite: Sprite3;
-    delta: Vector3;
-    duration: number;
-    onComplete: ((anim: IAnimatable) => void) | undefined;
-};
-export declare class SpriteMoveAnimation extends Animatable {
-    private props;
-    private x;
-    private y;
-    private sprite;
-    static create(props: SpriteMoveAnimationProps): SpriteMoveAnimation;
-    private constructor();
-    onComplete(): void;
-    animate(elapsed: number): boolean;
-}
-
-export type TileBuffer = {
-    w: number;
-    h: number;
-    tiles: number[];
-};
-export declare class SpriteSheet {
-    readonly props: SpriteSheetProps;
-    private startFrameId;
-    private static nextId;
-    get id(): string;
-    private constructor();
-    static load(props: SpriteSheetProps): Promise<SpriteSheet>;
-    private load;
-    createSprite(idx: number, pos: PxPos): any;
-    getTexture(idx: number): any;
-    getRegion(rect: GridRect): TileBuffer;
 }
 
 export declare class Ticker {
@@ -556,180 +409,18 @@ export declare class Cube extends Sprite3 {
 export declare class Mammal4 extends Sprite3 {
 }
 
+export declare class RoapModel implements IRigitModel {
+    private path;
+    private dir;
+    move(pos: Vector3, parts: VoxelMeshModel): void;
+    update(): void;
+}
+
 export declare var SimplexNoise: (gen: any) => void;
 
 export declare function perlinNoise(perilinW: number, perilinH: number, baseX: number, baseY: number, seed: number): Uint8ClampedArray;
 
 export declare function PRNG(): any;
-
-
-export type CodeModule = {
-    code: string;
-    codeObj: any;
-    enabled: boolean;
-};
-export declare class CodeLoader {
-    private codeLib;
-    private functionLib;
-    battleCode?: IBattleCode;
-    getCode(id: string): IAvatarCode | undefined;
-    updateCode(id: string, code: string): void;
-    getCodeModule(id: string): CodeModule | undefined;
-    loadFunction(id: string, ...args: string[]): boolean;
-    invokeFunction<T>(id: string, ...args: any): T;
-}
-export declare function printCodeException(avatar: string, e: any): void;
-export declare let codeLoader: CodeLoader;
-
-export declare enum WObjectKind {
-    character = "character",
-    pokemon = "pokemon"
-}
-export type WObject = {
-    x: number;
-    y: number;
-    kind: WObjectKind;
-};
-export type WCharacter = WObject & {
-    friend: boolean;
-};
-export type WPokemon = WObject & {
-    friend: boolean;
-    scary: number;
-};
-export interface IAvatarAPI {
-    look(func: (x: WObject) => boolean): void;
-    canMove(dir: MoveDirection): boolean;
-    lookFor(name: string): GridPos | null;
-    makeMove(dir: MoveDirection): MoveAction;
-    makeRelMove(dir: RelMoveDirection): MoveAction;
-    makeIdle(): CodeAction;
-    say(s: string): SayAction;
-}
-export declare enum CodeActionKind {
-    idle = 0,
-    move = 1,
-    say = 2,
-    teleport = 3
-}
-export type CodeAction = {
-    kind: CodeActionKind;
-};
-export declare enum MoveDirection {
-    none = "none",
-    up = "up",
-    down = "down",
-    left = "left",
-    right = "right"
-}
-export declare enum RelMoveDirection {
-    none = "none",
-    forward = "forward",
-    back = "back",
-    left = "left",
-    right = "right"
-}
-export type MoveAction = CodeAction & {
-    dir: MoveDirection;
-};
-export type SayAction = CodeAction & {
-    text: string;
-};
-export type TeleportAction = CodeAction & {
-    mapId: string | undefined;
-    layerId: string | undefined;
-    pos: GridPos;
-};
-export declare const maxLookDistance = 5;
-export declare function dirByRelDirection(dir: MoveDirection, newDir: RelMoveDirection): MoveDirection;
-export declare function deltaByAbsDirection(dir: MoveDirection): GridPos;
-
-export declare enum CodeCategory {
-    avatar = "avatar",
-    pokedex = "pokedex",
-    battle = "battle"
-}
-export declare enum FileCategory {
-    avatar = "avatar",
-    pokedex = "pokedex",
-    location = "location",
-    tile = "tile"
-}
-export declare function describeCodeCategory(): string;
-export interface IAvatarProxy {
-    get id(): string;
-    get name(): string;
-}
-export interface ICharacterProxy extends IAvatarProxy {
-    get pokemonCount(): number;
-    pokemonAt(idx: number): any;
-    ballCount(name: string): number;
-    balls(): IterableIterator<string>;
-}
-export interface IAvatarCode {
-}
-
-export interface IBattleCode {
-}
-export declare enum BattleActionKind {
-    run = 0,
-    attack = 1,
-    defend = 2
-}
-export type BattleAction = {
-    kind: BattleActionKind;
-};
-export type BattleAttackAction = BattleAction & {
-    moveId: string;
-};
-export declare enum BattleAttackResult {
-    continue = 0,
-    retreat = 1,
-    fainted = 2
-}
-export interface IBattleAPI {
-    prompt(s: string): Promise<string>;
-    makeRunAction(): BattleAction;
-    makeAttackAction(moveId: string): BattleAttackAction;
-}
-
-export declare enum CatchActionKind {
-    leave = 0,
-    catch = 1,
-    feed = 2
-}
-export type CatchAction = {
-    kind: CatchActionKind;
-};
-export type ThrowBallAction = CatchAction & {
-    ball: string;
-};
-export type FeedAction = CatchAction & {
-    item: string;
-};
-export declare enum CatchResult {
-    ranaway = 0,
-    escapedball = 1,
-    caught = 2
-}
-export interface ICatchAPI {
-    prompt(s: string): Promise<string>;
-    promptMenu(s: string): Promise<string>;
-    makeLeaveAction(): CatchAction;
-    makeCatchAction(ball: string): ThrowBallAction;
-    makeFeedAction(item: string): FeedAction;
-}
-
-export interface ILocationAPI {
-    makeTeleportAction(mapId: string | undefined, layerId: string | undefined, x: number, y: number): TeleportAction;
-}
-export interface ILocationCode {
-    onEnter(avatar: IAvatarProxy): CodeAction;
-    onExit(avatar: IAvatarProxy): CodeAction;
-}
-export declare class LocationAPI implements ILocationAPI {
-    makeTeleportAction(mapId: string | undefined, layerId: string | undefined, x: number, y: number): TeleportAction;
-}
 
 export type PtObj = {
     kind: string;
@@ -762,28 +453,6 @@ export declare function formatAst(node: AstNode): string;
 
 export declare function bytesToBase64(bytes: Uint8ClampedArray): string;
 export declare function base64ToBytes(str: string): Uint8ClampedArray;
-
-export declare class SpawnCharacterDef extends GenericEditorFuncDef {
-    private static funcName;
-    constructor(mapEditorState: MapEditorState);
-    help(): string;
-    createParamDefs(): ParamDef[];
-    protected evalCore(params: any): string | undefined;
-}
-
-export declare function editCode(args: {
-    category: string;
-    id: string;
-}): void;
-export declare function viewCode(args: {
-    category: string;
-    id: string;
-}): void;
-export declare function editObject(args: {
-    category: string;
-    id: string;
-}): void;
-export declare function registerCodeCommands(): void;
 
 export declare enum FuncCategory {
     edit = 0,
@@ -827,13 +496,6 @@ export declare class GenericFuncDef extends FuncDef {
 }
 export declare function combineParams(a: ParamDef[], b: ParamDef[]): ParamDef[];
 export declare function buildFuncAst(ptCall: PtCall): AstNode;
-
-export declare function teleport(args: {
-    id: string;
-    x: number;
-    y: number;
-}): undefined;
-export declare function registerMoveCommands(): void;
 
 export declare class GenericEditorFuncDef extends GenericFuncDef {
     mapEditorState: MapEditorState;
@@ -891,7 +553,6 @@ export declare function createMapBitmap(w: number, h: number): MapBitmap;
 export declare function updateRect(rect: GridRect, xNew: number, yNew: number): GridRect;
 export type MapEditorUpdate = {
     isEditMode?: boolean;
-    tileClipboard?: TileBuffer;
     region?: GridRect;
     scrollSize?: PxSize;
     map?: IGameMap;
@@ -900,13 +561,11 @@ export declare class MapEditorState {
     private _isEditMode;
     private _region?;
     private _currentLayer?;
-    private _tileClipboard?;
     private _scrollSize;
     private _world;
     private eventSource;
     get isEditMode(): boolean;
     get currentLayer(): any | undefined;
-    get tileClipboard(): TileBuffer | undefined;
     get region(): GridRect | undefined;
     get cameraSize(): PxSize | undefined;
     get world(): any | undefined;
@@ -1315,13 +974,11 @@ export type CommandBarProps = UiLayerProps & {
     mapEditorState: MapEditorState;
     onToggleEdit: () => void;
     onToggleTerm: () => void;
-    onToggleTile: () => void;
     onToggleMap: () => void;
 };
 export declare class CommandBar extends UiLayer2<CommandBarProps> {
     private editButton;
     private termButton;
-    private tileButton;
     private mapButton;
     constructor(props: CommandBarProps);
     private createLayerBox;
@@ -1446,7 +1103,6 @@ export declare class Terminal implements IGameTerminal {
     private terminalLayer;
     private mapEditor?;
     private codeEditor?;
-    private tileViewer?;
     private repl;
     constructor(gameContainer: HTMLDivElement);
     refresh(): void;
@@ -1465,7 +1121,6 @@ export declare class Terminal implements IGameTerminal {
     private onOpenTerm;
     private onCloseTerm;
     private onToggleMap;
-    private onToggleTile;
     private onToggleEdit;
     private openTextEditor;
     private closeTextEditor;
@@ -1551,31 +1206,11 @@ export type TilesetListProps = UiLayerProps & {
     scale: number;
     scrollY?: number;
 };
-export declare class TilesetList extends UiLayer2<TilesetListProps> {
-    selectedRect?: GridRect;
-    private isViewDirty;
-    private keyBinder;
-    private canvas;
-    private tileSheet?;
-    private tileSheetImage?;
-    private pxSize;
-    constructor(props: TilesetListProps);
-    private get canvasWidth();
-    private get canvasHeight();
-    refresh(force?: boolean): void;
-    onMouseDown(htmlEvt: MouseEvent): boolean;
-    onCopyRegion(): void;
-    onWheel(evt: WheelEvent): boolean;
-    private onUpdate;
-    private _repaint;
-    private drawContent;
-}
 
 export type CameraLayerProps = UiLayerProps & {
     scale: number;
     onOpenTerminal: () => void;
     onToggleEdit: () => void;
-    onToggleTile: () => void;
 };
 export declare class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLayer {
     renderer: WebGLRenderer;

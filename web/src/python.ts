@@ -1,7 +1,7 @@
 import { vm } from "./engine/ivm";
 import { Sprite3 } from "./engine/sprite3";
 import { Vector3 } from "three";
-import { RoapModel } from "./engine/sequencebody";
+import { RoapModel } from "./engine/avatars/sequencebody";
 import { IRigitBody, RigitBodyArray } from "./engine/voxelmeshmodel";
 import { KeyAction, MoveController2D } from "./engine/movecontroller2d";
 import { IDigGame } from "./engine/idiggame";

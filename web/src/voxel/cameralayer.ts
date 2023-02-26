@@ -12,7 +12,6 @@ export type CameraLayerProps = UiLayerProps & {
     scale: number;
     onOpenTerminal: () => void;
     onToggleEdit: () => void;
-    onToggleTile: () => void;
 }
 
 export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLayer {

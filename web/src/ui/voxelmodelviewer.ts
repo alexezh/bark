@@ -3,7 +3,6 @@ import { KeyBinder, makeMEvent } from "./keybinder";
 import { GameColors } from "./gamecolors";
 import { UiLayer2, UiLayerProps } from "./uilayer";
 import { GridRect, gridRectToPxRect, PxSize } from "../posh/pos";
-import { SpriteSheet } from "../engine/spritesheet";
 import _ from "lodash";
 
 export type TilesetListProps = UiLayerProps & {
@@ -12,12 +11,12 @@ export type TilesetListProps = UiLayerProps & {
   scrollY?: number;
 }
 
+/*
 export class TilesetList extends UiLayer2<TilesetListProps> {
   public selectedRect?: GridRect;
   private isViewDirty: boolean = false;
   private keyBinder: KeyBinder;
   private canvas: HTMLCanvasElement;
-  private tileSheet?: SpriteSheet;
   private tileSheetImage?: HTMLImageElement;
   private pxSize: PxSize = { w: 0, h: 0 };
 
@@ -110,14 +109,14 @@ export class TilesetList extends UiLayer2<TilesetListProps> {
       return;
     }
 
-    /*
+    
     if (this.tileSheet === this.props.mapEditorState.tileListSheet) {
       console.log("same spritesheet, ignore")
       return;
     }
 
     this.tileSheet = this.props.mapEditorState.tileListSheet;
-*/
+
     if (this.tileSheet !== undefined) {
       let fullSize = this._compositor!.size;
 
@@ -185,3 +184,4 @@ export class TilesetList extends UiLayer2<TilesetListProps> {
     ctx.restore();
   }
 }
+*/

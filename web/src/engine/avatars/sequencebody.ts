@@ -1,5 +1,5 @@
 import { Vector3 } from "three";
-import { IRigitBody, IRigitModel, VoxelMeshModel } from "./voxelmeshmodel";
+import { IRigitBody, IRigitModel, VoxelMeshModel } from "../voxelmeshmodel";
 
 class PathElement {
 

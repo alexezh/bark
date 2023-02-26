@@ -1,10 +1,5 @@
-import { animator, IAnimatable } from "./animator";
-import { GridPos } from "../posh/pos";
-import { CreateMoveAnimation, IGameCollisionHandler, IGamePhysics, IGamePhysicsInputController, RigitCollisionHandler } from "./igamephysics";
-import { SpriteMoveAnimationProps } from "./spritemoveanimation";
+import { IGameCollisionHandler, IGamePhysics, IGamePhysicsInputController, RigitCollisionHandler } from "./igamephysics";
 import { IGameMap } from "../voxel/igamemap";
-import { Sprite3 } from "./sprite3";
-import { Vector3 } from "three";
 import { IRigitBody } from "./voxelmeshmodel";
 import _ from "lodash";
 

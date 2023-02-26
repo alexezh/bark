@@ -1,5 +1,4 @@
 import Queue from "queue";
-import { WireAvatarProps } from "./engine/iavatar";
 
 export type WorldProps = {
 
