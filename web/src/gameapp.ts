@@ -1,36 +1,18 @@
 import { Terminal } from "./ui/terminal";
-import { createGameState, GameState } from "./world/gamestate";
 import { fetchFiles, WorldProps } from "./fetchadapter";
 import { setTerminal, terminal } from "./ui/igameterminal";
-import { IGameState } from "./world/igamestate";
+import { createVM } from "./engine/vm";
 
 const demoWorldId = "7fa84179-dc58-4939-8678-03370fd137f3";
 
 // root objects of the application
 export class GameApp {
-  private worldId: string;
   private gameContainer: any;
-  private worldProps?: WorldProps;
-  public state?: IGameState;
 
   // @ts-ignore
   public get terminal(): Terminal { return this._terminal; }
 
-  public constructor() {
-    this.worldId = demoWorldId;
-  }
-
   public async run() {
-    //this.worldProps = await fetchFiles(this.worldId);
-    this.worldProps = {
-
-    }
-
-    this.state = createGameState();
-
-    //await resourceLib.load(this.worldId);
-    await this.state.load();
-
     this.tryOnReady();
   }
 
@@ -46,11 +28,11 @@ export class GameApp {
 
   // wait for everything to initialize
   private tryOnReady() {
-    if (terminal === undefined || this.state === undefined || this.state.onLoaded == false) {
+    if (terminal === undefined) {
       return;
     }
 
-    terminal.setGameMap(this.state.map!);
+    createVM(this.gameContainer);
   }
 
   private resizeCanvas() {

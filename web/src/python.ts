@@ -9,7 +9,7 @@ import { Bone, Vector3 } from "three";
 import { KeyBinder } from "./ui/keybinder";
 import { IGamePhysicsInputController } from "./engine/igamephysics";
 import { RoapModel } from "./engine/sequencebody";
-import { IRigitBody } from "./engine/voxelmeshmodel";
+import { IRigitBody, RigitBodyArray } from "./engine/voxelmeshmodel";
 import { KeyAction, MoveController2D } from "./engine/movecontroller2d";
 
 
@@ -18,7 +18,7 @@ class Snake {
 
   public static async create() {
     let snake = new Snake();
-    snake.sprite = await Sprite3.create('./assets/vox/snakehead.', new RoapModel());
+    snake.sprite = await vm.createSprite(Snake, './assets/vox/snakehead.', new RoapModel());
 
     //vm.onInput(snake.onKey.bind(this));
 
@@ -29,13 +29,13 @@ class Snake {
 
 class Bomb extends Sprite3 {
   public static async create(): Promise<Bomb> {
-    return await vm.createSprite<Bomb>('./assets/vox/bomb.vox', new Vector3(0, 0, 1000));
+    return await vm.createSprite(Bomb, './assets/vox/bomb.vox', new Vector3(0, 0, 1000));
   }
 }
 
 class Monky extends Sprite3 {
   public static async create(): Promise<Monky> {
-    let m = await vm.createSprite<Monky>('./assets/vox/monky.vox', new Vector3(0, 0, 1000));
+    let m = await vm.createSprite(Monky, './assets/vox/monky.vox', new Vector3(0, 0, 1000));
 
     inputController!.onKeyAction(this.onKey.bind(this));
     return m;

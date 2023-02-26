@@ -218,9 +218,9 @@ export class MapEditor implements IMapEditor {
     let pos = this.map.voxelPosToWorldPos(block.gridPos);
     let size: VoxelSize3;
     if (block.model !== undefined) {
-      size = this.map.voxelSizeToWorldSize(block.model.gridSize);
+      size = this.map.voxelSizeToWorldSize(block.model.size);
     } else {
-      size = this.map.voxelSizeToWorldSize({ sx: 1, sy: 1, sz: 1 });
+      size = this.map.voxelSizeToWorldSize({ sx: 16, sy: 16, sz: 16 });
     }
     this.buildSelectionBox(pos, size);
 

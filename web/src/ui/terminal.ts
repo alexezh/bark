@@ -8,10 +8,7 @@ import { Repl } from "../posh/repl";
 import { HelpDef } from "../posh/helpdef";
 import { UiCompositor2 } from "./uicompositor";
 import { createMapEditorState, mapEditorState, MapEditorState } from "../posh/mapeditorstate";
-import { gameState } from "../world/igamestate";
 import { CodeEditor } from "./codeeditor";
-import { HumanKeyboardHandler } from "../world/humankeyboardhandler";
-import { IAvatar } from "../world/iavatar";
 import { IGameTerminal, terminal } from "./igameterminal";
 import { registerSystemCommands } from "../posh/systemcommands";
 import { decorateCommand } from "../posh/termcolors";
@@ -53,13 +50,11 @@ export class Terminal implements IGameTerminal {
   public camera?: CameraLayer;
   private compositor2: UiCompositor2;
   private props: TerminalProps;
-  private interactiveAvatar?: IAvatar;
   private barLayer: CommandBar;
   private terminalLayer: TextTerminalLayer;
   private mapEditor?: MapEditor;
   private codeEditor?: CodeEditor;
   private tileViewer?: TilesetList;
-  private keyboardHandler?: HumanKeyboardHandler;
   private repl: Repl;
 
   public constructor(gameContainer: HTMLDivElement) {
@@ -191,31 +186,6 @@ export class Terminal implements IGameTerminal {
     this.camera.focus();
   }
 
-  // must be called after setWorld
-  private setInteractiveAvatar(player: IAvatar | undefined) {
-
-    if (player !== undefined) {
-      this.interactiveAvatar = player;
-      /*
-      this.keyboardHandler = new HumanKeyboardHandler(
-        player,
-        this.map!.physics,
-        this.map!.props.cellWidth,
-        this.map!.props.cellHeight,
-        this.map!.props.humanStepDuration);
-*/
-
-      //this.camera!.setAvatar(this.interactiveAvatar, this.keyboardHandler);
-    }
-    else {
-      this.interactiveAvatar = undefined;
-      this.keyboardHandler = undefined;
-      //this.camera!.resetAvatar();
-    }
-
-    this.refresh();
-  }
-
   private populateBasicCommands() {
     this.repl.addFunc(new HelpDef(this.repl))
   }
@@ -233,33 +203,35 @@ export class Terminal implements IGameTerminal {
   }
 
   public login(name: string) {
-    if (this.interactiveAvatar !== undefined) {
-      this.printError(`Already logged in.You have to logout to switch avatar`);
-      return;
-    }
-
-    let avatar: IAvatar | undefined;
-    let id = parseInt(name);
     /*
-    if (isNaN(id)) {
-      avatar = gameState.avatarCollection.findCharacterByName(name);
-    } else {
-      avatar = gameState.avatarCollection.getAvatar(id.toString());
-    }
-*/
-    if (avatar === undefined) {
-      this.printError(`Avatar ${name} not found`);
-      return;
-    }
-
-    window.localStorage.setItem('user', avatar.id);
-
-    this.setInteractiveAvatar(avatar);
-    this.print(`Welcome ${avatar.rt.name} to Nomekop`);
-    this.camera?.focus()
+        if (this.interactiveAvatar !== undefined) {
+          this.printError(`Already logged in.You have to logout to switch avatar`);
+          return;
+        }
+    
+        let avatar: IAvatar | undefined;
+        let id = parseInt(name);
+        if (isNaN(id)) {
+          avatar = gameState.avatarCollection.findCharacterByName(name);
+        } else {
+          avatar = gameState.avatarCollection.getAvatar(id.toString());
+        }
+    
+        if (avatar === undefined) {
+          this.printError(`Avatar ${name} not found`);
+          return;
+        }
+    
+        window.localStorage.setItem('user', avatar.id);
+    
+        this.setInteractiveAvatar(avatar);
+        this.print(`Welcome ${avatar.rt.name} to Nomekop`);
+        this.camera?.focus()
+        */
   }
 
   public logout() {
+    /*
     if (this.interactiveAvatar === undefined) {
       this.printError(`Not logged in `);
       return;
@@ -267,6 +239,7 @@ export class Terminal implements IGameTerminal {
 
     this.print(`Goodbye ${this.interactiveAvatar.rt.name} `);
     this.setInteractiveAvatar(undefined);
+    */
   }
 
   private onToggleTerm() {

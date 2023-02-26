@@ -16,7 +16,7 @@ export type MapProps = {
 export interface IGameMap {
   //readonly props: MapProps;
 
-  load(): Promise<boolean>;
+  load(id: string): Promise<boolean>;
   loadScene(scene: Scene);
 
   findBlock(point: Vector3): MapBlockCoord | undefined;

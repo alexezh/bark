@@ -1,17 +1,12 @@
 import _ from "lodash";
 import { v4 as uuidv4 } from 'uuid';
-import { HubConnection, HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
-import { Repl } from "../posh/repl";
+import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 import { Avatar } from "./avatar";
-import { GridPos, gridPosToPxPos } from "../posh/pos";
+import { GridPos } from "../posh/pos";
 import { currentWorldId } from "../fetchadapter";
 import { IAvatar } from "./iavatar";
-import { printNetworkError } from "../ui/errorreport";
-import { terminal } from "../ui/igameterminal";
-import { gameState, IGameState, setGameState } from "./igamestate";
-import { IGameMap } from "../voxel/igamemap";
+import { IRealtimeClient } from "./igamestate";
 import { GameMap } from "../engine/gamemap";
-import AsyncEventSource from "../AsyncEventSource";
 
 export type WireSpawnCharacterRequest = {
   name: string;
@@ -38,22 +33,14 @@ export type RtcUpdateAvatarPosition = {
 }
 
 // manages game state (network updates and so on)
-export class GameState implements IGameState {
+export class RealtimeClient implements IRealtimeClient {
   private sessionId?: string;
   private connection?: HubConnection;
   private connectionStatus: RtcConnectionStatus = RtcConnectionStatus.connected;
 
-  public map: IGameMap | undefined;
-  public readonly repl: Repl;
-  public onLoaded: boolean = false;
-
-  public readonly mapLoaded: AsyncEventSource<boolean> = new AsyncEventSource<boolean>();
-  public readonly onMapClosed: AsyncEventSource<boolean> = new AsyncEventSource<boolean>();
-
   //public readonly avatarCollection: AvatarCollection = new AvatarCollection();
 
   constructor() {
-    this.repl = new Repl();
 
     _.bindAll(this, [
       "onAvatarPosChanged",
@@ -66,8 +53,8 @@ export class GameState implements IGameState {
 
   public async load(): Promise<boolean> {
 
-    this.map = new GameMap();
-    await this.map.load();
+    //this.map = new GameMap();
+    //await this.map.load('test');
     /*
         let wireAvatars = await fetchAvatars();
         for (let avatarProps of wireAvatars) {
@@ -92,8 +79,8 @@ export class GameState implements IGameState {
           }
         }
     */
-    this.onLoaded = true;
-    this.mapLoaded.invoke(true);
+    //this.onLoaded = true;
+    //this.mapLoaded.invoke(true);
 
     return true;
   }
@@ -191,14 +178,3 @@ export class GameState implements IGameState {
   }
 }
 
-export function createGameState(): IGameState {
-  setGameState(new GameState());
-  return gameState;
-}
-
-//export let game: Main;
-
-//export function createVoxelGame(container: HTMLElement) {
-//  game = new Main();
-//  game.init(container)
-//}

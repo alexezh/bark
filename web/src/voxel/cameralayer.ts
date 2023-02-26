@@ -4,9 +4,9 @@ import { MapEditor } from "../ui/mapeditor";
 import { KeyBinder, makeMEvent } from "../ui/keybinder";
 import { UiLayer2, UiLayerProps } from "../ui/uilayer";
 import { IGameMap } from "./igamemap";
-import { gameState } from "../world/igamestate";
 import { WorldCoord3 } from "./pos3";
 import { ICameraLayer } from "./icameralayer";
+import { vm } from "../engine/ivm";
 
 export type CameraLayerProps = UiLayerProps & {
     scale: number;
@@ -80,11 +80,10 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         this.textures.prepare();
         //this.waitForLoadTextures();
 
-        gameState.mapLoaded.add(this, (val: boolean) => {
-            this.loadMap();
-        });
+        vm.attachCamera(this);
+        vm.registerMapChanged(this, this.onMapChanged.bind(this));
 
-        setTimeout(() => this.loadMap());
+        //setTimeout(() => this.loadMap());
     };
 
     public refresh() {
@@ -133,14 +132,13 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         (this.camera as PerspectiveCamera).updateProjectionMatrix();
     }
 
-    private loadMap() {
+    private onMapChanged() {
 
-        if (gameState.map === undefined || this.map !== undefined) {
+        if (vm.map === undefined || this.map !== undefined) {
             return;
         }
 
-        this.map = gameState.map;
-        this.map.loadScene(this.scene);
+        this.map = vm.map;
 
         this.mapEditor = new MapEditor(
             this,
@@ -150,8 +148,8 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
             this.input,
             this.map);
 
+        // add geometry covering map on the bottom so we can handle all clicks within map
         const geometry = new PlaneGeometry(1000, 1000);
-        //geometry.rotateX(- Math.PI / 2);
 
         let plane = new Mesh(geometry, new MeshBasicMaterial({ visible: false }));
         this.scene.add(plane);

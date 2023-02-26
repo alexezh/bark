@@ -79,7 +79,7 @@ export class GameMap implements IGameMap {
                */
     };
 
-    public async load(): Promise<boolean> {
+    public async load(id: string): Promise<boolean> {
         //this.char = new Character('./assets/vox/monky.vox', this.material);
         //await this.char.load();
 
