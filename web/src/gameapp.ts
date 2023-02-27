@@ -24,6 +24,8 @@ export class GameApp {
     this.gameContainer = gameContainer;
     this.resizeCanvas();
 
+    createVM(gameContainer);
+
     setTerminal(new Terminal(gameContainer));
     this.tryOnReady();
   }
@@ -34,7 +36,6 @@ export class GameApp {
       return;
     }
 
-    createVM(this.gameContainer);
     setTimeout(async () => {
       await vm.loadGame(BoxedGame);
       vm.start();

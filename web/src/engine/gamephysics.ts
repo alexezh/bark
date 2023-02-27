@@ -31,7 +31,7 @@ export class GamePhysics implements IGamePhysics {
 
   public setCollideHandler(ro: IRigitBody, func: RigitCollisionHandler | undefined) {
     // @ts-ignore
-    ro[this.collisionHandler] = onCollide;
+    ro[this.collisionHandler] = func;
   }
 
   public removeRigitObject(ro: IRigitBody): void {

@@ -1,8 +1,20 @@
 import { Scene, Vector3 } from "three";
 import { WorldProps } from "../fetchadapter";
 import { MapBlockCoord } from "../engine/maplayer";
-import { VoxelPos3, VoxelSize3, WorldCoord3, WorldSize3 } from "./pos3";
+import { WorldCoord3, WorldSize3 } from "./pos3";
 import { VoxelModel } from "./voxelmodel";
+
+export type MapPos3 = {
+  x: number,
+  y: number,
+  z: number;
+}
+
+export type MapSize3 = {
+  sx: number,
+  sy: number,
+  sz: number;
+}
 
 export type MapProps = {
   id: string;
@@ -21,10 +33,10 @@ export interface IGameMap {
 
   findBlock(point: Vector3): MapBlockCoord | undefined;
   deleteBlock(block: MapBlockCoord);
-  addBlock(pos: VoxelPos3, block: VoxelModel);
+  addBlock(pos: MapPos3, block: VoxelModel);
 
-  voxelSizeToWorldSize(gridSize: VoxelSize3): WorldSize3;
-  voxelPosToWorldPos(gridPos: VoxelPos3): WorldCoord3;
+  mapSizeToWorldSize(gridSize: MapSize3): WorldSize3;
+  mapPosToWorldPos(gridPos: MapPos3): WorldCoord3;
 
   //  readonly physics: IGamePhysics;
   //  readonly mechanics: IGameMechanics;

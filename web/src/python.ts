@@ -61,10 +61,8 @@ export class BoxedGame implements IDigGame {
   }
 
   start(): void {
-    throw new Error("Method not implemented.");
   }
   stop(): void {
-    throw new Error("Method not implemented.");
   }
 
   // in digg

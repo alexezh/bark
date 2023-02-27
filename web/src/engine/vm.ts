@@ -64,7 +64,9 @@ export class VM implements IVM {
   public async loadMap(id: string): Promise<void> {
     this._map = new GameMap();
     await this._map.load(id);
+    this._physics = new GamePhysics(this._map);
 
+    this.loadScene();
     this.onMapChanged.invoke(true);
   }
 
@@ -76,7 +78,6 @@ export class VM implements IVM {
 
     this._ticker = new Ticker();
     animator.start(this._ticker);
-    this._physics = new GamePhysics(this._map);
     this._running = true;
   }
 
@@ -143,10 +144,11 @@ export class VM implements IVM {
       return;
     }
 
+    // TODO: we should clear the previous scene
     this._map.loadScene(this._camera.scene);
   }
 }
 
-export function createVM(canvas: HTMLCanvasElement) {
+export function createVM(canvas: HTMLElement) {
   setVM(new VM(canvas));
 }

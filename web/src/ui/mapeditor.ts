@@ -6,9 +6,9 @@ import { mapEditorState } from "../posh/mapeditorstate";
 import { PxSize } from "../posh/pos";
 import { IMapEditor } from "./imapeditor";
 import { KeyBinder, MEvent } from "./keybinder";
-import { IGameMap } from "../voxel/igamemap";
+import { IGameMap, MapSize3 } from "../voxel/igamemap";
 import { MapBlockCoord, MapLayer } from "../engine/maplayer";
-import { VoxelPos3, VoxelSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
+import { WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { ICameraLayer } from "../voxel/icameralayer";
 
@@ -86,7 +86,7 @@ export class MapEditor implements IMapEditor {
   }
 
   private onScroll(x: number, y: number, z: number) {
-    this.cameraLayer.scrollBy(this.map.voxelPosToWorldPos({ x: x, y: y, z: z }));
+    this.cameraLayer.scrollBy(this.map.mapPosToWorldPos({ x: x, y: y, z: z }));
   }
 
   public onMouseDown(evt: MEvent): boolean {
@@ -175,7 +175,7 @@ export class MapEditor implements IMapEditor {
     }
 
     let block = await modelCache.getVoxelModel('./assets/vox/dungeon_entrance.vox');
-    let pos = this.selectedBlock.gridPos;
+    let pos = this.selectedBlock.mapPos;
     if (this.selectedBlock.model !== undefined) {
       this.map.addBlock({ x: pos.x, y: pos.y, z: pos.z + 1 }, block);
     } else {
@@ -215,12 +215,12 @@ export class MapEditor implements IMapEditor {
       this.selectedBlock = undefined;
     }
 
-    let pos = this.map.voxelPosToWorldPos(block.gridPos);
-    let size: VoxelSize3;
+    let pos = this.map.mapPosToWorldPos(block.mapPos);
+    let size: MapSize3;
     if (block.model !== undefined) {
-      size = this.map.voxelSizeToWorldSize(block.model.size);
+      size = this.map.mapSizeToWorldSize(block.mapSize);
     } else {
-      size = this.map.voxelSizeToWorldSize({ sx: 16, sy: 16, sz: 16 });
+      size = this.map.mapSizeToWorldSize({ sx: 16, sy: 16, sz: 16 });
     }
     this.buildSelectionBox(pos, size);
 

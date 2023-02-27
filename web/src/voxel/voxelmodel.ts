@@ -1,5 +1,4 @@
-import { BufferAttribute, BufferGeometry, MeshPhongMaterial } from "three";
-import { VoxelSize3 } from "./pos3";
+import { BufferAttribute, BufferGeometry, MeshPhongMaterial, Vector3 } from "three";
 import { VoxelGeometryWriter } from "./voxelgeometrywriter";
 
 export type VoxelPoint = {
@@ -39,13 +38,9 @@ export class VoxelModel {
     this.id = id;
   }
 
-  public get size(): VoxelSize3 {
+  public get size(): Vector3 {
     let frame = this.frames[0];
-    return {
-      sx: frame.chunk_sx,
-      sy: frame.chunk_sy,
-      sz: frame.chunk_sz
-    }
+    return new Vector3(frame.chunk_sx, frame.chunk_sy, frame.chunk_sz);
   }
 }
 

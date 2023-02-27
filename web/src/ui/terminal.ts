@@ -61,7 +61,7 @@ export class Terminal implements IGameTerminal {
       'onOpenTerm',
       'onCloseTerm',
       'onToggleEdit',
-      'onToggleTile',
+      //      'onToggleTile',
       'onToggleTerm',
       'onToggleMap',
     ]);
@@ -103,6 +103,19 @@ export class Terminal implements IGameTerminal {
     this.compositor2.appendLayer(this.terminalLayer);
 
     this.terminalLayer.fit();
+
+    // add camera
+    this.camera = new CameraLayer({
+      id: "camera",
+      x: 0, y: 0,
+      w: this.props.width, h: this.props.height,
+      scale: this.props.scale,
+      visible: true,
+      onOpenTerminal: this.onOpenTerm,
+      onToggleEdit: this.onToggleEdit
+    });
+
+    this.compositor2.insertLayerBefore(this.camera, 'bar');
   }
 
   public refresh() {
@@ -156,22 +169,10 @@ export class Terminal implements IGameTerminal {
     this.map = map;
     //mapEditorState.update({ map: map });
 
-    this.camera = new CameraLayer({
-      id: "camera",
-      x: 0, y: 0,
-      w: this.props.width, h: this.props.height,
-      scale: this.props.scale,
-      visible: true,
-      onOpenTerminal: this.onOpenTerm,
-      onToggleEdit: this.onToggleEdit
-    });
-
-    this.compositor2.insertLayerBefore(this.camera, 'bar');
-
     this.loginCached();
 
     this.refresh();
-    this.camera.focus();
+    //    this.camera.focus();
   }
 
   private populateBasicCommands() {

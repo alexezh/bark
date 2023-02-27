@@ -2,8 +2,8 @@ import { AmbientLight, BufferGeometry, Mesh, MeshPhongMaterial, Scene, Vector3 }
 import { modelCache } from "../voxel/voxelmodelcache";
 import { MapBlock, MapBlockCoord, MapLayer } from "./maplayer";
 import { VoxelModel } from "../voxel/voxelmodel";
-import { VoxelPos3, VoxelSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
-import { IGameMap } from "../voxel/igamemap";
+import { WorldCoord3, WorldSize3 } from "../voxel/pos3";
+import { IGameMap, MapPos3, MapSize3 } from "../voxel/igamemap";
 
 
 export class MeshModel {
@@ -100,19 +100,19 @@ export class GameMap implements IGameMap {
         return true;
     }
 
-    public voxelSizeToWorldSize(voxelSize: VoxelSize3): WorldSize3 {
+    public mapSizeToWorldSize(mapSize: MapSize3): WorldSize3 {
         return {
-            sx: voxelSize.sx,
-            sy: voxelSize.sy,
-            sz: voxelSize.sz
+            sx: mapSize.sx * this.blockSize,
+            sy: mapSize.sy * this.blockSize,
+            sz: mapSize.sz * this.blockSize
         }
     }
 
-    public voxelPosToWorldPos(voxelPos: VoxelPos3): WorldCoord3 {
+    public mapPosToWorldPos(mapPos: MapPos3): WorldCoord3 {
         return {
-            x: voxelPos.x,
-            y: voxelPos.y,
-            z: voxelPos.z
+            x: mapPos.x * this.blockSize,
+            y: mapPos.y * this.blockSize,
+            z: mapPos.z * this.blockSize
         }
     }
 
@@ -126,14 +126,14 @@ export class GameMap implements IGameMap {
     }
 
     public deleteBlock(block: MapBlockCoord) {
-        let layer = this.layers[block.gridPos.z];
+        let layer = this.layers[block.mapPos.z];
         this.scene.remove(layer.staticMesh);
         layer.deleteBlock(block);
         layer.build();
         this.scene.add(layer.staticMesh);
     }
 
-    public addBlock(pos: VoxelPos3, block: VoxelModel) {
+    public addBlock(pos: MapPos3, block: VoxelModel) {
         if (pos.z >= this.layers.length) {
             for (let i = this.layers.length - 1; i < pos.z; i++) {
                 let layer = new MapLayer(this.material, this.layers.length, this.blockSize);

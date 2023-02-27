@@ -69,7 +69,7 @@ export class VoxelMeshModel {
         }
 
         let sz = vmm.size;
-        this._size = new Vector3(sz.sx * this.scale, sz.sy * this.scale, sz.sz * this.scale);
+        this._size = new Vector3(sz.x * this.scale, sz.y * this.scale, sz.z * this.scale);
     }
 
     public getMesh(): Mesh {
