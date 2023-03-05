@@ -4,6 +4,8 @@ import { IRigitBody } from "./voxelmeshmodel";
 import _ from "lodash";
 import { BroadphaseCollision } from "./broadphasecollision";
 import { WorldCoord3 } from "../voxel/pos3";
+import { Vector3 } from "three";
+import { MapBlockRigitBody } from "../voxel/mapblockrigitbody";
 
 // manages movement and collisions between world objects
 export class GamePhysics implements IGamePhysics {
@@ -12,6 +14,7 @@ export class GamePhysics implements IGamePhysics {
   private broadphase: BroadphaseCollision = new BroadphaseCollision();
   private collisionHandler?: IGameCollisionHandler;
   private input?: IGamePhysicsInputController;
+  private _collideHandler: RigitCollisionHandler | undefined;
   private static collideHandlerSymbol = Symbol('CollideHandler');
 
   public constructor(map: IGameMap) {
@@ -26,14 +29,12 @@ export class GamePhysics implements IGamePhysics {
     this.collisionHandler = handler;
   }
 
-  public addRigitObject(ro: IRigitBody, onCollide: RigitCollisionHandler | undefined): void {
+  public addRigitObject(ro: IRigitBody): void {
     this.bodies.push(ro);
-    this.setCollideHandler(ro, onCollide);
   }
 
-  public setCollideHandler(ro: IRigitBody, func: RigitCollisionHandler | undefined) {
-    // @ts-ignore
-    ro[this.collisionHandler] = func;
+  public setCollideHandler(func: RigitCollisionHandler | undefined) {
+    this._collideHandler = func;
   }
 
   public removeRigitObject(ro: IRigitBody): void {
@@ -48,6 +49,8 @@ export class GamePhysics implements IGamePhysics {
 
     await this.input?.onBeforeMove(dt);
 
+    let collisions: IRigitBody[] = [];
+
     for (let o of this.bodies) {
       if (o.inactive) {
         continue;
@@ -56,7 +59,6 @@ export class GamePhysics implements IGamePhysics {
       s.multiplyScalar(dt);
       let p = o.position.add(s);
 
-      o.onMove(p);
       let intersectBlock: MapBlock | undefined;
       let intersectPos: WorldCoord3 | undefined;
       if (this.map.intersectBlocks(o, p, (block: MapBlock, blockPos: WorldCoord3) => {
@@ -65,11 +67,19 @@ export class GamePhysics implements IGamePhysics {
         intersectPos = blockPos;
         return true;
       })) {
-        
+        o.setSpeed(new Vector3(0, 0, 0));
+        o.setCollision(new MapBlockRigitBody(intersectBlock!, intersectPos!));
+        collisions.push(o);
+      } else {
+        o.onMove(p);
       }
     }
 
-    let pairs = this.broadphase.getPairs(this.bodies);
+    if (collisions.length > 0) {
+      this._collideHandler?.call(this, collisions);
+    }
+
+    //let pairs = this.broadphase.getPairs(this.bodies);
 
     this.input?.onAfterMove();
   }

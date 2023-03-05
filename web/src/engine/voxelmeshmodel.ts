@@ -1,11 +1,16 @@
 // represents voxel model as set of meshes
 // ATT: it is responsivility of caller to adjust position information on mesh
 
-import { Mesh, MeshPhongMaterial, Vector3 } from "three";
+import { Mesh, MeshPhongMaterial, Vector, Vector3 } from "three";
 import { GameColors } from "../ui/gamecolors";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { Sprite3 } from "./sprite3";
+
+export enum RigitBodyKind {
+    sprite,
+    block
+}
 
 // interface for physics engine to work with sprites
 // from physics perspective, we deal with speed and impulses
@@ -14,6 +19,7 @@ import { Sprite3 } from "./sprite3";
 // similarly, the sprite can zero out the speed when reaching position
 export interface IRigitBody {
     get id(): number;
+    get kind(): RigitBodyKind;
     get inactive(): boolean;
     // owner set by application
     get owner(): any;
@@ -23,8 +29,9 @@ export interface IRigitBody {
     get position(): Vector3;
     get size(): Vector3;
 
+    setSpeed(speed: Vector3): void;
     onMove(pos: Vector3): void;
-    onCollision(obj: IRigitBody): void;
+    setCollision(obj: IRigitBody | undefined): void;
 }
 
 export class RigitBodyArray {

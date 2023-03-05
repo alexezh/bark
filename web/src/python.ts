@@ -69,6 +69,7 @@ export class BoxedGame implements IDigGame {
   // in digg
   // forever { key = waitKey()}
   private async moveMonkey(): Promise<void> {
+    console.log("start moveMonkey");
     vm.forever(async () => {
       let action = await inputController!.waitAction(this.char, 0.1);
       if (action !== undefined && action === KeyAction.None) {
@@ -80,22 +81,26 @@ export class BoxedGame implements IDigGame {
   // the problem with that loop is that collision detection happens outside
   // this makes it less visible
   private async dropObject(): Promise<void> {
+    console.log("start dropObject");
     vm.forever(async () => {
-      let bomb = await Bomb.create(new Vector3(randInt(0, 1000), randInt(0, 1000), 1000));
+      let bomb = await Bomb.create(new Vector3(randInt(50, 150), randInt(50, 150), 50));
       let speed = 10;
-      let collisions: IRigitBody[] = [];
 
       bomb.speed.add(new Vector3(0, 0, -speed));
 
-      while (!await vm.waitCollide(bomb, 0.1, collisions)) {
-        speed = Math.min(speed * 1.1, 100);
-        bomb.speed.add(new Vector3(0, 0, -speed));
-      }
-
-      if (RigitBodyArray.contains<Monky>(collisions)) {
-        vm.send('KilledMonkey');
-      } else {
-        vm.removeSprite(bomb);
+      while (true) {
+        let collision = await vm.waitCollide([bomb], 0.1);
+        if (collision === undefined) {
+          speed = Math.min(speed * 1.1, 100);
+          bomb.speed.add(new Vector3(0, 0, -speed));
+        } else {
+          if (collision instanceof Monky) {
+            vm.send('KilledMonkey');
+          } else {
+            vm.removeSprite(bomb);
+          }
+          break;
+        }
       }
     });
   }

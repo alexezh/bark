@@ -21,7 +21,7 @@ export class MapLayer {
   public constructor(material: MeshPhongMaterial, layerZ: number, blockSize: number) {
     this.material = material;
     this.blockSize = blockSize;
-    this.size = { w: 10, h: 10 };
+    this.size = { w: 20, h: 20 };
     this.layerZ = layerZ;
     this.blocks = new Array(this.size.w * this.size.h);
   }

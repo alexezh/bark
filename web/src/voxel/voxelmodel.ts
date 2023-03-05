@@ -199,10 +199,6 @@ export class VoxelModelFrame {
                 }
               }
 
-              if (maxZ === 0) {
-                console.log('zero');
-              }
-
               writer.appendVertice(x + maxX, y, z + maxZ);
               writer.appendVertice(x, y, z + maxZ);
               writer.appendVertice(x, y, z);
@@ -251,10 +247,6 @@ export class VoxelModelFrame {
                   let blockIdx_ = this.getIdx(x_, y, z_);
                   this.voxels[blockIdx_] = this.voxels[blockIdx_] | 0x2;
                 }
-              }
-
-              if (maxZ === 0) {
-                console.log('zero');
               }
 
               writer.appendVertice(x + maxX, y + 1, z + maxZ);
@@ -401,10 +393,6 @@ export class VoxelModelFrame {
                 }
               }
 
-              if (maxZ === 0 || maxY === 0 || maxZ === 2) {
-                console.log('zero');
-              }
-
               writer.appendVertice(x, y, z);
               writer.appendVertice(x, y, z + maxZ);
               writer.appendVertice(x, y + maxY, z + maxZ);
@@ -450,10 +438,6 @@ export class VoxelModelFrame {
                   let blockIdx_ = this.getIdx(x, y_, z_);
                   this.voxels[blockIdx_] = this.voxels[blockIdx_] | 0x4;
                 }
-              }
-
-              if (maxZ === 0) {
-                console.log('zero');
               }
 
               writer.appendVertice(x + 1, y, z);

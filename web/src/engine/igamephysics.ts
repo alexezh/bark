@@ -12,14 +12,14 @@ export interface IGamePhysicsInputController {
   onAfterMove();
 }
 
-export type RigitCollisionHandler = (target: IRigitBody) => void;
+export type RigitCollisionHandler = (target: IRigitBody[]) => void;
 
 export interface IGamePhysics {
   addRigitObject(ro: IRigitBody, onCollide: RigitCollisionHandler | undefined): void;
   removeRigitObject(ro: IRigitBody): void;
   update(tick: number): void;
   attachInputController(handler?: IGamePhysicsInputController);
-  setCollideHandler(ro: IRigitBody, func: RigitCollisionHandler | undefined);
+  setCollideHandler(func: RigitCollisionHandler | undefined);
   //moveAvatarRemote(sprite: Sprite3, pos: GridPos, func: (props: SpriteMoveAnimationProps) => IAnimatable): boolean;
   //attachCollisionHandler(handler?: IGameCollisionHandler): void;
 }

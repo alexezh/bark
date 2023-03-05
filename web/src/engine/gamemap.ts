@@ -160,14 +160,14 @@ export class GameMap implements IGameMap {
         // we assume upper bound non-inclusive; ie if block is at position 0
         // and size 16, it overlaps with one layer
         let xStart = Math.floor(pos.x / this.blockSize);
-        let xEnd = Math.floor((pos.x + sz.x) / this.blockSize);
+        let xEnd = Math.max(xStart + 1, Math.floor((pos.x + sz.x) / this.blockSize));
         let yStart = Math.floor(pos.y / this.blockSize);
-        let yEnd = Math.floor((pos.y + sz.y) / this.blockSize);
+        let yEnd = Math.max(yStart + 1, Math.floor((pos.y + sz.y) / this.blockSize));
         let zStart = Math.floor(pos.z / this.blockSize);
-        let zEnd = Math.floor((pos.z + sz.z) / this.blockSize);
+        let zEnd = Math.max(zStart + 1, Math.floor((pos.z + sz.z) / this.blockSize));
 
         for (let z = zStart; z < zEnd; z++) {
-            let layer: MapLayer = this.layers[pos.z];
+            let layer: MapLayer = this.layers[z];
             if (layer === undefined) {
                 continue;
             }

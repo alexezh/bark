@@ -13,6 +13,13 @@ import { Ticker } from "./ticker";
 import { IRigitBody, IRigitModel } from "./voxelmeshmodel";
 
 export type MessageHandler = (msg: string) => Promise<void>;
+export type StartHandler = () => Promise<void>;
+
+type CollisionWaiter = {
+  // if resolve is undefined, there is no waiter
+  // possibly waiter was already completed
+  resolve: ((res: IRigitBody | undefined) => void) | undefined;
+}
 
 export class VM implements IVM {
   private _running: boolean = false;
@@ -22,8 +29,10 @@ export class VM implements IVM {
   private _map!: IGameMap;
   private _camera?: ICameraLayer;
   private _game?: IDigGame;
+  private _collisions: WeakMap<IRigitBody, CollisionWaiter> = new WeakMap<IRigitBody, CollisionWaiter>;
+
   private readonly onMapChanged: AsyncEventSource<boolean> = new AsyncEventSource();
-  private readonly _startHandlers: (() => Promise<void>)[] = [];
+  private readonly _startHandlers: StartHandler[] = [];
 
   // we are going to copy/write of handler array
   // so it is safe to enumerate even if handler changes it
@@ -66,6 +75,7 @@ export class VM implements IVM {
     this._map = new GameMap();
     await this._map.load(id);
     this._physics = new GamePhysics(this._map);
+    this._physics.setCollideHandler(this.onCollide.bind(this));
 
     this.loadScene();
     this.onMapChanged.invoke(true);
@@ -75,6 +85,12 @@ export class VM implements IVM {
     if (this._game === undefined) {
       return;
     }
+    if (this._running) {
+      console.log('VM: already running');
+      return;
+    }
+
+    console.log('VM: start');
     this._game.start();
 
     this._ticker = new Ticker();
@@ -87,8 +103,10 @@ export class VM implements IVM {
   }
 
   public stop() {
+    console.log('VM: stop');
     animator.stop();
     this._game!.stop();
+    this._running = false;
   }
 
   public update(dt: number) {
@@ -100,7 +118,7 @@ export class VM implements IVM {
     await s.load(uri);
 
     this.physics.addRigitObject(s, undefined);
-    s.loadSprite(this._camera!.scene);
+    s.addToScene(this._camera!.scene);
     //gameState.scene 
     // gameApp.scene.
     return s;
@@ -108,6 +126,7 @@ export class VM implements IVM {
 
   public async removeSprite(sprite: Sprite3) {
     this.physics.removeRigitObject(sprite);
+    sprite.removeFromScene(this._camera!.scene);
   }
 
   public async forever(func: () => Promise<void>): Promise<void> {
@@ -116,10 +135,41 @@ export class VM implements IVM {
     }
   }
 
-  public async waitCollide(sprite: Sprite3, seconds: number, collisions: IRigitBody[]): Promise<boolean> {
-    this.physics.setCollideHandler
-    await this.sleep(seconds);
-    return false;
+  public waitCollide(sprites: Sprite3[], seconds: number): Promise<Sprite3> {
+    let waiter: CollisionWaiter = { resolve: undefined };
+    let p: Promise<Sprite3> = new Promise<Sprite3>((resolve) => {
+      waiter.resolve = (target: IRigitBody | undefined) => {
+        resolve(target as Sprite3);
+        for (let sprite of sprites) {
+          this._collisions.delete(sprite);
+        }
+      }
+    });
+
+    // first check if we have collisions recorded on any sprite
+    for (let sprite of sprites) {
+      if (this._collisions.get(sprite)) {
+        // remove from detection list
+        this._collisions.delete(sprite);
+        waiter.resolve!(sprite);
+        return p;
+      }
+    }
+
+    // if none of sprites triggered; wait on them
+    for (let sprite of sprites) {
+      this._collisions.set(sprite, waiter);
+    }
+
+    setTimeout(() => {
+      // if we have not resolved waiter yet, resolve it
+      if (waiter.resolve !== undefined) {
+        waiter.resolve(undefined);
+        waiter.resolve = undefined;
+      }
+    }, seconds * 1000);
+    this.sleep(seconds);
+    return p;
   }
 
   public sleep(seconds: number): Promise<void> {
@@ -147,8 +197,19 @@ export class VM implements IVM {
 
   }
 
-  public onCollide(ro: IRigitBody, func: RigitCollisionHandler) {
-    this.physics.setCollideHandler(ro, func);
+  public onCollide(ros: IRigitBody[]) {
+    // record collisions
+    for (let ro of ros) {
+      let waiter = this._collisions.get(ro);
+      if (waiter !== undefined && waiter.resolve !== undefined) {
+        waiter.resolve(ro);
+        // reset waiter after first resolve
+        waiter.resolve = undefined;
+        this._collisions.delete(ro);
+      } else {
+        this._collisions.set(ro, { resolve: undefined });
+      }
+    }
   }
 
   private loadScene() {
