@@ -26,16 +26,14 @@ export class MoveController2D implements IGamePhysicsInputController {
 
     // called by physics engine before next move
     // check if we have pending wait and complete it before we continue
-    public onBeforeMove(tick: number): Promise<void> {
+    public async onBeforeMove(tick: number): Promise<void> {
         let action: KeyAction;
         action = KeyAction.Left;
         // compute current action
         // this.onInput?.call(this, action);
-        throw new Error("Method not implemented.");
     }
 
     public onAfterMove() {
-        throw new Error("Method not implemented.");
     }
 
     // wait for next key press (emulating basic behavior)

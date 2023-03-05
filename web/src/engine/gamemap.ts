@@ -1,9 +1,10 @@
 import { AmbientLight, BufferGeometry, Mesh, MeshPhongMaterial, Scene, Vector3 } from "three";
 import { modelCache } from "../voxel/voxelmodelcache";
-import { MapBlock, MapBlockCoord, MapLayer } from "./maplayer";
+import { MapLayer } from "./maplayer";
 import { VoxelModel } from "../voxel/voxelmodel";
-import { WorldCoord3, WorldSize3 } from "../voxel/pos3";
-import { IGameMap, MapPos3, MapSize3 } from "../voxel/igamemap";
+import { MapPos3, MapSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
+import { IGameMap, MapBlock, MapBlockCoord } from "../voxel/igamemap";
+import { IRigitBody } from "./voxelmeshmodel";
 
 
 export class MeshModel {
@@ -142,12 +143,47 @@ export class GameMap implements IGameMap {
             }
         }
 
-        let layer = this.layers[pos.z];
+        let layer: MapLayer = this.layers[pos.z];
         layer.addBlock(pos, block);
 
         this.scene.remove(layer.staticMesh);
         layer.build();
         this.scene.add(layer.staticMesh);
+    }
+
+    public intersectBlocks(ro: IRigitBody,
+        pos: WorldCoord3,
+        func: (block: MapBlock, blockPos: WorldCoord3) => boolean): boolean {
+
+        let sz = ro.size;
+
+        // we assume upper bound non-inclusive; ie if block is at position 0
+        // and size 16, it overlaps with one layer
+        let xStart = Math.floor(pos.x / this.blockSize);
+        let xEnd = Math.floor((pos.x + sz.x) / this.blockSize);
+        let yStart = Math.floor(pos.y / this.blockSize);
+        let yEnd = Math.floor((pos.y + sz.y) / this.blockSize);
+        let zStart = Math.floor(pos.z / this.blockSize);
+        let zEnd = Math.floor((pos.z + sz.z) / this.blockSize);
+
+        for (let z = zStart; z < zEnd; z++) {
+            let layer: MapLayer = this.layers[pos.z];
+            if (layer === undefined) {
+                continue;
+            }
+            for (let y = yStart; y < yEnd; y++) {
+                for (let x = xStart; x < xEnd; x++) {
+                    let block = layer.getBlock(x, y);
+                    if (block !== undefined) {
+                        if (func(block, { x: x * this.blockSize, y: y * this.blockSize, z: z * this.blockSize })) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 };
 

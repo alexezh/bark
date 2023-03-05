@@ -6,9 +6,8 @@ import { mapEditorState } from "../posh/mapeditorstate";
 import { PxSize } from "../posh/pos";
 import { IMapEditor } from "./imapeditor";
 import { KeyBinder, MEvent } from "./keybinder";
-import { IGameMap, MapSize3 } from "../voxel/igamemap";
-import { MapBlockCoord, MapLayer } from "../engine/maplayer";
-import { WorldCoord3, WorldSize3 } from "../voxel/pos3";
+import { IGameMap, MapBlockCoord } from "../voxel/igamemap";
+import { MapSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { ICameraLayer } from "../voxel/icameralayer";
 

@@ -1,29 +1,20 @@
 import { BufferGeometry, Mesh, MeshPhongMaterial, Vector3 } from "three";
 import { GridSize } from "../posh/pos";
-import { MapPos3, MapSize3 } from "../voxel/igamemap";
+import { MapBlock, MapBlockCoord } from "../voxel/igamemap";
+import { MapPos3 } from "../voxel/pos3";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
 import { VoxelModel } from "../voxel/voxelmodel";
-
-export type MapBlock = {
-  model: VoxelModel;
-  frame: number;
-}
-
-export type MapBlockCoord = {
-  model: VoxelModel | undefined;
-  idx: number;
-  mapPos: MapPos3;
-  mapSize: MapSize3;
-}
 
 export class MapLayer {
   private size!: GridSize;
   private blockSize: number;
-  private layerZ: number;
   private blocks!: (MapBlock | undefined)[];
   private _mesh!: Mesh;
   private geometry!: BufferGeometry;
   private material: MeshPhongMaterial;
+
+  // Z coordinate of layer in pixels
+  public readonly layerZ: number;
 
   public get staticMesh(): Mesh { return this._mesh; }
 
@@ -41,7 +32,7 @@ export class MapLayer {
 
   public fill(tile: VoxelModel) {
     for (let idx = 0; idx < this.blocks.length; idx++) {
-      this.blocks[idx] = { model: tile, frame: 0 }
+      this.blocks[idx] = { model: tile, frame: 0, topmost: true }
     }
   }
 
@@ -92,9 +83,14 @@ export class MapLayer {
     this.blocks[block.idx] = undefined;
   }
 
+  public getBlock(xMap: number, yMap: number): MapBlock | undefined {
+    let idx = yMap * this.size.w + xMap;
+    return this.blocks[idx];
+  }
+
   public addBlock(pos: MapPos3, block: VoxelModel) {
     let idx = pos.y * this.size.w + pos.x;
-    this.blocks[idx] = { model: block, frame: 0 };
+    this.blocks[idx] = { model: block, frame: 0, topmost: false };
   }
 }
 

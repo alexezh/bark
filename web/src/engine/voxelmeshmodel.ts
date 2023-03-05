@@ -13,12 +13,15 @@ import { Sprite3 } from "./sprite3";
 // such as when we do wall jump, contact with the wall will 0 the speed
 // similarly, the sprite can zero out the speed when reaching position
 export interface IRigitBody {
+    get id(): number;
+    get inactive(): boolean;
     // owner set by application
     get owner(): any;
 
     // speed is pixel per second
     get speed(): Vector3;
     get position(): Vector3;
+    get size(): Vector3;
 
     onMove(pos: Vector3): void;
     onCollision(obj: IRigitBody): void;
@@ -42,6 +45,9 @@ export class VoxelMeshModel {
     private scale: number = 0.6;
     private _size!: Vector3;
     private readonly material: MeshPhongMaterial;
+
+    // size in world units
+    // computed as voxels multiplied by scale factor
     public get size(): Vector3 { return this._size; };
 
     public static async create(uri: string): Promise<VoxelMeshModel> {

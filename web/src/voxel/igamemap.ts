@@ -1,20 +1,8 @@
 import { Scene, Vector3 } from "three";
 import { WorldProps } from "../fetchadapter";
-import { MapBlockCoord } from "../engine/maplayer";
-import { WorldCoord3, WorldSize3 } from "./pos3";
+import { MapPos3, MapSize3, WorldCoord3, WorldSize3 } from "./pos3";
 import { VoxelModel } from "./voxelmodel";
-
-export type MapPos3 = {
-  x: number,
-  y: number,
-  z: number;
-}
-
-export type MapSize3 = {
-  sx: number,
-  sy: number,
-  sz: number;
-}
+import { IRigitBody } from "../engine/voxelmeshmodel";
 
 export type MapProps = {
   id: string;
@@ -23,6 +11,20 @@ export type MapProps = {
   cellWidth: number;
   cellHeight: number;
   humanStepDuration: number;
+}
+
+export type MapBlock = {
+  model: VoxelModel;
+  frame: number;
+  // true if block is top most (no other blocks)
+  topmost: boolean;
+}
+
+export type MapBlockCoord = {
+  model: VoxelModel | undefined;
+  idx: number;
+  mapPos: MapPos3;
+  mapSize: MapSize3;
 }
 
 export interface IGameMap {
@@ -37,6 +39,11 @@ export interface IGameMap {
 
   mapSizeToWorldSize(gridSize: MapSize3): WorldSize3;
   mapPosToWorldPos(gridPos: MapPos3): WorldCoord3;
+
+  intersectBlocks(
+    ro: IRigitBody,
+    pos: WorldCoord3,
+    func: (block: MapBlock, blockPos: WorldCoord3) => boolean): boolean;
 
   //  readonly physics: IGamePhysics;
   //  readonly mechanics: IGameMechanics;

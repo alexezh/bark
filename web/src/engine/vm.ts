@@ -23,6 +23,7 @@ export class VM implements IVM {
   private _camera?: ICameraLayer;
   private _game?: IDigGame;
   private readonly onMapChanged: AsyncEventSource<boolean> = new AsyncEventSource();
+  private readonly _startHandlers: (() => Promise<void>)[] = [];
 
   // we are going to copy/write of handler array
   // so it is safe to enumerate even if handler changes it
@@ -70,7 +71,7 @@ export class VM implements IVM {
     this.onMapChanged.invoke(true);
   }
 
-  public start() {
+  public async start(): Promise<void> {
     if (this._game === undefined) {
       return;
     }
@@ -79,6 +80,10 @@ export class VM implements IVM {
     this._ticker = new Ticker();
     animator.start(this._ticker);
     this._running = true;
+
+    for (let h of this._startHandlers) {
+      await h();
+    }
   }
 
   public stop() {
@@ -86,11 +91,16 @@ export class VM implements IVM {
     this._game!.stop();
   }
 
+  public update(dt: number) {
+    this.physics.update(dt);
+  }
+
   public async createSprite<T extends Sprite3>(AT: { new(...args: any[]): T; }, uri: string, pos: Vector3, rm: IRigitModel | undefined = undefined): Promise<T> {
     let s = new AT(pos);
     await s.load(uri);
 
     this.physics.addRigitObject(s, undefined);
+    s.loadSprite(this._camera!.scene);
     //gameState.scene 
     // gameApp.scene.
     return s;
@@ -106,12 +116,14 @@ export class VM implements IVM {
     }
   }
 
-  public async waitCollide(sprite: Sprite3, timeout: number, collisions: IRigitBody[]): Promise<boolean> {
+  public async waitCollide(sprite: Sprite3, seconds: number, collisions: IRigitBody[]): Promise<boolean> {
+    this.physics.setCollideHandler
+    await this.sleep(seconds);
     return false;
   }
 
-  public sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+  public sleep(seconds: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, seconds * 1000));
   }
 
   public async send(msg: string): Promise<void> {
@@ -128,7 +140,7 @@ export class VM implements IVM {
   }
 
   public onStart(func: () => Promise<void>) {
-
+    this._startHandlers.push(func);
   }
 
   public onMessage(func: () => Promise<void>) {

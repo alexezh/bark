@@ -27,11 +27,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     public map!: IGameMap;
     public mapEditor!: MapEditor;
 
-    public update_objects: any = [];
-    public player: any;
     public visible_distance = 500; // from player to hide chunks + enemies.
-    public textures = new Textures();
-    public ff_objects = [];
     private selected: Object3D | undefined;
     private isDown: boolean = false;
 
@@ -74,10 +70,6 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         this.element.appendChild(this.renderer.domElement);
 
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
-
-        // Wait for all resources to be loaded before loading map.
-        this.textures.prepare();
-        //this.waitForLoadTextures();
 
         vm.attachCamera(this);
         vm.registerMapChanged(this, this.onMapChanged.bind(this));
@@ -157,16 +149,6 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     }
 
     reset() {
-        this.camera = new PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, this.visible_distance);
-        this.player.reset();
-        for (var i = 0; i < this.update_objects.length; i++) {
-            if (this.update_objects[i].chunk) {
-                this.scene.remove(this.update_objects[i].chunk.mesh);
-            }
-        }
-        this.update_objects = [];
-        // @ts-ignore
-        this.maps.init();
     };
 
     onWindowResize() {
@@ -193,28 +175,13 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         //      this.render();
     };
 
-    addObject(obj) {
-        this.update_objects.push(obj);
-    };
 
     render() {
         requestAnimationFrame(this.render.bind(this));
 
-        var time = (Date.now() - this.t_start) * 0.001;
-        //var time = Date.now() * 0.00005;
         var delta = this.clock.getDelta();
 
-        // Update all objects
-        for (var f in this.update_objects) {
-            if (this.update_objects[f] == null) { continue; }
-            if (this.update_objects[f].update) {
-                this.update_objects[f].update(time, delta);
-            } else {
-                this.update_objects[f] = null;
-            }
-        }
-
-        //this.map?.update(time, delta);
+        vm.update(delta);
         this.renderer.render(this.scene, this.camera);
     };
 }

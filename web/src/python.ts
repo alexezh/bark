@@ -5,6 +5,7 @@ import { RoapModel } from "./engine/avatars/sequencebody";
 import { IRigitBody, RigitBodyArray } from "./engine/voxelmeshmodel";
 import { KeyAction, MoveController2D } from "./engine/movecontroller2d";
 import { IDigGame } from "./engine/idiggame";
+import { randInt } from "three/src/math/MathUtils";
 
 
 class Snake extends Sprite3 {
@@ -22,8 +23,8 @@ class Snake extends Sprite3 {
 }
 
 class Bomb extends Sprite3 {
-  public static async create(): Promise<Bomb> {
-    return await vm.createSprite(Bomb, './assets/vox/bomb.vox', new Vector3(0, 0, 1000), undefined);
+  public static async create(pos: Vector3): Promise<Bomb> {
+    return await vm.createSprite(Bomb, './assets/vox/bomb.vox', pos, undefined);
   }
 }
 
@@ -69,7 +70,7 @@ export class BoxedGame implements IDigGame {
   // forever { key = waitKey()}
   private async moveMonkey(): Promise<void> {
     vm.forever(async () => {
-      let action = await inputController!.waitAction(this.char, 100);
+      let action = await inputController!.waitAction(this.char, 0.1);
       if (action !== undefined && action === KeyAction.None) {
         this.char.speed.set(0, 0, 0);
       }
@@ -80,11 +81,15 @@ export class BoxedGame implements IDigGame {
   // this makes it less visible
   private async dropObject(): Promise<void> {
     vm.forever(async () => {
-      let bomb = await Bomb.create();
+      let bomb = await Bomb.create(new Vector3(randInt(0, 1000), randInt(0, 1000), 1000));
+      let speed = 10;
       let collisions: IRigitBody[] = [];
 
-      while (!await vm.waitCollide(bomb, 100, collisions)) {
-        bomb.speed.add(new Vector3(0, 0, 1));
+      bomb.speed.add(new Vector3(0, 0, -speed));
+
+      while (!await vm.waitCollide(bomb, 0.1, collisions)) {
+        speed = Math.min(speed * 1.1, 100);
+        bomb.speed.add(new Vector3(0, 0, -speed));
       }
 
       if (RigitBodyArray.contains<Monky>(collisions)) {

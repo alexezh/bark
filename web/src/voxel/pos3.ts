@@ -1,4 +1,5 @@
 
+// same as vector but more efficient as it does use array
 export type WorldCoord3 = {
   x: number,
   y: number,
@@ -6,6 +7,18 @@ export type WorldCoord3 = {
 }
 
 export type WorldSize3 = {
+  sx: number,
+  sy: number,
+  sz: number;
+}
+
+export type MapPos3 = {
+  x: number,
+  y: number,
+  z: number;
+}
+
+export type MapSize3 = {
   sx: number,
   sy: number,
   sz: number;

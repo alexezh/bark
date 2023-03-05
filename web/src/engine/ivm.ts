@@ -16,8 +16,9 @@ export interface IVM {
   loadGame(GT: { new(): IDigGame }): Promise<IDigGame>;
 
   loadMap(id: string): Promise<void>;
-  start(): void;
+  start(): Promise<void>;
   stop(): void;
+  update(dt: number): void;
   createSprite<T extends Sprite3>(AT: { new(...args: any[]): T; }, uri: string, pos: Vector3, rm: IRigitModel | undefined): Promise<T>;
   removeSprite(sprite: Sprite3);
   forever(func: () => Promise<void>): Promise<void>;
