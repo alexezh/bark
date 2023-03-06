@@ -1,6 +1,6 @@
 import { vm } from "./engine/ivm";
 import { Sprite3 } from "./engine/sprite3";
-import { Vector3 } from "three";
+import { Vector3, Vector4 } from "three";
 import { RoapModel } from "./engine/avatars/sequencebody";
 import { IRigitBody, RigitBodyArray } from "./engine/voxelmeshmodel";
 import { KeyAction, MoveController2D } from "./engine/movecontroller2d";
@@ -30,18 +30,10 @@ class Bomb extends Sprite3 {
 
 class Monky extends Sprite3 {
   public static async create(): Promise<Monky> {
-    let m = await vm.createSprite(Monky, './assets/vox/monky.vox', new Vector3(0, 0, 1000), undefined);
+    let m = await vm.createSprite(Monky, './assets/vox/monky.vox', new Vector3(50, 50, 20), undefined);
 
     //inputController!.onKeyAction(this.onKey.bind(this));
     return m;
-  }
-
-  public async onKey(action: KeyAction): Promise<void> {
-    if (action === KeyAction.None) {
-      this.speed.set(0, 0, 0);
-    } else {
-      this.speed.set(1, 0, 0);
-    }
   }
 }
 
@@ -71,9 +63,9 @@ export class BoxedGame implements IDigGame {
   private async moveMonkey(): Promise<void> {
     console.log("start moveMonkey");
     vm.forever(async () => {
-      let action = await inputController!.waitAction(this.char, 0.1);
-      if (action !== undefined && action === KeyAction.None) {
-        this.char.speed.set(0, 0, 0);
+      let action = await inputController!.waitAction(10);
+      if (action !== undefined) {
+        this.char.setSpeed(new Vector3(action.move * 10, action.strafe * 10, 0));
       }
     });
   }

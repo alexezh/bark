@@ -8,8 +8,8 @@ export type CreateMoveAnimation = (sprite: Sprite3, pos: Vector3) => IAnimatable
 export interface IGamePhysicsInputController {
   // called before physics evaluates parameters
   // good chance for sprite to handle keyboard
-  onBeforeMove(tick: number): Promise<void>;
-  onAfterMove();
+  //onBeforeMove(tick: number);
+  //onAfterMove();
 }
 
 export type RigitCollisionHandler = (target: IRigitBody[]) => void;

@@ -4,55 +4,89 @@ import { Sprite3 } from "./sprite3";
 import { vm } from "./ivm";
 
 // abstracts actions between keyboard, controllers and mouse
-export enum KeyAction {
+export enum KeyActionKind {
     None,
-    Left,
-    Right,
-    Forward,
-    Back,
     Jump,
     Action,
+}
+
+export type KeyAction = {
+    move: number; // -1 back
+    strafe: number; // -1 left
+    jump: boolean;
+    // true if keyboard has not changed
+    repeat: number;
 }
 
 // handles ASDW and arrows
 export class MoveController2D implements IGamePhysicsInputController {
     private pending: ((action: KeyAction | undefined) => void) | undefined = undefined;
+    private actionGen: number = 0;
     private lastAction: KeyAction | undefined;
+    private lastActionTimeSeconds: number = 0;
     private input: KeyBinder;
+    private keyRepeatTimeoutSeconds = 0.1;
 
     public constructor() {
         this.input = new KeyBinder(vm.canvas, this.onKey.bind(this));
-    }
-
-    // called by physics engine before next move
-    // check if we have pending wait and complete it before we continue
-    public async onBeforeMove(tick: number): Promise<void> {
-        let action: KeyAction;
-        action = KeyAction.Left;
-        // compute current action
-        // this.onInput?.call(this, action);
-    }
-
-    public onAfterMove() {
+        this.lastActionTimeSeconds = vm.clock.elapsedTime;
     }
 
     // wait for next key press (emulating basic behavior)
-    public waitAction(sprite: Sprite3, timeout: number): Promise<KeyAction | undefined> {
-        // make sure that controller attached; mostly noop
-        vm.physics.attachInputController(this);
+    public waitAction(timeoutSeconds: number): Promise<KeyAction | undefined> {
 
         let promise = new Promise<KeyAction | undefined>((resolve) => { this.pending = resolve });
-        if (this.lastAction !== undefined) {
+        if (this.lastAction !== undefined && this.lastAction.repeat === 0) {
+            this.lastAction.repeat += 1;
             this.pending!.call(this, this.lastAction);
+            return promise;
         }
 
-        // setTimeout(timeout, )
+        let lastAction = this.lastAction;
+        if (lastAction !== undefined) {
+            setTimeout(() => {
+                if (lastAction !== undefined && lastAction === this.lastAction) {
+                    lastAction.repeat += 1;
+                    this.pending!.call(this, this.lastAction);
+                }
+            }, timeoutSeconds * 1000);
+        }
 
         return promise;
     }
 
     private onKey(): void {
+        this.lastActionTimeSeconds = vm.clock.elapsedTime;
 
+        let action: KeyAction = {
+            move: 0,
+            strafe: 0,
+            jump: false,
+            repeat: 0
+        };
+
+        if (this.input.pressedKeys.ArrowLeft || this.input.pressedKeys.KeyA) {
+            action.strafe -= 1;
+        }
+
+        if (this.input.pressedKeys.ArrowRight || this.input.pressedKeys.KeyD) {
+            action.strafe += 1;
+        }
+
+        if (this.input.pressedKeys.ArrowDown || this.input.pressedKeys.KeyS) {
+            action.move += 1;
+        }
+
+        if (this.input.pressedKeys.ArrowUp || this.input.pressedKeys.KeyW) {
+            action.move -= 1;
+        }
+
+        this.lastAction = action;
+        if (this.pending !== undefined) {
+            this.lastAction.repeat += 1;
+            this.pending!.call(this, this.lastAction);
+            this.pending = undefined;
+        }
     }
 
     public async onKeyDzz(input: KeyBinder): Promise<void> {

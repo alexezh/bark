@@ -1,4 +1,4 @@
-import { Vector3 } from "three";
+import { Clock, Vector3 } from "three";
 import AsyncEventSource from "../AsyncEventSource";
 import { ICameraLayer } from "../voxel/icameralayer";
 import { IGameMap } from "../voxel/igamemap";
@@ -30,6 +30,7 @@ export class VM implements IVM {
   private _camera?: ICameraLayer;
   private _game?: IDigGame;
   private _collisions: WeakMap<IRigitBody, CollisionWaiter> = new WeakMap<IRigitBody, CollisionWaiter>;
+  public clock!: Clock;
 
   private readonly onMapChanged: AsyncEventSource<boolean> = new AsyncEventSource();
   private readonly _startHandlers: StartHandler[] = [];
@@ -44,6 +45,7 @@ export class VM implements IVM {
 
   public constructor(canvas: HTMLElement) {
     this._canvas = canvas;
+    this.clock = new Clock();
   }
 
   public get canvas(): HTMLElement { return this._canvas; }
@@ -91,6 +93,7 @@ export class VM implements IVM {
     }
 
     console.log('VM: start');
+    this.clock.start();
     this._game.start();
 
     this._ticker = new Ticker();
@@ -106,11 +109,13 @@ export class VM implements IVM {
     console.log('VM: stop');
     animator.stop();
     this._game!.stop();
+    this.clock.stop();
     this._running = false;
   }
 
-  public update(dt: number) {
-    this.physics.update(dt);
+  public update() {
+    var delta = this.clock.getDelta();
+    this.physics.update(delta);
   }
 
   public async createSprite<T extends Sprite3>(AT: { new(...args: any[]): T; }, uri: string, pos: Vector3, rm: IRigitModel | undefined = undefined): Promise<T> {

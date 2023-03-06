@@ -10,6 +10,7 @@ const demoWorldId = "7fa84179-dc58-4939-8678-03370fd137f3";
 // root objects of the application
 export class GameApp {
   private gameContainer: any;
+  private ready: boolean = false;
 
   // @ts-ignore
   public get terminal(): Terminal { return this._terminal; }
@@ -32,10 +33,11 @@ export class GameApp {
 
   // wait for everything to initialize
   private tryOnReady() {
-    if (terminal === undefined) {
+    if (terminal === undefined || this.ready) {
       return;
     }
 
+    this.ready = true;
     setTimeout(async () => {
       await vm.loadGame(BoxedGame);
       vm.start();

@@ -42,12 +42,10 @@ export class GamePhysics implements IGamePhysics {
     _.remove(this.bodies, (x: IRigitBody) => { return x === ro });
   }
 
-  public async update(dt: number): Promise<void> {
+  public update(dt: number): void {
     if (dt <= 0) {
       return;
     }
-
-    await this.input?.onBeforeMove(dt);
 
     let collisions: IRigitBody[] = [];
 
@@ -55,7 +53,7 @@ export class GamePhysics implements IGamePhysics {
       if (o.inactive) {
         continue;
       }
-      let s = o.speed;
+      let s = o.speed.clone();
       s.multiplyScalar(dt);
       let p = o.position.add(s);
 
@@ -71,6 +69,9 @@ export class GamePhysics implements IGamePhysics {
         o.setCollision(new MapBlockRigitBody(intersectBlock!, intersectPos!));
         collisions.push(o);
       } else {
+        if (o.id === 1) {
+          console.log('x :' + p.x + ' speed: ' + o.speed.x + ' time ' + dt);
+        }
         o.onMove(p);
       }
     }
@@ -81,7 +82,7 @@ export class GamePhysics implements IGamePhysics {
 
     //let pairs = this.broadphase.getPairs(this.bodies);
 
-    this.input?.onAfterMove();
+    //this.input?.onAfterMove();
   }
 }
 

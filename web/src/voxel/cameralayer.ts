@@ -18,7 +18,6 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     public renderer!: WebGLRenderer;
     public camera!: Camera;
     public scene!: Scene;
-    public clock!: Clock;
     private input!: KeyBinder;
 
     //public particles!: ParticlePool;
@@ -50,7 +49,6 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         })());
 
         this.scene = new Scene();
-        this.clock = new Clock();
 
         this.input = new KeyBinder(this.element, () => { });
 
@@ -131,6 +129,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
 
         this.map = vm.map;
 
+        /*
         this.mapEditor = new MapEditor(
             this,
             { w: this.props.w, h: this.props.h },
@@ -138,6 +137,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
             this.camera,
             this.input,
             this.map);
+*/
 
         // add geometry covering map on the bottom so we can handle all clicks within map
         const geometry = new PlaneGeometry(1000, 1000);
@@ -151,7 +151,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     reset() {
     };
 
-    onWindowResize() {
+    public onWindowResize() {
         //this.camera.aspect = window.innerWidth / window.innerHeight;
         //this.camera.updateProjectionMatrix();
 
@@ -160,13 +160,13 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
 
     public onMouseDown(htmlEvt: MouseEvent): boolean {
         let evt = makeMEvent(htmlEvt, undefined, this.props.scale);
-        this.mapEditor.onMouseDown(evt);
+        this.mapEditor?.onMouseDown(evt);
         return true;
     }
 
     public onMouseUp(htmlEvt: MouseEvent): boolean {
         let evt = makeMEvent(htmlEvt, undefined, this.props.scale);
-        this.mapEditor.onMouseUp(evt);
+        this.mapEditor?.onMouseUp(evt);
         return true;
     }
 
@@ -179,9 +179,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     render() {
         requestAnimationFrame(this.render.bind(this));
 
-        var delta = this.clock.getDelta();
-
-        vm.update(delta);
+        vm.update();
         this.renderer.render(this.scene, this.camera);
     };
 }
