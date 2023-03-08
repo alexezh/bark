@@ -3,7 +3,7 @@ import { ICameraLayer } from "../voxel/icameralayer";
 import { IGameMap } from "../voxel/igamemap";
 import { IGamePhysics } from "./igamephysics";
 import { Sprite3 } from "./sprite3";
-import { IRigitBody, IRigitModel } from "./voxelmeshmodel";
+import { IRigitBody, IRigitModel, VoxelAnimationCollection } from "./voxelmeshmodel";
 import { IDigGame } from "./idiggame";
 
 export interface IVM {
@@ -20,7 +20,10 @@ export interface IVM {
   start(): Promise<void>;
   stop(): void;
   update(): void;
-  createSprite<T extends Sprite3>(AT: { new(...args: any[]): T; }, uri: string, pos: Vector3, rm: IRigitModel | undefined): Promise<T>;
+  createSprite<T extends Sprite3>(
+    AT: { new(...args: any[]): T; }, uri: string, pos: Vector3,
+    rm: IRigitModel | undefined,
+    ac: VoxelAnimationCollection | undefined): Promise<T>;
   removeSprite(sprite: Sprite3);
   forever(func: () => Promise<void>): Promise<void>;
 

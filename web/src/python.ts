@@ -2,7 +2,7 @@ import { vm } from "./engine/ivm";
 import { Sprite3 } from "./engine/sprite3";
 import { Vector3, Vector4 } from "three";
 import { RoapModel } from "./engine/avatars/sequencebody";
-import { IRigitBody, RigitBodyArray } from "./engine/voxelmeshmodel";
+import { IRigitBody, RigitBodyArray, VoxelAnimationCollection } from "./engine/voxelmeshmodel";
 import { KeyAction, MoveController2D } from "./engine/movecontroller2d";
 import { IDigGame } from "./engine/idiggame";
 import { randInt } from "three/src/math/MathUtils";
@@ -12,7 +12,10 @@ class Snake extends Sprite3 {
   private sprite!: Sprite3;
 
   public static async create(): Promise<Snake> {
-    let snake = await vm.createSprite(Snake, './assets/vox/snakehead.', new Vector3(0, 0, 0), new RoapModel());
+    let snake = await vm.createSprite(
+      Snake,
+      './assets/vox/snakehead.',
+      new Vector3(0, 0, 0), new RoapModel(), undefined);
 
     //vm.onInput(snake.onKey.bind(this));
 
@@ -24,13 +27,20 @@ class Snake extends Sprite3 {
 
 class Bomb extends Sprite3 {
   public static async create(pos: Vector3): Promise<Bomb> {
-    return await vm.createSprite(Bomb, './assets/vox/bomb.vox', pos, undefined);
+    return await vm.createSprite(Bomb, './assets/vox/bomb.vox', pos, undefined, undefined);
   }
 }
 
 class Monky extends Sprite3 {
   public static async create(): Promise<Monky> {
-    let m = await vm.createSprite(Monky, './assets/vox/monky.vox', new Vector3(50, 50, 20), undefined);
+    let ac: VoxelAnimationCollection = {
+      right: [{ idx: 0, dur: 0.1 }, { idx: 1, dur: 0.1 }],
+      left: [{ idx: 2, dur: 0.1 }, { idx: 3, dur: 0.1 }]
+    }
+    let m = await vm.createSprite(Monky, './assets/vox/monky.vox',
+      new Vector3(50, 50, 20),
+      undefined,
+      ac);
 
     //inputController!.onKeyAction(this.onKey.bind(this));
     return m;
@@ -63,7 +73,7 @@ export class BoxedGame implements IDigGame {
   private async moveMonkey(): Promise<void> {
     console.log("start moveMonkey");
     vm.forever(async () => {
-      let action = await inputController!.waitAction(10);
+      let action = await inputController!.waitAction(0.1);
       if (action !== undefined) {
         this.char.setSpeed(new Vector3(action.move * 10, action.strafe * 10, 0));
       }

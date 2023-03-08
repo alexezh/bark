@@ -1,12 +1,12 @@
 import { Scene, Vector3 } from "three";
 import { getSupportedCodeFixes } from "typescript";
-import { IRigitBody, IRigitModel, RigitBodyKind, VoxelMeshModel } from "./voxelmeshmodel";
+import { IRigitBody, IRigitModel, RigitBodyKind, VoxelAnimationCollection, VoxelMeshModel } from "./voxelmeshmodel";
 
 // main object for compositing content
 export class Sprite3 implements IRigitBody {
   private static _nextId: number = 1;
   private _id: number;
-  private meshModels: VoxelMeshModel[] = [];
+  private meshModels: { [key: string]: VoxelMeshModel } = {};
   private _rigitBody: IRigitBody | undefined;
   public owner: any;
   public rigit: IRigitModel | undefined;
@@ -32,23 +32,23 @@ export class Sprite3 implements IRigitBody {
     this._position = pos;
   }
 
-  public async load(uri: string): Promise<void> {
-    let m = await VoxelMeshModel.create(uri);
-    this.meshModels.push(m);
+  public async load(uri: string, animations: VoxelAnimationCollection | undefined): Promise<void> {
+    let m = await VoxelMeshModel.create(uri, animations);
+    this.meshModels.main = m;
     this._size = m.size;
   }
 
   public addToScene(scene: Scene) {
-    for (let m of this.meshModels) {
-      scene.add(m.getMesh());
+    for (let m of Object.keys(this.meshModels)) {
+      this.meshModels[m].addToScene(scene);
     }
 
     console.log('Loaded sprite: ' + this._id);
   }
 
   public removeFromScene(scene: Scene) {
-    for (let m of this.meshModels) {
-      scene.remove(m.getMesh());
+    for (let m of Object.keys(this.meshModels)) {
+      this.meshModels[m].removeFromScene(scene);
     }
 
     console.log('Remove sprite: ' + this._id);
@@ -68,8 +68,8 @@ export class Sprite3 implements IRigitBody {
 
     // move meshes; we should run this through rigitmodel to update
     // position correctly
-    for (let m of this.meshModels) {
-      m.getMesh().position.set(pos.x, pos.y, pos.z);
+    for (let m of Object.keys(this.meshModels)) {
+      this.meshModels[m].setPosition(pos);
     }
   }
 

@@ -10,7 +10,7 @@ import { IGamePhysics, RigitCollisionHandler } from "./igamephysics";
 import { IVM, setVM } from "./ivm";
 import { Sprite3 } from "./sprite3";
 import { Ticker } from "./ticker";
-import { IRigitBody, IRigitModel } from "./voxelmeshmodel";
+import { IRigitBody, IRigitModel, VoxelAnimationCollection } from "./voxelmeshmodel";
 
 export type MessageHandler = (msg: string) => Promise<void>;
 export type StartHandler = () => Promise<void>;
@@ -118,9 +118,15 @@ export class VM implements IVM {
     this.physics.update(delta);
   }
 
-  public async createSprite<T extends Sprite3>(AT: { new(...args: any[]): T; }, uri: string, pos: Vector3, rm: IRigitModel | undefined = undefined): Promise<T> {
+  public async createSprite<T extends Sprite3>(
+    AT: { new(...args: any[]): T; },
+    uri: string,
+    pos: Vector3,
+    rm: IRigitModel | undefined = undefined,
+    animations: VoxelAnimationCollection | undefined = undefined): Promise<T> {
+
     let s = new AT(pos);
-    await s.load(uri);
+    await s.load(uri, animations);
 
     this.physics.addRigitObject(s, undefined);
     s.addToScene(this._camera!.scene);

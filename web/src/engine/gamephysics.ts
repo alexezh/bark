@@ -69,9 +69,6 @@ export class GamePhysics implements IGamePhysics {
         o.setCollision(new MapBlockRigitBody(intersectBlock!, intersectPos!));
         collisions.push(o);
       } else {
-        if (o.id === 1) {
-          console.log('x :' + p.x + ' speed: ' + o.speed.x + ' time ' + dt);
-        }
         o.onMove(p);
       }
     }

@@ -1,7 +1,7 @@
 // represents voxel model as set of meshes
 // ATT: it is responsivility of caller to adjust position information on mesh
 
-import { Mesh, MeshPhongMaterial, Vector, Vector3 } from "three";
+import { Mesh, MeshPhongMaterial, Scene, Vector, Vector3 } from "three";
 import { GameColors } from "../ui/gamecolors";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
 import { modelCache } from "../voxel/voxelmodelcache";
@@ -45,26 +45,36 @@ export interface IRigitModel {
     update(): void;
 }
 
+export type VoxelAnimationFrame = {
+    idx: number;
+    dur: number;
+}
+
+export type VoxelAnimationCollection = { [name: string]: VoxelAnimationFrame[] };
+
 // when adding / updating mesh on scene
 export class VoxelMeshModel {
     private frames: Mesh[] = [];
     private currentFrame: number = 0;
     private scale: number = 0.6;
     private _size!: Vector3;
+    private readonly _animations: VoxelAnimationCollection | undefined;
     private readonly material: MeshPhongMaterial;
+    private currentAnumation: string | undefined;
 
     // size in world units
     // computed as voxels multiplied by scale factor
     public get size(): Vector3 { return this._size; };
 
-    public static async create(uri: string): Promise<VoxelMeshModel> {
-        let o = new VoxelMeshModel();
+    public static async create(uri: string, animations: VoxelAnimationCollection | undefined = undefined): Promise<VoxelMeshModel> {
+        let o = new VoxelMeshModel(animations);
         await o.load(uri);
         return o;
     }
 
-    public constructor() {
+    public constructor(animations: VoxelAnimationCollection | undefined) {
         this.material = GameColors.material;
+        this._animations = animations;
     }
 
     private async load(uri: string): Promise<void> {
@@ -85,8 +95,25 @@ export class VoxelMeshModel {
         this._size = new Vector3(sz.x * this.scale, sz.y * this.scale, sz.z * this.scale);
     }
 
-    public getMesh(): Mesh {
-        return this.frames[this.currentFrame];
+    public playAnimation(name: string) {
+
+    }
+
+    public addToScene(scene: Scene) {
+        for (let m of this.frames) {
+            m.visible = false;
+            scene.add(m);
+        }
+    }
+
+    public removeFromScene(scene: Scene) {
+        for (let m of this.frames) {
+            scene.remove(m);
+        }
+    }
+
+    public setPosition(pos: Vector3): void {
+        this.frames[this.currentFrame].position.set(pos.x, pos.y, pos.z);
     }
 }
 

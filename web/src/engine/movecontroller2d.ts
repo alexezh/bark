@@ -4,8 +4,9 @@ import { Sprite3 } from "./sprite3";
 import { vm } from "./ivm";
 
 // abstracts actions between keyboard, controllers and mouse
-export enum KeyActionKind {
+export enum KeyAction {
     None,
+
     Jump,
     Action,
 }
