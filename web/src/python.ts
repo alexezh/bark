@@ -3,7 +3,7 @@ import { Sprite3 } from "./engine/sprite3";
 import { Vector3, Vector4 } from "three";
 import { RoapModel } from "./engine/avatars/sequencebody";
 import { IRigitBody, RigitBodyArray, VoxelAnimationCollection } from "./engine/voxelmeshmodel";
-import { KeyAction, MoveController2D } from "./engine/movecontroller2d";
+import { MoveController2D } from "./engine/movecontroller2d";
 import { IDigGame } from "./engine/idiggame";
 import { randInt } from "three/src/math/MathUtils";
 
@@ -73,10 +73,22 @@ export class BoxedGame implements IDigGame {
   private async moveMonkey(): Promise<void> {
     console.log("start moveMonkey");
     vm.forever(async () => {
-      let action = await inputController!.waitAction(0.1);
-      if (action !== undefined) {
-        this.char.setSpeed(new Vector3(action.move * 10, action.strafe * 10, 0));
+      let dx = 0;
+      let dy = 0;
+      let ev = await inputController!.waitKey(0.1);
+      if (ev.left) {
+        dx -= 10;
       }
+      if (ev.right) {
+        dx += 10;
+      }
+      if (ev.forward) {
+        dy += 10;
+      }
+      if (ev.backward) {
+        dy -= 10;
+      }
+      this.char.setSpeed(new Vector3(dx, dy, 0));
     });
   }
 
