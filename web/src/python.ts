@@ -77,16 +77,16 @@ export class BoxedGame implements IDigGame {
       let dy = 0;
       let ev = await inputController!.waitKey(0.1);
       if (ev.left) {
-        dx -= 10;
+        dy -= 10;
       }
       if (ev.right) {
-        dx += 10;
-      }
-      if (ev.forward) {
         dy += 10;
       }
+      if (ev.forward) {
+        dx += 10;
+      }
       if (ev.backward) {
-        dy -= 10;
+        dx -= 10;
       }
       this.char.setSpeed(new Vector3(dx, dy, 0));
     });
@@ -106,7 +106,7 @@ export class BoxedGame implements IDigGame {
         let collision = await vm.waitCollide([bomb], 0.1);
         if (collision === undefined) {
           speed = Math.min(speed * 1.1, 100);
-          bomb.speed.add(new Vector3(0, 0, -speed));
+          bomb.speed.set(0, 0, -speed);
         } else {
           if (collision instanceof Monky) {
             vm.send('KilledMonkey');

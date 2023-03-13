@@ -5,6 +5,7 @@ import { VoxelModel } from "../voxel/voxelmodel";
 import { MapPos3, MapSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { IGameMap, MapBlock, MapBlockCoord } from "../voxel/igamemap";
 import { IRigitBody } from "./voxelmeshmodel";
+import { MapBlockRigitBody, MapBoundaryRigitBody } from "../voxel/mapblockrigitbody";
 
 
 export class MeshModel {
@@ -150,9 +151,14 @@ export class GameMap implements IGameMap {
 
     public intersectBlocks(ro: IRigitBody,
         pos: WorldCoord3,
-        func: (block: MapBlock, blockPos: WorldCoord3) => boolean): boolean {
+        func: (target: IRigitBody) => boolean): boolean {
 
         let sz = ro.size;
+
+        if (pos.z < 0) {
+            func(new MapBoundaryRigitBody(new Vector3(pos.x, pos.y, 0), new Vector3(0, 0, 0)));
+            return true;
+        }
 
         // we assume upper bound non-inclusive; ie if block is at position 0
         // and size 16, it overlaps with one layer
@@ -172,7 +178,8 @@ export class GameMap implements IGameMap {
                 for (let x = xStart; x < xEnd; x++) {
                     let block = layer.getBlock(x, y);
                     if (block !== undefined) {
-                        if (func(block, { x: x * this.blockSize, y: y * this.blockSize, z: z * this.blockSize })) {
+                        let b = new MapBlockRigitBody(block, { x: x * this.blockSize, y: y * this.blockSize, z: z * this.blockSize });
+                        if (func(b)) {
                             return true;
                         }
                     }

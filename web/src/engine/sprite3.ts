@@ -34,6 +34,7 @@ export class Sprite3 implements IRigitBody {
 
   public async load(uri: string, animations: VoxelAnimationCollection | undefined): Promise<void> {
     let m = await VoxelMeshModel.create(uri, animations);
+    m.setPosition(this._position);
     this.meshModels.main = m;
     this._size = m.size;
   }
@@ -55,7 +56,10 @@ export class Sprite3 implements IRigitBody {
   }
 
   public setPosition(pos: Vector3) {
-
+    this._position = pos;
+    for (let m of Object.keys(this.meshModels)) {
+      this.meshModels[m].setPosition(pos);
+    }
   }
 
   public setSpeed(speed: Vector3) {

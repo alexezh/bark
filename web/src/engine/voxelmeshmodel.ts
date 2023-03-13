@@ -9,7 +9,8 @@ import { Sprite3 } from "./sprite3";
 
 export enum RigitBodyKind {
     sprite,
-    block
+    block,
+    boundary
 }
 
 // interface for physics engine to work with sprites
@@ -104,6 +105,8 @@ export class VoxelMeshModel {
             m.visible = false;
             scene.add(m);
         }
+
+        this.frames[this.currentFrame].visible = true;
     }
 
     public removeFromScene(scene: Scene) {

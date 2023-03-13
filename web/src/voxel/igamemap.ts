@@ -40,10 +40,12 @@ export interface IGameMap {
   mapSizeToWorldSize(gridSize: MapSize3): WorldSize3;
   mapPosToWorldPos(gridPos: MapPos3): WorldCoord3;
 
+  // intersects sprite with block
+  // creates rigit body for each interesecting block
   intersectBlocks(
     ro: IRigitBody,
     pos: WorldCoord3,
-    func: (block: MapBlock, blockPos: WorldCoord3) => boolean): boolean;
+    func: (target: IRigitBody) => boolean): boolean;
 
   //  readonly physics: IGamePhysics;
   //  readonly mechanics: IGameMechanics;

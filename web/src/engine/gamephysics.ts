@@ -57,16 +57,14 @@ export class GamePhysics implements IGamePhysics {
       s.multiplyScalar(dt);
       let p = o.position.add(s);
 
-      let intersectBlock: MapBlock | undefined;
-      let intersectPos: WorldCoord3 | undefined;
-      if (this.map.intersectBlocks(o, p, (block: MapBlock, blockPos: WorldCoord3) => {
+      let intersectBody: IRigitBody | undefined;
+      if (this.map.intersectBlocks(o, p, (target: IRigitBody) => {
         // just check if there is a block
-        intersectBlock = block;
-        intersectPos = blockPos;
+        intersectBody = target;
         return true;
       })) {
         o.setSpeed(new Vector3(0, 0, 0));
-        o.setCollision(new MapBlockRigitBody(intersectBlock!, intersectPos!));
+        o.setCollision(intersectBody!);
         collisions.push(o);
       } else {
         o.onMove(p);

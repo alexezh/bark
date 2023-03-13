@@ -31,6 +31,7 @@ export class VM implements IVM {
   private _game?: IDigGame;
   private _collisions: WeakMap<IRigitBody, CollisionWaiter> = new WeakMap<IRigitBody, CollisionWaiter>;
   public clock!: Clock;
+  private _waitCalls: number = 0;
 
   private readonly onMapChanged: AsyncEventSource<boolean> = new AsyncEventSource();
   private readonly _startHandlers: StartHandler[] = [];
@@ -147,6 +148,8 @@ export class VM implements IVM {
   }
 
   public waitCollide(sprites: Sprite3[], seconds: number): Promise<Sprite3> {
+    this._waitCalls++;
+
     let waiter: CollisionWaiter = { resolve: undefined };
     let p: Promise<Sprite3> = new Promise<Sprite3>((resolve) => {
       waiter.resolve = (target: IRigitBody | undefined) => {
@@ -179,7 +182,6 @@ export class VM implements IVM {
         waiter.resolve = undefined;
       }
     }, seconds * 1000);
-    this.sleep(seconds);
     return p;
   }
 
