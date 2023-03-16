@@ -4,7 +4,7 @@ import { MapLayer } from "./maplayer";
 import { VoxelModel } from "../voxel/voxelmodel";
 import { MapPos3, MapSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { IGameMap, MapBlock, MapBlockCoord } from "../voxel/igamemap";
-import { IRigitBody } from "./voxelmeshmodel";
+import { IRigitBody } from "../voxel/voxelmeshmodel";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../voxel/mapblockrigitbody";
 
 

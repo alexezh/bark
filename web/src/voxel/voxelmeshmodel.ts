@@ -1,11 +1,12 @@
 // represents voxel model as set of meshes
 // ATT: it is responsivility of caller to adjust position information on mesh
 
-import { Mesh, MeshPhongMaterial, Scene, Vector, Vector3 } from "three";
+import { Mesh, MeshPhongMaterial, Quaternion, Scene, Vector, Vector3 } from "three";
 import { GameColors } from "../ui/gamecolors";
-import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
-import { modelCache } from "../voxel/voxelmodelcache";
-import { Sprite3 } from "./sprite3";
+import { VoxelGeometryWriter } from "./voxelgeometrywriter";
+import { modelCache } from "./voxelmodelcache";
+import { vm } from "../engine/ivm";
+import { Sprite3 } from "../engine/sprite3";
 
 export enum RigitBodyKind {
     sprite,
@@ -35,17 +36,6 @@ export interface IRigitBody {
     setCollision(obj: IRigitBody | undefined): void;
 }
 
-export class RigitBodyArray {
-    public static contains<T extends Sprite3>(a: IRigitBody[]) {
-        return false;
-    }
-}
-
-export interface IRigitModel {
-    move(pos: Vector3, parts: VoxelMeshModel): void;
-    update(): void;
-}
-
 export type VoxelAnimationFrame = {
     idx: number;
     dur: number;
@@ -56,12 +46,18 @@ export type VoxelAnimationCollection = { [name: string]: VoxelAnimationFrame[] }
 // when adding / updating mesh on scene
 export class VoxelMeshModel {
     private frames: Mesh[] = [];
-    private currentFrame: number = 0;
     private scale: number = 0.6;
     private _size!: Vector3;
-    private readonly _animations: VoxelAnimationCollection | undefined;
+    private _pos!: Vector3;
+    private _qt!: Quaternion;
     private readonly material: MeshPhongMaterial;
-    private currentAnumation: string | undefined;
+    // index in frames array
+    private currentFrame: number = 0;
+    private currentAnimation: VoxelAnimationFrame[] | undefined;
+    // index in frames array
+    private currentAnimationFrame: number = 0;
+    private lastFrameTick: number = 0;
+    private readonly animations: VoxelAnimationCollection | undefined;
 
     // size in world units
     // computed as voxels multiplied by scale factor
@@ -75,7 +71,7 @@ export class VoxelMeshModel {
 
     public constructor(animations: VoxelAnimationCollection | undefined) {
         this.material = GameColors.material;
-        this._animations = animations;
+        this.animations = animations;
     }
 
     private async load(uri: string): Promise<void> {
@@ -94,10 +90,42 @@ export class VoxelMeshModel {
 
         let sz = vmm.size;
         this._size = new Vector3(sz.x * this.scale, sz.y * this.scale, sz.z * this.scale);
+        this._pos = new Vector3(0, 0, 0);
     }
 
     public playAnimation(name: string) {
+        if (this.animations === undefined) {
+            return;
+        }
 
+        if (this.currentAnimation === this.animations[name]) {
+            return;
+        }
+
+        if (this.currentAnimation !== undefined) {
+
+        }
+
+        this.lastFrameTick = vm.clock.lastTick;
+        this.currentAnimation = this.animations[name];
+    }
+
+    public onRender(tick: number) {
+        if (this.currentAnimation === undefined) {
+            return;
+        }
+
+        if (this.lastFrameTick !== 0 && this.lastFrameTick + this.currentAnimation[this.currentAnimationFrame].dur < tick) {
+            this.frames[this.currentFrame].visible = false;
+            this.currentAnimationFrame++;
+            if (this.currentAnimationFrame >= this.currentAnimation.length) {
+                this.currentAnimationFrame = 0;
+            }
+            this.lastFrameTick = tick;
+            this.currentFrame = this.currentAnimation[this.currentAnimationFrame].idx;
+            this.frames[this.currentFrame].position.copy(this._pos);
+            this.frames[this.currentFrame].visible = true;
+        }
     }
 
     public addToScene(scene: Scene) {
@@ -116,7 +144,13 @@ export class VoxelMeshModel {
     }
 
     public setPosition(pos: Vector3): void {
+        this._pos = pos;
         this.frames[this.currentFrame].position.set(pos.x, pos.y, pos.z);
+    }
+
+    public setRotation(qt: Quaternion) {
+        this._qt = qt;
+        this.frames[this.currentFrame].rotation.setFromQuaternion(this._qt);
     }
 }
 

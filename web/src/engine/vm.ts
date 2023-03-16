@@ -3,6 +3,7 @@ import AsyncEventSource from "../AsyncEventSource";
 import { ICameraLayer } from "../voxel/icameralayer";
 import { IGameMap } from "../voxel/igamemap";
 import { animator } from "./animator";
+import { FrameClock } from "./clock";
 import { GameMap } from "./gamemap";
 import { GamePhysics } from "./gamephysics";
 import { IDigGame } from "./idiggame";
@@ -10,7 +11,8 @@ import { IGamePhysics, RigitCollisionHandler } from "./igamephysics";
 import { IVM, setVM } from "./ivm";
 import { Sprite3 } from "./sprite3";
 import { Ticker } from "./ticker";
-import { IRigitBody, IRigitModel, VoxelAnimationCollection } from "./voxelmeshmodel";
+import { IRigitBody, VoxelAnimationCollection } from "../voxel/voxelmeshmodel";
+import { IRigitModel } from "./irigitmodel";
 
 export type MessageHandler = (msg: string) => Promise<void>;
 export type StartHandler = () => Promise<void>;
@@ -29,9 +31,9 @@ export class VM implements IVM {
   private _map!: IGameMap;
   private _camera?: ICameraLayer;
   private _game?: IDigGame;
-  private _collisions: WeakMap<IRigitBody, CollisionWaiter> = new WeakMap<IRigitBody, CollisionWaiter>;
-  public clock!: Clock;
-  private _waitCalls: number = 0;
+  private readonly _sprites: Map<number, Sprite3> = new Map<number, Sprite3>();
+  private readonly _collisions: WeakMap<IRigitBody, CollisionWaiter> = new WeakMap<IRigitBody, CollisionWaiter>;
+  public readonly clock!: FrameClock;
 
   private readonly onMapChanged: AsyncEventSource<boolean> = new AsyncEventSource();
   private readonly _startHandlers: StartHandler[] = [];
@@ -46,7 +48,7 @@ export class VM implements IVM {
 
   public constructor(canvas: HTMLElement) {
     this._canvas = canvas;
-    this.clock = new Clock();
+    this.clock = new FrameClock();
   }
 
   public get canvas(): HTMLElement { return this._canvas; }
@@ -110,13 +112,16 @@ export class VM implements IVM {
     console.log('VM: stop');
     animator.stop();
     this._game!.stop();
-    this.clock.stop();
     this._running = false;
   }
 
-  public update() {
-    var delta = this.clock.getDelta();
-    this.physics.update(delta);
+  public onRender() {
+    this.clock.tick();
+    this.physics.update(this.clock.delta);
+    let tick = this.clock.lastTick;
+    for (let s of this._sprites) {
+      s[1].onRender(tick);
+    }
   }
 
   public async createSprite<T extends Sprite3>(
@@ -129,6 +134,7 @@ export class VM implements IVM {
     let s = new AT(pos);
     await s.load(uri, animations);
 
+    this._sprites.set(s.id, s);
     this.physics.addRigitObject(s, undefined);
     s.addToScene(this._camera!.scene);
     //gameState.scene 
@@ -138,6 +144,7 @@ export class VM implements IVM {
 
   public async removeSprite(sprite: Sprite3) {
     this.physics.removeRigitObject(sprite);
+    this._sprites.delete(sprite.id);
     sprite.removeFromScene(this._camera!.scene);
   }
 
@@ -148,8 +155,6 @@ export class VM implements IVM {
   }
 
   public waitCollide(sprites: Sprite3[], seconds: number): Promise<Sprite3> {
-    this._waitCalls++;
-
     let waiter: CollisionWaiter = { resolve: undefined };
     let p: Promise<Sprite3> = new Promise<Sprite3>((resolve) => {
       waiter.resolve = (target: IRigitBody | undefined) => {

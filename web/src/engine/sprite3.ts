@@ -1,13 +1,13 @@
 import { Scene, Vector3 } from "three";
 import { getSupportedCodeFixes } from "typescript";
-import { IRigitBody, IRigitModel, RigitBodyKind, VoxelAnimationCollection, VoxelMeshModel } from "./voxelmeshmodel";
+import { IRigitModel } from "./irigitmodel";
+import { IRigitBody, RigitBodyKind, VoxelAnimationCollection, VoxelMeshModel } from "../voxel/voxelmeshmodel";
 
 // main object for compositing content
 export class Sprite3 implements IRigitBody {
   private static _nextId: number = 1;
   private _id: number;
   private meshModels: { [key: string]: VoxelMeshModel } = {};
-  private _rigitBody: IRigitBody | undefined;
   public owner: any;
   public rigit: IRigitModel | undefined;
   private _inactive: boolean = false;
@@ -39,6 +39,12 @@ export class Sprite3 implements IRigitBody {
     this._size = m.size;
   }
 
+  public animate(id: string) {
+    for (let m of Object.keys(this.meshModels)) {
+      this.meshModels[m].playAnimation(id);
+    }
+  }
+
   public addToScene(scene: Scene) {
     for (let m of Object.keys(this.meshModels)) {
       this.meshModels[m].addToScene(scene);
@@ -53,6 +59,14 @@ export class Sprite3 implements IRigitBody {
     }
 
     console.log('Remove sprite: ' + this._id);
+  }
+
+  public onRender(tick: number) {
+    for (let key of Object.keys(this.meshModels)) {
+      let model = this.meshModels[key];
+      this.rigit?.onRender(this._speed, model);
+      model.onRender(tick);
+    }
   }
 
   public setPosition(pos: Vector3) {

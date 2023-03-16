@@ -2,7 +2,7 @@ import { Scene, Vector3 } from "three";
 import { WorldProps } from "../fetchadapter";
 import { MapPos3, MapSize3, WorldCoord3, WorldSize3 } from "./pos3";
 import { VoxelModel } from "./voxelmodel";
-import { IRigitBody } from "../engine/voxelmeshmodel";
+import { IRigitBody } from "./voxelmeshmodel";
 
 export type MapProps = {
   id: string;

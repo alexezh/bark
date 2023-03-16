@@ -63,7 +63,7 @@ export class MoveController2D implements IGamePhysicsInputController {
     private onKey(): void {
 
         let ev = new KeyEvent();
-        ev.lastKeyTimeSeconds = vm.clock.elapsedTime;
+        ev.lastKeyTimeSeconds = vm.clock.lastTick;
 
         if (this.input.pressedKeys.ArrowLeft || this.input.pressedKeys.KeyA) {
             ev.left = true;

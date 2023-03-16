@@ -1,5 +1,5 @@
 import { Vector3 } from "three";
-import { IRigitBody, RigitBodyKind } from "../engine/voxelmeshmodel";
+import { IRigitBody, RigitBodyKind } from "./voxelmeshmodel";
 import { MapBlock } from "./igamemap";
 import { WorldCoord3 } from "./pos3";
 

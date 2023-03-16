@@ -2,10 +2,11 @@ import { vm } from "./engine/ivm";
 import { Sprite3 } from "./engine/sprite3";
 import { Vector3, Vector4 } from "three";
 import { RoapModel } from "./engine/avatars/sequencebody";
-import { IRigitBody, RigitBodyArray, VoxelAnimationCollection } from "./engine/voxelmeshmodel";
+import { IRigitBody, VoxelAnimationCollection } from "./voxel/voxelmeshmodel";
 import { MoveController2D } from "./engine/movecontroller2d";
 import { IDigGame } from "./engine/idiggame";
 import { randInt } from "three/src/math/MathUtils";
+import { Mammal4 } from "./engine/avatars/mammal4";
 
 
 class Snake extends Sprite3 {
@@ -31,11 +32,11 @@ class Bomb extends Sprite3 {
   }
 }
 
-class Monky extends Sprite3 {
+class Monky extends Mammal4 {
   public static async create(): Promise<Monky> {
     let ac: VoxelAnimationCollection = {
-      right: [{ idx: 0, dur: 0.1 }, { idx: 1, dur: 0.1 }],
-      left: [{ idx: 2, dur: 0.1 }, { idx: 3, dur: 0.1 }]
+      move: [{ idx: 1, dur: 0.1 }, { idx: 2, dur: 0.1 }],
+      stand: [{ idx: 0, dur: 0 }]
     }
     let m = await vm.createSprite(Monky, './assets/vox/monky.vox',
       new Vector3(50, 50, 20),
@@ -87,6 +88,11 @@ export class BoxedGame implements IDigGame {
       }
       if (ev.backward) {
         dx -= 10;
+      }
+      if (dx !== 0 || dy !== 0) {
+        this.char.animate('move');
+      } else {
+        this.char.animate('stand');
       }
       this.char.setSpeed(new Vector3(dx, dy, 0));
     });

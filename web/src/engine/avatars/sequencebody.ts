@@ -1,5 +1,6 @@
 import { Vector3 } from "three";
-import { IRigitBody, IRigitModel, VoxelMeshModel } from "../voxelmeshmodel";
+import { IRigitBody, VoxelMeshModel } from "../../voxel/voxelmeshmodel";
+import { IRigitModel } from "../irigitmodel";
 
 class PathElement {
 
@@ -7,6 +8,9 @@ class PathElement {
 
 // sprites follow the path of the first sprite
 export class RoapModel implements IRigitModel {
+    onRender(speed: Vector3) {
+        throw new Error("Method not implemented.");
+    }
     private path: Vector3[] = [];
     private dir: Vector3 | undefined;
 

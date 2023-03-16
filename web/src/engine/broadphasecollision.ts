@@ -1,4 +1,4 @@
-import { IRigitBody } from "./voxelmeshmodel";
+import { IRigitBody } from "../voxel/voxelmeshmodel";
 
 export class BroadphaseCollision {
   private xEdges: number[] = [];

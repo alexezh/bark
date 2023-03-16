@@ -3,14 +3,16 @@ import { ICameraLayer } from "../voxel/icameralayer";
 import { IGameMap } from "../voxel/igamemap";
 import { IGamePhysics } from "./igamephysics";
 import { Sprite3 } from "./sprite3";
-import { IRigitBody, IRigitModel, VoxelAnimationCollection } from "./voxelmeshmodel";
+import { IRigitBody, VoxelAnimationCollection } from "../voxel/voxelmeshmodel";
 import { IDigGame } from "./idiggame";
+import { FrameClock } from "./clock";
+import { IRigitModel } from "./irigitmodel";
 
 export interface IVM {
   get map(): IGameMap;
   get physics(): IGamePhysics;
   get canvas(): HTMLElement;
-  get clock(): Clock;
+  get clock(): FrameClock;
 
   attachCamera(camera: ICameraLayer): void;
   registerMapChanged(target: any, func: () => void): void;
@@ -19,7 +21,7 @@ export interface IVM {
   loadMap(id: string): Promise<void>;
   start(): Promise<void>;
   stop(): void;
-  update(): void;
+  onRender(): void;
   createSprite<T extends Sprite3>(
     AT: { new(...args: any[]): T; }, uri: string, pos: Vector3,
     rm: IRigitModel | undefined,

@@ -177,9 +177,10 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
 
 
     render() {
+        // request next animation
         requestAnimationFrame(this.render.bind(this));
 
-        vm.update();
+        vm.onRender();
         this.renderer.render(this.scene, this.camera);
     };
 }
