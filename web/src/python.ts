@@ -1,7 +1,6 @@
 import { vm } from "./engine/ivm";
 import { Sprite3 } from "./engine/sprite3";
 import { Vector3, Vector4 } from "three";
-import { RoapModel } from "./engine/avatars/sequencebody";
 import { IRigitBody, VoxelAnimationCollection } from "./voxel/voxelmeshmodel";
 import { MoveController2D } from "./engine/movecontroller2d";
 import { IDigGame } from "./engine/idiggame";
@@ -12,18 +11,18 @@ import { Mammal4 } from "./engine/avatars/mammal4";
 class Snake extends Sprite3 {
   private sprite!: Sprite3;
 
-  public static async create(): Promise<Snake> {
-    let snake = await vm.createSprite(
-      Snake,
-      './assets/vox/snakehead.',
-      new Vector3(0, 0, 0), new RoapModel(), undefined);
+  //public static async create(): Promise<Snake> {
+  // let snake = await vm.createSprite(
+  //   Snake,
+  //   './assets/vox/snakehead.',
+  //   new Vector3(0, 0, 0), new RoapModel(), undefined);
 
-    //vm.onInput(snake.onKey.bind(this));
+  //vm.onInput(snake.onKey.bind(this));
 
-    // vm.physics.attachInputController(new MoveController2D(this))
-    //vm.physics.addRigitObject(snake.sprite, undefined);
-    return snake;
-  }
+  // vm.physics.attachInputController(new MoveController2D(this))
+  //vm.physics.addRigitObject(snake.sprite, undefined);
+  //return snake;
+  //}
 }
 
 class Bomb extends Sprite3 {

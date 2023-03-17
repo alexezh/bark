@@ -1,9 +1,20 @@
-import { Vector3 } from "three";
-import { VoxelMeshModel } from "../voxel/voxelmeshmodel";
+import { Scene, Vector3 } from "three";
+import { VoxelAnimationCollection, VoxelMeshModel } from "../voxel/voxelmeshmodel";
 
 export interface IRigitModel {
-  move(pos: Vector3, parts: VoxelMeshModel): void;
+  get size(): Vector3;
+
+  load(uri: string, animations: VoxelAnimationCollection | undefined): Promise<void>;
+  animate(id: string);
+
+  addToScene(scene: Scene);
+  removeFromScene(scene: Scene);
+
+  setPosition(pos: Vector3): void;
+  setDirection(pos: Vector3): void;
   update(): void;
-  onRender(speed: Vector3, parts: VoxelMeshModel);
+
+  // call when we render the model for each frame
+  onRenderFrame(tick: number);
 }
 

@@ -108,6 +108,7 @@ export class VoxelMeshModel {
 
         this.lastFrameTick = vm.clock.lastTick;
         this.currentAnimation = this.animations[name];
+        this.currentAnimationFrame = 0;
     }
 
     public onRender(tick: number) {
@@ -125,6 +126,9 @@ export class VoxelMeshModel {
             this.currentFrame = this.currentAnimation[this.currentAnimationFrame].idx;
             this.frames[this.currentFrame].position.copy(this._pos);
             this.frames[this.currentFrame].visible = true;
+            if (this._qt) {
+                this.frames[this.currentFrame].rotation.setFromQuaternion(this._qt);
+            }
         }
     }
 

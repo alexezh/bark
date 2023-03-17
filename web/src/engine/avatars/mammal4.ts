@@ -1,29 +1,61 @@
-import { Matrix4, Quaternion, Vector3 } from "three";
+import { Matrix4, Quaternion, Scene, Vector3 } from "three";
 import { IRigitModel } from "../irigitmodel";
 import { Sprite3 } from "../sprite3";
-import { VoxelMeshModel } from "../../voxel/voxelmeshmodel";
+import { VoxelAnimationCollection, VoxelMeshModel } from "../../voxel/voxelmeshmodel";
 
+// handles animal with 4 legs, tail and head
 export class Mammal4Model implements IRigitModel {
-  private speed: Vector3 | undefined;
-  private qt: Quaternion | undefined;
+  private meshModels: { [key: string]: VoxelMeshModel } = {};
+  private _size!: Vector3;
 
-  public onRender(speed: Vector3, parts: VoxelMeshModel) {
-    if (this.speed !== undefined && this.speed.equals(speed)) {
-      return;
+  get size(): Vector3 { return this._size; }
+  async load(uri: string, animations: VoxelAnimationCollection | undefined): Promise<void> {
+    let main = await VoxelMeshModel.create(uri, animations);
+    this.meshModels.main = main;
+    this._size = main.size;
+  }
+
+
+  public animate(id: string) {
+    for (let m of Object.keys(this.meshModels)) {
+      this.meshModels[m].playAnimation(id);
     }
-
-    //var mx = new Matrix4().lookAt(speed, new Vector3(0, 0, 0), new Vector3(0, 0, 1));
-    //this.qt = new Quaternion().setFromRotationMatrix(mx);
-    let angle = Math.atan2(speed.x, -speed.y);
-    this.qt = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), angle);
-    parts.setRotation(this.qt);
   }
 
-  // adds new position to the path
-  // recomputes position of parts
-  public move(pos: Vector3, parts: VoxelMeshModel) {
+  public addToScene(scene: Scene) {
+    for (let m of Object.keys(this.meshModels)) {
+      this.meshModels[m].addToScene(scene);
+    }
   }
 
+  public removeFromScene(scene: Scene) {
+    for (let m of Object.keys(this.meshModels)) {
+      this.meshModels[m].removeFromScene(scene);
+    }
+  }
+
+  public onRenderFrame(tick: number) {
+    for (let key of Object.keys(this.meshModels)) {
+      let model = this.meshModels[key];
+      model.onRender(tick);
+    }
+  }
+
+  public setPosition(pos: Vector3): void {
+    for (let key of Object.keys(this.meshModels)) {
+      let model = this.meshModels[key];
+      model.setPosition(pos);
+    }
+  }
+
+  public setDirection(dir: Vector3): void {
+    let angle = Math.atan2(dir.x, -dir.y);
+    let qt = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), angle);
+    for (let key of Object.keys(this.meshModels)) {
+      let model = this.meshModels[key];
+      model.setRotation(qt);
+    }
+  }
   // recalc from physics
   public update() {
 

@@ -7,6 +7,7 @@ class PathElement {
 }
 
 // sprites follow the path of the first sprite
+/*
 export class RoapModel implements IRigitModel {
     onRender(speed: Vector3) {
         throw new Error("Method not implemented.");
@@ -26,3 +27,4 @@ export class RoapModel implements IRigitModel {
     }
 }
 
+*/
