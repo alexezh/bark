@@ -1,7 +1,7 @@
 // represents voxel model as set of meshes
 // ATT: it is responsivility of caller to adjust position information on mesh
 
-import { Mesh, MeshPhongMaterial, Quaternion, Scene, Vector, Vector3 } from "three";
+import { Mesh, MeshPhongMaterial, Object3D, Quaternion, Scene, Vector, Vector3 } from "three";
 import { GameColors } from "../ui/gamecolors";
 import { VoxelGeometryWriter } from "./voxelgeometrywriter";
 import { modelCache } from "./voxelmodelcache";
@@ -47,8 +47,8 @@ export type VoxelAnimationCollection = { [name: string]: VoxelAnimationFrame[] }
 export class VoxelMeshModel {
     private frames: Mesh[] = [];
     private scale: number = 0.6;
-    private _size!: Vector3;
-    private _pos!: Vector3;
+    private readonly _size: Vector3 = new Vector3();
+    private readonly _pos: Vector3 = new Vector3();
     private _qt!: Quaternion;
     private readonly material: MeshPhongMaterial;
     // index in frames array
@@ -89,8 +89,8 @@ export class VoxelMeshModel {
         }
 
         let sz = vmm.size;
-        this._size = new Vector3(sz.x * this.scale, sz.y * this.scale, sz.z * this.scale);
-        this._pos = new Vector3(0, 0, 0);
+        this._size.set(sz.x * this.scale, sz.y * this.scale, sz.z * this.scale);
+        this._pos.set(0, 0, 0);
     }
 
     public playAnimation(name: string) {
@@ -124,32 +124,37 @@ export class VoxelMeshModel {
             }
             this.lastFrameTick = tick;
             this.currentFrame = this.currentAnimation[this.currentAnimationFrame].idx;
-            this.frames[this.currentFrame].position.copy(this._pos);
-            this.frames[this.currentFrame].visible = true;
+
+            let frame = this.frames[this.currentFrame];
+            frame.position.copy(this._pos);
+            frame.visible = true;
             if (this._qt) {
-                this.frames[this.currentFrame].rotation.setFromQuaternion(this._qt);
+                //frame.position.set(0, 0, 0);
+                frame.rotation.setFromQuaternion(this._qt);
+                //frame.position.copy(this._pos);
             }
         }
     }
 
-    public addToScene(scene: Scene) {
+    public addToScene(parent: Object3D) {
         for (let m of this.frames) {
             m.visible = false;
-            scene.add(m);
+            m.geometry.center();
+            parent.add(m);
         }
 
         this.frames[this.currentFrame].visible = true;
     }
 
-    public removeFromScene(scene: Scene) {
+    public removeFromScene(parent: Object3D) {
         for (let m of this.frames) {
-            scene.remove(m);
+            parent.remove(m);
         }
     }
 
     public setPosition(pos: Vector3): void {
-        this._pos = pos;
-        this.frames[this.currentFrame].position.set(pos.x, pos.y, pos.z);
+        this._pos.copy(pos);
+        this.frames[this.currentFrame].position.copy(pos);
     }
 
     public setRotation(qt: Quaternion) {
