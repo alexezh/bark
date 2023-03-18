@@ -48,7 +48,7 @@ public class ImageAtlasCollection
     var atlaseBlobs = _db.LoadEntities(EntityKind);
     foreach (var blob in atlaseBlobs)
     {
-      var atlas = WorldDbStatics.DeserializeEntity<ImageAtlas>(blob);
+      var atlas = ProjectDbStatics.DeserializeEntity<ImageAtlas>(blob);
       _atlases.Add(atlas.id, atlas);
     }
   }

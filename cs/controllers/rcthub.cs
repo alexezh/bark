@@ -20,13 +20,13 @@ public class RctHub : Hub
   {
     RctUpdateAvatarPosition msg = JsonSerializer.Deserialize<RctUpdateAvatarPosition>(message);
 
-    World world = WorldCollection.Instance.GetWorld(msg.worldId);
+    Project world = ProjectCollection.Instance.GetProject(msg.worldId);
     if (world == null)
     {
       return;
     }
 
-    world.Avatars.UpdatePosition(msg);
+    //world.Avatars.UpdatePosition(msg);
 
     await Clients.All.SendAsync("OnUpdateAvatarPosition", sessionId, message);
   }

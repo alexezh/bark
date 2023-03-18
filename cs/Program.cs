@@ -1,13 +1,17 @@
+using LettuceEncrypt;
+
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 
+builder.Services.AddLettuceEncrypt().PersistDataToDirectory(new DirectoryInfo("~/LettuceEncrypt/"), "DigJsBark");
+
 var app = builder.Build();
 
 //app.MapGet("/", () => "Hello World!");
-WorldCollection.Instance.Initialize();
+//WorldCollection.Instance.Initialize();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -25,67 +29,31 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=World}/{action=Get}/{id?}");
+    pattern: "{controller=ProjectList}/{action=ListProjects}");
 
 app.MapControllerRoute(
-    name: "world",
-    pattern: "/api/{controller=World}/{action=Get}/{id?}");
+    name: "createProject",
+    pattern: "/api/{controller=ProjectList}/{action=CreateProject}");
 
 app.MapControllerRoute(
-    name: "atlas",
-    pattern: "/api/{controller=Resource}/{action=GetAtlases}/{id?}");
+    name: "listProjects",
+    pattern: "/api/{controller=ProjectList}/{action=ListProjects}");
 
 app.MapControllerRoute(
-    name: "tiles",
-    pattern: "/api/{controller=Resource}/{action=GetTiles}/{id?}");
+    name: "getStrings",
+    pattern: "/api/{controller=Project}/{action=GetStrings}/{id?}");
 
 app.MapControllerRoute(
-    name: "addCompositeTile",
-    pattern: "/api/{controller=Resource}/{action=AddCompositeTile}/{id?}");
+    name: "updateStrings",
+    pattern: "/api/{controller=Project}/{action=UpdateStrings}/{id?}");
 
 app.MapControllerRoute(
-    name: "updateTile",
-    pattern: "/api/{controller=Resource}/{action=UpdateTile}/{id?}");
+    name: "getArray",
+    pattern: "/api/{controller=Project}/{action=GetArray}/{id?}");
 
 app.MapControllerRoute(
-    name: "map",
-    pattern: "/api/{controller=World}/{action=GetMap}/{id?}");
-
-app.MapControllerRoute(
-    name: "map2",
-    pattern: "/api/{controller=World}/{action=UpdateTileLayer}/{id?}");
-
-app.MapControllerRoute(
-    name: "map3",
-    pattern: "/api/{controller=World}/{action=AddTileBuffer}/{id?}");
-
-app.MapControllerRoute(
-    name: "map4",
-    pattern: "/api/{controller=World}/{action=AddTileSet}/{id?}");
-
-app.MapControllerRoute(
-    name: "spawnPokemon",
-    pattern: "/api/{controller=World}/{action=SpawnPokemon}/{id?}");
-
-app.MapControllerRoute(
-    name: "spawnCharacter",
-    pattern: "/api/{controller=World}/{action=SpawnCharacter}/{id?}");
-
-app.MapControllerRoute(
-    name: "updateAvatarRuntimeProps",
-    pattern: "/api/{controller=World}/{action=UpdateAvatarRuntimeProps}/{id?}");
-
-app.MapControllerRoute(
-    name: "updateMapCode",
-    pattern: "/api/{controller=World}/{action=UpdateMapCode}/{id?}");
-
-app.MapControllerRoute(
-    name: "getCodeLibrary",
-    pattern: "/api/{controller=Resource}/{action=FetchFiles}/{id?}");
-
-app.MapControllerRoute(
-    name: "updateCode",
-    pattern: "/api/{controller=Resource}/{action=StoreFile}/{id?}");
+    name: "updateArray",
+    pattern: "/api/{controller=Project}/{action=UpdateArray}/{id?}");
 
 //app.MapFallbackToFile("index.html"); ;
 app.MapHub<RctHub>("/updates");

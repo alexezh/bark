@@ -1,25 +1,37 @@
-public class WireFetchFilesRequest
+public class WireGetStringsRequest
 {
   public string pattern { get; set; }
 }
-public class WireFile
+public class WireString
 {
   public string name { get; set; }
   public string data { get; set; }
 }
 
-public class FileCollection
+public class Project
 {
   private readonly Dictionary<string, string> _lib = new Dictionary<string, string>();
   private EntityDb _db;
   public const string EntityKind = "Code";
 
-  public FileCollection(EntityDb db)
+  public static Project Load(string id)
   {
-    _db = db;
+    var db = new EntityDb(id);
+    return new Project(db);
   }
 
-  public IEnumerable<WireFile> FetchFiles(string pattern)
+  public Project(EntityDb db)
+  {
+    _db = db;
+
+    var blobs = _db.LoadEntities2(EntityKind);
+    foreach (var blob in blobs)
+    {
+      _lib.Add(blob.Item1, blob.Item2);
+    }
+  }
+
+  public IEnumerable<WireString> FetchStrings(string pattern)
   {
     // for now we only accept * pattern
     if (pattern.Length > 0 && pattern[pattern.Length - 1] == '*')
@@ -29,7 +41,7 @@ public class FileCollection
       {
         if (e.Key.StartsWith(prefix))
         {
-          yield return new WireFile() { name = e.Key, data = e.Value };
+          yield return new WireString() { name = e.Key, data = e.Value };
         }
       }
     }
@@ -37,12 +49,12 @@ public class FileCollection
     {
       if (_lib.TryGetValue(pattern, out var val))
       {
-        yield return new WireFile() { name = pattern, data = val };
+        yield return new WireString() { name = pattern, data = val };
       }
     }
   }
 
-  public void StoreFile(string name, string data)
+  public void SetString(string name, string data)
   {
     if (_lib.TryGetValue(name, out var existing))
     {
@@ -54,30 +66,6 @@ public class FileCollection
 
     _lib[name] = data;
     _db.UpdateEntityRaw(EntityKind, name, data);
-  }
-
-  public void Load()
-  {
-    var blobs = _db.LoadEntities2(EntityKind);
-    foreach (var blob in blobs)
-    {
-      if (false && (blob.Item1.StartsWith("avatar/") || blob.Item1.StartsWith("pokedex/")))
-      {
-        var data = WorldDbStatics.DeserializeEntity<string>(blob.Item2);
-        if (data == null)
-        {
-          data = "";
-        }
-
-        _db.UpdateEntityRaw(EntityKind, blob.Item1, data);
-        _lib.Add(blob.Item1, data);
-
-      }
-      else
-      {
-        _lib.Add(blob.Item1, blob.Item2);
-      }
-    }
   }
 
   public bool TryGet(string name, out string data)

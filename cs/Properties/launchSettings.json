@@ -8,7 +8,7 @@
     }
   },
   "profiles": {
-    "nomekopsrv": {
+    "barksrv": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": false,

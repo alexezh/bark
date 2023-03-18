@@ -1,14 +1,11 @@
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
 
-public class WorldDbStatics
+public class ProjectDbStatics
 {
-  public const string resources = "resources";
-  public const string creatures = "creatures";
-
   private static string GetDbPath(string id)
   {
-    return $"monekop_{id}.db";
+    return $"barkdata{id}.db";
   }
 
   public static SqliteConnection CreateConnection(string id)
@@ -21,41 +18,7 @@ public class WorldDbStatics
     return File.Exists(GetDbPath(id));
   }
 
-  public static void CreateResources()
-  {
-    using (var connection = CreateConnection(resources))
-    {
-      connection.Open();
-
-      {
-        var command = connection.CreateCommand();
-        command.CommandText = "CREATE TABLE IF NOT EXISTS Entities (kind TEXT, id TEXT, content TEXT)";
-        using (var reader = command.ExecuteReader())
-        {
-          // TODO: check error
-        }
-      }
-    }
-  }
-
-  public static void CreateCreatures()
-  {
-    using (var connection = CreateConnection(creatures))
-    {
-      connection.Open();
-
-      {
-        var command = connection.CreateCommand();
-        command.CommandText = "CREATE TABLE IF NOT EXISTS Entities (kind TEXT, id TEXT, content TEXT)";
-        using (var reader = command.ExecuteReader())
-        {
-          // TODO: check error
-        }
-      }
-    }
-  }
-
-  public static void CreateWorld(string id)
+  public static void CreateProject(string id)
   {
     using (var connection = CreateConnection(id))
     {
@@ -64,16 +27,6 @@ public class WorldDbStatics
       {
         var command = connection.CreateCommand();
         command.CommandText = "CREATE TABLE IF NOT EXISTS Entities (kind TEXT, id TEXT, content TEXT)";
-        using (var reader = command.ExecuteReader())
-        {
-          // TODO: check error
-        }
-      }
-
-      // list of commands
-      {
-        var command = connection.CreateCommand();
-        command.CommandText = "CREATE TABLE IF NOT EXISTS Commands (id TEXT, content TEXT)";
         using (var reader = command.ExecuteReader())
         {
           // TODO: check error
@@ -109,20 +62,6 @@ public class WorldDbStatics
   }
 }
 
-public class GameDb
-{
-  public readonly EntityDb World;
-  public readonly EntityDb Resources;
-  public readonly EntityDb Avatars;
-
-  public GameDb(string id)
-  {
-    World = new EntityDb(id);
-    Resources = new EntityDb(WorldDbStatics.resources);
-    Avatars = new EntityDb(WorldDbStatics.creatures);
-  }
-}
-
 public class EntityDb
 {
   private SqliteConnection _connection;
@@ -131,7 +70,7 @@ public class EntityDb
   public EntityDb(string id)
   {
     _id = id;
-    _connection = WorldDbStatics.CreateConnection(id);
+    _connection = ProjectDbStatics.CreateConnection(id);
     _connection.Open();
   }
 
@@ -151,7 +90,7 @@ public class EntityDb
 
   public void InsertEntity<T>(string kind, string id, T content) where T : class
   {
-    var contentBlob = WorldDbStatics.SerializeEntity(content);
+    var contentBlob = ProjectDbStatics.SerializeEntity(content);
 
     var command = _connection.CreateCommand();
     command.CommandText = "INSERT INTO Entities(kind, id, content) VALUES($kind, $id, $content)";
@@ -199,7 +138,7 @@ public class EntityDb
 
   public bool TryUpdateEntity<T>(string kind, string id, T content) where T : class
   {
-    var contentBlob = WorldDbStatics.SerializeEntity(content);
+    var contentBlob = ProjectDbStatics.SerializeEntity(content);
 
     var command = _connection.CreateCommand();
     command.CommandText = "UPDATE Entities SET content = $content WHERE kind == $kind AND id == $id";
@@ -282,7 +221,7 @@ public class EntityDb
       while (reader.Read())
       {
         var data = reader["content"] as string;
-        return WorldDbStatics.DeserializeEntity<T>(data);
+        return ProjectDbStatics.DeserializeEntity<T>(data);
       }
     }
 
