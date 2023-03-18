@@ -35,6 +35,8 @@ export interface IVM {
   // get all information there
   waitCollide(sprite: Sprite3[], timeout: number): Promise<Sprite3>;
 
+  createExplosion(pos: Vector3): void;
+
   sleep(ms: number): Promise<void>;
   send(msg: string): Promise<void>;
   onStart(func: () => Promise<void>);

@@ -1,11 +1,16 @@
 import { IRigitBody } from "../voxel/voxelmeshmodel";
 
+export type BroadphasePair = {
+  first: IRigitBody;
+  second: IRigitBody;
+}
+
 export class BroadphaseCollision {
   private xEdges: number[] = [];
   private yEdges: number[] = [];
   private zEdges: number[] = [];
 
-  public getPairs(rigitObjects: IRigitBody[]) {
+  public getPairs(rigitObjects: IRigitBody[]): BroadphasePair[] {
     this.xEdges.length = 0;
     this.yEdges.length = 0;
     this.zEdges.length = 0;
@@ -23,6 +28,7 @@ export class BroadphaseCollision {
     this.xEdges.sort();
     this.yEdges.sort();
 
-    let pairs: { first: IRigitBody, second: IRigitBody }[] = [];
+    let pairs: BroadphasePair[] = [];
+    return pairs;
   }
 }

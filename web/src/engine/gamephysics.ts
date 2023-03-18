@@ -57,6 +57,7 @@ export class GamePhysics implements IGamePhysics {
       s.multiplyScalar(dt);
       let p = o.position.add(s);
 
+      // check if intersecs with the map
       let intersectBody: IRigitBody | undefined;
       if (this.map.intersectBlocks(o, p, (target: IRigitBody) => {
         // just check if there is a block
@@ -75,8 +76,11 @@ export class GamePhysics implements IGamePhysics {
       this._collideHandler?.call(this, collisions);
     }
 
-    //let pairs = this.broadphase.getPairs(this.bodies);
+    // now check collisiopn of bodies
+    let pairs = this.broadphase.getPairs(this.bodies);
+    for (let pair in pairs) {
 
+    }
     //this.input?.onAfterMove();
   }
 }

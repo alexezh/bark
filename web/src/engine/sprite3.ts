@@ -15,7 +15,7 @@ export class Sprite3 implements IRigitBody {
   private _position: Vector3;
 
   // if true, onCollide will record the array
-  private collision: IRigitBody | undefined;
+  public collision: IRigitBody | undefined;
 
   public get id(): number { return this._id; }
   public get inactive(): boolean { return this._inactive }
@@ -84,9 +84,5 @@ export class Sprite3 implements IRigitBody {
     } else {
       this.collision = undefined;
     }
-  }
-
-  public collidedWith<T>(): boolean {
-    return false;
   }
 }

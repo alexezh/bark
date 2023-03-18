@@ -114,11 +114,12 @@ export class BoxedGame implements IDigGame {
           speed = Math.min(speed * 1.1, 100);
           bomb.speed.set(0, 0, -speed);
         } else {
-          if (collision instanceof Monky) {
+          if (collision.collision instanceof Monky) {
             vm.send('KilledMonkey');
-          } else if (collision instanceof MapBlockRigitBody) {
-            for (let b of (collision as MapBlockRigitBody).blocks) {
+          } else if (collision.collision instanceof MapBlockRigitBody) {
+            for (let b of (collision.collision as MapBlockRigitBody).blocks) {
               vm.map.deleteBlock(b);
+              vm.createExplosion(collision.position);
             }
             vm.removeSprite(bomb);
           } else {

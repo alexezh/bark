@@ -1,5 +1,5 @@
 import { Clock, Vector3 } from "three";
-import AsyncEventSource from "../AsyncEventSource";
+import AsyncEventSource from "./AsyncEventSource";
 import { ICameraLayer } from "../voxel/icameralayer";
 import { IGameMap } from "../voxel/igamemap";
 import { animator } from "./animator";
@@ -13,6 +13,7 @@ import { Sprite3 } from "./sprite3";
 import { Ticker } from "./ticker";
 import { IRigitBody, VoxelAnimationCollection } from "../voxel/voxelmeshmodel";
 import { IRigitModel } from "./irigitmodel";
+import { ParticlePool } from "../voxel/particles";
 
 export type MessageHandler = (msg: string) => Promise<void>;
 export type StartHandler = () => Promise<void>;
@@ -37,6 +38,7 @@ export class VM implements IVM {
 
   private readonly onMapChanged: AsyncEventSource<boolean> = new AsyncEventSource();
   private readonly _startHandlers: StartHandler[] = [];
+  public particles!: ParticlePool;
 
   // we are going to copy/write of handler array
   // so it is safe to enumerate even if handler changes it
@@ -118,6 +120,7 @@ export class VM implements IVM {
   public onRender() {
     this.clock.tick();
     this.physics.update(this.clock.delta);
+    this.particles.update(this.clock.tick, this.clock.delta)
     let tick = this.clock.lastTick;
     for (let s of this._sprites) {
       s[1].onRender(tick);
@@ -190,6 +193,10 @@ export class VM implements IVM {
     return p;
   }
 
+  public createExplosion(pos: Vector3) {
+    this.particles.explosion(pos.x, pos.y, pos.z, 1, null);
+  }
+
   public sleep(seconds: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, seconds * 1000));
   }
@@ -237,6 +244,8 @@ export class VM implements IVM {
 
     // TODO: we should clear the previous scene
     this._map.loadScene(this._camera.scene);
+
+    this.particles = new ParticlePool(this._camera.scene, 200, 1);
   }
 }
 

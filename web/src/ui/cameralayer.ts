@@ -22,8 +22,6 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     public scene!: Scene;
     private input!: KeyBinder;
 
-    //public particles!: ParticlePool;
-    //public particles_box!: ParticlePool;
     public t_start = Date.now();
     public map!: IGameMap;
     public mapEditor!: MapEditor;
@@ -33,8 +31,6 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     private isDown: boolean = false;
 
     // Particle stuff.
-    public box_material = new MeshPhongMaterial({ color: 0xffffff });
-    public sprite_material = new SpriteMaterial({ color: 0xffffff });
     public chunk_material = new MeshPhongMaterial({ vertexColors: true, wireframe: false });
     public p_light = new PointLight(0xFFAA00, 1, 10);
 
