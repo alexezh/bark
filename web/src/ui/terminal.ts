@@ -11,7 +11,7 @@ import { IGameTerminal } from "./igameterminal";
 import { registerSystemCommands } from "../posh/systemcommands";
 import { decorateCommand } from "../posh/termcolors";
 import { MapEditor } from "./mapeditor";
-import { CameraLayer } from "../voxel/cameralayer";
+import { CameraLayer } from "./cameralayer";
 import { IGameMap } from "../voxel/igamemap";
 
 //registerRegionCommands();

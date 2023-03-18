@@ -8,14 +8,11 @@ export class Mammal4Model implements IRigitModel {
   private meshModels: { [key: string]: VoxelMeshModel } = {};
   private _size!: Vector3;
   private _dir: Vector3 = new Vector3();
-  private _group!: Group;
 
   get size(): Vector3 { return this._size; }
   async load(uri: string, animations: VoxelAnimationCollection | undefined): Promise<void> {
     let main = await VoxelMeshModel.create(uri, animations);
     this.meshModels.main = main;
-    this._group = new Group();
-    this.meshModels.main.addToScene(this._group);
     this._size = main.size;
     this.meshModels.main.setPosition(new Vector3(-this._size.x / 2, -this._size.y / 2, 0));
   }
@@ -28,11 +25,19 @@ export class Mammal4Model implements IRigitModel {
   }
 
   public addToScene(scene: Scene) {
-    scene.add(this._group);
+    for (let key of Object.keys(this.meshModels)) {
+      let model = this.meshModels[key];
+      model.addToScene(scene);
+    }
+    //    scene.add(this._group);
   }
 
   public removeFromScene(scene: Scene) {
-    scene.remove(this._group);
+    for (let key of Object.keys(this.meshModels)) {
+      let model = this.meshModels[key];
+      model.removeFromScene(scene);
+    }
+    // scene.remove(this._group);
   }
 
   public onRenderFrame(tick: number) {
@@ -43,11 +48,11 @@ export class Mammal4Model implements IRigitModel {
   }
 
   public setPosition(pos: Vector3): void {
-    //for (let key of Object.keys(this.meshModels)) {
-    //  let model = this.meshModels[key];
-    //  model.setPosition(pos);
-    //}
-    this._group.position.copy(pos);
+    for (let key of Object.keys(this.meshModels)) {
+      let model = this.meshModels[key];
+      model.setPosition(pos);
+    }
+    //this._group.position.copy(pos);
   }
 
   public setDirection(dir: Vector3): void {

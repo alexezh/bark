@@ -60,7 +60,7 @@ module.exports = {
   devServer: {
     // progress: true,
     hot: true,
-    // https: true,
+    //https: true,
     allowedHosts: 'all',
     port: 8081,
     //    static: {

@@ -6,6 +6,7 @@ import { MoveController2D } from "./engine/movecontroller2d";
 import { IDigGame } from "./engine/idiggame";
 import { randInt } from "three/src/math/MathUtils";
 import { Mammal4 } from "./engine/avatars/mammal4";
+import { MapBlockRigitBody } from "./voxel/mapblockrigitbody";
 
 
 class Snake extends Sprite3 {
@@ -38,7 +39,7 @@ class Monky extends Mammal4 {
       stand: [{ idx: 0, dur: 0 }]
     }
     let m = await vm.createSprite(Monky, './assets/vox/monky.vox',
-      new Vector3(50, 50, 20),
+      new Vector3(120, 60, 20),
       undefined,
       ac);
 
@@ -115,6 +116,11 @@ export class BoxedGame implements IDigGame {
         } else {
           if (collision instanceof Monky) {
             vm.send('KilledMonkey');
+          } else if (collision instanceof MapBlockRigitBody) {
+            for (let b of (collision as MapBlockRigitBody).blocks) {
+              vm.map.deleteBlock(b);
+            }
+            vm.removeSprite(bomb);
           } else {
             vm.removeSprite(bomb);
           }

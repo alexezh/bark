@@ -30,7 +30,7 @@
     "codeflask"
   ],
   "include": [
-    "src/**/*.ts",
+    "src/**/*.ts", "src/ui/vrbutton.js",
   ],
   "exclude": [
     "./out.d.ts",

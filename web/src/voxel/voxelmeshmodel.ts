@@ -136,7 +136,7 @@ export class VoxelMeshModel {
         }
     }
 
-    public addToScene(parent: Object3D) {
+    public addToScene(parent: Scene) {
         for (let m of this.frames) {
             m.visible = false;
             m.geometry.center();
@@ -146,7 +146,7 @@ export class VoxelMeshModel {
         this.frames[this.currentFrame].visible = true;
     }
 
-    public removeFromScene(parent: Object3D) {
+    public removeFromScene(parent: Scene) {
         for (let m of this.frames) {
             parent.remove(m);
         }

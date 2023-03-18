@@ -1,12 +1,14 @@
-import { Textures } from "./textures";
+import { Textures } from "../voxel/textures";
 import { Camera, Clock, Fog, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
-import { MapEditor } from "../ui/mapeditor";
-import { KeyBinder, makeMEvent } from "../ui/keybinder";
-import { UiLayer2, UiLayerProps } from "../ui/uilayer";
-import { IGameMap } from "./igamemap";
-import { WorldCoord3 } from "./pos3";
-import { ICameraLayer } from "./icameralayer";
+import { MapEditor } from "./mapeditor";
+import { KeyBinder, makeMEvent } from "./keybinder";
+import { UiLayer2, UiLayerProps } from "./uilayer";
+import { IGameMap } from "../voxel/igamemap";
+import { WorldCoord3 } from "../voxel/pos3";
+import { ICameraLayer } from "../voxel/icameralayer";
 import { vm } from "../engine/ivm";
+import { VRButton } from "./vrbutton";
+//import { VRButton } from 'three/addons/webxr/VRButton';
 
 export type CameraLayerProps = UiLayerProps & {
     scale: number;
@@ -66,6 +68,8 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = PCFSoftShadowMap;
         this.element.appendChild(this.renderer.domElement);
+
+        this.element.appendChild(VRButton.createButton(this.renderer));
 
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
 

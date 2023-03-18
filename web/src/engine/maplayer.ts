@@ -83,9 +83,26 @@ export class MapLayer {
     this.blocks[block.idx] = undefined;
   }
 
-  public getBlock(xMap: number, yMap: number): MapBlock | undefined {
+  public getBlock(xMap: number, yMap: number): MapBlockCoord | undefined {
     let idx = yMap * this.size.w + xMap;
-    return this.blocks[idx];
+    let b = this.blocks[idx];
+    if (b === undefined) {
+      return undefined;
+    }
+    return {
+      model: b?.model,
+      idx: idx,
+      mapPos: {
+        x: xMap,
+        y: yMap,
+        z: this.layerZ,
+      },
+      mapSize: {
+        sx: 1,
+        sy: 1,
+        sz: 1
+      }
+    };
   }
 
   public addBlock(pos: MapPos3, block: VoxelModel) {
