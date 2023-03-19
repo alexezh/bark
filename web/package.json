@@ -51,6 +51,7 @@
     "codeflask": "^1.4.1",
     "declaration-bundler-webpack-plugin": "^1.0.3",
     "dts-webpack-bundler": "^1.0.3",
+    "fast-png": "^6.1.0",
     "file-loader": "^6.2.0",
     "lodash": "^4.17.21",
     "lowdash": "^1.2.0",

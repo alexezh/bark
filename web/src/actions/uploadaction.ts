@@ -14,6 +14,7 @@ export class UploadVoxAction implements IAction {
   private _id: number;
   private _inputElem: HTMLInputElement | undefined;
   private _bar: ICommandBar;
+  private parent!: HTMLElement;
 
   get tags(): string[] { return ['upload', 'vox', 'block'] }
 
@@ -25,6 +26,8 @@ export class UploadVoxAction implements IAction {
   public get name(): string { return 'Upload' }
 
   public render(parent: HTMLElement) {
+    this.parent = parent;
+
     let d = document.createElement('input');
     d.id = 'upload_' + this._id;
     d.type = 'file';
@@ -68,7 +71,7 @@ export class UploadVoxAction implements IAction {
         return;
       }
 
-      let thumb = this.renderThumbnail(vox, tr, data, fn);
+      let thumb = await this.renderThumbnail(vox, tr, data, fn);
       if (thumb === undefined) {
         return;
       }
@@ -80,7 +83,7 @@ export class UploadVoxAction implements IAction {
     await wireSetStrings(wireFiles);
   }
 
-  renderThumbnail(vox: Vox, tr: ThumbnailRenderer, data: ArrayBuffer, fn: string): string | undefined {
+  async renderThumbnail(vox: Vox, tr: ThumbnailRenderer, data: ArrayBuffer, fn: string): Promise<string | undefined> {
     let voxelFile = vox.loadModel(data, fn);
     if (voxelFile === undefined || voxelFile.frames.length === 0) {
       this._bar.displayError('Cannot load model ' + fn);
@@ -95,6 +98,14 @@ export class UploadVoxAction implements IAction {
     let mm = new Mesh(geo, defaultMaterial);
     mm.geometry.center();
 
-    return tr.render(mm);
+    let imageData = tr.render(mm);
+    let bitmap = await createImageBitmap(imageData);
+
+    let canvas: HTMLCanvasElement = document.createElement('canvas');
+    let ctx = canvas.getContext("2d");
+    ctx?.drawImage(bitmap, 0, 0);
+    this.parent.appendChild(canvas);
+
+    return '';
   }
 }

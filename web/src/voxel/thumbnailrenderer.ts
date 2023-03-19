@@ -1,6 +1,6 @@
 import { Mesh, Object3D, PCFSoftShadowMap, PerspectiveCamera, Scene, Vector3, WebGLRenderer, WebGLRenderTarget } from "three";
-import * as pngStream from 'three-png-stream';
 import { bytesToBase64 } from "../posh/base64";
+import { encode as PngEncode, ImageData as PngImageData } from 'fast-png';
 
 export class ThumbnailRenderer {
   private renderer!: WebGLRenderer;
@@ -32,7 +32,7 @@ export class ThumbnailRenderer {
     //this.element.appendChild(this.renderer.domElement);
   };
 
-  public render(target: Mesh): string {
+  public render(target: Mesh): ImageData {
     var point = new Vector3(0, 0, 0);
     this.camera.lookAt(point);
     let angleY = Math.PI / 4;
@@ -56,7 +56,13 @@ export class ThumbnailRenderer {
     const renderTarget = new WebGLRenderTarget(this.width, this.height);
     this.renderer.setRenderTarget(renderTarget);
     this.renderer.render(this.scene, this.camera);
-    const b = pngStream(this.renderer, target).toBytes();
-    return bytesToBase64(b);
+
+
+    let pixels = new Uint8ClampedArray(this.width * this.height * 4);
+    this.renderer.readRenderTargetPixels(renderTarget, 0, 0, this.width, this.height, pixels);
+    // const b = new PNG().pack().toBytes();
+    //const b = PngEncode({ width: this.width, height: this.height, data: pixels })
+    //return bytesToBase64(b);
+    return new ImageData(pixels, this.width, this.height);
   }
 }
