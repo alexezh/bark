@@ -1,9 +1,9 @@
 import { Mesh } from "three";
-import { GameMap } from "../engine/gamemap";
 import { wireSetStrings, WireString } from "../fetchadapter";
 import { base64ToBytes, bytesToBase64 } from "../posh/base64";
 import { ICommandBar } from "../ui/commandBar";
 import { IAction } from "../ui/iaction";
+import { defaultMaterial } from "../voxel/igamemap";
 import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
 import { Vox } from "../voxel/vox";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
@@ -92,7 +92,7 @@ export class UploadVoxAction implements IAction {
     mf.build(writer);
 
     let geo = writer.getGeometry();
-    let mm = new Mesh(geo, GameMap.material);
+    let mm = new Mesh(geo, defaultMaterial);
     mm.geometry.center();
 
     return tr.render(mm);

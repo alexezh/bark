@@ -1,4 +1,4 @@
-import { Scene, Vector3 } from "three";
+import { MeshPhongMaterial, Scene, Vector3 } from "three";
 import { MapPos3, MapSize3, WorldCoord3, WorldSize3 } from "./pos3";
 import { VoxelModel } from "./voxelmodel";
 import { IRigitBody } from "./voxelmeshmodel";
@@ -50,3 +50,5 @@ export interface IGameMap {
   //  readonly mechanics: IGameMechanics;
   //  setViewport(pxRect: PxRect): void;
 }
+
+export let defaultMaterial: MeshPhongMaterial = new MeshPhongMaterial({ color: 0xffffff, vertexColors: true });
