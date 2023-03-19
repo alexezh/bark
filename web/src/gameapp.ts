@@ -1,5 +1,4 @@
 import { Shell } from "./ui/shell";
-import { fetchFiles, WorldProps } from "./fetchadapter";
 import { setTerminal, terminal } from "./ui/igameterminal";
 import { createVM } from "./engine/vm";
 import { vm } from "./engine/ivm";

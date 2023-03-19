@@ -32,7 +32,7 @@ export class GameMap implements IGameMap {
     private layers: MapLayer[] = [];
 
     public ambient_light!: AmbientLight;
-    public material: MeshPhongMaterial = new MeshPhongMaterial({ color: 0xffffff, vertexColors: true });
+    public static material: MeshPhongMaterial = new MeshPhongMaterial({ color: 0xffffff, vertexColors: true });
 
     reset() {
         /*
@@ -80,7 +80,7 @@ export class GameMap implements IGameMap {
     };
 
     public async load(id: string): Promise<boolean> {
-        this.layers.push(new MapLayer(this.material, 0, this.blockSize));
+        this.layers.push(new MapLayer(GameMap.material, 0, this.blockSize));
 
         let ground = await modelCache.getVoxelModel('./assets/vox/ground.vox');
         this.layers[0].fill(ground);
@@ -135,7 +135,7 @@ export class GameMap implements IGameMap {
     public addBlock(pos: MapPos3, block: VoxelModel) {
         if (pos.z >= this.layers.length) {
             for (let i = this.layers.length - 1; i < pos.z; i++) {
-                let layer = new MapLayer(this.material, this.layers.length, this.blockSize);
+                let layer = new MapLayer(GameMap.material, this.layers.length, this.blockSize);
                 layer.build();
                 this.layers.push(layer);
             }

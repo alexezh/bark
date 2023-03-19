@@ -17,8 +17,13 @@ export function setFetchAdapter(adapter: IFetchAdapter) {
   fetchAdapter = adapter;
 }
 
+// get static resource
+export async function fetchResource(url: string): Promise<ArrayBuffer> {
+  return await (await (await fetchAdapter!.get(url)).blob()).arrayBuffer();
+}
+
 export type WireString = {
-  name: string;
+  key: string;
   data: string;
 }
 
@@ -39,8 +44,14 @@ export async function wireGetStrings(pattern: string): Promise<WireString[]> {
 }
 
 export async function wireSetString(key: string, value: string): Promise<WireString[]> {
-  let request: WireString[] = [{ name: key, data: value }]
+  let request: WireString[] = [{ key: key, data: value }]
   let requestData = JSON.stringify(request);
+  let files = await (await fetchAdapter!.post(`/api/project/setstrings/${projectId}`, requestData)).json();
+  return files;
+}
+
+export async function wireSetStrings(keys: WireString[]): Promise<WireString[]> {
+  let requestData = JSON.stringify(keys);
   let files = await (await fetchAdapter!.post(`/api/project/setstrings/${projectId}`, requestData)).json();
   return files;
 }

@@ -60,6 +60,7 @@
     "three": "^0.148.0",
     "three-orbit-controls": "^82.1.0",
     "three-orbitcontrols-ts": "^0.1.2",
+    "three-png-stream": "^1.0.3",
     "ts-node": "^10.4.0",
     "types-webpack-bundler": "^1.0.2",
     "typescript-declaration-webpack-plugin": "^0.2.2",

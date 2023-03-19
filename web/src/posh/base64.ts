@@ -81,7 +81,7 @@ function getBase64Code(charCode: number) {
   return code;
 }
 
-export function bytesToBase64(bytes: Uint8ClampedArray): string {
+export function bytesToBase64(bytes: Uint8ClampedArray | Uint8Array): string {
   let result = '', i, l = bytes.length;
   for (i = 2; i < l; i += 3) {
     result += base64abc[bytes[i - 2] >> 2];

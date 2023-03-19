@@ -1,7 +1,9 @@
 import { MapEditorChangeEvent, MapEditorState } from "../posh/mapeditorstate";
 import { createButton, setElementVisible } from "./htmlutils";
+import { IAction } from "./iaction";
 import { ShellProps } from "./shell";
 import { UiLayer2, UiLayerProps } from "./uilayer";
+import { UploadVoxAction } from "../actions/uploadaction";
 
 export type CommandBarProps = UiLayerProps & {
   termProps: ShellProps;
@@ -12,11 +14,14 @@ export type CommandBarProps = UiLayerProps & {
   onToggleMap: () => void;
 }
 
-export class CommandBar extends UiLayer2<CommandBarProps> {
-  private editButton: HTMLButtonElement;
-  private termButton: HTMLButtonElement;
+export interface ICommandBar {
+  displayError(text: string);
+}
+
+export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar {
+  //private editButton: HTMLButtonElement;
   //private tileButton: HTMLButtonElement;
-  private mapButton: HTMLButtonElement;
+  private actions: IAction[] = [];
 
   public constructor(props: CommandBarProps) {
     let element = document.createElement('div');
@@ -24,36 +29,18 @@ export class CommandBar extends UiLayer2<CommandBarProps> {
 
     super(props, element);
 
-    this.props.mapEditorState.onChanged(this, (evt: MapEditorChangeEvent) => {
-      this.onUpdateMapEditorState();
-    });
+    this.actions.push(new UploadVoxAction(this));
 
-
+    for (let a of this.actions) {
+      a.render(this.element);
+    }
     // <button type="button" class="nes-btn is-primary">Primary</button>
-    this.editButton = createButton(this._element, 'EDIT', (evt: any): any => props.onToggleEdit());
-    this.termButton = createButton(this._element, 'TERM', (evt: any): any => props.onToggleTerm());
-    this.mapButton = createButton(this._element, 'MAP', (evt: any): any => props.onToggleMap());
-    //this.tileButton = createButton(this._element, 'TILE', (evt: any): any => props.onToggleTile());
+    //this.editButton = createButton(this._element, 'EDIT', (evt: any): any => props.onToggleEdit());
 
-    this.onUpdateMapEditorState();
+    // this.onUpdateMapEditorState();
   }
 
-  private createLayerBox(text: string): HTMLLabelElement {
-    let label = document.createElement('label');
-    let input = document.createElement('input');
-    input.type = 'checkbox';
-    input.className = 'nes-checkbox';
-    label.appendChild(input);
-    let span = document.createElement('span');
-    span.textContent = text;
-    label.appendChild(span);
-
-    this._element.appendChild(label);
-
-    return label;
-  }
-
-  onUpdateMapEditorState() {
-    // setElementVisible(this.tileButton, this.props.mapEditorState.isEditMode);
+  public displayError(text: string) {
+    console.log(text);
   }
 }

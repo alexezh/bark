@@ -1,6 +1,5 @@
 import _ from "lodash";
 import { BufferGeometry, Camera, Line, LineBasicMaterial, Raycaster, Scene, Vector3 } from "three";
-import { WorldProps } from "../fetchadapter";
 import { ShowKeyBindingsDef } from "../posh/keybindcommands";
 import { mapEditorState } from "../posh/mapeditorstate";
 import { PxSize } from "../posh/pos";
