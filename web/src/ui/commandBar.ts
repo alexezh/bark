@@ -1,6 +1,6 @@
 import { MapEditorChangeEvent, MapEditorState } from "../posh/mapeditorstate";
 import { createButton, setElementVisible } from "./htmlutils";
-import { TerminalProps } from "./terminal";
+import { TerminalProps } from "./shell";
 import { UiLayer2, UiLayerProps } from "./uilayer";
 
 export type CommandBarProps = UiLayerProps & {

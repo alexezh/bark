@@ -1,4 +1,4 @@
-import { Terminal } from "./ui/terminal";
+import { Shell } from "./ui/shell";
 import { fetchFiles, WorldProps } from "./fetchadapter";
 import { setTerminal, terminal } from "./ui/igameterminal";
 import { createVM } from "./engine/vm";
@@ -13,7 +13,7 @@ export class GameApp {
   private ready: boolean = false;
 
   // @ts-ignore
-  public get terminal(): Terminal { return this._terminal; }
+  public get terminal(): Shell { return this._terminal; }
 
   public async run() {
     this.tryOnReady();
@@ -27,7 +27,7 @@ export class GameApp {
 
     createVM(gameContainer);
 
-    setTerminal(new Terminal(gameContainer));
+    setTerminal(new Shell(gameContainer));
     this.tryOnReady();
   }
 

@@ -7,7 +7,7 @@ import { HelpDef } from "../posh/helpdef";
 import { UiCompositor2 } from "./uicompositor";
 import { createMapEditorState, mapEditorState } from "../posh/mapeditorstate";
 import { CodeEditor } from "./codeeditor";
-import { IGameTerminal } from "./igameterminal";
+import { IGameTerminal as IGameShell } from "./igameterminal";
 import { registerSystemCommands } from "../posh/systemcommands";
 import { decorateCommand } from "../posh/termcolors";
 import { MapEditor } from "./mapeditor";
@@ -35,7 +35,7 @@ export class TerminalProps {
   public mediumButtonHeight = 32;
 }
 
-export class Terminal implements IGameTerminal {
+export class Shell implements IGameShell {
   private map!: IGameMap;
   private container: HTMLDivElement;
   public camera?: CameraLayer;
