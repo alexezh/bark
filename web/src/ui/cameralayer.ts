@@ -12,8 +12,6 @@ import { VRButton } from "./vrbutton";
 
 export type CameraLayerProps = UiLayerProps & {
     scale: number;
-    onOpenTerminal: () => void;
-    onToggleEdit: () => void;
 }
 
 export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLayer {

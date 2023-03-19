@@ -1,6 +1,4 @@
-import _ from "lodash";
 import { CommandBar } from "./commandBar";
-import { TextTerminalLayer } from "./textterminallayer";
 import { populateMapEditCommands } from "../posh/mapeditcommands";
 import { Repl } from "../posh/repl";
 import { HelpDef } from "../posh/helpdef";
@@ -42,7 +40,6 @@ export class Shell implements IGameShell {
   private compositor2: UiCompositor2;
   private props: ShellProps;
   private barLayer: CommandBar;
-  private terminalLayer: TextTerminalLayer;
   private mapEditor?: MapEditor;
   private codeEditor?: CodeEditor;
   private repl: Repl;
@@ -57,17 +54,7 @@ export class Shell implements IGameShell {
     this.props.canvasHeight = this.props.height / this.props.scale;
     this.repl = new Repl();
 
-    _.bindAll(this, [
-      'onOpenTerm',
-      'onCloseTerm',
-      'onToggleEdit',
-      //      'onToggleTile',
-      'onToggleTerm',
-      'onToggleMap',
-    ]);
-
     this.populateBasicCommands();
-
 
     createMapEditorState();
     mapEditorState.onChanged(this, (evt) => this.refresh());
@@ -80,29 +67,12 @@ export class Shell implements IGameShell {
     // now add UI layers
     this.barLayer = new CommandBar({
       id: "bar", x: 0, y: 0,
-      w: this.props.width, h: this.props.commandPaneHeight,
+      w: this.props.width, h: this.props.height,
       termProps: this.props,
       visible: true,
-      mapEditorState: mapEditorState,
-      onToggleEdit: this.onToggleEdit,
-      onToggleTerm: this.onToggleTerm,
-      onToggleMap: this.onToggleMap
+      mapEditorState: mapEditorState
     });
     this.compositor2.appendLayer(this.barLayer);
-
-    // add terminal
-    let terminalHeight = this.props.height * this.props.terminalPaneHeightRatio;
-    this.terminalLayer = new TextTerminalLayer({
-      id: 'terminal',
-      x: 0, y: this.props.height - terminalHeight, w: this.props.width, h: terminalHeight,
-      repl: this.repl,
-      mapEditorState: mapEditorState,
-      visible: true,
-      onCloseTerminal: this.onCloseTerm
-    });
-    this.compositor2.appendLayer(this.terminalLayer);
-
-    this.terminalLayer.fit();
 
     // add camera
     this.camera = new CameraLayer({
@@ -110,9 +80,7 @@ export class Shell implements IGameShell {
       x: 0, y: 0,
       w: this.props.width, h: this.props.height,
       scale: this.props.scale,
-      visible: true,
-      onOpenTerminal: this.onOpenTerm,
-      onToggleEdit: this.onToggleEdit
+      visible: true
     });
 
     this.compositor2.insertLayerBefore(this.camera, 'bar');
@@ -123,25 +91,12 @@ export class Shell implements IGameShell {
   }
 
   public printError(s: string): void {
-    this.terminalLayer.print(s);
   }
 
   public print(s: string): void {
-    this.terminalLayer.print(s);
   }
 
-  public async prompt(s: string): Promise<string> {
-    this.terminalLayer.focus();
-    let res = await this.terminalLayer.prompt(s);
-    this.camera?.focus();
-    return res;
-  }
-
-  public promptMenu(s: string): Promise<string> {
-    this.terminalLayer.focus();
-    let res = this.terminalLayer.promptMenu(s);
-    this.camera?.focus();
-    return res;
+  public printException(e: any): void {
   }
 
   public editFile(text: string | null | undefined, onSave: ((text: string) => void) | undefined) {
@@ -156,14 +111,6 @@ export class Shell implements IGameShell {
     }
   }
 
-  public printException(e: any): void {
-    let message: string;
-    if (typeof e === "string") {
-      this.terminalLayer.print(e as string);
-    } else if (e instanceof Error) {
-      this.terminalLayer.print((e as Error).message);
-    }
-  }
 
   public setGameMap(map: IGameMap) {
     this.map = map;
@@ -180,8 +127,6 @@ export class Shell implements IGameShell {
   }
 
   private loginCached() {
-    this.terminalLayer.print('Welcome to nomekop world\r\n');
-
     let user = window.localStorage.getItem('user');
     if (user === undefined || user === null) {
       this.print(`Run ${decorateCommand('login name')} to login. Type ${decorateCommand('help')} to see more commands`);
@@ -229,87 +174,6 @@ export class Shell implements IGameShell {
     this.print(`Goodbye ${this.interactiveAvatar.rt.name} `);
     this.setInteractiveAvatar(undefined);
     */
-  }
-
-  private onToggleTerm() {
-    this.terminalLayer!.visible = !this.terminalLayer.visible;
-    if (this.terminalLayer.visible) {
-      this.terminalLayer.focus();
-    } else {
-      this.camera?.focus();
-    }
-  }
-
-  private onOpenTerm() {
-    if (!this.terminalLayer!.visible) {
-      this.terminalLayer!.visible = true;
-      this.terminalLayer.focus();
-    }
-  }
-
-  private onCloseTerm() {
-    if (this.terminalLayer!.visible) {
-      this.terminalLayer!.visible = false;
-      this.camera!.focus();
-    }
-  }
-
-  private onToggleMap() {
-    if (this.map === undefined) {
-      return;
-    }
-    /*
-        if (this.mapViewer === undefined) {
-          let mapProps = this.map.props;
-          let atlas = resourceLib.getSpriteSheetById("outside3");
-    
-          this.mapViewer = new MapBitmapViewer({
-            id: "mapviewer",
-            x: 40,
-            y: 40,
-            w: mapProps.gridWidth,
-            h: mapProps.gridHeight,
-            visible: true,
-            mapEditorState: mapEditorState
-          });
-    
-          this.compositor2.insertLayerBefore(this.mapViewer, 'bar');
-        }
-        else {
-          this.mapViewer.visible = !this.mapViewer.visible;
-        }
-    
-        this.mapViewer.refresh();
-        */
-  }
-
-  private onToggleEdit() {
-    if (this.map === undefined) {
-      return;
-    }
-
-    let editMode = !mapEditorState.isEditMode;
-    mapEditorState.update({ isEditMode: editMode });
-    if (editMode === true) {
-      this.terminalLayer.visible = true;
-    }
-    /*
-        if (!editMode) {
-          this.mapEditor = undefined;
-          this.camera?.setEditor(undefined);
-        } else {
-          // whole screen
-          this.mapEditor = new MapEditor({
-            id: "mapeditor",
-            x: 0, y: 0, w: this.props.canvasWidth, h: this.props.canvasHeight,
-            world: this.map,
-            mapEditorState: mapEditorState!,
-            repl: this.repl
-          });
-          this.camera?.setEditor(this.mapEditor);
-        }
-    */
-    this.camera?.focus();
   }
 
   private openTextEditor(text: string | null | undefined, onSave: ((text: string) => void) | undefined) {

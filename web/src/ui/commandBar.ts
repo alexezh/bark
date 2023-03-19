@@ -9,9 +9,6 @@ export type CommandBarProps = UiLayerProps & {
   termProps: ShellProps;
   // world: World;
   mapEditorState: MapEditorState;
-  onToggleEdit: () => void;
-  onToggleTerm: () => void;
-  onToggleMap: () => void;
 }
 
 export interface ICommandBar {
@@ -22,6 +19,7 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
   //private editButton: HTMLButtonElement;
   //private tileButton: HTMLButtonElement;
   private actions: IAction[] = [];
+  private actionButton: HTMLButtonElement;
 
   public constructor(props: CommandBarProps) {
     let element = document.createElement('div');
@@ -29,6 +27,9 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
 
     super(props, element);
 
+    this.actionButton = createButton(element, 'A', this.onAction.bind(this));
+
+    // make list of possible actions
     this.actions.push(new UploadVoxAction(this));
 
     for (let a of this.actions) {
@@ -42,5 +43,9 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
 
   public displayError(text: string) {
     console.log(text);
+  }
+
+  private onAction() {
+
   }
 }

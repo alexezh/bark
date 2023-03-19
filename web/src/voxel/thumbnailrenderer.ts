@@ -21,7 +21,6 @@ export class ThumbnailRenderer {
 
     this.camera = new PerspectiveCamera(35, width / height, 1, this.visible_distance);
     this.camera.up.set(0, 0, 1);
-    this.camera.position.set(0, 0, 100);
 
     this.renderer = new WebGLRenderer({ antialias: false, preserveDrawingBuffer: false });
     this.renderer.setPixelRatio(1);
@@ -33,7 +32,7 @@ export class ThumbnailRenderer {
   };
 
   public render(target: Mesh): ImageData {
-    this.camera.position.set(0, 0, 100);
+    this.camera.position.set(200, 0, 100);
     this.camera.lookAt(new Vector3(0, 0, 0));
 
     // (re)Position the camera See

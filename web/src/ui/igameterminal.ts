@@ -9,8 +9,6 @@ export interface IGameTerminal {
   printError(s: string): void;
   print(s: string): void;
   printException(e: any): void;
-  prompt(s: string): Promise<string>;
-  promptMenu(s: string): Promise<string>;
   editFile(text: string | undefined | null, onSave: ((text: string) => void) | undefined): void;
 }
 
