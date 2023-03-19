@@ -1,7 +1,7 @@
 import { terminal } from "../ui/igameterminal";
 import { AstNode } from "./ast";
 import { ParamDef, paramTypeFromString } from "./funcdef";
-import { greenText, resetColor } from "./termcolors";
+import { greenText, resetColor } from "../lib/termcolors";
 
 export type PoshFunction = {
   params: ParamDef[],

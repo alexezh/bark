@@ -1,4 +1,7 @@
-export function setElementVisible(elem: HTMLElement, val: boolean) {
+export function setElementVisible(elem: HTMLElement | undefined, val: boolean) {
+  if (elem === undefined) {
+    return;
+  }
   elem.style.visibility = (val) ? 'visible' : 'hidden';
 }
 

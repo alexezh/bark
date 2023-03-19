@@ -7,7 +7,7 @@ import { createMapEditorState, mapEditorState } from "../posh/mapeditorstate";
 import { CodeEditor } from "./codeeditor";
 import { IGameTerminal as IGameShell } from "./igameterminal";
 import { registerSystemCommands } from "../posh/systemcommands";
-import { decorateCommand } from "../posh/termcolors";
+import { decorateCommand } from "../lib/termcolors";
 import { MapEditor } from "./mapeditor";
 import { CameraLayer } from "./cameralayer";
 import { IGameMap } from "../voxel/igamemap";

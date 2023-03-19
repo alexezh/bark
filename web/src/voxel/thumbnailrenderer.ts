@@ -1,5 +1,5 @@
 import { AmbientLight, Mesh, Object3D, PCFSoftShadowMap, PerspectiveCamera, Scene, Vector3, WebGLRenderer, WebGLRenderTarget } from "three";
-import { bytesToBase64 } from "../posh/base64";
+import { bytesToBase64 } from "../lib/base64";
 import { encode as PngEncode, ImageData as PngImageData } from 'fast-png';
 
 export class ThumbnailRenderer {

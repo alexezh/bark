@@ -1,6 +1,6 @@
 import { Mesh } from "three";
 import { wireSetStrings, WireString } from "../fetchadapter";
-import { base64ToBytes, bytesToBase64 } from "../posh/base64";
+import { base64ToBytes, bytesToBase64 } from "../lib/base64";
 import { ICommandBar } from "../ui/commandBar";
 import { IAction } from "../ui/iaction";
 import { defaultMaterial } from "../voxel/igamemap";
@@ -31,6 +31,7 @@ export class UploadVoxAction implements IAction {
     let d = document.createElement('input');
     d.id = 'upload_' + this._id;
     d.type = 'file';
+    d.textContent = 'Upload';
     d.multiple = true;
     d.onchange = () => {
       this.processUpload();

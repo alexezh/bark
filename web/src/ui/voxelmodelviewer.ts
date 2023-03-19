@@ -1,6 +1,6 @@
 import { MapEditorState, updateRect } from "../posh/mapeditorstate";
 import { KeyBinder, makeMEvent } from "./keybinder";
-import { GameColors } from "./gamecolors";
+import { GameColors } from "../lib/gamecolors";
 import { UiLayer2, UiLayerProps } from "./uilayer";
 import { GridRect, gridRectToPxRect, PxSize } from "../posh/pos";
 import _ from "lodash";

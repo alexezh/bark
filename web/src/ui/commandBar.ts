@@ -20,6 +20,8 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
   //private tileButton: HTMLButtonElement;
   private actions: IAction[] = [];
   private actionButton: HTMLButtonElement;
+  private commandPaletteVisible = false;
+  private commandPalette: HTMLDivElement | undefined;
 
   public constructor(props: CommandBarProps) {
     let element = document.createElement('div');
@@ -32,9 +34,6 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
     // make list of possible actions
     this.actions.push(new UploadVoxAction(this));
 
-    for (let a of this.actions) {
-      a.render(this.element);
-    }
     // <button type="button" class="nes-btn is-primary">Primary</button>
     //this.editButton = createButton(this._element, 'EDIT', (evt: any): any => props.onToggleEdit());
 
@@ -46,6 +45,15 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
   }
 
   private onAction() {
-
+    if (!this.commandPaletteVisible) {
+      for (let a of this.actions) {
+        a.render(this.element);
+      }
+  
+      this.commandPaletteVisible = false;
+    } else {
+      setElementVisible(this.commandPalette, false);
+      this.commandPaletteVisible = false;
+    }
   }
 }

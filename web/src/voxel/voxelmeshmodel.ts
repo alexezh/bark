@@ -2,7 +2,7 @@
 // ATT: it is responsivility of caller to adjust position information on mesh
 
 import { Mesh, MeshPhongMaterial, Object3D, Quaternion, Scene, Vector, Vector3 } from "three";
-import { GameColors } from "../ui/gamecolors";
+import { GameColors } from "../lib/gamecolors";
 import { VoxelGeometryWriter } from "./voxelgeometrywriter";
 import { modelCache } from "./voxelmodelcache";
 import { vm } from "../engine/ivm";

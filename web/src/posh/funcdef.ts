@@ -1,6 +1,6 @@
 import { AstNode, AstNodeKind, intParam, PtCall, stringParam } from "./ast";
 import { getFunction } from "./poshregistry";
-import { greenText, resetColor } from "./termcolors";
+import { greenText, resetColor } from "../lib/termcolors";
 
 export enum FuncCategory {
   edit,

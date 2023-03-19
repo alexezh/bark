@@ -1,5 +1,5 @@
 import { terminal } from "../ui/igameterminal";
-import { redText, resetColor } from "../posh/termcolors";
+import { redText, resetColor } from "../lib/termcolors";
 
 export type CodeModule = {
   code: string,
