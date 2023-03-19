@@ -1,4 +1,4 @@
-import { Mesh, Object3D, PCFSoftShadowMap, PerspectiveCamera, Scene, Vector3, WebGLRenderer, WebGLRenderTarget } from "three";
+import { AmbientLight, Mesh, Object3D, PCFSoftShadowMap, PerspectiveCamera, Scene, Vector3, WebGLRenderer, WebGLRenderTarget } from "three";
 import { bytesToBase64 } from "../posh/base64";
 import { encode as PngEncode, ImageData as PngImageData } from 'fast-png';
 
@@ -33,9 +33,7 @@ export class ThumbnailRenderer {
   };
 
   public render(target: Mesh): ImageData {
-    var point = new Vector3(0, 0, 0);
-    this.camera.lookAt(point);
-    let angleY = Math.PI / 4;
+    this.camera.position.set(0, 0, 100);
     this.camera.lookAt(new Vector3(0, 0, 0));
 
     // (re)Position the camera See
@@ -52,6 +50,10 @@ export class ThumbnailRenderer {
       .position
       .set(newPosition.x, newPosition.y, newPosition.z);
     this.camera.updateProjectionMatrix();
+
+    this.scene.add(target);
+    let ambient_light = new AmbientLight(0xFFFFFF, 0.8);
+    this.scene.add(ambient_light);
 
     const renderTarget = new WebGLRenderTarget(this.width, this.height);
     this.renderer.setRenderTarget(renderTarget);
