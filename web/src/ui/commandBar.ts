@@ -1,10 +1,10 @@
 import { MapEditorChangeEvent, MapEditorState } from "../posh/mapeditorstate";
 import { createButton, setElementVisible } from "./htmlutils";
-import { TerminalProps } from "./shell";
+import { ShellProps } from "./shell";
 import { UiLayer2, UiLayerProps } from "./uilayer";
 
 export type CommandBarProps = UiLayerProps & {
-  termProps: TerminalProps;
+  termProps: ShellProps;
   // world: World;
   mapEditorState: MapEditorState;
   onToggleEdit: () => void;

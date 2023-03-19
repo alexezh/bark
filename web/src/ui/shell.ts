@@ -18,7 +18,7 @@ import { IGameMap } from "../voxel/igamemap";
 registerSystemCommands();
 //registerMapCommands();
 
-export class TerminalProps {
+export class ShellProps {
   public width: number = 0;
   public height: number = 0;
   // scaled width and height for drawing
@@ -40,7 +40,7 @@ export class Shell implements IGameShell {
   private container: HTMLDivElement;
   public camera?: CameraLayer;
   private compositor2: UiCompositor2;
-  private props: TerminalProps;
+  private props: ShellProps;
   private barLayer: CommandBar;
   private terminalLayer: TextTerminalLayer;
   private mapEditor?: MapEditor;
@@ -49,7 +49,7 @@ export class Shell implements IGameShell {
 
   public constructor(gameContainer: HTMLDivElement) {
     this.container = gameContainer;
-    this.props = new TerminalProps();
+    this.props = new ShellProps();
     this.props.width = this.container.offsetWidth;
     this.props.height = this.container.offsetHeight;
     this.props.scale = 1; // window.devicePixelRatio;
