@@ -73,12 +73,17 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         //setTimeout(() => this.loadMap());
     };
 
+    public get position(): Vector3 { return this.camera.position }
     public refresh() {
 
     }
 
     public scrollBy(delta: WorldCoord3) {
         this.camera.position.add(new Vector3(delta.x, delta.y, delta.z));
+    }
+
+    public setPosition(pos: Vector3) {
+        this.camera.position.copy(pos);
     }
 
     private createCamera(w: number, h: number) {

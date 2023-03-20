@@ -4,6 +4,7 @@ import { IAction } from "./iaction";
 import { ShellProps } from "./shell";
 import { UiLayer2, UiLayerProps } from "./uilayer";
 import { UploadVoxAction } from "../actions/uploadaction";
+import { MoveCameraAction } from "../actions/movecameraaction";
 
 export type CommandBarProps = UiLayerProps & {
   termProps: ShellProps;
@@ -11,17 +12,89 @@ export type CommandBarProps = UiLayerProps & {
   mapEditorState: MapEditorState;
 }
 
+export interface ICommandPalette {
+  openDetailsPane(elem: HTMLElement): void;
+  closeDetailsPane(): void;
+}
+
 export interface ICommandBar {
   displayError(text: string);
+  get palette(): ICommandPalette;
+}
+
+export class CommandPalette implements ICommandPalette {
+  private actions: IAction[] = [];
+  private _visible: boolean = false;
+  private commandPalette: HTMLDivElement | undefined;
+  private props: CommandBarProps;
+  private propPane: HTMLElement | undefined;
+
+  public get visible(): boolean { return this._visible };
+
+  public constructor(props: CommandBarProps) {
+    this.props = props;
+  }
+
+  public setVisible(val: boolean, parent: HTMLElement) {
+    if (!this._visible) {
+      if (this.commandPalette === undefined) {
+        this.commandPalette = document.createElement('div');
+        this.commandPalette.className = 'commandPalette';
+        parent.appendChild(this.commandPalette);
+        this.updatePaletteSize();
+      }
+
+      for (let a of this.actions) {
+        a.destroyButton(this.commandPalette);
+      }
+
+      for (let a of this.actions) {
+        a.renderButton(this.commandPalette);
+      }
+
+      setElementVisible(this.commandPalette, true);
+      this._visible = true;
+    } else {
+      setElementVisible(this.commandPalette, false);
+      this._visible = false;
+    }
+  }
+
+  registerAction(action: IAction): void {
+    this.actions.push(action);
+  }
+
+  openDetailsPane(elem: HTMLElement): void {
+    this.commandPalette?.appendChild(elem);
+    this.propPane = elem;
+  }
+  closeDetailsPane(): void {
+    if (this.propPane === undefined) {
+      return;
+    }
+
+    this.commandPalette?.removeChild(this.propPane);
+    this.propPane = undefined;
+  }
+
+  private updatePaletteSize() {
+    if (this.commandPalette === undefined) {
+      return;
+    }
+    this.commandPalette.style.left = '0';
+    if (this.props.w !== 0) {
+      this.commandPalette.style.width = this.props.w.toString();
+    }
+  }
 }
 
 export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar {
   //private editButton: HTMLButtonElement;
   //private tileButton: HTMLButtonElement;
-  private actions: IAction[] = [];
   private actionButton: HTMLButtonElement;
-  private commandPaletteVisible = false;
-  private commandPalette: HTMLDivElement | undefined;
+  private _palette: CommandPalette;
+
+  public get palette(): ICommandPalette { return this._palette }
 
   public constructor(props: CommandBarProps) {
     let element = document.createElement('div');
@@ -31,8 +104,11 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
 
     this.actionButton = createButton(element, 'A', this.onAction.bind(this));
 
+    this._palette = new CommandPalette(this.props);
+
     // make list of possible actions
-    this.actions.push(new UploadVoxAction(this));
+    this._palette.registerAction(new UploadVoxAction(this));
+    this._palette.registerAction(new MoveCameraAction(this));
 
     // <button type="button" class="nes-btn is-primary">Primary</button>
     //this.editButton = createButton(this._element, 'EDIT', (evt: any): any => props.onToggleEdit());
@@ -45,15 +121,6 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
   }
 
   private onAction() {
-    if (!this.commandPaletteVisible) {
-      for (let a of this.actions) {
-        a.render(this.element);
-      }
-  
-      this.commandPaletteVisible = false;
-    } else {
-      setElementVisible(this.commandPalette, false);
-      this.commandPaletteVisible = false;
-    }
+    this._palette.setVisible(!this._palette.visible, this.element);
   }
 }

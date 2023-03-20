@@ -54,6 +54,7 @@ export class VM implements IVM {
   }
 
   public get canvas(): HTMLElement { return this._canvas; }
+  public get camera(): ICameraLayer | undefined { return this._camera }
 
   public attachCamera(camera: ICameraLayer) {
     this._camera = camera;

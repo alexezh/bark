@@ -12,6 +12,7 @@ import { VoxelModel, VoxelModelFrame } from "../voxel/voxelmodel";
 export class UploadVoxAction implements IAction {
   private static _nextId: number = 1;
   private _id: number;
+  private _element: HTMLDivElement | undefined;
   private _inputElem: HTMLInputElement | undefined;
   private _bar: ICommandBar;
   private parent!: HTMLElement;
@@ -25,27 +26,42 @@ export class UploadVoxAction implements IAction {
 
   public get name(): string { return 'Upload' }
 
-  public render(parent: HTMLElement) {
+  public renderButton(parent: HTMLElement) {
     this.parent = parent;
 
     let d = document.createElement('input');
     d.id = 'upload_' + this._id;
+    d.name = d.id;
     d.type = 'file';
-    d.textContent = 'Upload';
+    d.style.visibility = "hidden";
     d.multiple = true;
+    d.accept = ".vox";
     d.onchange = () => {
       this.processUpload();
     }
-
     this._inputElem = d;
-    parent.appendChild(d);
+
+    let label = document.createElement('label') as HTMLLabelElement;
+    label.htmlFor = d.id;
+    label.className = "label";
+    label.textContent = 'Upload';
+
+
+    let div = document.createElement('div') as HTMLDivElement;
+    div.appendChild(label);
+    div.appendChild(d);
+
+    this._element = div;
+
+    parent.appendChild(div);
   }
 
-  public destroy(parent: HTMLElement) {
-    if (this._inputElem === undefined) {
+  public destroyButton(parent: HTMLElement) {
+    if (this._element === undefined) {
       return;
     }
-    parent.removeChild(this._inputElem);
+    parent.removeChild(this._element);
+    this._element = undefined;
     this._inputElem = undefined;
   }
 

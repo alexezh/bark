@@ -13,6 +13,7 @@ export interface IVM {
   get physics(): IGamePhysics;
   get canvas(): HTMLElement;
   get clock(): FrameClock;
+  get camera(): ICameraLayer | undefined;
 
   attachCamera(camera: ICameraLayer): void;
   registerMapChanged(target: any, func: () => void): void;

@@ -24,3 +24,27 @@ export function createButton(parent: HTMLElement, text: string, handler: (evt: a
 
   return button;
 }
+
+export function createTextEntry(
+  parent: HTMLElement,
+  text: string,
+  value: any,
+  handler: (val: string) => any): HTMLDivElement {
+
+  let d = document.createElement('div') as HTMLDivElement;
+  let l = document.createElement('label') as HTMLLabelElement;
+  l.textContent = text;
+
+  let i = document.createElement('input') as HTMLInputElement;
+  i.type = 'number';
+  i.value = value;
+
+  d.appendChild(l);
+  d.appendChild(i);
+
+  i.addEventListener('input', () => handler(i.value));
+
+  parent.appendChild(d);
+
+  return d;
+}
