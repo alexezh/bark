@@ -6,12 +6,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 
-builder.Services.AddLettuceEncrypt().PersistDataToDirectory(new DirectoryInfo("~/LettuceEncrypt/"), "DigJsBark");
+//builder.Services.AddLettuceEncrypt().PersistDataToDirectory(new DirectoryInfo("~/LettuceEncrypt/"), "DigJsBark");
 
 var app = builder.Build();
 
-//app.MapGet("/", () => "Hello World!");
-//WorldCollection.Instance.Initialize();
+// initialize storage
+ProjectCollection.Instance.Initialize();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -45,7 +45,7 @@ app.MapControllerRoute(
 
 app.MapControllerRoute(
     name: "updateStrings",
-    pattern: "/api/{controller=Project}/{action=UpdateStrings}/{id?}");
+    pattern: "/api/{controller=Project}/{action=SetStrings}/{id?}");
 
 app.MapControllerRoute(
     name: "getArray",
@@ -53,7 +53,7 @@ app.MapControllerRoute(
 
 app.MapControllerRoute(
     name: "updateArray",
-    pattern: "/api/{controller=Project}/{action=UpdateArray}/{id?}");
+    pattern: "/api/{controller=Project}/{action=SetArray}/{id?}");
 
 //app.MapFallbackToFile("index.html"); ;
 app.MapHub<RctHub>("/updates");

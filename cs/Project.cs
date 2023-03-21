@@ -4,7 +4,7 @@ public class WireGetStringsRequest
 }
 public class WireString
 {
-  public string name { get; set; }
+  public string key { get; set; }
   public string data { get; set; }
 }
 
@@ -41,7 +41,7 @@ public class Project
       {
         if (e.Key.StartsWith(prefix))
         {
-          yield return new WireString() { name = e.Key, data = e.Value };
+          yield return new WireString() { key = e.Key, data = e.Value };
         }
       }
     }
@@ -49,7 +49,7 @@ public class Project
     {
       if (_lib.TryGetValue(pattern, out var val))
       {
-        yield return new WireString() { name = pattern, data = val };
+        yield return new WireString() { key = pattern, data = val };
       }
     }
   }
@@ -66,6 +66,23 @@ public class Project
 
     _lib[name] = data;
     _db.UpdateEntityRaw(EntityKind, name, data);
+  }
+
+  public void SetStrings(WireString[] data)
+  {
+    foreach (var d in data)
+    {
+      if (_lib.TryGetValue(d.key, out var existing))
+      {
+        if (!_db.TryUpdateEntityRaw(EntityKind, d.key + ".bak", existing))
+        {
+          _db.InsertEntityRaw(EntityKind, d.key + ".bak", existing);
+        }
+      }
+
+      _lib[d.key] = d.data;
+      _db.UpdateEntityRaw(EntityKind, d.key, d.data);
+    }
   }
 
   public bool TryGet(string name, out string data)

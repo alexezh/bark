@@ -25,12 +25,12 @@ public class ProjectController : Controller
   }
 
   [HttpPost]
-  public async Task<string> SetString(string id)
+  public async Task<string> SetStrings(string id)
   {
     using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
     {
       string content = await reader.ReadToEndAsync();
-      WireString code = JsonSerializer.Deserialize<WireString>(content);
+      WireString[] code = JsonSerializer.Deserialize<WireString[]>(content);
 
       Project prj = ProjectCollection.Instance.GetProject(id);
       if (prj == null)
@@ -38,7 +38,7 @@ public class ProjectController : Controller
         return "Unknown world";
       }
 
-      prj.SetString(code.name, code.data);
+      prj.SetStrings(code);
     }
 
     return "OK";
