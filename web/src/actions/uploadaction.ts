@@ -33,7 +33,7 @@ export class UploadVoxAction implements IAction {
     d.id = 'upload_' + this._id;
     d.name = d.id;
     d.type = 'file';
-    d.style.visibility = "hidden";
+    d.style.display = "none";
     d.multiple = true;
     d.accept = ".vox";
     d.onchange = () => {
@@ -43,9 +43,8 @@ export class UploadVoxAction implements IAction {
 
     let label = document.createElement('label') as HTMLLabelElement;
     label.htmlFor = d.id;
-    label.className = "label";
+    label.className = "commandButton";
     label.textContent = 'Upload';
-
 
     let div = document.createElement('div') as HTMLDivElement;
     div.appendChild(label);
@@ -93,8 +92,11 @@ export class UploadVoxAction implements IAction {
         return;
       }
 
-      let str = bytesToBase64(data as Uint8Array);
-      wireFiles.push({ key: 'vox/' + fn, data: str });
+      let dataStr = bytesToBase64(data as Uint8Array);
+      wireFiles.push({ key: 'vox/' + fn, data: dataStr });
+
+      let thumbName = fn.replace('.vox', '.png');
+      wireFiles.push({ key: 'vox/' + thumbName, data: thumb });
     }
 
     await wireSetStrings(wireFiles);

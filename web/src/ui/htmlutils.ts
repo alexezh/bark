@@ -25,18 +25,30 @@ export function createButton(parent: HTMLElement, text: string, handler: (evt: a
   return button;
 }
 
+export function createCommandButton(parent: HTMLElement, text: string, handler: (evt: any) => any): HTMLButtonElement {
+  let button = document.createElement('button');
+  button.textContent = text;
+  button.className = "commandButton";
+
+  parent.appendChild(button);
+  button.addEventListener('click', handler);
+
+  return button;
+}
+
 export function createTextEntry(
   parent: HTMLElement,
   text: string,
   value: any,
   handler: (val: string) => any): HTMLDivElement {
 
-  let d = document.createElement('div') as HTMLDivElement;
+  let d = document.createElement('span') as HTMLDivElement;
   let l = document.createElement('label') as HTMLLabelElement;
   l.textContent = text;
 
   let i = document.createElement('input') as HTMLInputElement;
   i.type = 'number';
+  i.maxLength = 5;
   i.value = value;
 
   d.appendChild(l);

@@ -6,11 +6,11 @@ export interface IFetchAdapter {
 }
 
 let fetchAdapter: IFetchAdapter | undefined = undefined;
-let projectId: string;
+let projectId: string = '7fa84179-dc58-4939-8678-03370fd137f3';
 let updateQueue: Queue = new Queue();
 
-export function currentProjectId(): string {
-  return projectId;
+export function setProjectId(id: string) {
+  projectId = id;
 }
 
 export function setFetchAdapter(adapter: IFetchAdapter) {

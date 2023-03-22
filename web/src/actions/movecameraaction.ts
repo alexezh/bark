@@ -1,7 +1,7 @@
 import { Vector3 } from "three";
 import { vm } from "../engine/ivm";
 import { ICommandBar } from "../ui/commandBar"
-import { createButton, createTextEntry } from "../ui/htmlutils";
+import { createButton, createCommandButton, createTextEntry } from "../ui/htmlutils";
 import { IAction } from "../ui/iaction"
 
 export class MoveCameraAction implements IAction {
@@ -17,10 +17,16 @@ export class MoveCameraAction implements IAction {
   }
 
   renderButton(parent: HTMLElement) {
-    this.button = createButton(parent, "MoveCamera", this.onMoveCameraClick.bind(this));
+    this.button = createCommandButton(parent, "MoveCamera", this.onMoveCameraClick.bind(this));
   }
 
   destroyButton(parent: HTMLElement) {
+    if (this.button === undefined) {
+      return;
+    }
+
+    parent.removeChild(this.button);
+    this.button = undefined;
   }
 
   private onMoveCameraClick() {

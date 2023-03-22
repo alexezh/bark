@@ -2,9 +2,7 @@ import _ from "lodash";
 import { v4 as uuidv4 } from 'uuid';
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 import { GridPos } from "../posh/pos";
-import { currentProjectId } from "../fetchadapter";
 import { IRealtimeClient } from "./igamestate";
-import { GameMap } from "../engine/gamemap";
 
 export type WireSpawnCharacterRequest = {
   name: string;
