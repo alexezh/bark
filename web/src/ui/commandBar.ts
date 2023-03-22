@@ -12,22 +12,17 @@ export type CommandBarProps = UiLayerProps & {
   mapEditorState: MapEditorState;
 }
 
-export interface ICommandPalette {
+export interface ICommandBar {
+  displayError(text: string);
   openDetailsPane(elem: HTMLElement): void;
   closeDetailsPane(): void;
 }
 
-export interface ICommandBar {
-  displayError(text: string);
-  get palette(): ICommandPalette;
-}
-
-export class CommandPalette implements ICommandPalette {
+export class CommandPalette {
   private actions: IAction[] = [];
   private _visible: boolean = false;
   private commandPalette: HTMLDivElement | undefined;
   private props: CommandBarProps;
-  private propPane: HTMLElement | undefined;
 
   public get visible(): boolean { return this._visible };
 
@@ -64,19 +59,6 @@ export class CommandPalette implements ICommandPalette {
     this.actions.push(action);
   }
 
-  openDetailsPane(elem: HTMLElement): void {
-    this.commandPalette?.appendChild(elem);
-    this.propPane = elem;
-  }
-  closeDetailsPane(): void {
-    if (this.propPane === undefined) {
-      return;
-    }
-
-    this.commandPalette?.removeChild(this.propPane);
-    this.propPane = undefined;
-  }
-
   private updatePaletteSize() {
     if (this.commandPalette === undefined) {
       return;
@@ -93,8 +75,7 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
   //private tileButton: HTMLButtonElement;
   private actionButton: HTMLButtonElement;
   private _palette: CommandPalette;
-
-  public get palette(): ICommandPalette { return this._palette }
+  private propPane: HTMLElement | undefined;
 
   public constructor(props: CommandBarProps) {
     let element = document.createElement('div');
@@ -118,6 +99,19 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
 
   public displayError(text: string) {
     console.log(text);
+  }
+
+  openDetailsPane(elem: HTMLElement): void {
+    this.element.appendChild(elem);
+    this.propPane = elem;
+  }
+  closeDetailsPane(): void {
+    if (this.propPane === undefined) {
+      return;
+    }
+
+    this.element.removeChild(this.propPane);
+    this.propPane = undefined;
   }
 
   private onAction() {
