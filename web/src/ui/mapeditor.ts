@@ -8,7 +8,7 @@ import { KeyBinder, MEvent } from "./keybinder";
 import { IVoxelMap, MapBlockCoord } from "./ivoxelmap";
 import { MapSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { modelCache } from "../voxel/voxelmodelcache";
-import { ICamera } from "./icamera";
+import { ICamera } from "../engine/icamera";
 
 export function addEditorShortcuts(showKeyBindingsDef: ShowKeyBindingsDef) {
   let editor = 'Editor'

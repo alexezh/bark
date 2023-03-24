@@ -57,7 +57,7 @@ export class BoxedGame implements IDigGame {
     // create controller and options such as repeat rate and so on
     inputController = new MoveController2D();
 
-    await vm.loadMap('test');
+    await vm.loadLevel('test');
     this.char = await Monky.create();
 
     vm.onStart(this.moveMonkey.bind(this));
@@ -118,7 +118,7 @@ export class BoxedGame implements IDigGame {
             vm.send('KilledMonkey');
           } else if (collision.collision instanceof MapBlockRigitBody) {
             for (let b of (collision.collision as MapBlockRigitBody).blocks) {
-              vm.map.deleteBlock(b);
+              vm.level.deleteBlock(b);
               vm.createExplosion(collision.position);
             }
             vm.removeSprite(bomb);

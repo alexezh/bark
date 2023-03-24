@@ -5,7 +5,7 @@ import { KeyBinder, makeMEvent } from "./keybinder";
 import { UiLayer2, UiLayerProps } from "./uilayer";
 import { IVoxelMap } from "./ivoxelmap";
 import { WorldCoord3 } from "../voxel/pos3";
-import { ICamera } from "./icamera";
+import { ICamera } from "../engine/icamera";
 import { vm } from "../engine/ivm";
 import { VRButton } from "./vrbutton";
 //import { VRButton } from 'three/addons/webxr/VRButton';
@@ -120,11 +120,11 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
 
     private onMapChanged() {
 
-        if (vm.map === undefined || this.map !== undefined) {
+        if (vm.level === undefined || this.map !== undefined) {
             return;
         }
 
-        this.map = vm.map;
+        this.map = vm.level;
 
         /*
         this.mapEditor = new MapEditor(

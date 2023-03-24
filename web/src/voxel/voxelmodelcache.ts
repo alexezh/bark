@@ -1,4 +1,4 @@
-import { fetchResource } from "../fetchadapter";
+import { fetchResource } from "../lib/fetchadapter";
 import { Vox } from "./vox";
 import { VoxelModel, VoxelModelFrame } from "./voxelmodel";
 

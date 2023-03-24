@@ -1,10 +1,10 @@
 import { Clock, Vector3 } from "three";
 import AsyncEventSource from "./AsyncEventSource";
-import { ICamera } from "../ui/icamera";
-import { IVoxelMap } from "../ui/ivoxelmap";
+import { ICamera } from "./icamera";
+import { IVoxelMap as IVoxelLevel, IVoxelMapFile as IVoxelLevelFile } from "../ui/ivoxelmap";
 import { animator } from "./animator";
 import { FrameClock } from "./clock";
-import { VoxelMap } from "./voxelmap";
+import { VoxelLevel } from "./voxellevel";
 import { GamePhysics } from "./gamephysics";
 import { IDigGame } from "./idiggame";
 import { IGamePhysics, RigitCollisionHandler } from "./igamephysics";
@@ -29,7 +29,8 @@ export class VM implements IVM {
   private _ticker!: Ticker;
   private _physics!: GamePhysics;
   private _canvas: HTMLElement;
-  private _map!: IVoxelMap;
+  private _map?: IVoxelLevel;
+  private _levelFile?: IVoxelLevelFile;
   private _camera?: ICamera;
   private _game?: IDigGame;
   private readonly _sprites: Map<number, Sprite3> = new Map<number, Sprite3>();
@@ -46,7 +47,13 @@ export class VM implements IVM {
   //private _sprites: Map
 
   public get physics(): IGamePhysics { return this._physics; }
-  public get map(): IVoxelMap { return this._map; }
+  public get level(): IVoxelLevel {
+    if (this._map === undefined) throw new Error('not loaded'); return this._map;
+  }
+  public get levelFile(): IVoxelLevelFile {
+    if (this._levelFile === undefined) throw new Error('not loaded');
+    return this._levelFile;
+  }
 
   public constructor(canvas: HTMLElement) {
     this._canvas = canvas;
@@ -54,7 +61,10 @@ export class VM implements IVM {
   }
 
   public get canvas(): HTMLElement { return this._canvas; }
-  public get camera(): ICamera | undefined { return this._camera }
+  public get camera(): ICamera {
+    if (this._camera === undefined) throw new Error('not loaded');
+    return this._camera;
+  }
 
   public attachCamera(camera: ICamera) {
     this._camera = camera;
@@ -79,8 +89,8 @@ export class VM implements IVM {
     return game;
   }
 
-  public async loadMap(id: string): Promise<void> {
-    this._map = new VoxelMap();
+  public async loadLevel(id: string): Promise<void> {
+    this._map = new VoxelLevel();
     await this._map.load(id);
     this._physics = new GamePhysics(this._map);
     this._physics.setCollideHandler(this.onCollide.bind(this));
@@ -241,6 +251,10 @@ export class VM implements IVM {
   private loadScene() {
     if (this._camera === undefined) {
       return;
+    }
+
+    if (this._map === undefined) {
+      throw new Error('not loaded');
     }
 
     // TODO: we should clear the previous scene
