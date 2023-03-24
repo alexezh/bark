@@ -3,9 +3,9 @@ import { Camera, Clock, Fog, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3
 import { MapEditor } from "./mapeditor";
 import { KeyBinder, makeMEvent } from "./keybinder";
 import { UiLayer2, UiLayerProps } from "./uilayer";
-import { IVoxelMap } from "../voxel/igamemap";
+import { IVoxelMap } from "./igamemap";
 import { WorldCoord3 } from "../voxel/pos3";
-import { ICameraLayer } from "../voxel/icameralayer";
+import { ICamera } from "./icamera";
 import { vm } from "../engine/ivm";
 import { VRButton } from "./vrbutton";
 //import { VRButton } from 'three/addons/webxr/VRButton';
@@ -14,7 +14,7 @@ export type CameraLayerProps = UiLayerProps & {
     scale: number;
 }
 
-export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLayer {
+export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     public renderer!: WebGLRenderer;
     public camera!: Camera;
     public scene!: Scene;

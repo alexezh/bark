@@ -1,6 +1,6 @@
 import { Clock, Vector3 } from "three";
-import { ICameraLayer } from "../voxel/icameralayer";
-import { IVoxelMap } from "../voxel/igamemap";
+import { ICamera } from "../ui/icamera";
+import { IVoxelMap } from "../ui/igamemap";
 import { IGamePhysics } from "./igamephysics";
 import { Sprite3 } from "./sprite3";
 import { IRigitBody, VoxelAnimationCollection } from "../voxel/voxelmeshmodel";
@@ -14,7 +14,7 @@ export interface IVM {
   get canvas(): HTMLElement;
   get clock(): FrameClock;
 
-  attachCamera(camera: ICameraLayer): void;
+  attachCamera(camera: ICamera): void;
   registerMapChanged(target: any, func: () => void): void;
   loadGame(GT: { new(): IDigGame }): Promise<IDigGame>;
 

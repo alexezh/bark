@@ -1,6 +1,6 @@
 import { BufferGeometry, Mesh, MeshPhongMaterial, Vector3 } from "three";
 import { GridSize } from "../posh/pos";
-import { MapBlock, MapBlockCoord } from "../voxel/igamemap";
+import { MapBlock, MapBlockCoord } from "../ui/igamemap";
 import { MapPos3 } from "../voxel/pos3";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
 import { VoxelModel } from "../voxel/voxelmodel";

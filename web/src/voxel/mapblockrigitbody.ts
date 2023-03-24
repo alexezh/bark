@@ -1,6 +1,6 @@
 import { Vector3 } from "three";
 import { IRigitBody, RigitBodyKind } from "./voxelmeshmodel";
-import { MapBlock, MapBlockCoord } from "./igamemap";
+import { MapBlock, MapBlockCoord } from "../ui/igamemap";
 import { WorldCoord3 } from "./pos3";
 
 export class MapBlockRigitBody implements IRigitBody {

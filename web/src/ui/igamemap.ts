@@ -1,7 +1,7 @@
 import { MeshPhongMaterial, Scene, Vector3 } from "three";
-import { MapPos3, MapSize3, WorldCoord3, WorldSize3 } from "./pos3";
-import { VoxelModel } from "./voxelmodel";
-import { IRigitBody } from "./voxelmeshmodel";
+import { MapPos3, MapSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
+import { VoxelModel } from "../voxel/voxelmodel";
+import { IRigitBody } from "../voxel/voxelmeshmodel";
 
 export type MapProps = {
   id: string;

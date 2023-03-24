@@ -10,7 +10,7 @@ import { registerSystemCommands } from "../posh/systemcommands";
 import { decorateCommand } from "../lib/termcolors";
 import { MapEditor } from "./mapeditor";
 import { CameraLayer } from "./cameralayer";
-import { IVoxelMap } from "../voxel/igamemap";
+import { IVoxelMap } from "./igamemap";
 
 //registerRegionCommands();
 registerSystemCommands();
@@ -111,16 +111,6 @@ export class Shell implements IGameShell {
     }
   }
 
-
-  public setGameMap(map: IVoxelMap) {
-    this.map = map;
-    //mapEditorState.update({ map: map });
-
-    this.loginCached();
-
-    this.refresh();
-    //    this.camera.focus();
-  }
 
   private populateBasicCommands() {
     this.repl.addFunc(new HelpDef(this.repl))

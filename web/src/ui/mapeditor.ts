@@ -5,10 +5,10 @@ import { mapEditorState } from "../posh/mapeditorstate";
 import { PxSize } from "../posh/pos";
 import { IMapEditor } from "./imapeditor";
 import { KeyBinder, MEvent } from "./keybinder";
-import { IVoxelMap, MapBlockCoord } from "../voxel/igamemap";
+import { IVoxelMap, MapBlockCoord } from "./igamemap";
 import { MapSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { modelCache } from "../voxel/voxelmodelcache";
-import { ICameraLayer } from "../voxel/icameralayer";
+import { ICamera } from "./icamera";
 
 export function addEditorShortcuts(showKeyBindingsDef: ShowKeyBindingsDef) {
   let editor = 'Editor'
@@ -35,7 +35,7 @@ export interface IMapEditorHost {
 export class MapEditor implements IMapEditor {
   private viewSize: PxSize;
   private camera: Camera;
-  private cameraLayer: ICameraLayer;
+  private cameraLayer: ICamera;
   private scene: Scene;
   private isDown: boolean = false;
   private map: IVoxelMap;
@@ -45,7 +45,7 @@ export class MapEditor implements IMapEditor {
   private selection: Line | undefined = undefined;
 
   public constructor(
-    cameraLayer: ICameraLayer,
+    cameraLayer: ICamera,
     viewSize: PxSize,
     scene: Scene,
     camera: Camera,

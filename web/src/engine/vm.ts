@@ -1,10 +1,10 @@
 import { Clock, Vector3 } from "three";
 import AsyncEventSource from "./AsyncEventSource";
-import { ICameraLayer } from "../voxel/icameralayer";
-import { IVoxelMap } from "../voxel/igamemap";
+import { ICamera } from "../ui/icamera";
+import { IVoxelMap } from "../ui/igamemap";
 import { animator } from "./animator";
 import { FrameClock } from "./clock";
-import { GameMap } from "./gamemap";
+import { VoxelMap } from "./voxelmap";
 import { GamePhysics } from "./gamephysics";
 import { IDigGame } from "./idiggame";
 import { IGamePhysics, RigitCollisionHandler } from "./igamephysics";
@@ -30,7 +30,7 @@ export class VM implements IVM {
   private _physics!: GamePhysics;
   private _canvas: HTMLElement;
   private _map!: IVoxelMap;
-  private _camera?: ICameraLayer;
+  private _camera?: ICamera;
   private _game?: IDigGame;
   private readonly _sprites: Map<number, Sprite3> = new Map<number, Sprite3>();
   private readonly _collisions: WeakMap<IRigitBody, CollisionWaiter> = new WeakMap<IRigitBody, CollisionWaiter>;
@@ -56,7 +56,7 @@ export class VM implements IVM {
   public get canvas(): HTMLElement { return this._canvas; }
   public get camera(): ICamera | undefined { return this._camera }
 
-  public attachCamera(camera: ICameraLayer) {
+  public attachCamera(camera: ICamera) {
     this._camera = camera;
 
     if (this._map !== undefined) {
@@ -80,7 +80,7 @@ export class VM implements IVM {
   }
 
   public async loadMap(id: string): Promise<void> {
-    this._map = new GameMap();
+    this._map = new VoxelMap();
     await this._map.load(id);
     this._physics = new GamePhysics(this._map);
     this._physics.setCollideHandler(this.onCollide.bind(this));

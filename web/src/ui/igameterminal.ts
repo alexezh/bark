@@ -1,10 +1,9 @@
-import { IVoxelMap } from "../voxel/igamemap";
+import { IVoxelMap } from "./igamemap";
 
 export interface IGameShell {
   login(name: string): void;
   logout(): void;
   refresh(): void;
-  setGameMap(map: IVoxelMap): void;
   // setInteractiveAvatar(player: IAvatar): void;
   printError(s: string): void;
   print(s: string): void;

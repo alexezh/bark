@@ -1,7 +1,7 @@
 import { idText } from "typescript";
 import AsyncEventSource from "../engine/AsyncEventSource";
 import { GridRect, PxPos, PxSize } from "./pos";
-import { IVoxelMap } from "../voxel/igamemap";
+import { IVoxelMap } from "../ui/igamemap";
 
 export type MapBitmap = {
   w: number;
