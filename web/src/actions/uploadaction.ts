@@ -29,6 +29,22 @@ export class UploadVoxAction implements IAction {
   public renderButton(parent: HTMLElement) {
     this.parent = parent;
 
+    let div = this.createUploadButton();
+    this._element = div;
+
+    parent.appendChild(div);
+  }
+
+  public destroyButton(parent: HTMLElement) {
+    if (this._element === undefined) {
+      return;
+    }
+    parent.removeChild(this._element);
+    this._element = undefined;
+    this._inputElem = undefined;
+  }
+
+  private createUploadButton(): HTMLDivElement {
     let d = document.createElement('input');
     d.id = 'upload_' + this._id;
     d.name = d.id;
@@ -50,18 +66,7 @@ export class UploadVoxAction implements IAction {
     div.appendChild(label);
     div.appendChild(d);
 
-    this._element = div;
-
-    parent.appendChild(div);
-  }
-
-  public destroyButton(parent: HTMLElement) {
-    if (this._element === undefined) {
-      return;
-    }
-    parent.removeChild(this._element);
-    this._element = undefined;
-    this._inputElem = undefined;
+    return div;
   }
 
   private async processUpload() {

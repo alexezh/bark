@@ -1,4 +1,4 @@
-import { terminal } from "../ui/igameterminal";
+import { shell } from "../ui/igameterminal";
 import { FuncCategory, GenericFuncDef, ParamDef, ParamType } from "./funcdef";
 import { PoshFunction, printHelp, registerFunction } from "./poshregistry";
 
@@ -12,11 +12,11 @@ export function login(args: { name: string }) {
     return;
   }
 
-  terminal?.login(args.name);
+  shell?.login(args.name);
 }
 
 export function logout() {
-  terminal?.logout();
+  shell?.logout();
 }
 
 export function registerSystemCommands() {

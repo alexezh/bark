@@ -3,9 +3,10 @@ import { modelCache } from "../voxel/voxelmodelcache";
 import { MapLayer } from "./maplayer";
 import { VoxelModel } from "../voxel/voxelmodel";
 import { MapPos3, MapSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
-import { defaultMaterial, IGameMap, MapBlock, MapBlockCoord } from "../voxel/igamemap";
+import { defaultMaterial, IVoxelMap, MapBlock, MapBlockCoord } from "../voxel/igamemap";
 import { IRigitBody } from "../voxel/voxelmeshmodel";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../voxel/mapblockrigitbody";
+import { wireGetArrayRange } from "../fetchadapter";
 
 
 export class MeshModel {
@@ -22,7 +23,7 @@ export class MeshModel {
 
 //////////////////////////////////////////////////////////////////////
 // Maps class - Loading of maps from images
-export class GameMap implements IGameMap {
+export class GameMap implements IVoxelMap {
     private scene!: Scene;
     public objects: any = [];
     public width = 100;
@@ -33,7 +34,9 @@ export class GameMap implements IGameMap {
 
     public ambient_light!: AmbientLight;
 
-    reset() {
+    public onStart() {
+    };
+    public onStop() {
         /*
         for (var i = 0; i < this.loaded.length; i++) {
             if (this.loaded[i].chunk) {
@@ -81,8 +84,13 @@ export class GameMap implements IGameMap {
     public async load(id: string): Promise<boolean> {
         this.layers.push(new MapLayer(defaultMaterial, 0, this.blockSize));
 
-        let ground = await modelCache.getVoxelModel('./assets/vox/ground.vox');
-        this.layers[0].fill(ground);
+        let mapData = await wireGetArrayRange('level', 0, -1);
+        if (mapData === undefined) {
+            let ground = await modelCache.getVoxelModel('./assets/vox/ground.vox');
+            this.layers[0].fill(ground);
+        } else {
+
+        }
 
         this.layers[0].build();
         return true;

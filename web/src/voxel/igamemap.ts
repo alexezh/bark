@@ -26,8 +26,38 @@ export type MapBlockCoord = {
   mapSize: MapSize3;
 }
 
-export interface IGameMap {
+export type FileMapBlockDef = {
+  id: number;
+  uri: string;
+}
+
+export type FileMapBlock = {
+  id: number;
+  x: number;
+  y: number;
+}
+
+export interface IVoxelMapFile {
+  get cameraPosition(): Vector3;
+  set cameraPosition(value: Vector3);
+  get mapSize(): MapSize3;
+  get blockCount(): number;
+
+  registerOnCameraChange(func: () => void);
+  registerOnBlockChange(func: () => void);
+
+  load(name: string): Promise<void>;
+  getBlock(idx: number): FileMapBlock;
+}
+
+export interface IVoxelMap {
   //readonly props: MapProps;
+
+  // called when game started; at this point properties become non-persisted
+  onStart();
+
+  // called when game stopped. properties reset to edit values
+  onStop();
 
   load(id: string): Promise<boolean>;
   loadScene(scene: Scene);
@@ -35,6 +65,8 @@ export interface IGameMap {
   findBlock(point: Vector3): MapBlockCoord | undefined;
   deleteBlock(block: MapBlockCoord);
   addBlock(pos: MapPos3, block: VoxelModel);
+
+  // todo: add map objects and sprites here
 
   mapSizeToWorldSize(gridSize: MapSize3): WorldSize3;
   mapPosToWorldPos(gridPos: MapPos3): WorldCoord3;

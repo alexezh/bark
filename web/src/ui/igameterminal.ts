@@ -1,10 +1,10 @@
-import { IGameMap } from "../voxel/igamemap";
+import { IVoxelMap } from "../voxel/igamemap";
 
-export interface IGameTerminal {
+export interface IGameShell {
   login(name: string): void;
   logout(): void;
   refresh(): void;
-  setGameMap(map: IGameMap): void;
+  setGameMap(map: IVoxelMap): void;
   // setInteractiveAvatar(player: IAvatar): void;
   printError(s: string): void;
   print(s: string): void;
@@ -12,8 +12,8 @@ export interface IGameTerminal {
   editFile(text: string | undefined | null, onSave: ((text: string) => void) | undefined): void;
 }
 
-export let terminal: IGameTerminal | undefined;
+export let shell: IGameShell | undefined;
 
-export function setTerminal(t: IGameTerminal) {
-  terminal = t;
+export function setShell(t: IGameShell) {
+  shell = t;
 }

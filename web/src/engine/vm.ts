@@ -1,7 +1,7 @@
 import { Clock, Vector3 } from "three";
 import AsyncEventSource from "./AsyncEventSource";
 import { ICameraLayer } from "../voxel/icameralayer";
-import { IGameMap } from "../voxel/igamemap";
+import { IVoxelMap } from "../voxel/igamemap";
 import { animator } from "./animator";
 import { FrameClock } from "./clock";
 import { GameMap } from "./gamemap";
@@ -29,7 +29,7 @@ export class VM implements IVM {
   private _ticker!: Ticker;
   private _physics!: GamePhysics;
   private _canvas: HTMLElement;
-  private _map!: IGameMap;
+  private _map!: IVoxelMap;
   private _camera?: ICameraLayer;
   private _game?: IDigGame;
   private readonly _sprites: Map<number, Sprite3> = new Map<number, Sprite3>();
@@ -46,7 +46,7 @@ export class VM implements IVM {
   //private _sprites: Map
 
   public get physics(): IGamePhysics { return this._physics; }
-  public get map(): IGameMap { return this._map; }
+  public get map(): IVoxelMap { return this._map; }
 
   public constructor(canvas: HTMLElement) {
     this._canvas = canvas;
@@ -54,7 +54,7 @@ export class VM implements IVM {
   }
 
   public get canvas(): HTMLElement { return this._canvas; }
-  public get camera(): ICameraLayer | undefined { return this._camera }
+  public get camera(): ICamera | undefined { return this._camera }
 
   public attachCamera(camera: ICameraLayer) {
     this._camera = camera;

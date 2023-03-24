@@ -102,6 +102,10 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
   }
 
   openDetailsPane(elem: HTMLElement): void {
+    if (this.propPane !== undefined) {
+      this.closeDetailsPane();
+    }
+
     this.element.appendChild(elem);
     this.propPane = elem;
   }

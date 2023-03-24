@@ -1,5 +1,5 @@
 import { Shell } from "./ui/shell";
-import { setTerminal, terminal } from "./ui/igameterminal";
+import { setShell, shell } from "./ui/igameterminal";
 import { createVM } from "./engine/vm";
 import { vm } from "./engine/ivm";
 import { BoxedGame } from "./python";
@@ -8,11 +8,11 @@ const demoWorldId = "7fa84179-dc58-4939-8678-03370fd137f3";
 
 // root objects of the application
 export class GameApp {
-  private gameContainer: any;
+  private gameContainer: HTMLDivElement | undefined;
   private ready: boolean = false;
 
   // @ts-ignore
-  public get terminal(): Shell { return this._terminal; }
+  public get shell(): Shell { return this._terminal; }
 
   public async run() {
     this.tryOnReady();
@@ -26,13 +26,13 @@ export class GameApp {
 
     createVM(gameContainer);
 
-    setTerminal(new Shell(gameContainer));
+    setShell(new Shell(gameContainer));
     this.tryOnReady();
   }
 
   // wait for everything to initialize
   private tryOnReady() {
-    if (terminal === undefined || this.ready) {
+    if (shell === undefined || this.ready) {
       return;
     }
 
@@ -44,10 +44,14 @@ export class GameApp {
   }
 
   private resizeCanvas() {
+    if (this.gameContainer === undefined) {
+      return;
+    }
+
     this.gameContainer.style.width = window.innerWidth.toString();
     this.gameContainer.style.height = window.innerHeight.toString();
-    if (this.terminal !== undefined) {
-      this.terminal.refresh();
+    if (this.shell !== undefined) {
+      this.shell.refresh();
     }
   }
 }

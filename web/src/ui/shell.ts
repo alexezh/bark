@@ -5,12 +5,12 @@ import { HelpDef } from "../posh/helpdef";
 import { UiCompositor2 } from "./uicompositor";
 import { createMapEditorState, mapEditorState } from "../posh/mapeditorstate";
 import { CodeEditor } from "./codeeditor";
-import { IGameTerminal as IGameShell } from "./igameterminal";
+import { IGameShell as IGameShell } from "./igameterminal";
 import { registerSystemCommands } from "../posh/systemcommands";
 import { decorateCommand } from "../lib/termcolors";
 import { MapEditor } from "./mapeditor";
 import { CameraLayer } from "./cameralayer";
-import { IGameMap } from "../voxel/igamemap";
+import { IVoxelMap } from "../voxel/igamemap";
 
 //registerRegionCommands();
 registerSystemCommands();
@@ -34,7 +34,7 @@ export class ShellProps {
 }
 
 export class Shell implements IGameShell {
-  private map!: IGameMap;
+  private map!: IVoxelMap;
   private container: HTMLDivElement;
   public camera?: CameraLayer;
   private compositor2: UiCompositor2;
@@ -112,7 +112,7 @@ export class Shell implements IGameShell {
   }
 
 
-  public setGameMap(map: IGameMap) {
+  public setGameMap(map: IVoxelMap) {
     this.map = map;
     //mapEditorState.update({ map: map });
 

@@ -1,4 +1,4 @@
-import { terminal } from "../ui/igameterminal";
+import { shell } from "../ui/igameterminal";
 import { AstNode } from "./ast";
 import { ParamDef, paramTypeFromString } from "./funcdef";
 import { greenText, resetColor } from "../lib/termcolors";
@@ -49,7 +49,7 @@ export function getFunction(name: string): PoshFunction | undefined {
 export function evalFunction(ast: AstNode): string | undefined {
   let func = funcs.get(ast.name);
   if (func === undefined) {
-    terminal?.print('Cannot find function ' + ast.name);
+    shell?.print('Cannot find function ' + ast.name);
     return undefined;
   }
 
@@ -69,7 +69,7 @@ export function printHelp(func: PoshFunction) {
     return;
   }
 
-  terminal?.print(func.help + makeUsageString(func.name, func.params));
+  shell?.print(func.help + makeUsageString(func.name, func.params));
 }
 
 function makeUsageString(name: string, params: ParamDef[]): string {
@@ -94,9 +94,9 @@ function incorrectArgError(param: any): string {
 }
 
 export function printEditModeError() {
-  terminal?.printError('Functionality only available in edit mode');
+  shell?.printError('Functionality only available in edit mode');
 }
 
 export function printNoRegion() {
-  terminal?.printError('Region is not selected');
+  shell?.printError('Region is not selected');
 }

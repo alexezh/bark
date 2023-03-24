@@ -3,7 +3,7 @@ import { Camera, Clock, Fog, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3
 import { MapEditor } from "./mapeditor";
 import { KeyBinder, makeMEvent } from "./keybinder";
 import { UiLayer2, UiLayerProps } from "./uilayer";
-import { IGameMap } from "../voxel/igamemap";
+import { IVoxelMap } from "../voxel/igamemap";
 import { WorldCoord3 } from "../voxel/pos3";
 import { ICameraLayer } from "../voxel/icameralayer";
 import { vm } from "../engine/ivm";
@@ -21,7 +21,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     private input!: KeyBinder;
 
     public t_start = Date.now();
-    public map!: IGameMap;
+    public map!: IVoxelMap;
     public mapEditor!: MapEditor;
 
     public visible_distance = 500; // from player to hide chunks + enemies.
@@ -74,16 +74,10 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     };
 
     public get position(): Vector3 { return this.camera.position }
-    public refresh() {
-
-    }
+    public set position(pos: Vector3) { this.camera.position.copy(pos); }
 
     public scrollBy(delta: WorldCoord3) {
         this.camera.position.add(new Vector3(delta.x, delta.y, delta.z));
-    }
-
-    public setPosition(pos: Vector3) {
-        this.camera.position.copy(pos);
     }
 
     private createCamera(w: number, h: number) {

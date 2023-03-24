@@ -1,7 +1,7 @@
 import { idText } from "typescript";
 import AsyncEventSource from "../engine/AsyncEventSource";
 import { GridRect, PxPos, PxSize } from "./pos";
-import { IGameMap } from "../voxel/igamemap";
+import { IVoxelMap } from "../voxel/igamemap";
 
 export type MapBitmap = {
   w: number;
@@ -46,7 +46,7 @@ export type MapEditorUpdate = {
   isEditMode?: boolean;
   region?: GridRect;
   scrollSize?: PxSize;
-  map?: IGameMap;
+  map?: IVoxelMap;
 }
 
 // if we change this to terminal state; things will make more sense

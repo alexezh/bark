@@ -5,7 +5,7 @@ import { mapEditorState } from "../posh/mapeditorstate";
 import { PxSize } from "../posh/pos";
 import { IMapEditor } from "./imapeditor";
 import { KeyBinder, MEvent } from "./keybinder";
-import { IGameMap, MapBlockCoord } from "../voxel/igamemap";
+import { IVoxelMap, MapBlockCoord } from "../voxel/igamemap";
 import { MapSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { ICameraLayer } from "../voxel/icameralayer";
@@ -38,7 +38,7 @@ export class MapEditor implements IMapEditor {
   private cameraLayer: ICameraLayer;
   private scene: Scene;
   private isDown: boolean = false;
-  private map: IGameMap;
+  private map: IVoxelMap;
   static material = new LineBasicMaterial({ color: 0x0000ff });
 
   private selectedBlock: MapBlockCoord | undefined = undefined;
@@ -50,7 +50,7 @@ export class MapEditor implements IMapEditor {
     scene: Scene,
     camera: Camera,
     input: KeyBinder,
-    map: IGameMap) {
+    map: IVoxelMap) {
 
     mapEditorState.onChanged(this, (evt) => this.onStateChanged())
 

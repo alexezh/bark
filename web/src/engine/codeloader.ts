@@ -1,4 +1,4 @@
-import { terminal } from "../ui/igameterminal";
+import { shell } from "../ui/igameterminal";
 import { redText, resetColor } from "../lib/termcolors";
 
 export type CodeModule = {
@@ -75,7 +75,7 @@ export function printCodeException(avatar: string, e: any) {
     message = 'unknown';
   }
 
-  terminal?.printError(`${redText}Code for ${avatar} failed to compile. Error: ${message}${resetColor}`);
+  shell?.printError(`${redText}Code for ${avatar} failed to compile. Error: ${message}${resetColor}`);
 }
 
 export let codeLoader = new CodeLoader();

@@ -40,7 +40,7 @@ export class MoveCameraAction implements IAction {
       }
       let newPos = camera.position.clone();
       newPos.x = parseInt(val);
-      camera.setPosition(newPos);
+      camera.position = newPos;
     });
     createTextEntry(pane, 'y', cp?.y, (val: string) => {
       let camera = vm.camera;
@@ -49,7 +49,7 @@ export class MoveCameraAction implements IAction {
       }
       let newPos = camera.position.clone();
       newPos.y = parseInt(val);
-      camera.setPosition(newPos);
+      camera.position = newPos;
     });
     createTextEntry(pane, 'z', cp?.y, (val: string) => {
       let camera = vm.camera;
@@ -58,7 +58,7 @@ export class MoveCameraAction implements IAction {
       }
       let newPos = camera.position.clone();
       newPos.z = parseInt(val);
-      camera.setPosition(newPos);
+      camera.position = newPos;
     });
 
     this.bar.openDetailsPane(pane);
