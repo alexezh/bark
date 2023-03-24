@@ -1,5 +1,5 @@
 import { IGameCollisionHandler, IGamePhysics, IGamePhysicsInputController, RigitCollisionHandler } from "./igamephysics";
-import { IVoxelMap, MapBlock } from "../ui/igamemap";
+import { IVoxelMap, MapBlock } from "../ui/ivoxelmap";
 import { IRigitBody } from "../voxel/voxelmeshmodel";
 import _ from "lodash";
 import { BroadphaseCollision } from "./broadphasecollision";

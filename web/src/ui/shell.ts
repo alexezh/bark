@@ -5,12 +5,12 @@ import { HelpDef } from "../posh/helpdef";
 import { UiCompositor2 } from "./uicompositor";
 import { createMapEditorState, mapEditorState } from "../posh/mapeditorstate";
 import { CodeEditor } from "./codeeditor";
-import { IGameShell as IGameShell } from "./igameterminal";
+import { IGameShell as IGameShell } from "./igameshell";
 import { registerSystemCommands } from "../posh/systemcommands";
 import { decorateCommand } from "../lib/termcolors";
 import { MapEditor } from "./mapeditor";
 import { CameraLayer } from "./cameralayer";
-import { IVoxelMap } from "./igamemap";
+import { IVoxelMap } from "./ivoxelmap";
 
 //registerRegionCommands();
 registerSystemCommands();

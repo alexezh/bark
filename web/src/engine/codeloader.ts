@@ -1,4 +1,4 @@
-import { shell } from "../ui/igameterminal";
+import { shell } from "../ui/igameshell";
 import { redText, resetColor } from "../lib/termcolors";
 
 export type CodeModule = {

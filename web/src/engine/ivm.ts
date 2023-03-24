@@ -1,6 +1,6 @@
 import { Clock, Vector3 } from "three";
 import { ICamera } from "../ui/icamera";
-import { IVoxelMap } from "../ui/igamemap";
+import { IVoxelMap } from "../ui/ivoxelmap";
 import { IGamePhysics } from "./igamephysics";
 import { Sprite3 } from "./sprite3";
 import { IRigitBody, VoxelAnimationCollection } from "../voxel/voxelmeshmodel";

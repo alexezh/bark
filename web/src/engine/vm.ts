@@ -1,7 +1,7 @@
 import { Clock, Vector3 } from "three";
 import AsyncEventSource from "./AsyncEventSource";
 import { ICamera } from "../ui/icamera";
-import { IVoxelMap } from "../ui/igamemap";
+import { IVoxelMap } from "../ui/ivoxelmap";
 import { animator } from "./animator";
 import { FrameClock } from "./clock";
 import { VoxelMap } from "./voxelmap";

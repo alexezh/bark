@@ -3,7 +3,7 @@ import { Camera, Clock, Fog, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3
 import { MapEditor } from "./mapeditor";
 import { KeyBinder, makeMEvent } from "./keybinder";
 import { UiLayer2, UiLayerProps } from "./uilayer";
-import { IVoxelMap } from "./igamemap";
+import { IVoxelMap } from "./ivoxelmap";
 import { WorldCoord3 } from "../voxel/pos3";
 import { ICamera } from "./icamera";
 import { vm } from "../engine/ivm";

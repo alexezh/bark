@@ -3,7 +3,7 @@ import { wireSetStrings, WireString } from "../fetchadapter";
 import { base64ToBytes, bytesToBase64 } from "../lib/base64";
 import { ICommandBar } from "../ui/commandBar";
 import { IAction } from "../ui/iaction";
-import { defaultMaterial } from "../ui/igamemap";
+import { defaultMaterial } from "../ui/ivoxelmap";
 import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
 import { Vox } from "../voxel/vox";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";

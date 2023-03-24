@@ -1,4 +1,4 @@
-import { IVoxelMap } from "./igamemap";
+import { IVoxelMap } from "./ivoxelmap";
 
 export interface IGameShell {
   login(name: string): void;

@@ -1,5 +1,5 @@
 import { Shell } from "./ui/shell";
-import { setShell, shell } from "./ui/igameterminal";
+import { setShell, shell } from "./ui/igameshell";
 import { createVM } from "./engine/vm";
 import { vm } from "./engine/ivm";
 import { BoxedGame } from "./python";

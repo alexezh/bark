@@ -1,4 +1,4 @@
-import { shell } from "../ui/igameterminal";
+import { shell } from "../ui/igameshell";
 import { AstNode } from "./ast";
 import { ParamDef, paramTypeFromString } from "./funcdef";
 import { greenText, resetColor } from "../lib/termcolors";

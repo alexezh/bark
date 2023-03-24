@@ -1,4 +1,4 @@
-import { shell } from "../ui/igameterminal";
+import { shell } from "../ui/igameshell";
 import { FuncCategory, GenericFuncDef, ParamDef, ParamType } from "./funcdef";
 import { PoshFunction, printHelp, registerFunction } from "./poshregistry";
 
