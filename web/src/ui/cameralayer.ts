@@ -1,13 +1,13 @@
 import { Textures } from "../voxel/textures";
 import { Camera, Clock, Fog, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
-import { MapEditor } from "./mapeditor";
+import { LevelEditor } from "./mapeditor";
 import { KeyBinder, makeMEvent } from "./keybinder";
 import { UiLayer2, UiLayerProps } from "./uilayer";
-import { IVoxelMap } from "./ivoxelmap";
 import { WorldCoord3 } from "../voxel/pos3";
 import { ICamera } from "../engine/icamera";
 import { vm } from "../engine/ivm";
 import { VRButton } from "./vrbutton";
+import { IVoxelLevel } from "./ivoxelmap";
 //import { VRButton } from 'three/addons/webxr/VRButton';
 
 export type CameraLayerProps = UiLayerProps & {
@@ -21,8 +21,8 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     private input!: KeyBinder;
 
     public t_start = Date.now();
-    public map!: IVoxelMap;
-    public mapEditor!: MapEditor;
+    public map!: IVoxelLevel;
+    public mapEditor!: LevelEditor;
 
     public visible_distance = 500; // from player to hide chunks + enemies.
     private selected: Object3D | undefined;

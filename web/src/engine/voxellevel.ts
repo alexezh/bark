@@ -3,10 +3,10 @@ import { modelCache } from "../voxel/voxelmodelcache";
 import { MapLayer } from "./maplayer";
 import { VoxelModel } from "../voxel/voxelmodel";
 import { MapPos3, MapSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
-import { defaultMaterial, IVoxelMap as IVoxelLevel, MapBlock, MapBlockCoord } from "../ui/ivoxelmap";
+import { defaultMaterial, IVoxelLevel, MapBlock, MapBlockCoord } from "../ui/ivoxelmap";
 import { IRigitBody } from "../voxel/voxelmeshmodel";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../voxel/mapblockrigitbody";
-import { wireGetArrayRange } from "../lib/fetchadapter";
+import { wireGetArrayRange, wireGetObject, wireSetObjectBackground, wireSetString } from "../lib/fetchadapter";
 
 
 export class MeshModel {
@@ -19,7 +19,6 @@ export class MeshModel {
         this.mesh = new Mesh(geo, this.material);
     }
 }
-
 
 //////////////////////////////////////////////////////////////////////
 // Maps class - Loading of maps from images

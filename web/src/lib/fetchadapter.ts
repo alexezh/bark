@@ -41,18 +41,25 @@ export type WireGetArrayRange = {
   count: number;
 }
 
-export type WireArray = {
-  value: string[];
-}
-
-export async function wireGetString(pattern: string): Promise<string | undefined> {
-  let request = JSON.stringify({ pattern: pattern });
+export async function wireGetString(key: string): Promise<string | undefined> {
+  let request = JSON.stringify({ pattern: key });
   let files = await (await fetchAdapter!.post(`/api/project/getstrings/${projectId}`, request)).json();
   if (files.length !== 1) {
     return undefined;
   }
 
   return files[0].data;
+}
+
+export async function wireGetObject<T>(key: string): Promise<T | undefined> {
+  let request = JSON.stringify({ pattern: key });
+  let files = await (await fetchAdapter!.post(`/api/project/getstrings/${projectId}`, request)).json();
+  if (files.length !== 1) {
+    return undefined;
+  }
+
+  let o = JSON.parse(files[0].data);
+  return o;
 }
 
 export async function wireGetStrings(pattern: string): Promise<WireString[]> {
@@ -67,20 +74,46 @@ export async function wireSetString(key: string, value: string): Promise<void> {
   let res = await (await fetchAdapter!.post(`/api/project/setstrings/${projectId}`, requestData)).json();
 }
 
+export async function wireSetObject<T>(key: string, value: T): Promise<void> {
+  let valueData = JSON.stringify(value);
+  let request: WireString[] = [{ key: key, data: valueData }]
+  let requestData = JSON.stringify(request);
+  let res = await (await fetchAdapter!.post(`/api/project/setstrings/${projectId}`, requestData)).json();
+}
+
+export function wireSetObjectBackground<T>(key: string, value: T): void {
+  updateQueue.push(async () => {
+    let valueData = JSON.stringify(value);
+    let request: WireString[] = [{ key: key, data: valueData }]
+    let requestData = JSON.stringify(request);
+    let res = await (await fetchAdapter!.post(`/api/project/setstrings/${projectId}`, requestData)).json();
+  });
+
+  updateQueue.start();
+}
+
 export async function wireSetStrings(keys: WireString[]): Promise<void> {
   let requestData = JSON.stringify(keys);
   let res = await (await fetchAdapter!.post(`/api/project/setstrings/${projectId}`, requestData)).json();
 }
 
-export async function wireGetArrayRange(key: string, idx: number, count: number): Promise<WireArray | undefined> {
+export async function wireGetArrayRange<T>(key: string, idx: number, count: number): Promise<T[] | undefined> {
   let request: WireGetArrayRange = { key: key, pos: idx, count: count };
   let requestData = JSON.stringify(request);
   let data = await (await fetchAdapter!.post(`/api/project/getarray/${projectId}`, requestData)).json();
-  return data;
+  let res: T[] = [];
+  for (let s of data) {
+    res.push(JSON.parse(s));
+  }
+  return res;
 }
 
-export async function wireSetArrayRange(key: string, idx: number, count: number, value: string[]): Promise<void> {
-  let request: WireSetArrayRange = { key: key, pos: idx, count: count, value: value };
+export async function wireSetArrayRange<T>(key: string, idx: number, count: number, value: T[]): Promise<void> {
+  let valueData: string[] = [];
+  for (let v of value) {
+    valueData.push(JSON.stringify(v));
+  }
+  let request: WireSetArrayRange = { key: key, pos: idx, count: count, value: valueData };
   let requestData = JSON.stringify(request);
   let res = await (await fetchAdapter!.post(`/api/project/setarrayrange/${projectId}`, requestData)).json();
 }

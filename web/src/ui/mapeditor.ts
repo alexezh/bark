@@ -3,9 +3,9 @@ import { BufferGeometry, Camera, Line, LineBasicMaterial, Raycaster, Scene, Vect
 import { ShowKeyBindingsDef } from "../posh/keybindcommands";
 import { mapEditorState } from "../posh/mapeditorstate";
 import { PxSize } from "../posh/pos";
-import { IMapEditor } from "./imapeditor";
+import { IMapEditor as ILevelEditor } from "./imapeditor";
 import { KeyBinder, MEvent } from "./keybinder";
-import { IVoxelMap, MapBlockCoord } from "./ivoxelmap";
+import { IVoxelLevel, MapBlockCoord } from "./ivoxelmap";
 import { MapSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { ICamera } from "../engine/icamera";
@@ -32,13 +32,13 @@ export interface IMapEditorHost {
   //    ensureVisible(pos: GridPos): void;
 }
 
-export class MapEditor implements IMapEditor {
+export class LevelEditor implements ILevelEditor {
   private viewSize: PxSize;
   private camera: Camera;
   private cameraLayer: ICamera;
   private scene: Scene;
   private isDown: boolean = false;
-  private map: IVoxelMap;
+  private map: IVoxelLevel;
   static material = new LineBasicMaterial({ color: 0x0000ff });
 
   private selectedBlock: MapBlockCoord | undefined = undefined;
@@ -50,7 +50,7 @@ export class MapEditor implements IMapEditor {
     scene: Scene,
     camera: Camera,
     input: KeyBinder,
-    map: IVoxelMap) {
+    map: IVoxelLevel) {
 
     mapEditorState.onChanged(this, (evt) => this.onStateChanged())
 
@@ -244,7 +244,7 @@ export class MapEditor implements IMapEditor {
 
     const geometry = new BufferGeometry().setFromPoints(points);
 
-    this.selection = new Line(geometry, MapEditor.material);
+    this.selection = new Line(geometry, LevelEditor.material);
     this.scene.add(this.selection);
   }
 }

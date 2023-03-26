@@ -1,7 +1,6 @@
 import { Clock, Vector3 } from "three";
 import AsyncEventSource from "./AsyncEventSource";
 import { ICamera } from "./icamera";
-import { IVoxelMap as IVoxelLevel, IVoxelMapFile as IVoxelLevelFile } from "../ui/ivoxelmap";
 import { animator } from "./animator";
 import { FrameClock } from "./clock";
 import { VoxelLevel } from "./voxellevel";
@@ -14,6 +13,8 @@ import { Ticker } from "./ticker";
 import { IRigitBody, VoxelAnimationCollection } from "../voxel/voxelmeshmodel";
 import { IRigitModel } from "./irigitmodel";
 import { ParticlePool } from "../voxel/particles";
+import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
+import { VoxelLevelFile } from "./voxellevelfile";
 
 export type MessageHandler = (msg: string) => Promise<void>;
 export type StartHandler = () => Promise<void>;
@@ -29,7 +30,7 @@ export class VM implements IVM {
   private _ticker!: Ticker;
   private _physics!: GamePhysics;
   private _canvas: HTMLElement;
-  private _map?: IVoxelLevel;
+  private _level?: IVoxelLevel;
   private _levelFile?: IVoxelLevelFile;
   private _camera?: ICamera;
   private _game?: IDigGame;
@@ -48,7 +49,7 @@ export class VM implements IVM {
 
   public get physics(): IGamePhysics { return this._physics; }
   public get level(): IVoxelLevel {
-    if (this._map === undefined) throw new Error('not loaded'); return this._map;
+    if (this._level === undefined) throw new Error('not loaded'); return this._level;
   }
   public get levelFile(): IVoxelLevelFile {
     if (this._levelFile === undefined) throw new Error('not loaded');
@@ -69,14 +70,14 @@ export class VM implements IVM {
   public attachCamera(camera: ICamera) {
     this._camera = camera;
 
-    if (this._map !== undefined) {
+    if (this._level !== undefined) {
       this.loadScene();
     }
   }
 
   public registerMapChanged(target: any, func: (val: boolean) => void) {
     this.onMapChanged.add(target, func);
-    if (this._map !== undefined) {
+    if (this._level !== undefined) {
       this.loadScene();
       this.onMapChanged.invoke(true);
     }
@@ -90,9 +91,10 @@ export class VM implements IVM {
   }
 
   public async loadLevel(id: string): Promise<void> {
-    this._map = new VoxelLevel();
-    await this._map.load(id);
-    this._physics = new GamePhysics(this._map);
+    //this._levelFile = new VoxelLevelFile('levels/default');
+    this._level = new VoxelLevel();
+    await this._level.load(id);
+    this._physics = new GamePhysics(this._level);
     this._physics.setCollideHandler(this.onCollide.bind(this));
 
     this.loadScene();
@@ -253,12 +255,12 @@ export class VM implements IVM {
       return;
     }
 
-    if (this._map === undefined) {
+    if (this._level === undefined) {
       throw new Error('not loaded');
     }
 
     // TODO: we should clear the previous scene
-    this._map.loadScene(this._camera.scene);
+    this._level.loadScene(this._camera.scene);
 
     this.particles = new ParticlePool(this._camera.scene, 200, 1);
   }

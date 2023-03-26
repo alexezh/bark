@@ -1,19 +1,19 @@
 import { Clock, Vector3 } from "three";
 import { ICamera } from "./icamera";
-import { IVoxelMap, IVoxelMapFile } from "../ui/ivoxelmap";
 import { IGamePhysics } from "./igamephysics";
 import { Sprite3 } from "./sprite3";
 import { IRigitBody, VoxelAnimationCollection } from "../voxel/voxelmeshmodel";
 import { IDigGame } from "./idiggame";
 import { FrameClock } from "./clock";
 import { IRigitModel } from "./irigitmodel";
+import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
 
 export interface IVM {
-  get level(): IVoxelMap;
+  get level(): IVoxelLevel;
   get physics(): IGamePhysics;
   get canvas(): HTMLElement;
   get clock(): FrameClock;
-  get levelFile(): IVoxelMapFile;
+  get levelFile(): IVoxelLevelFile;
   get camera(): ICamera;
 
   attachCamera(camera: ICamera): void;

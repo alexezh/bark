@@ -27,30 +27,46 @@ export type MapBlockCoord = {
 }
 
 export type FileMapBlockDef = {
-  id: number;
+  blockId: number;
   uri: string;
 }
 
 export type FileMapBlock = {
-  id: number;
+  blockId: number;
   x: number;
   y: number;
+  z: number;
 }
 
-export interface IVoxelMapFile {
+export type WireCamera = {
+  xPos: number;
+  yPos: number;
+  zPos: number;
+  xLook: number;
+  yLook: number;
+  zLook: number;
+}
+
+export type WireLevelInfo = {
+  xMap: number;
+  yMap: number;
+  zMap: number;
+}
+
+export interface IVoxelLevelFile {
   get cameraPosition(): Vector3;
   set cameraPosition(value: Vector3);
   get mapSize(): MapSize3;
-  get blockCount(): number;
+  get blocks(): ReadonlyMap<number, FileMapBlock>;
 
-  registerOnCameraChange(func: () => void);
-  registerOnBlockChange(func: () => void);
+  registerOnChangeCamera(func: () => void);
+  registerOnChangeBlock(func: () => void);
 
   load(name: string): Promise<void>;
-  getBlock(idx: number): FileMapBlock;
+  getBlockDef(idx: number): FileMapBlockDef | undefined;
 }
 
-export interface IVoxelMap {
+export interface IVoxelLevel {
   //readonly props: MapProps;
 
   // called when game started; at this point properties become non-persisted

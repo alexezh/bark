@@ -8,9 +8,9 @@ import { CodeEditor } from "./codeeditor";
 import { IGameShell as IGameShell } from "./igameshell";
 import { registerSystemCommands } from "../posh/systemcommands";
 import { decorateCommand } from "../lib/termcolors";
-import { MapEditor } from "./mapeditor";
+import { LevelEditor } from "./mapeditor";
 import { CameraLayer } from "./cameralayer";
-import { IVoxelMap } from "./ivoxelmap";
+import { IVoxelLevel } from "./ivoxelmap";
 
 //registerRegionCommands();
 registerSystemCommands();
@@ -34,13 +34,13 @@ export class ShellProps {
 }
 
 export class Shell implements IGameShell {
-  private map!: IVoxelMap;
+  private map!: IVoxelLevel;
   private container: HTMLDivElement;
   public camera?: CameraLayer;
   private compositor2: UiCompositor2;
   private props: ShellProps;
   private barLayer: CommandBar;
-  private mapEditor?: MapEditor;
+  private mapEditor?: LevelEditor;
   private codeEditor?: CodeEditor;
   private repl: Repl;
 
