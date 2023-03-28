@@ -61,9 +61,19 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
         this.renderer.setClearColor(0x000000, 1);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = PCFSoftShadowMap;
+        this.renderer.xr.enabled = true;
+        this.renderer.xr.setReferenceSpaceType('local');
         this.element.appendChild(this.renderer.domElement);
 
         this.element.appendChild(VRButton.createButton(this.renderer));
+
+        let controller1 = this.renderer.xr.getController(0);
+        controller1.userData.id = 0;
+        this.scene.add(controller1);
+
+        let controller2 = this.renderer.xr.getController(1);
+        controller2.userData.id = 1;
+        this.scene.add(controller2);
 
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
 
@@ -105,15 +115,16 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
             viewport.far
         );
 */
-        this.camera = new PerspectiveCamera(35, w / h, 1, this.visible_distance);
+        this.camera = new PerspectiveCamera(70, w / h, 1, this.visible_distance);
         this.camera.up.set(0, 0, 1);
+        this.camera.layers.enable(1);
 
         var point = new Vector3(0, 0, -1);
         this.camera.lookAt(point);
         let angleY = Math.PI / 4;
         this.camera.rotation.y = angleY;
         //game.camera.rotation.x = -Math.PI / 1.4;
-        this.camera.position.set(100 + 100 * Math.tan(angleY), 100, 100);
+        this.camera.position.set(100 + 100 * Math.tan(angleY), 100, 200);
         //game.camera.position.y = 120;
         (this.camera as PerspectiveCamera).updateProjectionMatrix();
     }
@@ -142,6 +153,8 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
         let plane = new Mesh(geometry, new MeshBasicMaterial({ visible: false }));
         this.scene.add(plane);
 
+        this.renderer.setAnimationLoop(this.render.bind(this));
+
         this.render();
     }
 
@@ -149,8 +162,8 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     };
 
     public onWindowResize() {
-        //this.camera.aspect = window.innerWidth / window.innerHeight;
-        //this.camera.updateProjectionMatrix();
+        (this.camera as PerspectiveCamera).aspect = window.innerWidth / window.innerHeight;
+        (this.camera as PerspectiveCamera).updateProjectionMatrix();
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     };
@@ -174,8 +187,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
 
 
     render() {
-        // request next animation
-        requestAnimationFrame(this.render.bind(this));
+        //requestAnimationFrame(this.render.bind(this));
 
         vm.onRender();
         this.renderer.render(this.scene, this.camera);

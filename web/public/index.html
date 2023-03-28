@@ -160,8 +160,10 @@
 <script>
     function onLoaded() {
         const gameContainer = document.getElementById('gameContainer');
-        pokman.initGame(gameContainer);
+        //pokman.initGame(gameContainer);
         //pokman.gameApp.setContainer(gameContainer);
+        pokman.gameApp.setContainer(gameContainer);
+        setTimeout(() => pokman.gameApp.run());
     }
 </script>
 

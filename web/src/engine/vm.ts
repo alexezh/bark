@@ -131,6 +131,10 @@ export class VM implements IVM {
   }
 
   public onRender() {
+    if (!this._running) {
+      return;
+    }
+
     this.clock.tick();
     this.physics.update(this.clock.delta);
     this.particles.update(this.clock.tick, this.clock.delta)

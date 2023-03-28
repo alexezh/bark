@@ -1,5 +1,5 @@
 import { IGameCollisionHandler, IGamePhysics, IGamePhysicsInputController, RigitCollisionHandler } from "./igamephysics";
-import { IVoxelMap, MapBlock } from "../ui/ivoxelmap";
+import { IVoxelLevel, MapBlock } from "../ui/ivoxelmap";
 import { IRigitBody } from "../voxel/voxelmeshmodel";
 import _ from "lodash";
 import { BroadphaseCollision } from "./broadphasecollision";
@@ -9,7 +9,7 @@ import { MapBlockRigitBody } from "../voxel/mapblockrigitbody";
 
 // manages movement and collisions between world objects
 export class GamePhysics implements IGamePhysics {
-  private map: IVoxelMap;
+  private map: IVoxelLevel;
   private bodies: IRigitBody[] = [];
   private broadphase: BroadphaseCollision = new BroadphaseCollision();
   private collisionHandler?: IGameCollisionHandler;
@@ -17,7 +17,7 @@ export class GamePhysics implements IGamePhysics {
   private _collideHandler: RigitCollisionHandler | undefined;
   private static collideHandlerSymbol = Symbol('CollideHandler');
 
-  public constructor(map: IVoxelMap) {
+  public constructor(map: IVoxelLevel) {
     this.map = map;
   }
 

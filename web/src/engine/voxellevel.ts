@@ -83,13 +83,13 @@ export class VoxelLevel implements IVoxelLevel {
     public async load(id: string): Promise<boolean> {
         this.layers.push(new MapLayer(defaultMaterial, 0, this.blockSize));
 
-        let mapData = await wireGetArrayRange('level', 0, -1);
-        if (mapData === undefined) {
-            let ground = await modelCache.getVoxelModel('./assets/vox/ground.vox');
-            this.layers[0].fill(ground);
-        } else {
+        //let mapData = await wireGetArrayRange('level', 0, -1);
+        //if (mapData === undefined) {
+        let ground = await modelCache.getVoxelModel('./assets/vox/ground.vox');
+        this.layers[0].fill(ground);
+        //} else {
 
-        }
+        //}
 
         this.layers[0].build();
         return true;
