@@ -69,18 +69,10 @@ export class VM implements IVM {
 
   public attachCamera(camera: ICamera) {
     this._camera = camera;
-
-    if (this._level !== undefined) {
-      this.loadScene();
-    }
   }
 
   public registerMapChanged(target: any, func: (val: boolean) => void) {
     this.onMapChanged.add(target, func);
-    if (this._level !== undefined) {
-      this.loadScene();
-      this.onMapChanged.invoke(true);
-    }
   }
 
   public async loadGame(GT: { new(): IDigGame }): Promise<IDigGame> {

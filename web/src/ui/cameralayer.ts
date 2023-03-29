@@ -18,7 +18,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     public renderer!: WebGLRenderer;
     public camera!: Camera;
     public scene!: Scene;
-    private input!: KeyBinder;
+    //private input!: KeyBinder;
 
     public t_start = Date.now();
     public map!: IVoxelLevel;
@@ -46,10 +46,10 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
 
         this.scene = new Scene();
 
-        this.input = new KeyBinder(this.element, () => { });
+        //this.input = new KeyBinder(this.element, () => { });
 
         // Iosmetric view
-        Object3D.DefaultUp = new Vector3(0, 0, 1);
+        //Object3D.DefaultUp = new Vector3(0, 1, 0);
         this.createCamera(this.props.w / 10, this.props.h / 10);
 
         //  this.scene.fog = new FogExp2( 0xFFA1C1, 0.0059 );
@@ -83,6 +83,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
         //setTimeout(() => this.loadMap());
     };
 
+    public get canvas(): HTMLDivElement { return this.element as HTMLDivElement; }
     public get position(): Vector3 { return this.camera.position }
     public set position(pos: Vector3) { this.camera.position.copy(pos); }
 
@@ -116,15 +117,15 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
         );
 */
         this.camera = new PerspectiveCamera(70, w / h, 1, this.visible_distance);
-        this.camera.up.set(0, 0, 1);
+        //this.camera.up.set(0, 0, 1);
         this.camera.layers.enable(1);
 
-        var point = new Vector3(0, 0, -1);
+        var point = new Vector3(0, -1, 0);
         this.camera.lookAt(point);
-        let angleY = Math.PI / 4;
-        this.camera.rotation.y = angleY;
+        let angleZ = Math.PI / 4;
+        this.camera.rotation.x = -angleZ;
         //game.camera.rotation.x = -Math.PI / 1.4;
-        this.camera.position.set(100 + 100 * Math.tan(angleY), 100, 200);
+        this.camera.position.set(100 + 100 * Math.tan(angleZ), 200, 100);
         //game.camera.position.y = 120;
         (this.camera as PerspectiveCamera).updateProjectionMatrix();
     }

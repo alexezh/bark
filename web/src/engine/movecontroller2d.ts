@@ -33,7 +33,7 @@ export class MoveController2D implements IGamePhysicsInputController {
     private keyRepeatTimeoutSeconds = 0.1;
 
     public constructor() {
-        this.input = new KeyBinder(vm.canvas, this.onKey.bind(this));
+        this.input = new KeyBinder(vm.camera.canvas, this.onKey.bind(this));
     }
 
     // wait for next key press (emulating basic behavior)

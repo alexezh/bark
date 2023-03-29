@@ -81,6 +81,8 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
     let element = document.createElement('div');
     element.className = 'barLayer';
 
+    props.w = 0;
+    props.h = 0;
     super(props, element);
 
     this.actionButton = createButton(element, 'A', this.onAction.bind(this));

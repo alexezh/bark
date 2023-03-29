@@ -17,7 +17,7 @@ export class ThumbnailRenderer {
     this.height = height;
 
     // Iosmetric view
-    Object3D.DefaultUp = new Vector3(0, 0, 1);
+    //Object3D.DefaultUp = new Vector3(0, 0, 1);
 
     this.camera = new PerspectiveCamera(35, width / height, 1, this.visible_distance);
     this.camera.up.set(0, 0, 1);

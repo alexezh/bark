@@ -1515,7 +1515,7 @@ export declare function getBlockModelList(): string[];
 export declare function getObjectModelList(): string[];
 
 export class VRButton {
-    static createButton(renderer: any): HTMLAnchorElement | HTMLButtonElement;
+    static createButton(renderer: any): HTMLButtonElement | HTMLAnchorElement;
     static registerSessionGrantedListener(): void;
 }
 export namespace VRButton {
