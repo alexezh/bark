@@ -75,26 +75,26 @@ export class BoxedGame implements IDigGame {
     console.log("start moveMonkey");
     vm.forever(async () => {
       let dx = 0;
-      let dy = 0;
+      let dz = 0;
       let ev = await inputController!.waitKey(0.1);
       if (ev.left) {
-        dy -= 10;
-      }
-      if (ev.right) {
-        dy += 10;
-      }
-      if (ev.forward) {
-        dx += 10;
-      }
-      if (ev.backward) {
         dx -= 10;
       }
-      if (dx !== 0 || dy !== 0) {
+      if (ev.right) {
+        dx += 10;
+      }
+      if (ev.forward) {
+        dz += 10;
+      }
+      if (ev.backward) {
+        dz -= 10;
+      }
+      if (dx !== 0 || dz !== 0) {
         this.char.animate('move');
       } else {
         this.char.animate('stand');
       }
-      this.char.setSpeed(new Vector3(dx, dy, 0));
+      this.char.setSpeed(new Vector3(dx, 0, dz));
     });
   }
 
@@ -103,16 +103,16 @@ export class BoxedGame implements IDigGame {
   private async dropObject(): Promise<void> {
     console.log("start dropObject");
     vm.forever(async () => {
-      let bomb = await Bomb.create(new Vector3(randInt(50, 150), randInt(50, 150), 50));
+      let bomb = await Bomb.create(new Vector3(randInt(50, 150), 50, randInt(50, 150)));
       let speed = 10;
 
-      bomb.speed.add(new Vector3(0, 0, -speed));
+      bomb.speed.add(new Vector3(0, -speed, 0));
 
       while (true) {
         let collision = await vm.waitCollide([bomb], 0.1);
         if (collision === undefined) {
           speed = Math.min(speed * 1.1, 100);
-          bomb.speed.set(0, 0, -speed);
+          bomb.speed.set(0, -speed, 0);
         } else {
           if (collision.collision instanceof Monky) {
             vm.send('KilledMonkey');

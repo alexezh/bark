@@ -122,7 +122,7 @@ export class VoxelLevel implements IVoxelLevel {
     }
 
     public findBlock(point: Vector3): MapBlockCoord | undefined {
-        let layerIdx = (point.z / this.blockSize) | 0;
+        let layerIdx = (point.y / this.blockSize) | 0;
         if (layerIdx < 0 || layerIdx >= this.layers.length) {
             console.log('unknown z layer');
             return undefined;
@@ -131,7 +131,7 @@ export class VoxelLevel implements IVoxelLevel {
     }
 
     public deleteBlock(block: MapBlockCoord) {
-        let layer = this.layers[block.mapPos.z];
+        let layer = this.layers[block.mapPos.y];
         this.scene.remove(layer.staticMesh);
         layer.deleteBlock(block);
         layer.build();
@@ -139,7 +139,7 @@ export class VoxelLevel implements IVoxelLevel {
     }
 
     public addBlock(pos: MapPos3, block: VoxelModel) {
-        if (pos.z >= this.layers.length) {
+        if (pos.y >= this.layers.length) {
             for (let i = this.layers.length - 1; i < pos.y; i++) {
                 let layer = new MapLayer(defaultMaterial, this.layers.length, this.blockSize);
                 layer.build();
@@ -162,7 +162,7 @@ export class VoxelLevel implements IVoxelLevel {
         let sz = ro.size;
 
         if (pos.y < 0) {
-            func(new MapBoundaryRigitBody(new Vector3(pos.x, pos.y, 0), new Vector3(0, 0, 0)));
+            func(new MapBoundaryRigitBody(new Vector3(pos.x, 0, pos.z), new Vector3(0, 0, 0)));
             return true;
         }
 
@@ -175,7 +175,7 @@ export class VoxelLevel implements IVoxelLevel {
         let zStart = Math.floor(pos.z / this.blockSize);
         let zEnd = Math.max(zStart + 1, Math.floor((pos.z + sz.z) / this.blockSize));
 
-        for (let y = yStart; y < zEnd; y++) {
+        for (let y = yStart; y < yEnd; y++) {
             let layer: MapLayer = this.layers[y];
             if (layer === undefined) {
                 continue;

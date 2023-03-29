@@ -99,9 +99,9 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
         var point = new Vector3(0, 0, 0);
         this.camera.lookAt(point);
         let angleZ = Math.PI / 4;
-        this.camera.rotation.y = -angleZ;
+        this.camera.rotation.x = -angleZ;
         //game.camera.rotation.x = -Math.PI / 1.4;
-        this.camera.position.set(100 + 100 * Math.tan(angleZ), 200, 100);
+        this.camera.position.set(100, 200, 100 + 100 * Math.tan(angleZ));
         //game.camera.position.y = 120;
         (this.camera as PerspectiveCamera).updateProjectionMatrix();
     }

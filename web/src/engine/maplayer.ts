@@ -106,7 +106,7 @@ export class MapLayer {
   }
 
   public addBlock(pos: MapPos3, block: VoxelModel) {
-    let idx = pos.y * this.size.w + pos.x;
+    let idx = pos.z * this.size.w + pos.x;
     this.blocks[idx] = { model: block, frame: 0, topmost: false };
   }
 }
