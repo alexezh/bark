@@ -140,14 +140,14 @@ export class VoxelLevel implements IVoxelLevel {
 
     public addBlock(pos: MapPos3, block: VoxelModel) {
         if (pos.z >= this.layers.length) {
-            for (let i = this.layers.length - 1; i < pos.z; i++) {
+            for (let i = this.layers.length - 1; i < pos.y; i++) {
                 let layer = new MapLayer(defaultMaterial, this.layers.length, this.blockSize);
                 layer.build();
                 this.layers.push(layer);
             }
         }
 
-        let layer: MapLayer = this.layers[pos.z];
+        let layer: MapLayer = this.layers[pos.y];
         layer.addBlock(pos, block);
 
         this.scene.remove(layer.staticMesh);
@@ -161,7 +161,7 @@ export class VoxelLevel implements IVoxelLevel {
 
         let sz = ro.size;
 
-        if (pos.z < 0) {
+        if (pos.y < 0) {
             func(new MapBoundaryRigitBody(new Vector3(pos.x, pos.y, 0), new Vector3(0, 0, 0)));
             return true;
         }
@@ -175,14 +175,14 @@ export class VoxelLevel implements IVoxelLevel {
         let zStart = Math.floor(pos.z / this.blockSize);
         let zEnd = Math.max(zStart + 1, Math.floor((pos.z + sz.z) / this.blockSize));
 
-        for (let z = zStart; z < zEnd; z++) {
-            let layer: MapLayer = this.layers[z];
+        for (let y = yStart; y < zEnd; y++) {
+            let layer: MapLayer = this.layers[y];
             if (layer === undefined) {
                 continue;
             }
-            for (let y = yStart; y < yEnd; y++) {
+            for (let z = zStart; z < zEnd; z++) {
                 for (let x = xStart; x < xEnd; x++) {
-                    let block = layer.getBlock(x, y);
+                    let block = layer.getBlock(x, z);
                     if (block !== undefined) {
                         let b = new MapBlockRigitBody(block, { x: x * this.blockSize, y: y * this.blockSize, z: z * this.blockSize });
                         if (func(b)) {

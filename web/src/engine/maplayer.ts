@@ -14,7 +14,7 @@ export class MapLayer {
   private material: MeshPhongMaterial;
 
   // Z coordinate of layer in pixels
-  public readonly layerZ: number;
+  public readonly layerY: number;
 
   public get staticMesh(): Mesh { return this._mesh; }
 
@@ -22,7 +22,7 @@ export class MapLayer {
     this.material = material;
     this.blockSize = blockSize;
     this.size = { w: 20, h: 20 };
-    this.layerZ = layerZ;
+    this.layerY = layerZ;
     this.blocks = new Array(this.size.w * this.size.h);
   }
 
@@ -38,14 +38,14 @@ export class MapLayer {
 
   public build() {
     let writer = new VoxelGeometryWriter();
-    for (let y = 0; y < this.size.h; y++) {
+    for (let z = 0; z < this.size.h; z++) {
       for (let x = 0; x < this.size.w; x++) {
-        let pos = y * this.size.w + x;
+        let pos = z * this.size.w + x;
         let block = this.blocks[pos];
         if (block !== undefined) {
           let model = block.model.frames[block.frame];
           writer.setScale(this.blockSize / model.chunk_sx);
-          writer.setPosition(this.blockSize * x, this.blockSize * y, this.blockSize * this.layerZ);
+          writer.setPosition(this.blockSize * x, this.blockSize * this.layerY, this.blockSize * z);
           model.build(writer);
         }
       }
@@ -58,9 +58,9 @@ export class MapLayer {
   // the tricky part is boundaries
   public findBlock(point: Vector3): MapBlockCoord | undefined {
     let x = (point.x / this.blockSize) | 0;
-    let y = (point.y / this.blockSize) | 0;
+    let z = (point.z / this.blockSize) | 0;
 
-    let pos = y * this.size.w + x;
+    let pos = z * this.size.w + x;
     let block = this.blocks[pos];
 
     return {
@@ -68,8 +68,8 @@ export class MapLayer {
       idx: pos,
       mapPos: {
         x: x,
-        y: y,
-        z: this.layerZ,
+        y: this.layerY,
+        z: z,
       },
       mapSize: {
         sx: 1,
@@ -83,8 +83,8 @@ export class MapLayer {
     this.blocks[block.idx] = undefined;
   }
 
-  public getBlock(xMap: number, yMap: number): MapBlockCoord | undefined {
-    let idx = yMap * this.size.w + xMap;
+  public getBlock(xMap: number, zMap: number): MapBlockCoord | undefined {
+    let idx = zMap * this.size.w + xMap;
     let b = this.blocks[idx];
     if (b === undefined) {
       return undefined;
@@ -94,8 +94,8 @@ export class MapLayer {
       idx: idx,
       mapPos: {
         x: xMap,
-        y: yMap,
-        z: this.layerZ,
+        z: zMap,
+        y: this.layerY,
       },
       mapSize: {
         sx: 1,
