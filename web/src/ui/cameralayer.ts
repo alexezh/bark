@@ -1,5 +1,5 @@
 import { Textures } from "../voxel/textures";
-import { Camera, Clock, Fog, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
+import { Camera, Clock, Fog, Group, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
 import { LevelEditor } from "./mapeditor";
 import { KeyBinder, makeMEvent } from "./keybinder";
 import { UiLayer2, UiLayerProps } from "./uilayer";
@@ -17,6 +17,7 @@ export type CameraLayerProps = UiLayerProps & {
 export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     public renderer!: WebGLRenderer;
     public camera!: Camera;
+    public cameraGroup!: Group;
     public scene!: Scene;
     //private input!: KeyBinder;
 
@@ -63,6 +64,9 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
         this.renderer.shadowMap.type = PCFSoftShadowMap;
         this.renderer.xr.enabled = true;
         this.renderer.xr.setReferenceSpaceType('local');
+        //this.renderer.xr.cameraAutoUpdate = false;
+        //this.renderer.xr.updateCamera(this.camera as PerspectiveCamera);
+
         this.element.appendChild(this.renderer.domElement);
 
         this.element.appendChild(VRButton.createButton(this.renderer));
@@ -99,11 +103,17 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
         var point = new Vector3(0, 0, 0);
         this.camera.lookAt(point);
         let angleZ = Math.PI / 4;
-        this.camera.rotation.x = -angleZ;
+
+        this.cameraGroup = new Group();
+        this.cameraGroup.add(this.camera);
+
         //game.camera.rotation.x = -Math.PI / 1.4;
-        this.camera.position.set(100, 200, 100 + 100 * Math.tan(angleZ));
+        this.cameraGroup.rotation.x = -angleZ;
+        this.cameraGroup.position.set(100, 200, 100 + 100 * Math.tan(angleZ));
         //game.camera.position.y = 120;
         (this.camera as PerspectiveCamera).updateProjectionMatrix();
+
+        this.scene.add(this.cameraGroup);
     }
 
     private onMapChanged() {

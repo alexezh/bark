@@ -60,13 +60,15 @@ export class Mammal4Model implements IRigitModel {
       return;
     }
 
-    if (dir.x === 0 && dir.y === 0) {
+    if (dir.x === 0 && dir.z === 0) {
       return;
     }
 
     this._dir.copy(dir);
-    let angle = Math.atan2(dir.x, -dir.y);
-    let qt = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), angle);
+    let angle = Math.atan2(dir.x, dir.z);
+    let r = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2);
+    let qt = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), angle);
+    qt = qt.multiply(r);
     for (let key of Object.keys(this.meshModels)) {
       let model = this.meshModels[key];
       model.setRotation(qt);

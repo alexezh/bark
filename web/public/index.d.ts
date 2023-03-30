@@ -226,6 +226,7 @@ export declare class RealtimeClient implements IRealtimeClient {
 
 export interface ICamera {
     get scene(): Scene;
+    get canvas(): HTMLDivElement;
     get position(): Vector3;
     set position(pos: Vector3);
     scrollBy(pxSize: WorldCoord3): void;
@@ -304,7 +305,7 @@ export declare class MapLayer {
     private _mesh;
     private geometry;
     private material;
-    readonly layerZ: number;
+    readonly layerY: number;
     get staticMesh(): Mesh;
     constructor(material: MeshPhongMaterial, layerZ: number, blockSize: number);
     load(): void;
@@ -312,7 +313,7 @@ export declare class MapLayer {
     build(): void;
     findBlock(point: Vector3): MapBlockCoord | undefined;
     deleteBlock(block: MapBlockCoord): void;
-    getBlock(xMap: number, yMap: number): MapBlockCoord | undefined;
+    getBlock(xMap: number, zMap: number): MapBlockCoord | undefined;
     addBlock(pos: MapPos3, block: VoxelModel): void;
 }
 
@@ -833,8 +834,8 @@ export type CameraLayerProps = UiLayerProps & {
 export declare class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     renderer: WebGLRenderer;
     camera: Camera;
+    cameraGroup: Group;
     scene: Scene;
-    private input;
     t_start: number;
     map: IVoxelLevel;
     mapEditor: LevelEditor;
@@ -845,6 +846,7 @@ export declare class CameraLayer extends UiLayer2<CameraLayerProps> implements I
     p_light: PointLight;
     maps_ground: number;
     constructor(props: CameraLayerProps);
+    get canvas(): HTMLDivElement;
     get position(): Vector3;
     set position(pos: Vector3);
     scrollBy(delta: WorldCoord3): void;
@@ -1215,7 +1217,7 @@ export declare class ParticlePool {
     sprite_material: SpriteMaterial;
     constructor(scene: Scene, size: number, type: number);
     update(time: any, delta: any): void;
-    createParticle(opts: any): -1 | Particle;
+    createParticle(opts: any): Particle | -1;
     queueParticleDef(opts: any): void;
     fire(x: any, y: any, z: any): void;
     explosion(x: number, y: number, z: number, power: number, type: any): void;
@@ -1515,7 +1517,7 @@ export declare function getBlockModelList(): string[];
 export declare function getObjectModelList(): string[];
 
 export class VRButton {
-    static createButton(renderer: any): HTMLButtonElement | HTMLAnchorElement;
+    static createButton(renderer: any): HTMLAnchorElement | HTMLButtonElement;
     static registerSessionGrantedListener(): void;
 }
 export namespace VRButton {

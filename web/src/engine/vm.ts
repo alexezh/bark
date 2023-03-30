@@ -103,6 +103,7 @@ export class VM implements IVM {
     }
 
     console.log('VM: start');
+    this.camera.canvas.focus();
     this.clock.start();
     this._game.start();
 
