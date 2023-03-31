@@ -1,105 +1,116 @@
 import { KeyBinder } from "../ui/keybinder";
 import { IGamePhysicsInputController } from "./igamephysics";
 import { Sprite3 } from "./sprite3";
-import { vm } from "./ivm";
+import { IInputController, vm } from "./ivm";
 
 // abstracts actions between keyboard, controllers and mouse
-export interface IKeyEvent {
-    get left(): boolean;
-    get right(): boolean;
-    get forward(): boolean;
-    get backward(): boolean;
-    get jump(): boolean;
-    get action(): boolean;
+export interface IMoveEvent2D {
+  get speedX(): number;
+  get speedZ(): number;
 }
 
-class KeyEvent implements IKeyEvent {
-    public none: boolean = false;
-    public left: boolean = false;
-    public right: boolean = false;
-    public forward: boolean = false;
-    public backward: boolean = false;
-    public jump: boolean = false;
-    public action: boolean = false;
-    public repeat: number = 0;
-    public lastKeyTimeSeconds: number = 0;
+class MoveEvent2D implements IMoveEvent2D {
+  public speedX: number = 0;
+  public speedZ: number = 0;
+}
+
+export type MoveControllerConfig = {
+  keySpeedX: number;
+  keySpeedZ: number;
+  thumbSpeedX: number;
+  thumbSpeedZ: number;
+  timeoutSeconds: number;
 }
 
 // handles ASDW and arrows
-export class MoveController2D implements IGamePhysicsInputController {
-    private pending: ((action: IKeyEvent) => void) | undefined = undefined;
-    private lastEvent: KeyEvent = new KeyEvent();
-    private input: KeyBinder;
-    private keyRepeatTimeoutSeconds = 0.1;
+export class MoveController2D implements IGamePhysicsInputController, IInputController {
+  private pending: ((action: IMoveEvent2D) => void) | undefined = undefined;
+  private lastEvent: MoveEvent2D = new MoveEvent2D();
+  private input: KeyBinder;
+  private xrSession: XRSession | undefined;
+  private gamePad: Gamepad | undefined;
+  private config: MoveControllerConfig;
+  private lastTick: number = 0;
+  private timeoutMilliseconds: number = 0;
 
-    public constructor() {
-        this.input = new KeyBinder(vm.camera.canvas, this.onKey.bind(this));
+  public constructor(config: MoveControllerConfig) {
+    this.config = config;
+    this.timeoutMilliseconds = config.timeoutSeconds * 1000;
+    this.input = new KeyBinder(vm.camera.canvas, () => { });
+    this.lastTick = performance.now();
+  }
+
+  public onXrSessionChanged(session: XRSession | undefined) {
+    console.log('onXrSessionChanged');
+    if (session !== undefined) {
+      this.xrSession = session;
+      this.attachGamepad();
+    }
+  }
+
+  public async readInput(): Promise<any> {
+    let now = performance.now();
+    if (this.lastTick + this.timeoutMilliseconds > now) {
+      await new Promise(resolve => setTimeout(resolve, now - this.lastTick - this.timeoutMilliseconds));
     }
 
-    // wait for next key press (emulating basic behavior)
-    public waitKey(timeoutSeconds: number): Promise<IKeyEvent> {
+    let x: number = 0;
+    let z: number = 0;
 
-        let promise = new Promise<IKeyEvent>((resolve) => { this.pending = resolve });
-        if (this.lastEvent !== undefined && this.lastEvent.repeat === 0) {
-            this.lastEvent.repeat += 1;
-            this.pending!.call(this, this.lastEvent);
-            return promise;
-        }
+    if (this.gamePad !== undefined) {
+      let axes = this.gamePad.axes;
 
-        // keep event object for comparison in case if we get event while waiting
-        let lastEvent = this.lastEvent;
-        if (lastEvent !== undefined) {
-            setTimeout(() => {
-                if (lastEvent !== undefined && lastEvent === this.lastEvent) {
-                    lastEvent.repeat += 1;
-                    this.pending!.call(this, this.lastEvent);
-                }
-            }, timeoutSeconds * 1000);
-        }
-
-        return promise;
+      if (axes[0] !== 0) {
+        x -= axes[0] * this.config.thumbSpeedX;
+      } else if (axes[1] !== 0) {
+        z += axes[1] * this.config.thumbSpeedZ;
+      } else if (axes[2] !== 0) {
+        x += axes[2] * this.config.thumbSpeedX;
+      } else if (axes[3] !== 0) {
+        z -= axes[3] * this.config.thumbSpeedZ;
+      }
     }
 
-    private onKey(): void {
-
-        let ev = new KeyEvent();
-        ev.lastKeyTimeSeconds = vm.clock.lastTick;
-
-        if (this.input.pressedKeys.ArrowLeft || this.input.pressedKeys.KeyA) {
-            ev.left = true;
-        }
-
-        if (this.input.pressedKeys.ArrowRight || this.input.pressedKeys.KeyD) {
-            ev.right = true;
-        }
-
-        if (this.input.pressedKeys.ArrowDown || this.input.pressedKeys.KeyS) {
-            ev.forward = true;
-        }
-
-        if (this.input.pressedKeys.ArrowUp || this.input.pressedKeys.KeyW) {
-            ev.backward = true;
-        }
-
-        this.lastEvent = ev;
-        if (this.pending !== undefined) {
-            this.lastEvent.repeat += 1;
-            this.pending!.call(this, this.lastEvent);
-            this.pending = undefined;
-        }
+    if (x !== 0 || z !== 0) {
+      return {
+        speedX: x,
+        speedZ: z
+      }
     }
 
-    public async onKeyDzz(input: KeyBinder): Promise<void> {
-        let sx: number = 0;
-        let sy: number = 0;
-        let sz: number = 0;
-
-        if (input.pressedKeys.w) {
-            sy = 1;
-        }
-
-        // this.sprite.setSpeed(this, new Vector3(dx, dy, dz));
-        // this.sprite.setDirection();
+    if (this.input.pressedKeys.ArrowLeft || this.input.pressedKeys.KeyA) {
+      x -= this.config.keySpeedX;
     }
+
+    if (this.input.pressedKeys.ArrowRight || this.input.pressedKeys.KeyD) {
+      x += this.config.keySpeedX;
+    }
+
+    if (this.input.pressedKeys.ArrowDown || this.input.pressedKeys.KeyS) {
+      z += this.config.keySpeedX;
+    }
+
+    if (this.input.pressedKeys.ArrowUp || this.input.pressedKeys.KeyW) {
+      z -= this.config.keySpeedX;
+    }
+
+    return {
+      speedX: x,
+      speedZ: z
+    }
+  }
+
+  public update(tick: number) {
+  }
+
+  private attachGamepad() {
+    this.gamePad = undefined;
+
+    for (let source of this.xrSession!.inputSources) {
+      if (source.gamepad !== null) {
+        this.gamePad = source.gamepad;
+      }
+    }
+  }
 }
 

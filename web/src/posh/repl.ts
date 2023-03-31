@@ -1,5 +1,5 @@
 import { AstNode, AstNodeKind, formatAst, PtCall, PtObj, PtSequence } from "./ast";
-import AsyncEventSource from "../engine/AsyncEventSource";
+import AsyncEventSource from "../lib/AsyncEventSource";
 import { buildFuncAst, FuncDef } from "./funcdef";
 import { evalFunction } from "./poshregistry";
 

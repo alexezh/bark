@@ -8,6 +8,7 @@ import { ICamera } from "../engine/icamera";
 import { vm } from "../engine/ivm";
 import { VRButton } from "./vrbutton";
 import { IVoxelLevel } from "./ivoxelmap";
+import SyncEventSource from "../lib/synceventsource";
 //import { VRButton } from 'three/addons/webxr/VRButton';
 
 export type CameraLayerProps = UiLayerProps & {
@@ -29,6 +30,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     private selected: Object3D | undefined;
     private isDown: boolean = false;
     private vrButton!: VRButton;
+    private xrSessionChangedSource = new SyncEventSource<XRSession | undefined>();
 
     // Particle stuff.
     public chunk_material = new MeshPhongMaterial({ vertexColors: true, wireframe: false });
@@ -70,7 +72,9 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
 
         this.element.appendChild(this.renderer.domElement);
 
-        this.vrButton = new VRButton(this.renderer, this.onXrSessionChanged.bind(this));
+        this.vrButton = new VRButton(this.renderer, (x) => {
+            this.xrSessionChangedSource.invoke(x);
+        });
         this.element.appendChild(this.vrButton.element);
 
         let controller1 = this.renderer.xr.getController(0);
@@ -95,6 +99,13 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
 
     public scrollBy(delta: WorldCoord3) {
         this.camera.position.add(new Vector3(delta.x, delta.y, delta.z));
+    }
+
+    public registerXrSessionHandler(target: any, func: (session: XRSession | undefined) => void): void {
+        this.xrSessionChangedSource.add(target, func);
+        if (this.vrButton.currentSession !== null) {
+            this.xrSessionChangedSource.invoke(this.vrButton.currentSession);
+        }
     }
 
     private createCamera(w: number, h: number) {
@@ -167,10 +178,6 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
         let evt = makeMEvent(htmlEvt, undefined, this.props.scale);
         this.mapEditor?.onMouseUp(evt);
         return true;
-    }
-
-    private onXrSessionChanged(xrSession: XRSession | undefined) {
-
     }
 
     private animate() {

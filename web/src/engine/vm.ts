@@ -1,5 +1,5 @@
 import { Clock, Vector3 } from "three";
-import AsyncEventSource from "./AsyncEventSource";
+import AsyncEventSource from "../lib/AsyncEventSource";
 import { ICamera } from "./icamera";
 import { animator } from "./animator";
 import { FrameClock } from "./clock";
@@ -7,7 +7,7 @@ import { VoxelLevel } from "./voxellevel";
 import { GamePhysics } from "./gamephysics";
 import { IDigGame } from "./idiggame";
 import { IGamePhysics, RigitCollisionHandler } from "./igamephysics";
-import { IVM, setVM } from "./ivm";
+import { IInputController, IVM, setVM } from "./ivm";
 import { Sprite3 } from "./sprite3";
 import { Ticker } from "./ticker";
 import { IRigitBody, VoxelAnimationCollection } from "../voxel/voxelmeshmodel";
@@ -15,6 +15,7 @@ import { IRigitModel } from "./irigitmodel";
 import { ParticlePool } from "../voxel/particles";
 import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
 import { VoxelLevelFile } from "./voxellevelfile";
+import { MoveController2D } from "./movecontroller2d";
 
 export type MessageHandler = (msg: string) => Promise<void>;
 export type StartHandler = () => Promise<void>;
@@ -37,6 +38,7 @@ export class VM implements IVM {
   private readonly _sprites: Map<number, Sprite3> = new Map<number, Sprite3>();
   private readonly _collisions: WeakMap<IRigitBody, CollisionWaiter> = new WeakMap<IRigitBody, CollisionWaiter>;
   public readonly clock!: FrameClock;
+  private inputController: IInputController | undefined;
 
   private readonly onMapChanged: AsyncEventSource<boolean> = new AsyncEventSource();
   private readonly _startHandlers: StartHandler[] = [];
@@ -69,10 +71,17 @@ export class VM implements IVM {
 
   public attachCamera(camera: ICamera) {
     this._camera = camera;
+    this._camera.registerXrSessionHandler(this, this.onXrSessionChanged.bind(this));
   }
 
   public registerMapChanged(target: any, func: (val: boolean) => void) {
     this.onMapChanged.add(target, func);
+  }
+
+  public setController<T extends IInputController>(AT: { new(): T; }): T {
+    let controller: T = new AT();
+    this.inputController = controller;
+    return controller;
   }
 
   public async loadGame(GT: { new(): IDigGame }): Promise<IDigGame> {
@@ -95,8 +104,13 @@ export class VM implements IVM {
 
   public async start(): Promise<void> {
     if (this._game === undefined) {
-      return;
+      throw new Error('game is not loaded');
     }
+
+    if (this.inputController === undefined) {
+      throw new Error('attach input');
+    }
+
     if (this._running) {
       console.log('VM: already running');
       return;
@@ -129,6 +143,7 @@ export class VM implements IVM {
     }
 
     this.clock.tick();
+    this.inputController?.update(this.clock.delta)
     this.physics.update(this.clock.delta);
     this.particles.update(this.clock.tick, this.clock.delta)
     let tick = this.clock.lastTick;
@@ -165,6 +180,10 @@ export class VM implements IVM {
     while (this._running) {
       await func();
     }
+  }
+
+  public readInput(): Promise<any> {
+    return this.inputController!.readInput();
   }
 
   public waitCollide(sprites: Sprite3[], seconds: number): Promise<Sprite3> {
@@ -260,6 +279,10 @@ export class VM implements IVM {
     this._level.loadScene(this._camera.scene);
 
     this.particles = new ParticlePool(this._camera.scene, 200, 1);
+  }
+
+  private onXrSessionChanged(session: XRSession | undefined) {
+    this.inputController?.onXrSessionChanged(session);
   }
 }
 

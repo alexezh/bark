@@ -9,5 +9,6 @@ export interface ICamera {
   set position(pos: Vector3);
 
   scrollBy(pxSize: WorldCoord3): void;
+  registerXrSessionHandler(target: any, func: (session: XRSession | undefined) => void): void;
 }
 

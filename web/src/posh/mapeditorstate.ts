@@ -1,5 +1,5 @@
 import { idText } from "typescript";
-import AsyncEventSource from "../engine/AsyncEventSource";
+import AsyncEventSource from "../lib/AsyncEventSource";
 import { GridRect, PxPos, PxSize } from "./pos";
 import { IVoxelLevel } from "../ui/ivoxelmap";
 

@@ -8,6 +8,12 @@ import { FrameClock } from "./clock";
 import { IRigitModel } from "./irigitmodel";
 import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
 
+export interface IInputController {
+  onXrSessionChanged(session: XRSession | undefined);
+  update(tick: number);
+  readInput<T>(): Promise<T>;
+}
+
 export interface IVM {
   get level(): IVoxelLevel;
   get physics(): IGamePhysics;
@@ -18,6 +24,7 @@ export interface IVM {
 
   attachCamera(camera: ICamera): void;
   registerMapChanged(target: any, func: () => void): void;
+  setController<T extends IInputController>(AT: { new(): T; }): T;
   loadGame(GT: { new(): IDigGame }): Promise<IDigGame>;
 
   loadLevel(id: string): Promise<void>;
@@ -30,6 +37,9 @@ export interface IVM {
     ac: VoxelAnimationCollection | undefined): Promise<T>;
   removeSprite(sprite: Sprite3);
   forever(func: () => Promise<void>): Promise<void>;
+
+  // read input; the actual implementation depends on input controller
+  readInput(): Promise<any>;
 
   // wait for any sprites in the list to collide
   // multiple threads can call wait on different groups of sprites

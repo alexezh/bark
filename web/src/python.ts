@@ -55,7 +55,7 @@ export class BoxedGame implements IDigGame {
 
   public async init(): Promise<void> {
     // create controller and options such as repeat rate and so on
-    inputController = new MoveController2D();
+    inputController = vm.setController(MoveController2D);
 
     await vm.loadLevel('test');
     this.char = await Monky.create();
@@ -74,27 +74,14 @@ export class BoxedGame implements IDigGame {
   private async moveMonkey(): Promise<void> {
     console.log("start moveMonkey");
     vm.forever(async () => {
-      let dx = 0;
-      let dz = 0;
-      let ev = await inputController!.waitKey(0.1);
-      if (ev.left) {
-        dx -= 10;
-      }
-      if (ev.right) {
-        dx += 10;
-      }
-      if (ev.forward) {
-        dz += 10;
-      }
-      if (ev.backward) {
-        dz -= 10;
-      }
-      if (dx !== 0 || dz !== 0) {
+      let ev = await vm!.readInput();
+
+      if (ev.speedX !== 0 || ev.speedZ !== 0) {
         this.char.animate('move');
       } else {
         this.char.animate('stand');
       }
-      this.char.setSpeed(new Vector3(dx, 0, dz));
+      this.char.setSpeed(new Vector3(ev.speedX, 0, ev.speedZ));
     });
   }
 
