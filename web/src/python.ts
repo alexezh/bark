@@ -39,7 +39,7 @@ class Monky extends Mammal4 {
       stand: [{ idx: 0, dur: 0 }]
     }
     let m = await vm.createSprite(Monky, './assets/vox/monky.vox',
-      new Vector3(120, 60, 20),
+      new Vector3(120, 20, 120),
       undefined,
       ac);
 
@@ -55,7 +55,13 @@ export class BoxedGame implements IDigGame {
 
   public async init(): Promise<void> {
     // create controller and options such as repeat rate and so on
-    inputController = vm.setController(MoveController2D);
+    inputController = vm.setController(new MoveController2D({
+      keySpeedX: 10,
+      keySpeedZ: 10,
+      thumbSpeedX: 10,
+      thumbSpeedZ: 10,
+      timeoutSeconds: 0.1
+    }));
 
     await vm.loadLevel('test');
     this.char = await Monky.create();

@@ -28,7 +28,7 @@ export class MoveController2D implements IGamePhysicsInputController, IInputCont
   private lastEvent: MoveEvent2D = new MoveEvent2D();
   private input: KeyBinder;
   private xrSession: XRSession | undefined;
-  private gamePad: Gamepad | undefined;
+  private gamePads: Gamepad[] = [];
   private config: MoveControllerConfig;
   private lastTick: number = 0;
   private timeoutMilliseconds: number = 0;
@@ -44,8 +44,12 @@ export class MoveController2D implements IGamePhysicsInputController, IInputCont
     console.log('onXrSessionChanged');
     if (session !== undefined) {
       this.xrSession = session;
+      this.xrSession.addEventListener('inputsourceschange', this.onXrInputChanged.bind(this));
       this.attachGamepad();
     }
+  }
+  private onXrInputChanged() {
+    this.attachGamepad();
   }
 
   public async readInput(): Promise<any> {
@@ -54,20 +58,29 @@ export class MoveController2D implements IGamePhysicsInputController, IInputCont
       await new Promise(resolve => setTimeout(resolve, now - this.lastTick - this.timeoutMilliseconds));
     }
 
+    this.lastTick = now;
+
     let x: number = 0;
     let z: number = 0;
 
-    if (this.gamePad !== undefined) {
-      let axes = this.gamePad.axes;
+    for (let pad of this.gamePads) {
+      let axes = pad.axes;
 
+      // not sure why we have 4 axis
       if (axes[0] !== 0) {
-        x -= axes[0] * this.config.thumbSpeedX;
-      } else if (axes[1] !== 0) {
+        x += axes[0] * this.config.thumbSpeedX;
+      }
+
+      if (axes[1] !== 0) {
         z += axes[1] * this.config.thumbSpeedZ;
-      } else if (axes[2] !== 0) {
+      }
+
+      if (axes[2] !== 0) {
         x += axes[2] * this.config.thumbSpeedX;
-      } else if (axes[3] !== 0) {
-        z -= axes[3] * this.config.thumbSpeedZ;
+      }
+
+      if (axes[3] !== 0) {
+        z += axes[3] * this.config.thumbSpeedZ;
       }
     }
 
@@ -104,11 +117,11 @@ export class MoveController2D implements IGamePhysicsInputController, IInputCont
   }
 
   private attachGamepad() {
-    this.gamePad = undefined;
+    this.gamePads.splice(0, this.gamePads.length);
 
     for (let source of this.xrSession!.inputSources) {
       if (source.gamepad !== null) {
-        this.gamePad = source.gamepad;
+        this.gamePads.push(source.gamepad!);
       }
     }
   }

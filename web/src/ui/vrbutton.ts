@@ -60,7 +60,7 @@ export class VRButton {
 
   async onSessionStarted(session: XRSession) {
 
-    session.addEventListener('end', this.onSessionEnded);
+    session.addEventListener('end', this.onSessionEnded.bind(this));
 
     // @ts-ignore
     await this.renderer.xr!.setSession(session);
@@ -113,7 +113,7 @@ export class VRButton {
 
         const sessionInit = { optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking', 'layers'] };
         // @ts-ignore
-        navigator.xr.requestSession('immersive-vr', sessionInit).then(onSessionStarted);
+        navigator.xr.requestSession('immersive-vr', sessionInit).then(this.onSessionStarted.bind(this));
 
       } else {
         // @ts-ignore

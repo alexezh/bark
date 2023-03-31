@@ -74,16 +74,6 @@ export declare class UploadVoxAction implements IAction {
     renderThumbnail(vox: Vox, tr: ThumbnailRenderer, data: ArrayBuffer, fn: string): Promise<string | undefined>;
 }
 
-export default class AsyncEventSource<T> {
-    private callbackSym;
-    private handlers;
-    private gaps;
-    add(obj: any, func: (val: T) => void): void;
-    private invokeWorker;
-    invoke(...args: any[]): void;
-    invokeWithCompletion(onInvoke: () => void, ...args: any[]): void;
-}
-
 export interface IAnimatable {
     get id(): number;
     get startTime(): number;
@@ -136,8 +126,6 @@ export declare class PropertyAnimationManager {
     private processAnimation;
 }
 export declare var animator: PropertyAnimationManager;
-
-export declare function numberArrayToString(v: number[]): string;
 
 export type BroadphasePair = {
     first: IRigitBody;
@@ -231,6 +219,7 @@ export interface ICamera {
     get position(): Vector3;
     set position(pos: Vector3);
     scrollBy(pxSize: WorldCoord3): void;
+    registerXrSessionHandler(target: any, func: (session: XRSession | undefined) => void): void;
 }
 
 export interface IDigGame {
@@ -268,6 +257,11 @@ export interface IRigitModel {
     onRenderFrame(tick: number): any;
 }
 
+export interface IInputController {
+    onXrSessionChanged(session: XRSession | undefined): any;
+    update(tick: number): any;
+    readInput<T>(): Promise<T>;
+}
 export interface IVM {
     get level(): IVoxelLevel;
     get physics(): IGamePhysics;
@@ -277,6 +271,7 @@ export interface IVM {
     get camera(): ICamera;
     attachCamera(camera: ICamera): void;
     registerMapChanged(target: any, func: () => void): void;
+    setController(controller: IInputController): any;
     loadGame(GT: {
         new (): IDigGame;
     }): Promise<IDigGame>;
@@ -289,6 +284,7 @@ export interface IVM {
     }, uri: string, pos: Vector3, rm: IRigitModel | undefined, ac: VoxelAnimationCollection | undefined): Promise<T>;
     removeSprite(sprite: Sprite3): any;
     forever(func: () => Promise<void>): Promise<void>;
+    readInput(): Promise<any>;
     waitCollide(sprite: Sprite3[], timeout: number): Promise<Sprite3>;
     createExplosion(pos: Vector3): void;
     sleep(ms: number): Promise<void>;
@@ -318,23 +314,32 @@ export declare class MapLayer {
     addBlock(pos: MapPos3, block: VoxelModel): void;
 }
 
-export interface IKeyEvent {
-    get left(): boolean;
-    get right(): boolean;
-    get forward(): boolean;
-    get backward(): boolean;
-    get jump(): boolean;
-    get action(): boolean;
+export interface IMoveEvent2D {
+    get speedX(): number;
+    get speedZ(): number;
 }
-export declare class MoveController2D implements IGamePhysicsInputController {
+export type MoveControllerConfig = {
+    keySpeedX: number;
+    keySpeedZ: number;
+    thumbSpeedX: number;
+    thumbSpeedZ: number;
+    timeoutSeconds: number;
+};
+export declare class MoveController2D implements IGamePhysicsInputController, IInputController {
     private pending;
     private lastEvent;
     private input;
-    private keyRepeatTimeoutSeconds;
-    constructor();
-    waitKey(timeoutSeconds: number): Promise<IKeyEvent>;
-    private onKey;
-    onKeyDzz(input: KeyBinder): Promise<void>;
+    private xrSession;
+    private gamePads;
+    private config;
+    private lastTick;
+    private timeoutMilliseconds;
+    constructor(config: MoveControllerConfig);
+    onXrSessionChanged(session: XRSession | undefined): void;
+    private onXrInputChanged;
+    readInput(): Promise<any>;
+    update(tick: number): void;
+    private attachGamepad;
 }
 
 export declare class Sprite3 implements IRigitBody {
@@ -389,6 +394,7 @@ export declare class VM implements IVM {
     private readonly _sprites;
     private readonly _collisions;
     readonly clock: FrameClock;
+    private inputController;
     private readonly onMapChanged;
     private readonly _startHandlers;
     particles: ParticlePool;
@@ -401,6 +407,7 @@ export declare class VM implements IVM {
     get camera(): ICamera;
     attachCamera(camera: ICamera): void;
     registerMapChanged(target: any, func: (val: boolean) => void): void;
+    setController(controller: IInputController): IInputController;
     loadGame(GT: {
         new (): IDigGame;
     }): Promise<IDigGame>;
@@ -413,6 +420,7 @@ export declare class VM implements IVM {
     }, uri: string, pos: Vector3, rm?: IRigitModel | undefined, animations?: VoxelAnimationCollection | undefined): Promise<T>;
     removeSprite(sprite: Sprite3): Promise<void>;
     forever(func: () => Promise<void>): Promise<void>;
+    readInput(): Promise<any>;
     waitCollide(sprites: Sprite3[], seconds: number): Promise<Sprite3>;
     createExplosion(pos: Vector3): void;
     sleep(seconds: number): Promise<void>;
@@ -421,6 +429,7 @@ export declare class VM implements IVM {
     onMessage(func: () => Promise<void>): void;
     onCollide(ros: IRigitBody[]): void;
     private loadScene;
+    private onXrSessionChanged;
 }
 export declare function createVM(canvas: HTMLElement): void;
 
@@ -512,7 +521,19 @@ export declare class StaticCubeModel implements IRigitModel {
     update(): void;
 }
 
+export default class AsyncEventSource<T> {
+    private callbackSym;
+    private handlers;
+    private gaps;
+    add(obj: any, func: (val: T) => void): void;
+    private invokeWorker;
+    invoke(...args: any[]): void;
+    invokeWithCompletion(onInvoke: () => void, ...args: any[]): void;
+}
+
 export declare var SimplexNoise: (gen: any) => void;
+
+export declare function numberArrayToString(v: number[]): string;
 
 export declare function bytesToBase64(bytes: Uint8ClampedArray | Uint8Array): string;
 export declare function base64ToBytes(str: string): Uint8ClampedArray;
@@ -573,6 +594,15 @@ export declare class GameColors {
 export declare function perlinNoise(perilinW: number, perilinH: number, baseX: number, baseY: number, seed: number): Uint8ClampedArray;
 
 export declare function PRNG(): any;
+
+export default class SyncEventSource<T> {
+    private callbackSym;
+    private handlers;
+    private gaps;
+    add(obj: any, func: (val: T) => void): void;
+    private invokeWorker;
+    invoke(...args: any[]): void;
+}
 
 export declare const resetColor = "\u001B[0m";
 export declare const greenText = "\u001B[1;3;32m";
@@ -844,6 +874,7 @@ export declare class CameraLayer extends UiLayer2<CameraLayerProps> implements I
     private selected;
     private isDown;
     private vrButton;
+    private xrSessionChangedSource;
     chunk_material: MeshPhongMaterial;
     p_light: PointLight;
     maps_ground: number;
@@ -852,13 +883,13 @@ export declare class CameraLayer extends UiLayer2<CameraLayerProps> implements I
     get position(): Vector3;
     set position(pos: Vector3);
     scrollBy(delta: WorldCoord3): void;
+    registerXrSessionHandler(target: any, func: (session: XRSession | undefined) => void): void;
     private createCamera;
     private onMapChanged;
     reset(): void;
     onWindowResize(): void;
     onMouseDown(htmlEvt: MouseEvent): boolean;
     onMouseUp(htmlEvt: MouseEvent): boolean;
-    private onXrSessionChanged;
     private animate;
     render(): void;
 }
@@ -1152,7 +1183,7 @@ export type TilesetListProps = UiLayerProps & {
 export declare class VRButton {
     element: HTMLElement;
     private renderer;
-    private currentSession;
+    currentSession: XRSession | null;
     xrSessionIsGranted: boolean;
     private sessionChanged;
     constructor(renderer: Renderer, sessionChanged: (xrSession: XRSession | undefined) => void);

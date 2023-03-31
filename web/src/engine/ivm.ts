@@ -24,7 +24,7 @@ export interface IVM {
 
   attachCamera(camera: ICamera): void;
   registerMapChanged(target: any, func: () => void): void;
-  setController<T extends IInputController>(AT: { new(): T; }): T;
+  setController(controller: IInputController);
   loadGame(GT: { new(): IDigGame }): Promise<IDigGame>;
 
   loadLevel(id: string): Promise<void>;

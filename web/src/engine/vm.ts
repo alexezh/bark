@@ -78,8 +78,7 @@ export class VM implements IVM {
     this.onMapChanged.add(target, func);
   }
 
-  public setController<T extends IInputController>(AT: { new(): T; }): T {
-    let controller: T = new AT();
+  public setController(controller: IInputController) {
     this.inputController = controller;
     return controller;
   }
@@ -105,10 +104,6 @@ export class VM implements IVM {
   public async start(): Promise<void> {
     if (this._game === undefined) {
       throw new Error('game is not loaded');
-    }
-
-    if (this.inputController === undefined) {
-      throw new Error('attach input');
     }
 
     if (this._running) {
@@ -183,6 +178,10 @@ export class VM implements IVM {
   }
 
   public readInput(): Promise<any> {
+    if (this.inputController === undefined) {
+      throw new Error('attach input');
+    }
+
     return this.inputController!.readInput();
   }
 
