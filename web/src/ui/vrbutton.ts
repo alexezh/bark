@@ -1,41 +1,39 @@
+import _ from "lodash";
 import { Renderer } from "three";
 
 export class VRButton {
-  private button: HTMLButtonElement;
+  public element!: HTMLElement;
   private renderer: Renderer;
   private currentSession: XRSession | null = null;
+  public xrSessionIsGranted: boolean = false;
+  private sessionChanged: (xrSession: XRSession | undefined)=>void;
 
-  static createButton(renderer: Renderer) {
-    return new VRButton(renderer);
-  }
-
-  public constructor(renderer: Renderer) {
-    this.button = document.createElement('button');
+  public constructor(renderer: Renderer, sessionChanged: (xrSession: XRSession | undefined)=>void) {
     this.renderer = renderer;
+    this.sessionChanged = sessionChanged;
+
+    this.registerSessionGrantedListener();
 
     _.bindAll(this, ['onSessionEnded']);
 
     if ('xr' in navigator) {
+      let button = document.createElement('button');
 
       button.id = 'VRButton';
       button.style.display = 'none';
 
-      stylizeElement(button);
+      VRButton.stylizeElement(button);
 
-      navigator.xr.isSessionSupported('immersive-vr').then(function (supported) {
+      navigator.xr!.isSessionSupported('immersive-vr').then((supported) => {
 
-        supported ? showEnterVR() : showWebXRNotFound();
+        supported ? this.showEnterVR() : this.showWebXRNotFound();
 
-        if (supported && VRButton.xrSessionIsGranted) {
-
+        if (supported && this.xrSessionIsGranted) {
           button.click();
-
         }
 
-      }).catch(showVRNotAllowed);
-
-      return button;
-
+      }).catch(this.showVRNotAllowed.bind(this));
+      this.element = button;
     } else {
 
       const message = document.createElement('a');
@@ -55,52 +53,54 @@ export class VRButton {
       message.style.left = 'calc(50% - 90px)';
       message.style.width = '180px';
       message.style.textDecoration = 'none';
-
-      stylizeElement(message);
-
-      return message;
+      VRButton.stylizeElement(message);
+      this.element = message;
     }
+}
 
   async onSessionStarted(session: XRSession) {
 
       session.addEventListener('end', this.onSessionEnded);
 
-      await this.renderer.xr.setSession(session);
-      this.button.textContent = 'EXIT VR';
+      // @ts-ignore
+      await this.renderer.xr!.setSession(session);
+      this.element.textContent = 'EXIT VR';
 
       this.currentSession = session;
+      this.sessionChanged(session);
     }
 
     onSessionEnded( /*event*/) {
       this.currentSession!.removeEventListener('end', this.onSessionEnded);
 
-      this.button.textContent = 'ENTER VR';
+      this.element.textContent = 'ENTER VR';
 
       this.currentSession = null;
+      this.sessionChanged(undefined);
     }
 
     showEnterVR( /*device*/) {
-      this.button.style.display = '';
+      this.element.style.display = '';
 
-      this.button.style.cursor = 'pointer';
-      this.button.style.left = 'calc(50% - 50px)';
-      this.button.style.width = '100px';
+      this.element.style.cursor = 'pointer';
+      this.element.style.left = 'calc(50% - 50px)';
+      this.element.style.width = '100px';
 
-      this.button.textContent = 'ENTER VR';
+      this.element.textContent = 'ENTER VR';
 
-      this.button.onmouseenter = () => {
+      this.element.onmouseenter = () => {
 
-        this.button.style.opacity = '1.0';
-
-      };
-
-      this.button.onmouseleave = () => {
-
-        this.button.style.opacity = '0.5';
+        this.element.style.opacity = '1.0';
 
       };
 
-      this.button.onclick = () => {
+      this.element.onmouseleave = () => {
+
+        this.element.style.opacity = '0.5';
+
+      };
+
+      this.element.onclick = () => {
 
         if (this.currentSession === null) {
 
@@ -124,37 +124,37 @@ export class VRButton {
 
     disableButton() {
 
-      this.button.style.display = '';
+      this.element.style.display = '';
 
-      this.button.style.cursor = 'auto';
-      this.button.style.left = 'calc(50% - 75px)';
-      this.button.style.width = '150px';
+      this.element.style.cursor = 'auto';
+      this.element.style.left = 'calc(50% - 75px)';
+      this.element.style.width = '150px';
 
-      this.button.onmouseenter = null;
-      this.button.onmouseleave = null;
+      this.element.onmouseenter = null;
+      this.element.onmouseleave = null;
 
-      this.button.onclick = null;
+      this.element.onclick = null;
     }
 
     showWebXRNotFound() {
 
       this.disableButton();
 
-      this.button.textContent = 'VR NOT SUPPORTED';
+      this.element.textContent = 'VR NOT SUPPORTED';
 
     }
 
-    showVRNotAllowed(exception) {
+    private showVRNotAllowed(exception) {
 
       this.disableButton();
 
       console.warn('Exception when trying to call xr.isSessionSupported', exception);
 
-      this.button.textContent = 'VR NOT ALLOWED';
+      this.element.textContent = 'VR NOT ALLOWED';
 
     }
 
-    stylizeElement(element) {
+    private static stylizeElement(element) {
 
       element.style.position = 'absolute';
       element.style.bottom = '20px';
@@ -171,7 +171,7 @@ export class VRButton {
 
     }
 
-  static registerSessionGrantedListener() {
+  registerSessionGrantedListener() {
 
     if ('xr' in navigator) {
 
@@ -179,18 +179,11 @@ export class VRButton {
       // throws a silent exception and aborts execution entirely.
       if (/WebXRViewer\//i.test(navigator.userAgent)) return;
 
-      navigator.xr.addEventListener('sessiongranted', () => {
-
-        VRButton.xrSessionIsGranted = true;
-
+      navigator.xr!.addEventListener('sessiongranted', () => {
+        this.xrSessionIsGranted = true;
       });
-
     }
-
   }
-
 }
 
-VRButton.xrSessionIsGranted = false;
-VRButton.registerSessionGrantedListener();
 

@@ -1,5 +1,3 @@
-using LettuceEncrypt;
-
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -20,16 +18,16 @@ if (!app.Environment.IsDevelopment())
   app.UseHsts();
 }
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 var staticOptions = new StaticFileOptions();
 staticOptions.ServeUnknownFileTypes = true;
 app.UseStaticFiles(staticOptions);
 app.UseRouting();
 app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=ProjectList}/{action=ListProjects}");
+//app.MapControllerRoute(
+//    name: "default",
+//    pattern: "{controller=ProjectList}/{action=ListProjects}");
 
 app.MapControllerRoute(
     name: "createProject",
@@ -55,7 +53,7 @@ app.MapControllerRoute(
     name: "updateArray",
     pattern: "/api/{controller=Project}/{action=SetArray}/{id?}");
 
-//app.MapFallbackToFile("index.html"); ;
+app.MapFallbackToFile("index.html"); ;
 app.MapHub<RctHub>("/updates");
 
 app.Run();

@@ -28,6 +28,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     public visible_distance = 500; // from player to hide chunks + enemies.
     private selected: Object3D | undefined;
     private isDown: boolean = false;
+    private vrButton!: VRButton;
 
     // Particle stuff.
     public chunk_material = new MeshPhongMaterial({ vertexColors: true, wireframe: false });
@@ -69,7 +70,8 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
 
         this.element.appendChild(this.renderer.domElement);
 
-        this.element.appendChild(VRButton.createButton(this.renderer));
+        this.vrButton = new VRButton(this.renderer, this.onXrSessionChanged.bind(this));
+        this.element.appendChild(this.vrButton.element);
 
         let controller1 = this.renderer.xr.getController(0);
         controller1.userData.id = 0;
@@ -167,7 +169,11 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
         return true;
     }
 
-    animate() {
+    private onXrSessionChanged(xrSession: XRSession | undefined) {
+
+    }
+
+    private animate() {
         //      requestAnimationFrame( this.animate.bind(this) );
         //      this.render();
     };

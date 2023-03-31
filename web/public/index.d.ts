@@ -1,3 +1,4 @@
+/// <reference types="webxr" />
 export declare class GameApp {
     private gameContainer;
     private ready;
@@ -842,6 +843,7 @@ export declare class CameraLayer extends UiLayer2<CameraLayerProps> implements I
     visible_distance: number;
     private selected;
     private isDown;
+    private vrButton;
     chunk_material: MeshPhongMaterial;
     p_light: PointLight;
     maps_ground: number;
@@ -856,7 +858,8 @@ export declare class CameraLayer extends UiLayer2<CameraLayerProps> implements I
     onWindowResize(): void;
     onMouseDown(htmlEvt: MouseEvent): boolean;
     onMouseUp(htmlEvt: MouseEvent): boolean;
-    animate(): void;
+    private onXrSessionChanged;
+    private animate;
     render(): void;
 }
 
@@ -1145,6 +1148,23 @@ export type TilesetListProps = UiLayerProps & {
     scale: number;
     scrollY?: number;
 };
+
+export declare class VRButton {
+    element: HTMLElement;
+    private renderer;
+    private currentSession;
+    xrSessionIsGranted: boolean;
+    private sessionChanged;
+    constructor(renderer: Renderer, sessionChanged: (xrSession: XRSession | undefined) => void);
+    onSessionStarted(session: XRSession): Promise<void>;
+    onSessionEnded(): void;
+    showEnterVR(): void;
+    disableButton(): void;
+    showWebXRNotFound(): void;
+    private showVRNotAllowed;
+    private static stylizeElement;
+    registerSessionGrantedListener(): void;
+}
 
 export declare class KeyboardState {
     private domElement;
@@ -1515,11 +1535,3 @@ export declare let modelCache: VoxelModelCache;
 export declare function getCharacterModelList(): string[];
 export declare function getBlockModelList(): string[];
 export declare function getObjectModelList(): string[];
-
-export class VRButton {
-    static createButton(renderer: any): HTMLAnchorElement | HTMLButtonElement;
-    static registerSessionGrantedListener(): void;
-}
-export namespace VRButton {
-    const xrSessionIsGranted: boolean;
-}
