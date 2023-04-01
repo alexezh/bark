@@ -14,4 +14,3 @@ export class GameColors {
 
   public static material: MeshPhongMaterial = new MeshPhongMaterial({ color: 0xffffff, vertexColors: true });
 }
-

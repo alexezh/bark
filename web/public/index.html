@@ -78,8 +78,34 @@
     }
 </style>
 <script>
-    function login() {
+    async function onLoginClick() {
         console.log("login");
+        let name = document.getElementById("userName");
+        let pwd = document.getElementById("pwd");
+
+        await login(name.value, pwd.value);
+    }
+
+    async function login(name, pwd) {
+
+        let req = {
+            name: name,
+            pwd: pwd
+        };
+
+        try {
+            let reqStr = JSON.stringify(req);
+            let response = await (await fetch(`/api/login`, { method: "POST", headers: { "accept": "application/json" }, body: reqStr })).json();
+
+            if (response.url !== undefined) {
+                location.href = response.url;
+            } else {
+                return 'Login failed; try again';
+            }
+        }
+        catch (e) {
+            return 'Login failed; try again';
+        }
     }
 </script>
 
@@ -90,11 +116,11 @@
                 <div class="title">Welcome to dig.js</div>
                 <div class="input-row">
                     <label class="label">User name:</label>
-                    <input class="value" type="text"></input>
+                    <input id="userName" class="value" type="text"></input>
                 </div>
                 <div class="input-row">
                     <label class="label">Password:</label>
-                    <input class="value" type="password"></input>
+                    <input id="pwd" class="value" type="password"></input>
                 </div>
                 <div class="input-row">
                     <button class="login" onclick="login()">Login</button>
