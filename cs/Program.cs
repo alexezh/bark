@@ -18,7 +18,7 @@ if (!app.Environment.IsDevelopment())
   app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 var staticOptions = new StaticFileOptions();
 staticOptions.ServeUnknownFileTypes = true;
 app.UseStaticFiles(staticOptions);

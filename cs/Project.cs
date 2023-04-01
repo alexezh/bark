@@ -81,7 +81,7 @@ public class Project
       }
 
       _lib[d.key] = d.data;
-      _db.UpdateEntityRaw(EntityKind, d.key, d.data);
+      _db.InsertEntityRaw(EntityKind, d.key, d.data);
     }
   }
 
