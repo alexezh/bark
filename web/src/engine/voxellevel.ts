@@ -3,7 +3,7 @@ import { modelCache } from "../voxel/voxelmodelcache";
 import { MapLayer } from "./maplayer";
 import { VoxelModel } from "../voxel/voxelmodel";
 import { BlockPos3, BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
-import { defaultMaterial, IVoxelLevel, MapBlock, MapBlockCoord } from "../ui/ivoxelmap";
+import { defaultMaterial, FileMapBlock, IVoxelLevel, IVoxelLevelFile, MapBlock, MapBlockCoord } from "../ui/ivoxelmap";
 import { IRigitBody } from "../voxel/voxelmeshmodel";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../voxel/mapblockrigitbody";
 import { wireGetArrayRange, wireGetObject, wireSetObjectBackground, wireSetString } from "../lib/fetchadapter";
@@ -28,6 +28,7 @@ export class VoxelLevel implements IVoxelLevel {
     public width = 100;
     public height = 100;
     private _blockSize = 16;
+    private _file: IVoxelLevelFile;
     private layers: MapLayer[] = [];
 
     public ambient_light!: AmbientLight;
@@ -37,6 +38,14 @@ export class VoxelLevel implements IVoxelLevel {
     }
     get blockSize(): BlockSize3 {
         return { sx: this.width, sy: this.layers.length, sz: this.height }
+    }
+    get file(): IVoxelLevelFile {
+        return this._file;
+    }
+
+    public constructor(file: IVoxelLevelFile) {
+        this._file = file;
+        this._file.registerOnChangeBlock(this.onFileChangeBlock.bind(this));
     }
 
     public onStart() {
@@ -86,7 +95,7 @@ export class VoxelLevel implements IVoxelLevel {
                */
     };
 
-    public async load(id: string): Promise<boolean> {
+    public async load(): Promise<boolean> {
         this.layers.push(new MapLayer(defaultMaterial, 0, this._blockSize));
 
         //let mapData = await wireGetArrayRange('level', 0, -1);
@@ -200,6 +209,10 @@ export class VoxelLevel implements IVoxelLevel {
         }
 
         return false;
+    }
+
+    private onFileChangeBlock(blocks: FileMapBlock[]) {
+        console.log('block changed');
     }
 };
 

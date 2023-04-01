@@ -1,11 +1,7 @@
 /// <reference types="webxr" />
 export declare class GameApp {
     private gameContainer;
-    private ready;
-    get shell(): Shell;
-    run(): Promise<void>;
-    setContainer(gameContainer: HTMLDivElement): void;
-    private tryOnReady;
+    initializeApp(gameContainer: HTMLDivElement): void;
     private resizeCanvas;
 }
 
@@ -20,29 +16,64 @@ export declare class BoxedGame implements IDigGame {
     private dropObject;
 }
 
-export declare class SelectBlockAction implements IAction {
-    get name(): string;
-    get tags(): string[];
-    renderButton(parent: HTMLElement): void;
-    destroyButton(parent: HTMLElement): void;
+export type CommandBarProps = UiLayerProps & {
+    termProps: ShellProps;
+    mapEditorState: MapEditorState;
+};
+export interface ICommandBar {
+    displayError(text: string): any;
+    openDetailsPane(elem: HTMLElement): void;
+    closeDetailsPane(): void;
 }
-export declare class EditMapAction implements IAction {
-    get name(): string;
-    get tags(): string[];
-    renderButton(parent: HTMLElement): void;
-    destroyButton(parent: HTMLElement): void;
+export declare class CommandList {
+    private actions;
+    private listDiv;
+    private props;
+    constructor(props: CommandBarProps);
+    updateList(parent: HTMLElement): void;
+    registerAction(action: IAction): void;
+    private updateListSize;
 }
-export declare class EditBlockAction implements IAction {
-    get name(): string;
-    get tags(): string[];
-    renderButton(parent: HTMLElement): void;
-    destroyButton(parent: HTMLElement): void;
+export declare class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar {
+    private actionButton;
+    private _floatieVisible;
+    private _floatie;
+    private _commandList;
+    private _propPane;
+    constructor(props: CommandBarProps);
+    displayError(text: string): void;
+    openDetailsPane(elem: HTMLElement): void;
+    closeDetailsPane(): void;
+    private onAction;
 }
-export declare class EditCodeAction implements IAction {
-    get name(): string;
-    get tags(): string[];
+
+export declare abstract class CommandAction implements IAction {
+    abstract get name(): string;
+    abstract get tags(): string[];
+    private button;
     renderButton(parent: HTMLElement): void;
     destroyButton(parent: HTMLElement): void;
+    protected onClick(): void;
+}
+
+export declare class SelectBlockAction extends CommandAction {
+    get name(): string;
+    get tags(): string[];
+}
+export declare class EditLevelAction extends CommandAction {
+    get name(): string;
+    get tags(): string[];
+    protected onClick(): void;
+}
+export declare class EditBlockAction extends CommandAction {
+    get name(): string;
+    get tags(): string[];
+    protected onClick(): void;
+}
+export declare class EditCodeAction extends CommandAction {
+    get name(): string;
+    get tags(): string[];
+    protected onClick(): void;
 }
 
 export declare class MoveCameraAction implements IAction {
@@ -71,7 +102,10 @@ export declare class UploadVoxAction implements IAction {
     destroyButton(parent: HTMLElement): void;
     private createUploadButton;
     private processUpload;
-    renderThumbnail(vox: Vox, tr: ThumbnailRenderer, data: ArrayBuffer, fn: string): Promise<string | undefined>;
+    private loadVox;
+    private renderThumbnail;
+    private displayPane;
+    private upload;
 }
 
 export interface IAnimatable {
@@ -145,7 +179,8 @@ export declare class FrameClock {
     get delta(): number;
     get lastTick(): number;
     start(): void;
-    tick(): void;
+    stop(): void;
+    tick(): 0 | undefined;
 }
 
 export type CodeModule = {
@@ -215,11 +250,14 @@ export declare class RealtimeClient implements IRealtimeClient {
 
 export interface ICamera {
     get scene(): Scene;
+    get camera(): PerspectiveCamera;
     get canvas(): HTMLDivElement;
+    get viewSize(): PxSize;
     get position(): Vector3;
     set position(pos: Vector3);
     scrollBy(pxSize: WorldCoord3): void;
     registerXrSessionHandler(target: any, func: (session: XRSession | undefined) => void): void;
+    setEditor(editor: ILevelEditor | undefined): any;
 }
 
 export interface IDigGame {
@@ -258,6 +296,8 @@ export interface IRigitModel {
 }
 
 export interface IInputController {
+    start(): any;
+    stop(): any;
     onXrSessionChanged(session: XRSession | undefined): any;
     update(tick: number): any;
     readInput<T>(): Promise<T>;
@@ -270,15 +310,16 @@ export interface IVM {
     get levelFile(): IVoxelLevelFile;
     get camera(): ICamera;
     attachCamera(camera: ICamera): void;
-    registerMapChanged(target: any, func: () => void): void;
+    registerLevelLoaded(target: any, func: () => void): void;
     setController(controller: IInputController): any;
     loadGame(GT: {
         new (): IDigGame;
     }): Promise<IDigGame>;
     loadLevel(id: string): Promise<void>;
+    editLevel(): any;
     start(): Promise<void>;
     stop(): void;
-    onRender(): void;
+    onRenderFrame(): void;
     createSprite<T extends Sprite3>(AT: {
         new (...args: any[]): T;
     }, uri: string, pos: Vector3, rm: IRigitModel | undefined, ac: VoxelAnimationCollection | undefined): Promise<T>;
@@ -311,7 +352,7 @@ export declare class MapLayer {
     findBlock(point: Vector3): MapBlockCoord | undefined;
     deleteBlock(block: MapBlockCoord): void;
     getBlock(xMap: number, zMap: number): MapBlockCoord | undefined;
-    addBlock(pos: MapPos3, block: VoxelModel): void;
+    addBlock(pos: BlockPos3, block: VoxelModel): void;
 }
 
 export interface IMoveEvent2D {
@@ -326,16 +367,17 @@ export type MoveControllerConfig = {
     timeoutSeconds: number;
 };
 export declare class MoveController2D implements IGamePhysicsInputController, IInputController {
-    private pending;
-    private lastEvent;
     private input;
     private xrSession;
     private gamePads;
     private config;
     private lastTick;
     private timeoutMilliseconds;
+    private started;
     constructor(config: MoveControllerConfig);
     onXrSessionChanged(session: XRSession | undefined): void;
+    start(): void;
+    stop(): void;
     private onXrInputChanged;
     readInput(): Promise<any>;
     update(tick: number): void;
@@ -395,7 +437,8 @@ export declare class VM implements IVM {
     private readonly _collisions;
     readonly clock: FrameClock;
     private inputController;
-    private readonly onMapChanged;
+    private levelEditor;
+    private readonly onLevelLoaded;
     private readonly _startHandlers;
     particles: ParticlePool;
     private _messageHandlers;
@@ -406,7 +449,7 @@ export declare class VM implements IVM {
     get canvas(): HTMLElement;
     get camera(): ICamera;
     attachCamera(camera: ICamera): void;
-    registerMapChanged(target: any, func: (val: boolean) => void): void;
+    registerLevelLoaded(target: any, func: (val: boolean) => void): void;
     setController(controller: IInputController): IInputController;
     loadGame(GT: {
         new (): IDigGame;
@@ -414,7 +457,8 @@ export declare class VM implements IVM {
     loadLevel(id: string): Promise<void>;
     start(): Promise<void>;
     stop(): void;
-    onRender(): void;
+    editLevel(): void;
+    onRenderFrame(): void;
     createSprite<T extends Sprite3>(AT: {
         new (...args: any[]): T;
     }, uri: string, pos: Vector3, rm?: IRigitModel | undefined, animations?: VoxelAnimationCollection | undefined): Promise<T>;
@@ -444,20 +488,26 @@ export declare class VoxelLevel implements IVoxelLevel {
     objects: any;
     width: number;
     height: number;
-    private blockSize;
+    private _blockSize;
+    private _file;
     private layers;
     ambient_light: AmbientLight;
+    get worldSize(): WorldSize3;
+    get blockSize(): BlockSize3;
+    get file(): IVoxelLevelFile;
+    constructor(file: IVoxelLevelFile);
     onStart(): void;
     onStop(): void;
     update(time: any, delta: any): void;
-    load(id: string): Promise<boolean>;
+    load(): Promise<boolean>;
     loadScene(scene: Scene): boolean;
-    mapSizeToWorldSize(mapSize: MapSize3): WorldSize3;
-    mapPosToWorldPos(mapPos: MapPos3): WorldCoord3;
+    blockSizeToWorldSize(mapSize: BlockSize3): WorldSize3;
+    blockPosToWorldPos(mapPos: BlockPos3): WorldCoord3;
     findBlock(point: Vector3): MapBlockCoord | undefined;
     deleteBlock(block: MapBlockCoord): void;
-    addBlock(pos: MapPos3, block: VoxelModel): void;
+    addBlock(pos: BlockPos3, block: VoxelModel): void;
     intersectBlocks(ro: IRigitBody, pos: WorldCoord3, func: (target: IRigitBody) => boolean): boolean;
+    private onFileChangeBlock;
 }
 
 export declare class VoxelLevelFile implements IVoxelLevelFile {
@@ -466,9 +516,11 @@ export declare class VoxelLevelFile implements IVoxelLevelFile {
     private _mapSize;
     private _zStride;
     private _yStride;
+    private _blockDefsByUri;
     private _blockDefs;
     private _blocks;
     private _url;
+    private _nextBlockId;
     private onChangeCamera;
     private onChangeBlock;
     get blocks(): ReadonlyMap<number, FileMapBlock>;
@@ -476,11 +528,14 @@ export declare class VoxelLevelFile implements IVoxelLevelFile {
     load(): Promise<void>;
     get cameraPosition(): Vector3;
     set cameraPosition(value: Vector3);
-    get mapSize(): MapSize3;
+    get mapSize(): BlockSize3;
     get blockCount(): number;
     registerOnChangeCamera(func: () => void): void;
     registerOnChangeBlock(func: (blocks: FileMapBlock[]) => void): void;
     getBlockDef(blockId: number): FileMapBlockDef | undefined;
+    deleteBlock(block: MapBlockCoord): void;
+    addBlock(pos: BlockPos3, block: VoxelModel): void;
+    private createBlockId;
     private getBlockKey;
 }
 
@@ -566,9 +621,9 @@ export declare function wireGetString(key: string): Promise<string | undefined>;
 export declare function wireGetObject<T>(key: string): Promise<T | undefined>;
 export declare function wireGetStrings(pattern: string): Promise<WireString[]>;
 export declare function wireSetString(key: string, value: string): Promise<void>;
+export declare function wireSetStrings(keys: WireString[]): Promise<void>;
 export declare function wireSetObject<T>(key: string, value: T): Promise<void>;
 export declare function wireSetObjectBackground<T>(key: string, value: T): void;
-export declare function wireSetStrings(keys: WireString[]): Promise<void>;
 export declare function wireGetArrayRange<T>(key: string, idx: number, count: number): Promise<T[] | undefined>;
 export declare function wireSetArrayRange<T>(key: string, idx: number, count: number, value: T[]): Promise<void>;
 
@@ -590,6 +645,13 @@ export declare class GameColors {
     static readLineFont: '24px serif';
     static material: MeshPhongMaterial;
 }
+
+export declare function setElementVisible(elem: HTMLElement | undefined, val: boolean): void;
+export declare function setElementDisplay(elem: HTMLElement | undefined, val: boolean): void;
+export declare function createTextDiv(): [HTMLDivElement, HTMLSpanElement];
+export declare function createButton(parent: HTMLElement, text: string, handler: (evt: any) => any): HTMLButtonElement;
+export declare function createCommandButton(parent: HTMLElement, text: string, handler: (evt: any) => any): HTMLButtonElement;
+export declare function createTextEntry(parent: HTMLElement, text: string, value: any, handler: (val: string) => any): HTMLDivElement;
 
 export declare function perlinNoise(perilinW: number, perilinH: number, baseX: number, baseY: number, seed: number): Uint8ClampedArray;
 
@@ -700,14 +762,6 @@ export declare function coordinateParamsToRect(params: CoordinateParams): {
     h: number;
 };
 
-export declare class HelpDef extends GenericFuncDef {
-    private repl;
-    constructor(repl: Repl);
-    help(): string;
-    createParamDefs(): ParamDef[];
-    protected evalCore(params: any): string | undefined;
-}
-
 export declare class BindKeyDef extends GenericEditorFuncDef {
     static funcName: string;
     constructor(mapEditorState: MapEditorState);
@@ -725,9 +779,6 @@ export declare class ShowKeyBindingsDef extends GenericEditorFuncDef {
     descriptKeyBindings(): string;
     protected evalCore(params: any): string | undefined;
 }
-
-export declare let showKeyBindingsDef: ShowKeyBindingsDef | undefined;
-export declare function populateMapEditCommands(repl: Repl, mapEditorState: MapEditorState): void;
 
 export type MapBitmap = {
     w: number;
@@ -864,12 +915,11 @@ export type CameraLayerProps = UiLayerProps & {
 };
 export declare class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     renderer: WebGLRenderer;
-    camera: Camera;
+    camera: PerspectiveCamera;
     cameraGroup: Group;
     scene: Scene;
     t_start: number;
-    map: IVoxelLevel;
-    mapEditor: LevelEditor;
+    levelEditor: ILevelEditor | undefined;
     visible_distance: number;
     private selected;
     private isDown;
@@ -882,10 +932,12 @@ export declare class CameraLayer extends UiLayer2<CameraLayerProps> implements I
     get canvas(): HTMLDivElement;
     get position(): Vector3;
     set position(pos: Vector3);
+    get viewSize(): PxSize;
     scrollBy(delta: WorldCoord3): void;
     registerXrSessionHandler(target: any, func: (session: XRSession | undefined) => void): void;
+    setEditor(editor: ILevelEditor | undefined): void;
     private createCamera;
-    private onMapChanged;
+    private onLevelLoaded;
     reset(): void;
     onWindowResize(): void;
     onMouseDown(htmlEvt: MouseEvent): boolean;
@@ -904,43 +956,6 @@ export declare class CodeEditor extends UiLayer2<CodeEditorProps> {
     private onMacro;
 }
 
-export type CommandBarProps = UiLayerProps & {
-    termProps: ShellProps;
-    mapEditorState: MapEditorState;
-};
-export interface ICommandBar {
-    displayError(text: string): any;
-    openDetailsPane(elem: HTMLElement): void;
-    closeDetailsPane(): void;
-}
-export declare class CommandPalette {
-    private actions;
-    private _visible;
-    private commandPalette;
-    private props;
-    get visible(): boolean;
-    constructor(props: CommandBarProps);
-    setVisible(val: boolean, parent: HTMLElement): void;
-    registerAction(action: IAction): void;
-    private updatePaletteSize;
-}
-export declare class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar {
-    private actionButton;
-    private _palette;
-    private propPane;
-    constructor(props: CommandBarProps);
-    displayError(text: string): void;
-    openDetailsPane(elem: HTMLElement): void;
-    closeDetailsPane(): void;
-    private onAction;
-}
-
-export declare function setElementVisible(elem: HTMLElement | undefined, val: boolean): void;
-export declare function createTextDiv(): [HTMLDivElement, HTMLSpanElement];
-export declare function createButton(parent: HTMLElement, text: string, handler: (evt: any) => any): HTMLButtonElement;
-export declare function createCommandButton(parent: HTMLElement, text: string, handler: (evt: any) => any): HTMLButtonElement;
-export declare function createTextEntry(parent: HTMLElement, text: string, value: any, handler: (val: string) => any): HTMLDivElement;
-
 export interface IAction {
     get name(): string;
     get tags(): string[];
@@ -957,10 +972,10 @@ export interface IGameShell {
     printException(e: any): void;
     editFile(text: string | undefined | null, onSave: ((text: string) => void) | undefined): void;
 }
-export declare let shell: IGameShell | undefined;
+export declare let shell: IGameShell;
 export declare function setShell(t: IGameShell): void;
 
-export interface IMapEditor {
+export interface ILevelEditor {
     onMouseDown(evt: MEvent): boolean;
     onMouseUp(evt: MEvent): boolean;
     onMouseMove(evt: MEvent): boolean;
@@ -982,8 +997,8 @@ export type MapBlock = {
 export type MapBlockCoord = {
     model: VoxelModel | undefined;
     idx: number;
-    mapPos: MapPos3;
-    mapSize: MapSize3;
+    mapPos: BlockPos3;
+    mapSize: BlockSize3;
 };
 export type FileMapBlockDef = {
     blockId: number;
@@ -1011,23 +1026,28 @@ export type WireLevelInfo = {
 export interface IVoxelLevelFile {
     get cameraPosition(): Vector3;
     set cameraPosition(value: Vector3);
-    get mapSize(): MapSize3;
+    get mapSize(): BlockSize3;
     get blocks(): ReadonlyMap<number, FileMapBlock>;
     registerOnChangeCamera(func: () => void): any;
-    registerOnChangeBlock(func: () => void): any;
+    registerOnChangeBlock(func: (blocks: FileMapBlock[]) => void): any;
     load(name: string): Promise<void>;
     getBlockDef(idx: number): FileMapBlockDef | undefined;
+    deleteBlock(block: MapBlockCoord): any;
+    addBlock(pos: BlockPos3, block: VoxelModel): any;
 }
 export interface IVoxelLevel {
+    get worldSize(): WorldSize3;
+    get blockSize(): BlockSize3;
+    get file(): IVoxelLevelFile;
     onStart(): any;
     onStop(): any;
-    load(id: string): Promise<boolean>;
+    load(): Promise<boolean>;
     loadScene(scene: Scene): any;
     findBlock(point: Vector3): MapBlockCoord | undefined;
     deleteBlock(block: MapBlockCoord): any;
-    addBlock(pos: MapPos3, block: VoxelModel): any;
-    mapSizeToWorldSize(gridSize: MapSize3): WorldSize3;
-    mapPosToWorldPos(gridPos: MapPos3): WorldCoord3;
+    addBlock(pos: BlockPos3, block: VoxelModel): any;
+    blockSizeToWorldSize(gridSize: BlockSize3): WorldSize3;
+    blockPosToWorldPos(gridPos: BlockPos3): WorldCoord3;
     intersectBlocks(ro: IRigitBody, pos: WorldCoord3, func: (target: IRigitBody) => boolean): boolean;
 }
 export declare let defaultMaterial: MeshPhongMaterial;
@@ -1052,27 +1072,27 @@ export declare class KeyBinder {
     private keyUpHandlers;
     pressedKeys: any;
     private onInput;
-    constructor(htmlElem: HTMLElement, onInput: () => void);
+    constructor(htmlElem: HTMLElement, onInput?: (() => void) | undefined, attach?: boolean);
+    attach(): void;
+    detach(): void;
     private onKeyDown;
     private onKeyUp;
-    registerKeyUp(key: string, func?: () => void): void;
+    registerKeyUp(key: string, func: () => void, help?: string | undefined): void;
+    unregisterKeyUp(key: string): void;
 }
 
-export declare function addEditorShortcuts(showKeyBindingsDef: ShowKeyBindingsDef): void;
 export interface IMapEditorHost {
 }
 export declare class LevelEditor implements ILevelEditor {
-    private viewSize;
     private camera;
-    private cameraLayer;
-    private scene;
     private isDown;
-    private map;
+    private level;
+    private input;
     static material: LineBasicMaterial;
     private selectedBlock;
     private selection;
-    constructor(cameraLayer: ICamera, viewSize: PxSize, scene: Scene, camera: Camera, input: KeyBinder, map: IVoxelLevel);
-    private onStateChanged;
+    constructor(camera: ICamera, level: IVoxelLevel);
+    dispose(): void;
     private onScroll;
     onMouseDown(evt: MEvent): boolean;
     onMouseUp(evt: MEvent): boolean;
@@ -1115,7 +1135,6 @@ export declare class Shell implements IGameShell {
     print(s: string): void;
     printException(e: any): void;
     editFile(text: string | null | undefined, onSave: ((text: string) => void) | undefined): void;
-    private populateBasicCommands;
     private loginCached;
     login(name: string): void;
     logout(): void;
@@ -1160,7 +1179,7 @@ export declare class UiLayer2<T extends UiLayerProps> implements IUiLayer2 {
     private _visible;
     protected _compositor: IUiCompositor | undefined;
     private _onFocusOut?;
-    constructor(props: T, element: HTMLElement);
+    constructor(props: T, element: HTMLElement, attachMouse?: boolean);
     get element(): HTMLElement;
     get id(): string;
     get visible(): boolean;
@@ -1268,7 +1287,7 @@ export declare class ParticlePool {
     sprite_material: SpriteMaterial;
     constructor(scene: Scene, size: number, type: number);
     update(time: any, delta: any): void;
-    createParticle(opts: any): Particle | -1;
+    createParticle(opts: any): -1 | Particle;
     queueParticleDef(opts: any): void;
     fire(x: any, y: any, z: any): void;
     explosion(x: number, y: number, z: number, power: number, type: any): void;
@@ -1360,12 +1379,12 @@ export type WorldSize3 = {
     sy: number;
     sz: number;
 };
-export type MapPos3 = {
+export type BlockPos3 = {
     x: number;
     y: number;
     z: number;
 };
-export type MapSize3 = {
+export type BlockSize3 = {
     sx: number;
     sy: number;
     sz: number;
@@ -1534,9 +1553,9 @@ export type VoxelFileFrame = {
 };
 export declare function makeVoxelPoint(buffer: Uint8Array, i: number): VoxelPoint;
 export declare class VoxelModel {
-    id: string;
+    uri: string;
     frames: VoxelModelFrame[];
-    constructor(id: string);
+    constructor(uri: string);
     get size(): Vector3;
 }
 export declare class VoxelModelFrame {

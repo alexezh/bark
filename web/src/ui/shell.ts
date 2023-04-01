@@ -1,7 +1,5 @@
 import { CommandBar } from "../actions/commandBar";
-import { populateMapEditCommands } from "../posh/mapeditcommands";
 import { Repl } from "../posh/repl";
-import { HelpDef } from "../posh/helpdef";
 import { UiCompositor2 } from "./uicompositor";
 import { createMapEditorState, mapEditorState } from "../posh/mapeditorstate";
 import { CodeEditor } from "./codeeditor";
@@ -11,7 +9,6 @@ import { decorateCommand } from "../lib/termcolors";
 import { LevelEditor } from "./leveleditor";
 import { CameraLayer } from "./cameralayer";
 import { IVoxelLevel } from "./ivoxelmap";
-import { vm } from "../engine/ivm";
 
 //registerRegionCommands();
 registerSystemCommands();
@@ -55,11 +52,8 @@ export class Shell implements IGameShell {
     this.props.canvasHeight = this.props.height / this.props.scale;
     this.repl = new Repl();
 
-    this.populateBasicCommands();
-
     createMapEditorState();
     mapEditorState.onChanged(this, (evt) => this.refresh());
-    populateMapEditCommands(this.repl, mapEditorState);
 
     this.compositor2 = new UiCompositor2(gameContainer, { w: this.props.width, h: this.props.height });
 
@@ -112,10 +106,6 @@ export class Shell implements IGameShell {
     }
   }
 
-
-  private populateBasicCommands() {
-    this.repl.addFunc(new HelpDef(this.repl))
-  }
 
   private loginCached() {
     let user = window.localStorage.getItem('user');

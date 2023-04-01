@@ -60,7 +60,7 @@ export interface IVoxelLevelFile {
   get blocks(): ReadonlyMap<number, FileMapBlock>;
 
   registerOnChangeCamera(func: () => void);
-  registerOnChangeBlock(func: () => void);
+  registerOnChangeBlock(func: (blocks: FileMapBlock[]) => void);
 
   load(name: string): Promise<void>;
   getBlockDef(idx: number): FileMapBlockDef | undefined;
@@ -72,6 +72,7 @@ export interface IVoxelLevel {
   //readonly props: MapProps;
   get worldSize(): WorldSize3;
   get blockSize(): BlockSize3;
+  get file(): IVoxelLevelFile;
 
   // called when game started; at this point properties become non-persisted
   onStart();
@@ -79,11 +80,26 @@ export interface IVoxelLevel {
   // called when game stopped. properties reset to edit values
   onStop();
 
-  load(id: string): Promise<boolean>;
+  /**
+   * load level from current file
+   */
+  load(): Promise<boolean>;
+
+  /**
+   * load level into scene
+   */
   loadScene(scene: Scene);
 
   findBlock(point: Vector3): MapBlockCoord | undefined;
+
+  /**
+   * deletes block to runtime representation; not saved
+   */
   deleteBlock(block: MapBlockCoord);
+
+  /**
+   * adds block to runtime representation; not saved
+   */
   addBlock(pos: BlockPos3, block: VoxelModel);
 
   // todo: add map objects and sprites here

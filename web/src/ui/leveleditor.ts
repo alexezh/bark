@@ -20,7 +20,7 @@ export interface IMapEditorHost {
 export class LevelEditor implements ILevelEditor {
   private camera: ICamera;
   private isDown: boolean = false;
-  private level: IVoxelLevelFile;
+  private level: IVoxelLevel;
   private input: KeyBinder;
   static material = new LineBasicMaterial({ color: 0x0000ff });
 
@@ -29,7 +29,7 @@ export class LevelEditor implements ILevelEditor {
 
   public constructor(
     camera: ICamera,
-    level: IVoxelLevelFile) {
+    level: IVoxelLevel) {
 
     this.camera = camera;
 
@@ -60,7 +60,7 @@ export class LevelEditor implements ILevelEditor {
   }
 
   private onScroll(x: number, y: number, z: number) {
-    this.cameraLayer.scrollBy(this.level.blockPosToWorldPos({ x: x, y: y, z: z }));
+    //this.cameraLayer.scrollBy(this.level.blockPosToWorldPos({ x: x, y: y, z: z }));
   }
 
   public onMouseDown(evt: MEvent): boolean {
@@ -151,9 +151,9 @@ export class LevelEditor implements ILevelEditor {
     let block = await modelCache.getVoxelModel('./assets/vox/dungeon_entrance.vox');
     let pos = this.selectedBlock.mapPos;
     if (this.selectedBlock.model !== undefined) {
-      this.level.addBlock({ x: pos.x, y: pos.y, z: pos.z + 1 }, block);
+      this.level.file.addBlock({ x: pos.x, y: pos.y, z: pos.z + 1 }, block);
     } else {
-      this.level.addBlock({ x: pos.x, y: pos.y, z: pos.z }, block);
+      this.level.file.addBlock({ x: pos.x, y: pos.y, z: pos.z }, block);
     }
 
     return true;
@@ -164,7 +164,7 @@ export class LevelEditor implements ILevelEditor {
       return;
     }
 
-    this.level.deleteBlock(this.selectedBlock);
+    this.level.file.deleteBlock(this.selectedBlock);
     this.selectedBlock = undefined;
     this.camera.scene.remove(this.selection!);
     this.selection = undefined;
