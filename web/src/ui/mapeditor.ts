@@ -6,7 +6,7 @@ import { PxSize } from "../posh/pos";
 import { IMapEditor as ILevelEditor } from "./imapeditor";
 import { KeyBinder, MEvent } from "./keybinder";
 import { IVoxelLevel, MapBlockCoord } from "./ivoxelmap";
-import { MapSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
+import { BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { ICamera } from "../engine/icamera";
 
@@ -214,7 +214,7 @@ export class LevelEditor implements ILevelEditor {
     }
 
     let pos = this.map.mapPosToWorldPos(block.mapPos);
-    let size: MapSize3;
+    let size: BlockSize3;
     if (block.model !== undefined) {
       size = this.map.mapSizeToWorldSize(block.mapSize);
     } else {

@@ -40,7 +40,7 @@ export class VM implements IVM {
   public readonly clock!: FrameClock;
   private inputController: IInputController | undefined;
 
-  private readonly onMapChanged: AsyncEventSource<boolean> = new AsyncEventSource();
+  private readonly onLevelLoaded: AsyncEventSource<boolean> = new AsyncEventSource();
   private readonly _startHandlers: StartHandler[] = [];
   public particles!: ParticlePool;
 
@@ -74,8 +74,8 @@ export class VM implements IVM {
     this._camera.registerXrSessionHandler(this, this.onXrSessionChanged.bind(this));
   }
 
-  public registerMapChanged(target: any, func: (val: boolean) => void) {
-    this.onMapChanged.add(target, func);
+  public registerLevelLoaded(target: any, func: (val: boolean) => void) {
+    this.onLevelLoaded.add(target, func);
   }
 
   public setController(controller: IInputController) {
@@ -98,7 +98,7 @@ export class VM implements IVM {
     this._physics.setCollideHandler(this.onCollide.bind(this));
 
     this.loadScene();
-    this.onMapChanged.invoke(true);
+    this.onLevelLoaded.invoke(true);
   }
 
   public async start(): Promise<void> {

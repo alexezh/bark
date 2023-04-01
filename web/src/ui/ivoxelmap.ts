@@ -1,5 +1,5 @@
 import { MeshPhongMaterial, Scene, Vector3 } from "three";
-import { MapPos3, MapSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
+import { BlockPos3, BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { VoxelModel } from "../voxel/voxelmodel";
 import { IRigitBody } from "../voxel/voxelmeshmodel";
 
@@ -22,8 +22,8 @@ export type MapBlock = {
 export type MapBlockCoord = {
   model: VoxelModel | undefined;
   idx: number;
-  mapPos: MapPos3;
-  mapSize: MapSize3;
+  mapPos: BlockPos3;
+  mapSize: BlockSize3;
 }
 
 export type FileMapBlockDef = {
@@ -56,7 +56,7 @@ export type WireLevelInfo = {
 export interface IVoxelLevelFile {
   get cameraPosition(): Vector3;
   set cameraPosition(value: Vector3);
-  get mapSize(): MapSize3;
+  get mapSize(): BlockSize3;
   get blocks(): ReadonlyMap<number, FileMapBlock>;
 
   registerOnChangeCamera(func: () => void);
@@ -68,6 +68,8 @@ export interface IVoxelLevelFile {
 
 export interface IVoxelLevel {
   //readonly props: MapProps;
+  get worldSize(): WorldSize3;
+  get blockSize(): BlockSize3;
 
   // called when game started; at this point properties become non-persisted
   onStart();
@@ -80,12 +82,12 @@ export interface IVoxelLevel {
 
   findBlock(point: Vector3): MapBlockCoord | undefined;
   deleteBlock(block: MapBlockCoord);
-  addBlock(pos: MapPos3, block: VoxelModel);
+  addBlock(pos: BlockPos3, block: VoxelModel);
 
   // todo: add map objects and sprites here
 
-  mapSizeToWorldSize(gridSize: MapSize3): WorldSize3;
-  mapPosToWorldPos(gridPos: MapPos3): WorldCoord3;
+  mapSizeToWorldSize(gridSize: BlockSize3): WorldSize3;
+  mapPosToWorldPos(gridPos: BlockPos3): WorldCoord3;
 
   // intersects sprite with block
   // creates rigit body for each interesecting block

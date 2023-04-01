@@ -5,6 +5,7 @@ import { ShellProps } from "../ui/shell";
 import { UiLayer2, UiLayerProps } from "../ui/uilayer";
 import { UploadVoxAction } from "./uploadaction";
 import { MoveCameraAction } from "./movecameraaction";
+import { EditBlockAction, EditCodeAction, EditLevelAction } from "./editaction";
 
 export type CommandBarProps = UiLayerProps & {
   termProps: ShellProps;
@@ -92,6 +93,9 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
     // make list of possible actions
     this._commandList.registerAction(new UploadVoxAction(this));
     this._commandList.registerAction(new MoveCameraAction(this));
+    this._commandList.registerAction(new EditLevelAction());
+    this._commandList.registerAction(new EditBlockAction());
+    this._commandList.registerAction(new EditCodeAction());
 
     // <button type="button" class="nes-btn is-primary">Primary</button>
     //this.editButton = createButton(this._element, 'EDIT', (evt: any): any => props.onToggleEdit());

@@ -1,7 +1,7 @@
 import { Vector3 } from "three";
 import { wireGetArrayRange, wireGetObject, wireSetObjectBackground } from "../lib/fetchadapter";
 import { FileMapBlock, FileMapBlockDef, IVoxelLevelFile, WireCamera, WireLevelInfo } from "../ui/ivoxelmap";
-import { MapSize3, WorldSize3 } from "../voxel/pos3";
+import { BlockSize3, WorldSize3 } from "../voxel/pos3";
 
 export class VoxelLevelFile implements IVoxelLevelFile {
   private _cameraPosition: Vector3 = new Vector3();
@@ -65,7 +65,7 @@ export class VoxelLevelFile implements IVoxelLevelFile {
       zLook: this._cameraLookAt.z,
     });
   }
-  get mapSize(): MapSize3 {
+  get mapSize(): BlockSize3 {
     return this._mapSize;
   }
   get blockCount(): number {

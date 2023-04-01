@@ -12,13 +12,13 @@ export type WorldSize3 = {
   sz: number;
 }
 
-export type MapPos3 = {
+export type BlockPos3 = {
   x: number,
   y: number,
   z: number;
 }
 
-export type MapSize3 = {
+export type BlockSize3 = {
   sx: number,
   sy: number,
   sz: number;

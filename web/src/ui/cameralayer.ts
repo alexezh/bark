@@ -23,8 +23,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     //private input!: KeyBinder;
 
     public t_start = Date.now();
-    public map!: IVoxelLevel;
-    public mapEditor!: LevelEditor;
+    public levelEditor!: LevelEditor;
 
     public visible_distance = 500; // from player to hide chunks + enemies.
     private selected: Object3D | undefined;
@@ -88,7 +87,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
 
         vm.attachCamera(this);
-        vm.registerMapChanged(this, this.onMapChanged.bind(this));
+        vm.registerLevelLoaded(this, this.onLevelLoaded.bind(this));
 
         //setTimeout(() => this.loadMap());
     };
@@ -129,13 +128,14 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
         this.scene.add(this.cameraGroup);
     }
 
-    private onMapChanged() {
+    /**
+     * called by VM when new level loaded
+     */
+    private onLevelLoaded() {
 
-        if (vm.level === undefined || this.map !== undefined) {
+        if (vm.level === undefined) {
             return;
         }
-
-        this.map = vm.level;
 
         /*
         this.mapEditor = new MapEditor(
@@ -170,13 +170,13 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
 
     public onMouseDown(htmlEvt: MouseEvent): boolean {
         let evt = makeMEvent(htmlEvt, undefined, this.props.scale);
-        this.mapEditor?.onMouseDown(evt);
+        this.levelEditor?.onMouseDown(evt);
         return true;
     }
 
     public onMouseUp(htmlEvt: MouseEvent): boolean {
         let evt = makeMEvent(htmlEvt, undefined, this.props.scale);
-        this.mapEditor?.onMouseUp(evt);
+        this.levelEditor?.onMouseUp(evt);
         return true;
     }
 

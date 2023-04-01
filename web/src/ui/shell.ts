@@ -90,6 +90,10 @@ export class Shell implements IGameShell {
     //this.camera?.refresh();
   }
 
+  public editLevel(): void {
+    console.log('editLevel');
+  }
+
   public printError(s: string): void {
   }
 

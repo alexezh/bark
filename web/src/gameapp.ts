@@ -6,19 +6,13 @@ import { BoxedGame } from "./python";
 
 const demoWorldId = "7fa84179-dc58-4939-8678-03370fd137f3";
 
-// root objects of the application
+/**
+ * perforrms basic initialization; not used by other things
+ */
 export class GameApp {
   private gameContainer: HTMLDivElement | undefined;
-  private ready: boolean = false;
 
-  // @ts-ignore
-  public get shell(): Shell { return this._terminal; }
-
-  public async run() {
-    this.tryOnReady();
-  }
-
-  public setContainer(gameContainer: HTMLDivElement) {
+  public initializeApp(gameContainer: HTMLDivElement) {
     window.onresize = () => this.resizeCanvas();
 
     this.gameContainer = gameContainer;
@@ -27,16 +21,7 @@ export class GameApp {
     createVM(gameContainer);
 
     setShell(new Shell(gameContainer));
-    this.tryOnReady();
-  }
 
-  // wait for everything to initialize
-  private tryOnReady() {
-    if (shell === undefined || this.ready) {
-      return;
-    }
-
-    this.ready = true;
     setTimeout(async () => {
       await vm.loadGame(BoxedGame);
       vm.start();
@@ -50,8 +35,8 @@ export class GameApp {
 
     this.gameContainer.style.width = window.innerWidth.toString();
     this.gameContainer.style.height = window.innerHeight.toString();
-    if (this.shell !== undefined) {
-      this.shell.refresh();
+    if (shell !== undefined) {
+      shell.refresh();
     }
   }
 }

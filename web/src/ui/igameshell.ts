@@ -3,6 +3,7 @@ export interface IGameShell {
   login(name: string): void;
   logout(): void;
   refresh(): void;
+  editLevel(): void;
   // setInteractiveAvatar(player: IAvatar): void;
   printError(s: string): void;
   print(s: string): void;
@@ -10,7 +11,7 @@ export interface IGameShell {
   editFile(text: string | undefined | null, onSave: ((text: string) => void) | undefined): void;
 }
 
-export let shell: IGameShell | undefined;
+export let shell!: IGameShell;
 
 export function setShell(t: IGameShell) {
   shell = t;

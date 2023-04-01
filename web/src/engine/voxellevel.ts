@@ -2,7 +2,7 @@ import { AmbientLight, BufferGeometry, Mesh, MeshPhongMaterial, Scene, Vector3 }
 import { modelCache } from "../voxel/voxelmodelcache";
 import { MapLayer } from "./maplayer";
 import { VoxelModel } from "../voxel/voxelmodel";
-import { MapPos3, MapSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
+import { BlockPos3, BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { defaultMaterial, IVoxelLevel, MapBlock, MapBlockCoord } from "../ui/ivoxelmap";
 import { IRigitBody } from "../voxel/voxelmeshmodel";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../voxel/mapblockrigitbody";
@@ -27,11 +27,18 @@ export class VoxelLevel implements IVoxelLevel {
     public objects: any = [];
     public width = 100;
     public height = 100;
-    private blockSize = 16;
+    private _blockSize = 16;
     // Objects loaded 
     private layers: MapLayer[] = [];
 
     public ambient_light!: AmbientLight;
+
+    get worldSize(): WorldSize3 {
+
+    }
+    get blockSize(): BlockSize3 {
+        return { sx: this.width, sy: this.layers.length, sz: this.height }
+    }
 
     public onStart() {
     };
@@ -81,7 +88,7 @@ export class VoxelLevel implements IVoxelLevel {
     };
 
     public async load(id: string): Promise<boolean> {
-        this.layers.push(new MapLayer(defaultMaterial, 0, this.blockSize));
+        this.layers.push(new MapLayer(defaultMaterial, 0, this._blockSize));
 
         //let mapData = await wireGetArrayRange('level', 0, -1);
         //if (mapData === undefined) {
@@ -105,24 +112,24 @@ export class VoxelLevel implements IVoxelLevel {
         return true;
     }
 
-    public mapSizeToWorldSize(mapSize: MapSize3): WorldSize3 {
+    public mapSizeToWorldSize(mapSize: BlockSize3): WorldSize3 {
         return {
-            sx: mapSize.sx * this.blockSize,
-            sy: mapSize.sy * this.blockSize,
-            sz: mapSize.sz * this.blockSize
+            sx: mapSize.sx * this._blockSize,
+            sy: mapSize.sy * this._blockSize,
+            sz: mapSize.sz * this._blockSize
         }
     }
 
-    public mapPosToWorldPos(mapPos: MapPos3): WorldCoord3 {
+    public mapPosToWorldPos(mapPos: BlockPos3): WorldCoord3 {
         return {
-            x: mapPos.x * this.blockSize,
-            y: mapPos.y * this.blockSize,
-            z: mapPos.z * this.blockSize
+            x: mapPos.x * this._blockSize,
+            y: mapPos.y * this._blockSize,
+            z: mapPos.z * this._blockSize
         }
     }
 
     public findBlock(point: Vector3): MapBlockCoord | undefined {
-        let layerIdx = (point.y / this.blockSize) | 0;
+        let layerIdx = (point.y / this._blockSize) | 0;
         if (layerIdx < 0 || layerIdx >= this.layers.length) {
             console.log('unknown z layer');
             return undefined;
@@ -138,10 +145,10 @@ export class VoxelLevel implements IVoxelLevel {
         this.scene.add(layer.staticMesh);
     }
 
-    public addBlock(pos: MapPos3, block: VoxelModel) {
+    public addBlock(pos: BlockPos3, block: VoxelModel) {
         if (pos.y >= this.layers.length) {
             for (let i = this.layers.length - 1; i < pos.y; i++) {
-                let layer = new MapLayer(defaultMaterial, this.layers.length, this.blockSize);
+                let layer = new MapLayer(defaultMaterial, this.layers.length, this._blockSize);
                 layer.build();
                 this.layers.push(layer);
             }
@@ -168,12 +175,12 @@ export class VoxelLevel implements IVoxelLevel {
 
         // we assume upper bound non-inclusive; ie if block is at position 0
         // and size 16, it overlaps with one layer
-        let xStart = Math.floor(pos.x / this.blockSize);
-        let xEnd = Math.max(xStart + 1, Math.floor((pos.x + sz.x) / this.blockSize));
-        let yStart = Math.floor(pos.y / this.blockSize);
-        let yEnd = Math.max(yStart + 1, Math.floor((pos.y + sz.y) / this.blockSize));
-        let zStart = Math.floor(pos.z / this.blockSize);
-        let zEnd = Math.max(zStart + 1, Math.floor((pos.z + sz.z) / this.blockSize));
+        let xStart = Math.floor(pos.x / this._blockSize);
+        let xEnd = Math.max(xStart + 1, Math.floor((pos.x + sz.x) / this._blockSize));
+        let yStart = Math.floor(pos.y / this._blockSize);
+        let yEnd = Math.max(yStart + 1, Math.floor((pos.y + sz.y) / this._blockSize));
+        let zStart = Math.floor(pos.z / this._blockSize);
+        let zEnd = Math.max(zStart + 1, Math.floor((pos.z + sz.z) / this._blockSize));
 
         for (let y = yStart; y < yEnd; y++) {
             let layer: MapLayer = this.layers[y];
@@ -184,7 +191,7 @@ export class VoxelLevel implements IVoxelLevel {
                 for (let x = xStart; x < xEnd; x++) {
                     let block = layer.getBlock(x, z);
                     if (block !== undefined) {
-                        let b = new MapBlockRigitBody(block, { x: x * this.blockSize, y: y * this.blockSize, z: z * this.blockSize });
+                        let b = new MapBlockRigitBody(block, { x: x * this._blockSize, y: y * this._blockSize, z: z * this._blockSize });
                         if (func(b)) {
                             return true;
                         }
