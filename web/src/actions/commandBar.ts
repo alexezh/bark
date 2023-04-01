@@ -1,10 +1,10 @@
 import { MapEditorChangeEvent, MapEditorState } from "../posh/mapeditorstate";
 import { createButton, setElementDisplay, setElementVisible } from "../lib/htmlutils";
-import { IAction } from "./iaction";
-import { ShellProps } from "./shell";
-import { UiLayer2, UiLayerProps } from "./uilayer";
-import { UploadVoxAction } from "../actions/uploadaction";
-import { MoveCameraAction } from "../actions/movecameraaction";
+import { IAction } from "../ui/iaction";
+import { ShellProps } from "../ui/shell";
+import { UiLayer2, UiLayerProps } from "../ui/uilayer";
+import { UploadVoxAction } from "./uploadaction";
+import { MoveCameraAction } from "./movecameraaction";
 
 export type CommandBarProps = UiLayerProps & {
   termProps: ShellProps;
@@ -80,12 +80,12 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
     props.h = 0;
     super(props, element, false);
 
+    this.actionButton = createButton(element, 'A', this.onAction.bind(this));
+
     this._floatie = document.createElement('div') as HTMLDivElement;
     this._floatie.className = 'commandFloatie';
     setElementVisible(this._floatie, false);
     this.element.appendChild(this._floatie);
-
-    this.actionButton = createButton(element, 'A', this.onAction.bind(this));
 
     this._commandList = new CommandList(this.props);
 

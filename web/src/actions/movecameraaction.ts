@@ -1,6 +1,6 @@
 import { Vector3 } from "three";
 import { vm } from "../engine/ivm";
-import { ICommandBar } from "../ui/commandBar"
+import { ICommandBar } from "./commandBar"
 import { createButton, createCommandButton, createTextEntry } from "../lib/htmlutils";
 import { IAction } from "../ui/iaction"
 

@@ -1,4 +1,4 @@
-import { CommandBar } from "./commandBar";
+import { CommandBar } from "../actions/commandBar";
 import { populateMapEditCommands } from "../posh/mapeditcommands";
 import { Repl } from "../posh/repl";
 import { HelpDef } from "../posh/helpdef";

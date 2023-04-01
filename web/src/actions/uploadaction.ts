@@ -1,7 +1,7 @@
 import { Mesh } from "three";
 import { wireSetStrings, WireString } from "../lib/fetchadapter";
 import { base64ToBytes, bytesToBase64 } from "../lib/base64";
-import { ICommandBar } from "../ui/commandBar";
+import { ICommandBar } from "./commandBar";
 import { IAction } from "../ui/iaction";
 import { defaultMaterial } from "../ui/ivoxelmap";
 import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
@@ -174,6 +174,8 @@ export class UploadVoxAction implements IAction {
     }
 
     await wireSetStrings(wireFiles);
+
+    this._bar.closeDetailsPane();
   }
 }
 

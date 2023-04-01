@@ -5,9 +5,8 @@ export class SelectBlockAction implements IAction {
   get name(): string {
     throw new Error("Method not implemented.");
   }
-  get tags(): string[] {
-    throw new Error("Method not implemented.");
-  }
+  get tags(): string[] { return ['select', 'vox', 'block'] }
+
   renderButton(parent: HTMLElement) {
     throw new Error("Method not implemented.");
   }
@@ -17,11 +16,11 @@ export class SelectBlockAction implements IAction {
 
 }
 
-export class EditMapAction implements IAction {
+export class EditLevelAction implements IAction {
   get name(): string {
     throw new Error("Method not implemented.");
   }
-  get tags(): string[] { return ['level', 'edit', 'map'] }
+  get tags(): string[] { return ['level', 'edit', 'level'] }
   renderButton(parent: HTMLElement) {
     throw new Error("Method not implemented.");
   }
@@ -47,7 +46,7 @@ export class EditCodeAction implements IAction {
   get name(): string {
     throw new Error("Method not implemented.");
   }
-  get tags(): string[] { return ['edit', 'block', 'vox'] }
+  get tags(): string[] { return ['edit', 'code'] }
   renderButton(parent: HTMLElement) {
     throw new Error("Method not implemented.");
   }
