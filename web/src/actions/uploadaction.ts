@@ -13,7 +13,7 @@ import { encode as PngEncode } from 'fast-png';
 
 type UploadFile = {
   fn: string;
-  vox: ArrayBuffer;
+  vox: Uint8Array;
   png: ImageData;
 }
 
@@ -112,7 +112,7 @@ export class UploadVoxAction implements IAction {
         continue;
       }
 
-      uploadFiles.push({ fn: fn, vox: data, png: thumb });
+      uploadFiles.push({ fn: fn, vox: new Uint8Array(data), png: thumb });
     }
 
     return uploadFiles;
@@ -161,7 +161,7 @@ export class UploadVoxAction implements IAction {
 
     let wireFiles: WireString[] = [];
     for (let file of uploadFiles) {
-      let dataStr = bytesToBase64(file.vox as Uint8Array);
+      let dataStr = bytesToBase64(file.vox);
       wireFiles.push({ key: 'vox/' + file.fn, data: dataStr });
 
       let thumbName = file.fn.replace('.vox', '.png');

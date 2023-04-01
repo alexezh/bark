@@ -74,6 +74,11 @@ export async function wireSetString(key: string, value: string): Promise<void> {
   let res = await (await fetchAdapter!.post(`/api/project/setstrings/${projectId}`, requestData)).json();
 }
 
+export async function wireSetStrings(keys: WireString[]): Promise<void> {
+  let requestData = JSON.stringify(keys);
+  let res = await (await fetchAdapter!.post(`/api/project/setstrings/${projectId}`, requestData)).json();
+}
+
 export async function wireSetObject<T>(key: string, value: T): Promise<void> {
   let valueData = JSON.stringify(value);
   let request: WireString[] = [{ key: key, data: valueData }]
@@ -90,11 +95,6 @@ export function wireSetObjectBackground<T>(key: string, value: T): void {
   });
 
   updateQueue.start();
-}
-
-export async function wireSetStrings(keys: WireString[]): Promise<void> {
-  let requestData = JSON.stringify(keys);
-  let res = await (await fetchAdapter!.post(`/api/project/setstrings/${projectId}`, requestData)).json();
 }
 
 export async function wireGetArrayRange<T>(key: string, idx: number, count: number): Promise<T[] | undefined> {
