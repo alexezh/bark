@@ -15,60 +15,90 @@
         background-color: #ece7dd;
     }
 
-    .vertical-center {
-        margin: 0;
-        position: absolute;
-        top: 50%;
-        left: 50%;
+    .center-screen {
         display: flex;
-        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        min-height: 100vh;
         font-size: x-large;
-        transform: translateX(-50%);
-        transform: translateY(-50%);
+        flex-direction: column;
+    }
+
+    .input-container {
+        display: flex;
+        width: 500px;
+        flex-direction: column;
+    }
+
+    .input-row {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+
+    .input-row .label {
+        width: 30%;
+        text-align: right;
+        vertical-align: middle;
+    }
+
+    .input-row .value {
+        margin-left: 20px;
+        text-align: left;
+        padding-left: 30px;
+        width: 70%;
+        font-size: xx-large;
+        vertical-align: middle;
     }
 
     .title {
-        width: 300px;
+        margin-left: 30px;
         margin-bottom: 20px;
+        font-size: xx-large;
+        text-align: left;
     }
 
-    .inputContainer {
-        width: 300px;
-        margin-bottom: 20px;
-    }
-
-    .inputContainer label {
-        float: left;
-        margin-right: 5px;
-    }
-
-    .inputContainer div {
-        overflow: hidden;
-    }
-
-    .inputContainer input {
-        -moz-box-sizing: border-box;
-        -webkit-box-sizing: border-box;
-        box-sizing: border-box;
-        display: block
+    .login {
+        width: 100%;
+        text-align: middle;
+        border: 0;
+        line-height: 2.5;
+        padding: 0 20px;
+        font-size: 1rem;
+        text-align: center;
+        color: #fff;
+        text-shadow: 1px 1px 1px #000;
+        border-radius: 10px;
+        background-color: rgb(239, 164, 102);
+        background-image: linear-gradient(to top left, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2) 30%, rgba(0, 0, 0, 0));
+        box-shadow: inset 2px 2px 3px rgba(255, 255, 255, 0.6), inset -2px -2px 3px rgba(0, 0, 0, 0.6);
     }
 </style>
 <script>
-    function onLoaded() {
+    function login() {
+        console.log("login");
     }
 </script>
 
-<body id="body" scrolling="no" onload="onLoaded()">
-    <div height="100%" width="100%">
-        <div class="vertical-center">
-            <div class="title">Welcome to dig.js</div>
-            <div class="inputContainer">
-                <label>User name:</label>
-                <input type="text"></input>
-            </div>
-            <div class="inputContainer">
-                <label>Password:</label>
-                <input id="pwd" type="password"></input>
+<body id="body" scrolling="no">
+    <div height=" 100%" width="100%">
+        <div class="center-screen">
+            <div class="input-container">
+                <div class="title">Welcome to dig.js</div>
+                <div class="input-row">
+                    <label class="label">User name:</label>
+                    <input class="value" type="text"></input>
+                </div>
+                <div class="input-row">
+                    <label class="label">Password:</label>
+                    <input class="value" type="password"></input>
+                </div>
+                <div class="input-row">
+                    <button class="login" onclick="login()">Login</button>
+                </div>
             </div>
         </div>
     </div>
