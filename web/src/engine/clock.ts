@@ -12,7 +12,14 @@ export class FrameClock {
     this._running = true;
   }
 
+  stop() {
+    this._running = false;
+  }
+
   tick() {
+    if (!this._running) {
+      return 0;
+    }
     let t = now() / 1000;
     this._delta = t - this._lastTick;
     this._lastTick = t;
@@ -20,7 +27,5 @@ export class FrameClock {
 }
 
 function now() {
-
   return (typeof performance === 'undefined' ? Date : performance).now(); // see #10732
-
 }

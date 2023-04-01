@@ -1,4 +1,4 @@
-import { shell } from "../ui/igameshell";
+import { vm } from "../engine/ivm";
 import { CommandAction } from "./commandaction";
 
 // display list of blocks, selects block as current
@@ -24,7 +24,7 @@ export class EditBlockAction extends CommandAction {
   get tags(): string[] { return ['edit', 'block', 'vox'] }
 
   protected onClick() {
-    shell.editLevel();
+    vm.editLevel();
   }
 }
 

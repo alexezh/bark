@@ -1,6 +1,6 @@
 import { KeyBinder, MEvent } from "./keybinder";
 
-export interface IMapEditor {
+export interface ILevelEditor {
   //  attach(camera: ICameraControl, input: KeyBinder): void;
   //  detach(): void;
   onMouseDown(evt: MEvent): boolean;

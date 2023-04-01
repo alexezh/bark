@@ -16,6 +16,7 @@ import { ParticlePool } from "../voxel/particles";
 import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
 import { VoxelLevelFile } from "./voxellevelfile";
 import { MoveController2D } from "./movecontroller2d";
+import { LevelEditor } from "../ui/leveleditor";
 
 export type MessageHandler = (msg: string) => Promise<void>;
 export type StartHandler = () => Promise<void>;
@@ -39,6 +40,7 @@ export class VM implements IVM {
   private readonly _collisions: WeakMap<IRigitBody, CollisionWaiter> = new WeakMap<IRigitBody, CollisionWaiter>;
   public readonly clock!: FrameClock;
   private inputController: IInputController | undefined;
+  private levelEditor: LevelEditor | undefined = undefined;
 
   private readonly onLevelLoaded: AsyncEventSource<boolean> = new AsyncEventSource();
   private readonly _startHandlers: StartHandler[] = [];
@@ -112,6 +114,11 @@ export class VM implements IVM {
     }
 
     console.log('VM: start');
+    this.levelEditor?.dispose();
+    this.levelEditor = undefined;
+    this.camera.setEditor(undefined);
+
+    this.inputController?.start();
     this.camera.canvas.focus();
     this.clock.start();
     this._game.start();
@@ -128,11 +135,22 @@ export class VM implements IVM {
   public stop() {
     console.log('VM: stop');
     animator.stop();
+    this.inputController?.stop();
     this._game!.stop();
+    this.clock.stop();
     this._running = false;
   }
 
-  public onRender() {
+  public editLevel(): void {
+    console.log('editLevel');
+
+    this.stop();
+
+    this.levelEditor = new LevelEditor(this.camera, this.level);
+    this.camera.setEditor(this.levelEditor);
+  }
+
+  public onRenderFrame() {
     if (!this._running) {
       return;
     }

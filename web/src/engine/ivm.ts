@@ -9,6 +9,8 @@ import { IRigitModel } from "./irigitmodel";
 import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
 
 export interface IInputController {
+  start();
+  stop();
   onXrSessionChanged(session: XRSession | undefined);
   update(tick: number);
   readInput<T>(): Promise<T>;
@@ -28,9 +30,24 @@ export interface IVM {
   loadGame(GT: { new(): IDigGame }): Promise<IDigGame>;
 
   loadLevel(id: string): Promise<void>;
+  editLevel();
+
+  /**
+   * run the game
+   */
   start(): Promise<void>;
+  /**
+   * stop the game
+   * disconnect input handlers
+   * remove runtime objects from the scene
+   */
   stop(): void;
-  onRender(): void;
+
+  /**
+   * called every frame to render
+   */
+  onRenderFrame(): void;
+
   createSprite<T extends Sprite3>(
     AT: { new(...args: any[]): T; }, uri: string, pos: Vector3,
     rm: IRigitModel | undefined,

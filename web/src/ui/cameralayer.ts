@@ -1,6 +1,6 @@
 import { Textures } from "../voxel/textures";
 import { Camera, Clock, Fog, Group, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
-import { LevelEditor } from "./mapeditor";
+import { LevelEditor } from "./leveleditor";
 import { KeyBinder, makeMEvent } from "./keybinder";
 import { UiLayer2, UiLayerProps } from "./uilayer";
 import { WorldCoord3 } from "../voxel/pos3";
@@ -9,6 +9,8 @@ import { vm } from "../engine/ivm";
 import { VRButton } from "./vrbutton";
 import { IVoxelLevel } from "./ivoxelmap";
 import SyncEventSource from "../lib/synceventsource";
+import { ILevelEditor } from "./ileveleditor";
+import { PxSize } from "../posh/pos";
 //import { VRButton } from 'three/addons/webxr/VRButton';
 
 export type CameraLayerProps = UiLayerProps & {
@@ -17,13 +19,13 @@ export type CameraLayerProps = UiLayerProps & {
 
 export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     public renderer!: WebGLRenderer;
-    public camera!: Camera;
+    public camera!: PerspectiveCamera;
     public cameraGroup!: Group;
     public scene!: Scene;
     //private input!: KeyBinder;
 
     public t_start = Date.now();
-    public levelEditor!: LevelEditor;
+    public levelEditor: ILevelEditor | undefined;
 
     public visible_distance = 500; // from player to hide chunks + enemies.
     private selected: Object3D | undefined;
@@ -88,13 +90,12 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
 
         vm.attachCamera(this);
         vm.registerLevelLoaded(this, this.onLevelLoaded.bind(this));
-
-        //setTimeout(() => this.loadMap());
     };
 
     public get canvas(): HTMLDivElement { return this.element as HTMLDivElement; }
     public get position(): Vector3 { return this.cameraGroup.position }
     public set position(pos: Vector3) { this.cameraGroup.position.copy(pos); }
+    public get viewSize(): PxSize { return { w: this.props.w, h: this.props.h } }
 
     public scrollBy(delta: WorldCoord3) {
         this.camera.position.add(new Vector3(delta.x, delta.y, delta.z));
@@ -105,6 +106,10 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
         if (this.vrButton.currentSession !== null) {
             this.xrSessionChangedSource.invoke(this.vrButton.currentSession);
         }
+    }
+
+    public setEditor(editor: ILevelEditor | undefined) {
+        this.levelEditor = editor;
     }
 
     private createCamera(w: number, h: number) {
@@ -137,18 +142,11 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
             return;
         }
 
-        /*
-        this.mapEditor = new MapEditor(
-            this,
-            { w: this.props.w, h: this.props.h },
-            this.scene,
-            this.camera,
-            this.input,
-            this.map);
-*/
+        let wsz = vm.level.worldSize;
+        console.log(`load level: ${wsz.sx} ${wsz.sy}`);
 
         // add geometry covering map on the bottom so we can handle all clicks within map
-        const geometry = new PlaneGeometry(1000, 1000);
+        const geometry = new PlaneGeometry(wsz.sx, wsz.sz);
 
         let plane = new Mesh(geometry, new MeshBasicMaterial({ visible: false }));
         this.scene.add(plane);
@@ -189,7 +187,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     render() {
         //requestAnimationFrame(this.render.bind(this));
 
-        vm.onRender();
+        vm.onRenderFrame();
         this.renderer.render(this.scene, this.camera);
     };
 }

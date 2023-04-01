@@ -1,29 +1,14 @@
 import _ from "lodash";
-import { BufferGeometry, Camera, Line, LineBasicMaterial, Raycaster, Scene, Vector3 } from "three";
-import { ShowKeyBindingsDef } from "../posh/keybindcommands";
+import { BufferGeometry, Camera, Line, LineBasicMaterial, PerspectiveCamera, Raycaster, Scene, Vector3 } from "three";
 import { mapEditorState } from "../posh/mapeditorstate";
 import { PxSize } from "../posh/pos";
-import { IMapEditor as ILevelEditor } from "./imapeditor";
+import { ILevelEditor as ILevelEditor } from "./ileveleditor";
 import { KeyBinder, MEvent } from "./keybinder";
-import { IVoxelLevel, MapBlockCoord } from "./ivoxelmap";
+import { IVoxelLevel, IVoxelLevelFile, MapBlockCoord } from "./ivoxelmap";
 import { BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { ICamera } from "../engine/icamera";
-
-export function addEditorShortcuts(showKeyBindingsDef: ShowKeyBindingsDef) {
-  let editor = 'Editor'
-
-  // we can late bind later... pass name and bind object
-  showKeyBindingsDef.addKeyBinding('C', 'Copy block of tiles to buffer');
-  showKeyBindingsDef.addKeyBinding('V', 'Paste block of tiles from buffer');
-  showKeyBindingsDef.addKeyBinding('X', 'Clear block from layer');
-  showKeyBindingsDef.addKeyBinding('L', 'Fill block of tiles from buffer');
-
-  showKeyBindingsDef.addKeyBinding('A', 'Move camera up');
-  showKeyBindingsDef.addKeyBinding('S', 'Move camera down');
-  showKeyBindingsDef.addKeyBinding('D', 'Move camera right');
-  showKeyBindingsDef.addKeyBinding('W', 'Move camera left');
-}
+import { vm } from "../engine/ivm";
 
 export interface IMapEditorHost {
   //get 
@@ -33,32 +18,22 @@ export interface IMapEditorHost {
 }
 
 export class LevelEditor implements ILevelEditor {
-  private viewSize: PxSize;
-  private camera: Camera;
-  private cameraLayer: ICamera;
-  private scene: Scene;
+  private camera: ICamera;
   private isDown: boolean = false;
-  private map: IVoxelLevel;
+  private level: IVoxelLevelFile;
+  private input: KeyBinder;
   static material = new LineBasicMaterial({ color: 0x0000ff });
 
   private selectedBlock: MapBlockCoord | undefined = undefined;
   private selection: Line | undefined = undefined;
 
   public constructor(
-    cameraLayer: ICamera,
-    viewSize: PxSize,
-    scene: Scene,
-    camera: Camera,
-    input: KeyBinder,
-    map: IVoxelLevel) {
+    camera: ICamera,
+    level: IVoxelLevelFile) {
 
-    mapEditorState.onChanged(this, (evt) => this.onStateChanged())
-
-    this.viewSize = viewSize;
-    this.cameraLayer = cameraLayer;
-    this.map = map;
     this.camera = camera;
-    this.scene = scene;
+
+    this.level = level;
 
     _.bindAll(this, [
       'onCopyBlock',
@@ -67,36 +42,37 @@ export class LevelEditor implements ILevelEditor {
       'onClearBlock',
     ])
 
-    input.registerKeyUp('KeyC', this.onCopyBlock);
-    input.registerKeyUp('KeyV', this.onPasteBlock);
-    input.registerKeyUp('KeyX', this.onClearBlock);
+    this.input = new KeyBinder(this.camera.canvas, undefined, true);
+    this.input.registerKeyUp('KeyC', this.onCopyBlock, 'Copy block to buffer');
+    this.input.registerKeyUp('KeyV', this.onPasteBlock);
+    this.input.registerKeyUp('KeyX', this.onClearBlock);
 
-    input.registerKeyUp('KeyA', () => this.onScroll(0, -1, 0));
-    input.registerKeyUp('KeyS', () => this.onScroll(1, 0, 0));
-    input.registerKeyUp('KeyD', () => this.onScroll(0, 1, 0));
-    input.registerKeyUp('KeyW', () => this.onScroll(-1, 0, 0));
-    input.registerKeyUp('KeyQ', () => this.onScroll(0, 0, 1));
-    input.registerKeyUp('KeyE', () => this.onScroll(0, 0, -1));
+    this.input.registerKeyUp('KeyA', () => this.onScroll(0, -1, 0));
+    this.input.registerKeyUp('KeyS', () => this.onScroll(1, 0, 0));
+    this.input.registerKeyUp('KeyD', () => this.onScroll(0, 1, 0));
+    this.input.registerKeyUp('KeyW', () => this.onScroll(-1, 0, 0));
+    this.input.registerKeyUp('KeyQ', () => this.onScroll(0, 0, 1), 'Move camera up');
+    this.input.registerKeyUp('KeyE', () => this.onScroll(0, 0, -1), 'Move camera down');
   }
 
-  private onStateChanged() {
-
+  public dispose() {
+    this.input.detach();
   }
 
   private onScroll(x: number, y: number, z: number) {
-    this.cameraLayer.scrollBy(this.map.mapPosToWorldPos({ x: x, y: y, z: z }));
+    this.cameraLayer.scrollBy(this.level.blockPosToWorldPos({ x: x, y: y, z: z }));
   }
 
   public onMouseDown(evt: MEvent): boolean {
     let coords = {
-      x: (evt.x / this.viewSize.w) * 2 - 1,
-      y: -(evt.y / this.viewSize.h) * 2 + 1
+      x: (evt.x / this.camera.viewSize.w) * 2 - 1,
+      y: -(evt.y / this.camera.viewSize.h) * 2 + 1
     }
 
     let raycaster = new Raycaster();
-    raycaster.setFromCamera(coords, this.camera);
+    raycaster.setFromCamera(coords, this.camera.camera);
 
-    var intersects = raycaster.intersectObjects(this.scene.children, false);
+    var intersects = raycaster.intersectObjects(this.camera.scene.children, false);
 
     if (intersects.length > 0) {
       this.selectBlockFace(intersects[0].point);
@@ -175,9 +151,9 @@ export class LevelEditor implements ILevelEditor {
     let block = await modelCache.getVoxelModel('./assets/vox/dungeon_entrance.vox');
     let pos = this.selectedBlock.mapPos;
     if (this.selectedBlock.model !== undefined) {
-      this.map.addBlock({ x: pos.x, y: pos.y, z: pos.z + 1 }, block);
+      this.level.addBlock({ x: pos.x, y: pos.y, z: pos.z + 1 }, block);
     } else {
-      this.map.addBlock({ x: pos.x, y: pos.y, z: pos.z }, block);
+      this.level.addBlock({ x: pos.x, y: pos.y, z: pos.z }, block);
     }
 
     return true;
@@ -188,9 +164,9 @@ export class LevelEditor implements ILevelEditor {
       return;
     }
 
-    this.map.deleteBlock(this.selectedBlock);
+    this.level.deleteBlock(this.selectedBlock);
     this.selectedBlock = undefined;
-    this.scene.remove(this.selection!);
+    this.camera.scene.remove(this.selection!);
     this.selection = undefined;
   }
 
@@ -201,24 +177,24 @@ export class LevelEditor implements ILevelEditor {
       point.z = 0;
     }
 
-    block = this.map.findBlock(point);
+    block = this.level.findBlock(point);
     if (block === undefined) {
       return;
     }
 
     // for now select top face and draw rect
     if (this.selection !== undefined) {
-      this.scene.remove(this.selection);
+      this.camera.scene.remove(this.selection);
       this.selection = undefined;
       this.selectedBlock = undefined;
     }
 
-    let pos = this.map.mapPosToWorldPos(block.mapPos);
+    let pos = this.level.blockPosToWorldPos(block.mapPos);
     let size: BlockSize3;
     if (block.model !== undefined) {
-      size = this.map.mapSizeToWorldSize(block.mapSize);
+      size = this.level.blockSizeToWorldSize(block.mapSize);
     } else {
-      size = this.map.mapSizeToWorldSize({ sx: 16, sy: 16, sz: 16 });
+      size = this.level.blockSizeToWorldSize({ sx: 16, sy: 16, sz: 16 });
     }
     this.buildSelectionBox(pos, size);
 
@@ -245,6 +221,6 @@ export class LevelEditor implements ILevelEditor {
     const geometry = new BufferGeometry().setFromPoints(points);
 
     this.selection = new Line(geometry, LevelEditor.material);
-    this.scene.add(this.selection);
+    this.camera.scene.add(this.selection);
   }
 }

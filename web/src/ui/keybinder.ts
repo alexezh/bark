@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { PxPos } from "../posh/pos";
 
 // subset of mouse event; we use it to update things on the fly
@@ -54,6 +55,7 @@ export class WEvent extends MEvent {
 
 type KeyBinding = {
   handler: () => void;
+  help: string | undefined;
 }
 
 // convers press events into map which is more useful for games
@@ -63,9 +65,9 @@ export class KeyBinder {
   private moveKeys: { [id: string]: boolean } = {};
   private keyUpHandlers: { [id: string]: KeyBinding } = {};
   public pressedKeys: any = {};
-  private onInput: () => void;
+  private onInput: (() => void) | undefined;
 
-  public constructor(htmlElem: HTMLElement, onInput: () => void) {
+  public constructor(htmlElem: HTMLElement, onInput: (() => void) | undefined = undefined, attach: boolean = true) {
     this.moveKeys.ArrowLeft = true;
     this.moveKeys.ArrowRight = true;
     this.moveKeys.ArrowUp = true;
@@ -74,9 +76,21 @@ export class KeyBinder {
     this.htmlElem = htmlElem;
     this.onInput = onInput;
 
-    let self = this;
-    htmlElem.addEventListener('keydown', (evt) => self.onKeyDown(evt), false);
-    htmlElem.addEventListener('keyup', (evt) => self.onKeyUp(evt), false);
+    _.bindAll(this, ['onKeyDown', 'onKeyUp']);
+
+    if (attach) {
+      this.attach();
+    }
+  }
+
+  public attach() {
+    this.htmlElem.addEventListener('keydown', this.onKeyDown, false);
+    this.htmlElem.addEventListener('keyup', this.onKeyUp, false);
+  }
+
+  public detach() {
+    this.htmlElem.removeEventListener('keydown', this.onKeyDown);
+    this.htmlElem.removeEventListener('keyup', this.onKeyUp);
   }
 
   private onKeyDown(evt: any) {
@@ -92,7 +106,9 @@ export class KeyBinder {
 
     this.pressedKeys[evt.code] = true;
 
-    this.onInput();
+    if (this.onInput !== undefined) {
+      this.onInput();
+    }
   }
 
   private onKeyUp(evt: any) {
@@ -103,14 +119,16 @@ export class KeyBinder {
       binding.handler();
     }
 
-    this.onInput();
+    if (this.onInput !== undefined) {
+      this.onInput();
+    }
   }
 
-  public registerKeyUp(key: string, func?: () => void) {
-    if (func !== undefined) {
-      this.keyUpHandlers[key] = { handler: func };
-    } else {
-      delete this.keyUpHandlers[key];
-    }
+  public registerKeyUp(key: string, func: () => void, help: string | undefined = undefined) {
+    this.keyUpHandlers[key] = { handler: func, help: help };
+  }
+
+  public unregisterKeyUp(key: string) {
+    delete this.keyUpHandlers[key];
   }
 }

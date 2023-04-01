@@ -64,6 +64,7 @@ export interface IVoxelLevelFile {
 
   load(name: string): Promise<void>;
   getBlockDef(idx: number): FileMapBlockDef | undefined;
+  addBlock(pos: BlockPos3, block: VoxelModel);
 }
 
 export interface IVoxelLevel {
@@ -86,8 +87,8 @@ export interface IVoxelLevel {
 
   // todo: add map objects and sprites here
 
-  mapSizeToWorldSize(gridSize: BlockSize3): WorldSize3;
-  mapPosToWorldPos(gridPos: BlockPos3): WorldCoord3;
+  blockSizeToWorldSize(gridSize: BlockSize3): WorldSize3;
+  blockPosToWorldPos(gridPos: BlockPos3): WorldCoord3;
 
   // intersects sprite with block
   // creates rigit body for each interesecting block

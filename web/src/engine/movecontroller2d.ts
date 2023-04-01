@@ -30,11 +30,13 @@ export class MoveController2D implements IGamePhysicsInputController, IInputCont
   private config: MoveControllerConfig;
   private lastTick: number = 0;
   private timeoutMilliseconds: number = 0;
+  private started: boolean = false;
 
   public constructor(config: MoveControllerConfig) {
     this.config = config;
     this.timeoutMilliseconds = config.timeoutSeconds * 1000;
-    this.input = new KeyBinder(vm.camera.canvas, () => { });
+    // create detached key binder
+    this.input = new KeyBinder(vm.camera.canvas, undefined, false);
     this.lastTick = performance.now();
   }
 
@@ -46,11 +48,32 @@ export class MoveController2D implements IGamePhysicsInputController, IInputCont
       this.attachGamepad();
     }
   }
+
+  start() {
+    if (this.started) {
+      throw new Error('already started');
+    }
+
+    this.input.attach();
+  }
+  stop() {
+    if (!this.started) {
+      return;
+    }
+
+    this.started = false;
+    this.input.detach();
+  }
+
   private onXrInputChanged() {
     this.attachGamepad();
   }
 
   public async readInput(): Promise<any> {
+    if (!this.started) {
+      return undefined;
+    }
+
     let now = performance.now();
     if (this.lastTick + this.timeoutMilliseconds > now) {
       await new Promise(resolve => setTimeout(resolve, now - this.lastTick - this.timeoutMilliseconds));

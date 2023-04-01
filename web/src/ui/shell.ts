@@ -8,9 +8,10 @@ import { CodeEditor } from "./codeeditor";
 import { IGameShell as IGameShell } from "./igameshell";
 import { registerSystemCommands } from "../posh/systemcommands";
 import { decorateCommand } from "../lib/termcolors";
-import { LevelEditor } from "./mapeditor";
+import { LevelEditor } from "./leveleditor";
 import { CameraLayer } from "./cameralayer";
 import { IVoxelLevel } from "./ivoxelmap";
+import { vm } from "../engine/ivm";
 
 //registerRegionCommands();
 registerSystemCommands();
@@ -88,10 +89,6 @@ export class Shell implements IGameShell {
 
   public refresh() {
     //this.camera?.refresh();
-  }
-
-  public editLevel(): void {
-    console.log('editLevel');
   }
 
   public printError(s: string): void {

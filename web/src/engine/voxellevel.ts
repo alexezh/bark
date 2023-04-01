@@ -28,13 +28,12 @@ export class VoxelLevel implements IVoxelLevel {
     public width = 100;
     public height = 100;
     private _blockSize = 16;
-    // Objects loaded 
     private layers: MapLayer[] = [];
 
     public ambient_light!: AmbientLight;
 
     get worldSize(): WorldSize3 {
-
+        return this.blockSizeToWorldSize(this.blockSize);
     }
     get blockSize(): BlockSize3 {
         return { sx: this.width, sy: this.layers.length, sz: this.height }
@@ -112,7 +111,7 @@ export class VoxelLevel implements IVoxelLevel {
         return true;
     }
 
-    public mapSizeToWorldSize(mapSize: BlockSize3): WorldSize3 {
+    public blockSizeToWorldSize(mapSize: BlockSize3): WorldSize3 {
         return {
             sx: mapSize.sx * this._blockSize,
             sy: mapSize.sy * this._blockSize,
@@ -120,7 +119,7 @@ export class VoxelLevel implements IVoxelLevel {
         }
     }
 
-    public mapPosToWorldPos(mapPos: BlockPos3): WorldCoord3 {
+    public blockPosToWorldPos(mapPos: BlockPos3): WorldCoord3 {
         return {
             x: mapPos.x * this._blockSize,
             y: mapPos.y * this._blockSize,

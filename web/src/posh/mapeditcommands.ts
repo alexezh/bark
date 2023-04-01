@@ -1,7 +1,7 @@
 import { Repl } from "./repl";
 import { MapEditorState } from "./mapeditorstate";
 import { BindKeyDef, ShowKeyBindingsDef } from "./keybindcommands";
-import { addEditorShortcuts } from "../ui/mapeditor";
+import { addEditorShortcuts } from "../ui/leveleditor";
 
 export let showKeyBindingsDef: ShowKeyBindingsDef | undefined = undefined;
 
