@@ -68,7 +68,7 @@ module.exports = {
     //    },
     proxy: {
       "/api": {
-        target: 'http://localhost:5082',
+        target: 'http://localhost:5054',
         secure: false,
         changeOrigin: true
       },
@@ -78,7 +78,7 @@ module.exports = {
       //  changeOrigin: true
       //},
       '/updates': {
-        target: 'ws://localhost:5082',
+        target: 'ws://localhost:5054',
         ws: true
       },
     },

@@ -1,6 +1,4 @@
 import { AmbientLight, Mesh, Object3D, PCFSoftShadowMap, PerspectiveCamera, Scene, Vector3, WebGLRenderer, WebGLRenderTarget } from "three";
-import { bytesToBase64 } from "../lib/base64";
-import { encode as PngEncode, ImageData as PngImageData } from 'fast-png';
 
 export class ThumbnailRenderer {
   private renderer!: WebGLRenderer;
@@ -61,9 +59,7 @@ export class ThumbnailRenderer {
 
     let pixels = new Uint8ClampedArray(this.width * this.height * 4);
     this.renderer.readRenderTargetPixels(renderTarget, 0, 0, this.width, this.height, pixels);
-    // const b = new PNG().pack().toBytes();
-    //const b = PngEncode({ width: this.width, height: this.height, data: pixels })
-    //return bytesToBase64(b);
+
     return new ImageData(pixels, this.width, this.height);
   }
 }

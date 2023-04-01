@@ -8,11 +8,13 @@ import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
 import { Vox } from "../voxel/vox";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
 import { VoxelModel, VoxelModelFrame } from "../voxel/voxelmodel";
-import { ImageData as PngImageData } from 'fast-png';
+import { createButton } from "../lib/htmlutils";
+import { encode as PngEncode } from 'fast-png';
 
 type UploadFile = {
+  fn: string;
   vox: ArrayBuffer;
-  png: PngImageData;
+  png: ImageData;
 }
 
 export class UploadVoxAction implements IAction {
@@ -110,13 +112,13 @@ export class UploadVoxAction implements IAction {
         continue;
       }
 
-      uploadFiles.push({ vox: data, png: thumb });
+      uploadFiles.push({ fn: fn, vox: data, png: thumb });
     }
 
     return uploadFiles;
   }
 
-  private async renderThumbnail(vox: Vox, tr: ThumbnailRenderer, data: ArrayBuffer, fn: string): Promise<PngImageData | undefined> {
+  private async renderThumbnail(vox: Vox, tr: ThumbnailRenderer, data: ArrayBuffer, fn: string): Promise<ImageData | undefined> {
     let voxelFile = vox.loadModel(data, fn);
     if (voxelFile === undefined || voxelFile.frames.length === 0) {
       this._bar.displayError('Cannot load model ' + fn);
@@ -147,19 +149,31 @@ export class UploadVoxAction implements IAction {
       let canvas: HTMLCanvasElement = document.createElement('canvas');
       let ctx = canvas.getContext("2d");
       ctx?.drawImage(bitmap, 0, 0);
-      this.parent.appendChild(canvas);
+      d.appendChild(canvas);
     }
 
+    let upload = createButton(d, 'Upload', () => { this.upload(uploadFiles); });
+
     this._bar.openDetailsPane(d);
+  }
+
+  private async upload(uploadFiles: UploadFile[]) {
+
+    let wireFiles: WireString[] = [];
+    for (let file of uploadFiles) {
+      let dataStr = bytesToBase64(file.vox as Uint8Array);
+      wireFiles.push({ key: 'vox/' + file.fn, data: dataStr });
+
+      let thumbName = file.fn.replace('.vox', '.png');
+
+      // const b = new PNG().pack().toBytes();
+      const png = PngEncode({ width: file.png.width, height: file.png.height, data: file.png.data })
+      let pngStr = bytesToBase64(png);
+
+      wireFiles.push({ key: 'thumpnail/' + thumbName, data: pngStr });
+    }
 
     await wireSetStrings(wireFiles);
-
-    let dataStr = bytesToBase64(data as Uint8Array);
-    wireFiles.push({ key: 'vox/' + fn, data: dataStr });
-
-    let thumbName = fn.replace('.vox', '.png');
-    wireFiles.push({ key: 'vox/' + thumbName, data: thumb });
-
-
   }
 }
+
