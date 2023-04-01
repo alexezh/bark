@@ -4,7 +4,7 @@ const path = require('path');
 
 module.exports = {
   mode: 'development',
-  entry: './src/index.ts',
+  entry: './src/digruntime.ts',
   devtool: 'inline-source-map',
   module: {
     rules: [
@@ -45,7 +45,7 @@ module.exports = {
     extensions: ['.tsx', '.ts', '.js', '.peggjs', '.json'],
   },
   output: {
-    filename: 'index.js',
+    filename: 'digruntime.js',
     path: path.resolve(__dirname, 'public'),
     library: {
       name: "pokman",
@@ -54,7 +54,7 @@ module.exports = {
   },
   plugins: [
     new TypescriptDeclarationPlugin({
-      out: `index.d.ts`,
+      out: `digruntime.d.ts`,
     })
   ],
   devServer: {

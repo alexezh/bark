@@ -1,12 +1,10 @@
 import { CommandBar } from "../actions/commandBar";
-import { Repl } from "../posh/repl";
 import { UiCompositor2 } from "./uicompositor";
 import { createMapEditorState, mapEditorState } from "../posh/mapeditorstate";
 import { CodeEditor } from "./codeeditor";
 import { IGameShell as IGameShell } from "./igameshell";
 import { registerSystemCommands } from "../posh/systemcommands";
 import { decorateCommand } from "../lib/termcolors";
-import { LevelEditor } from "./leveleditor";
 import { CameraLayer } from "./cameralayer";
 import { IVoxelLevel } from "./ivoxelmap";
 
@@ -38,9 +36,7 @@ export class Shell implements IGameShell {
   private compositor2: UiCompositor2;
   private props: ShellProps;
   private barLayer: CommandBar;
-  private mapEditor?: LevelEditor;
   private codeEditor?: CodeEditor;
-  private repl: Repl;
 
   public constructor(gameContainer: HTMLDivElement) {
     this.container = gameContainer;
@@ -50,7 +46,6 @@ export class Shell implements IGameShell {
     this.props.scale = 1; // window.devicePixelRatio;
     this.props.canvasWidth = this.props.width / this.props.scale;
     this.props.canvasHeight = this.props.height / this.props.scale;
-    this.repl = new Repl();
 
     createMapEditorState();
     mapEditorState.onChanged(this, (evt) => this.refresh());

@@ -26,11 +26,11 @@
     "noEmit": false,
   },
   "types": [
-    "babylonjs",
     "codeflask"
   ],
   "include": [
-    "src/**/*.ts", "src/ui/vrbutton.ts",
+    "src/**/*.ts",
+    "src/ui/vrbutton.ts",
   ],
   "exclude": [
     "./out.d.ts",
