@@ -31,11 +31,11 @@ export function makeVoxelPoint(buffer: Uint8Array, i: number): VoxelPoint {
 }
 
 export class VoxelModel {
-  public id: string;
+  public uri: string;
   public frames: VoxelModelFrame[] = [];
 
-  public constructor(id: string) {
-    this.id = id;
+  public constructor(uri: string) {
+    this.uri = uri;
   }
 
   public get size(): Vector3 {

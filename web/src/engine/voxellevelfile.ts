@@ -1,7 +1,8 @@
 import { Vector3 } from "three";
 import { wireGetArrayRange, wireGetObject, wireSetObjectBackground } from "../lib/fetchadapter";
-import { FileMapBlock, FileMapBlockDef, IVoxelLevelFile, WireCamera, WireLevelInfo } from "../ui/ivoxelmap";
-import { BlockSize3, WorldSize3 } from "../voxel/pos3";
+import { FileMapBlock, FileMapBlockDef, IVoxelLevelFile, MapBlockCoord, WireCamera, WireLevelInfo } from "../ui/ivoxelmap";
+import { BlockPos3, BlockSize3, WorldSize3 } from "../voxel/pos3";
+import { VoxelModel } from "../voxel/voxelmodel";
 
 export class VoxelLevelFile implements IVoxelLevelFile {
   private _cameraPosition: Vector3 = new Vector3();
@@ -9,9 +10,11 @@ export class VoxelLevelFile implements IVoxelLevelFile {
   private _mapSize: WorldSize3 = { sx: 0, sy: 0, sz: 0 };
   private _zStride: number = 0;
   private _yStride: number = 0;
+  private _blockDefsByUri: Map<string, FileMapBlockDef> = new Map<string, FileMapBlockDef>;
   private _blockDefs: Map<number, FileMapBlockDef> = new Map<number, FileMapBlockDef>;
   private _blocks: Map<number, FileMapBlock> = new Map<number, FileMapBlock>();
   private _url: string;
+  private _nextBlockId: number = 1;
   private onChangeCamera: (() => void) | undefined;
   private onChangeBlock: ((blocks: FileMapBlock[]) => void) | undefined;
 
@@ -80,6 +83,40 @@ export class VoxelLevelFile implements IVoxelLevelFile {
   getBlockDef(blockId: number): FileMapBlockDef | undefined {
     let def = this._blockDefs.get(blockId);
     return def;
+  }
+
+  deleteBlock(block: MapBlockCoord) {
+
+  }
+
+  addBlock(pos: BlockPos3, block: VoxelModel) {
+    let key = this.getBlockKey(pos.x, pos.y, pos.z);
+    let def = this._blockDefsByUri.get(block.uri);
+    if (def === undefined) {
+      def = {
+        uri: block.uri,
+        blockId: this.createBlockId()
+      }
+      this._blockDefsByUri.set(block.uri, def);
+      this._blockDefs.set(def.blockId, def);
+    }
+
+    let fb: FileMapBlock = {
+      blockId: def.blockId,
+      x: pos.x,
+      y: pos.y,
+      z: pos.z
+    }
+
+    this._blocks.set(key, fb);
+
+    if (this.onChangeBlock !== undefined) {
+      this.onChangeBlock([fb]);
+    }
+  }
+
+  private createBlockId(): number {
+    return this._nextBlockId++;
   }
 
   private getBlockKey(x: number, y: number, z: number): number {

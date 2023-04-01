@@ -64,6 +64,7 @@ export interface IVoxelLevelFile {
 
   load(name: string): Promise<void>;
   getBlockDef(idx: number): FileMapBlockDef | undefined;
+  deleteBlock(block: MapBlockCoord);
   addBlock(pos: BlockPos3, block: VoxelModel);
 }
 
