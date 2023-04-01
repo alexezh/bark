@@ -5,6 +5,13 @@ export function setElementVisible(elem: HTMLElement | undefined, val: boolean) {
   elem.style.visibility = (val) ? 'visible' : 'hidden';
 }
 
+export function setElementDisplay(elem: HTMLElement | undefined, val: boolean) {
+  if (elem === undefined) {
+    return;
+  }
+  elem.style.display = (val) ? 'block' : 'none';
+}
+
 export function createTextDiv(): [HTMLDivElement, HTMLSpanElement] {
   let d = document.createElement('div');
   let s = document.createElement('span');
@@ -36,22 +43,32 @@ export function createCommandButton(parent: HTMLElement, text: string, handler: 
   return button;
 }
 
+/**
+ * 
+<div class="inputContainer">
+    <label>testy test test</label>
+    <div><input /></div>
+</div>
+ */
 export function createTextEntry(
   parent: HTMLElement,
   text: string,
   value: any,
   handler: (val: string) => any): HTMLDivElement {
 
-  let d = document.createElement('span') as HTMLDivElement;
+  let d = document.createElement('div') as HTMLDivElement;
+  d.className = 'inputContainer'
   let l = document.createElement('label') as HTMLLabelElement;
   l.textContent = text;
 
+  let d2 = document.createElement('div') as HTMLDivElement;
   let i = document.createElement('input') as HTMLInputElement;
   i.type = 'number';
   i.maxLength = 5;
   i.value = value;
 
   d.appendChild(l);
+  d2.appendChild(i);
   d.appendChild(i);
 
   i.addEventListener('input', () => handler(i.value));

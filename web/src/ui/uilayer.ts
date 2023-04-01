@@ -33,18 +33,20 @@ export class UiLayer2<T extends UiLayerProps> implements IUiLayer2 {
   protected _compositor: IUiCompositor | undefined;
   private _onFocusOut?: () => void;
 
-  public constructor(props: T, element: HTMLElement) {
+  public constructor(props: T, element: HTMLElement, attachMouse: boolean = true) {
     this.props = props;
     this._element = element;
 
     element.id = props.id;
     this.updateElementSize();
 
-    let self = this;
-    element.addEventListener('mousedown', (evt) => self.onMouseDown(evt), false);
-    element.addEventListener('mouseup', (evt) => self.onMouseUp(evt), false);
-    element.addEventListener('mousemove', (evt) => self.onMouseMove(evt), false);
-    element.addEventListener('wheel', (evt) => self.onWheel(evt), false);
+    if (attachMouse) {
+      let self = this;
+      element.addEventListener('mousedown', (evt) => self.onMouseDown(evt), false);
+      element.addEventListener('mouseup', (evt) => self.onMouseUp(evt), false);
+      element.addEventListener('mousemove', (evt) => self.onMouseMove(evt), false);
+      element.addEventListener('wheel', (evt) => self.onWheel(evt), false);
+    }
 
     // update initial visibility
     this.visible = (props.visible !== undefined && props.visible === true);

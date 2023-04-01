@@ -94,8 +94,8 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     };
 
     public get canvas(): HTMLDivElement { return this.element as HTMLDivElement; }
-    public get position(): Vector3 { return this.camera.position }
-    public set position(pos: Vector3) { this.camera.position.copy(pos); }
+    public get position(): Vector3 { return this.cameraGroup.position }
+    public set position(pos: Vector3) { this.cameraGroup.position.copy(pos); }
 
     public scrollBy(delta: WorldCoord3) {
         this.camera.position.add(new Vector3(delta.x, delta.y, delta.z));

@@ -75,16 +75,47 @@
 
     .barLayer {
         position: absolute;
-        background: transparent;
         display: flex;
         flex-direction: row;
         top: 0;
         left: 0;
     }
 
-    .commandPalette {
+    .inputContainer {
+        width: 300px;
+        border: 1px dashed rgb(14, 26, 197)
+    }
+
+    .inputContainer label {
+        float: left;
+        margin-right: 5px;
+        background: #ccc
+    }
+
+    .inputContainer div {
+        overflow: hidden;
+    }
+
+    .inputContainer input {
+        width: 100%;
+        max-width: 100px;
+        -moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        display: block
+    }
+
+    .commandFloatie {
         opacity: 1.0;
         background: rgb(219, 210, 210);
+        display: flex;
+        flex-direction: column;
+        top: 0;
+        left: 0;
+    }
+
+    .commandList {
+        opacity: 1.0;
         display: flex;
         flex-direction: row;
         top: 0;
@@ -92,12 +123,10 @@
     }
 
     .commandPane {
-        background: rgb(219, 210, 210);
         display: flex;
         flex-direction: row;
         top: 0;
         left: 0;
-        pointer-events: none;
     }
 
     .commandButton {
@@ -154,9 +183,7 @@
         display: inline-block;
     }
 </style>
-<link rel="stylesheet" href="./xterm.css" />
 <link rel="stylesheet" href="./nes-core.css" />
-<script src="./xterm.js"></script>
 <script src="./index.js"></script>
 <script>
     function onLoaded() {

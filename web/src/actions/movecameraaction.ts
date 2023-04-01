@@ -1,7 +1,7 @@
 import { Vector3 } from "three";
 import { vm } from "../engine/ivm";
 import { ICommandBar } from "../ui/commandBar"
-import { createButton, createCommandButton, createTextEntry } from "../ui/htmlutils";
+import { createButton, createCommandButton, createTextEntry } from "../lib/htmlutils";
 import { IAction } from "../ui/iaction"
 
 export class MoveCameraAction implements IAction {

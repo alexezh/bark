@@ -24,8 +24,6 @@ export type MoveControllerConfig = {
 
 // handles ASDW and arrows
 export class MoveController2D implements IGamePhysicsInputController, IInputController {
-  private pending: ((action: IMoveEvent2D) => void) | undefined = undefined;
-  private lastEvent: MoveEvent2D = new MoveEvent2D();
   private input: KeyBinder;
   private xrSession: XRSession | undefined;
   private gamePads: Gamepad[] = [];

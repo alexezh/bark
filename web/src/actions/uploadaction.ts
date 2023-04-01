@@ -8,6 +8,12 @@ import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
 import { Vox } from "../voxel/vox";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
 import { VoxelModel, VoxelModelFrame } from "../voxel/voxelmodel";
+import { ImageData as PngImageData } from 'fast-png';
+
+type UploadFile = {
+  vox: ArrayBuffer;
+  png: PngImageData;
+}
 
 export class UploadVoxAction implements IAction {
   private static _nextId: number = 1;
@@ -82,32 +88,35 @@ export class UploadVoxAction implements IAction {
       }
     }
 
+    let uploadFiles = await this.loadVox(this._inputElem!.files);
+    this.displayPane(uploadFiles);
+  }
+
+  private async loadVox(files: FileList): Promise<UploadFile[]> {
     let vox = new Vox();
     let tr = new ThumbnailRenderer(128, 128);
-    let wireFiles: WireString[] = [];
-    for (let f of this._inputElem!.files) {
+    let uploadFiles: UploadFile[] = [];
+    for (let f of files) {
       let data = await f.arrayBuffer();
       let fn = f.name;
       if (!fn.endsWith('.vox')) {
-        return;
+        console.log('file is not vox');
+        continue;
       }
 
       let thumb = await this.renderThumbnail(vox, tr, data, fn);
       if (thumb === undefined) {
-        return;
+        console.log('cannot render thumbnail');
+        continue;
       }
 
-      let dataStr = bytesToBase64(data as Uint8Array);
-      wireFiles.push({ key: 'vox/' + fn, data: dataStr });
-
-      let thumbName = fn.replace('.vox', '.png');
-      wireFiles.push({ key: 'vox/' + thumbName, data: thumb });
+      uploadFiles.push({ vox: data, png: thumb });
     }
 
-    await wireSetStrings(wireFiles);
+    return uploadFiles;
   }
 
-  async renderThumbnail(vox: Vox, tr: ThumbnailRenderer, data: ArrayBuffer, fn: string): Promise<string | undefined> {
+  private async renderThumbnail(vox: Vox, tr: ThumbnailRenderer, data: ArrayBuffer, fn: string): Promise<PngImageData | undefined> {
     let voxelFile = vox.loadModel(data, fn);
     if (voxelFile === undefined || voxelFile.frames.length === 0) {
       this._bar.displayError('Cannot load model ' + fn);
@@ -123,13 +132,34 @@ export class UploadVoxAction implements IAction {
     mm.geometry.center();
 
     let imageData = tr.render(mm);
-    let bitmap = await createImageBitmap(imageData);
 
-    let canvas: HTMLCanvasElement = document.createElement('canvas');
-    let ctx = canvas.getContext("2d");
-    ctx?.drawImage(bitmap, 0, 0);
-    this.parent.appendChild(canvas);
+    return imageData;
+  }
 
-    return '';
+  private async displayPane(uploadFiles: UploadFile[]) {
+
+    let d = document.createElement('div');
+    d.className = 'commandPane';
+
+    for (let file of uploadFiles) {
+      let bitmap = await createImageBitmap(file.png);
+
+      let canvas: HTMLCanvasElement = document.createElement('canvas');
+      let ctx = canvas.getContext("2d");
+      ctx?.drawImage(bitmap, 0, 0);
+      this.parent.appendChild(canvas);
+    }
+
+    this._bar.openDetailsPane(d);
+
+    await wireSetStrings(wireFiles);
+
+    let dataStr = bytesToBase64(data as Uint8Array);
+    wireFiles.push({ key: 'vox/' + fn, data: dataStr });
+
+    let thumbName = fn.replace('.vox', '.png');
+    wireFiles.push({ key: 'vox/' + thumbName, data: thumb });
+
+
   }
 }

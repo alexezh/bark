@@ -1,7 +1,7 @@
 import { UiLayer2, UiLayerProps } from "./uilayer";
 import { KeyBinder } from "./keybinder";
 import CodeFlask from 'codeflask';
-import { createButton, setElementVisible } from "./htmlutils";
+import { createButton, setElementVisible } from "../lib/htmlutils";
 
 export type CodeEditorProps = UiLayerProps & {
 }
