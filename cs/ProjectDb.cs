@@ -1,11 +1,24 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
+
+public static class PasswordHash
+{
+  public static string Compute(byte[] seed, string pwd)
+  {
+    var pwdData = Encoding.UTF8.GetBytes(pwd);
+
+    var hash = Rfc2898DeriveBytes.Pbkdf2(pwdData, seed, 20, HashAlgorithmName.SHA256, 32);
+    return Convert.ToBase64String(hash);
+  }
+}
 
 public class ProjectDbStatics
 {
   private static string GetDbPath(string id)
   {
-    return $"barkdata{id}.db";
+    return $"data/bark_{id}.db";
   }
 
   public static SqliteConnection CreateConnection(string id)
@@ -45,6 +58,7 @@ public class ProjectDbStatics
     }
   }
 
+
   private static JsonSerializerOptions jsonOptions = new JsonSerializerOptions()
   {
     DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
@@ -62,6 +76,92 @@ public class ProjectDbStatics
   }
 }
 
+public class UserDbStatics
+{
+  private static string GetDbPath()
+  {
+    return $"data/users.db";
+  }
+
+  public static SqliteConnection CreateConnection()
+  {
+    return new SqliteConnection($"Data Source={GetDbPath()}");
+  }
+
+  public static bool Exists(string id)
+  {
+    return File.Exists(GetDbPath());
+  }
+
+  public static void CreateUserDb()
+  {
+    using (var connection = CreateConnection())
+    {
+      connection.Open();
+
+      {
+        var command = connection.CreateCommand();
+        command.CommandText = "CREATE TABLE IF NOT EXISTS Users (id TEXT, seed TEXT, pwd TEXT);";
+        using (var reader = command.ExecuteReader())
+        {
+          // TODO: check error
+        }
+      }
+
+      {
+        var command = connection.CreateCommand();
+        command.CommandText = "CREATE UNIQUE INDEX IF NOT EXISTS `UsersU` ON `Users` (`id` ASC);";
+        using (var reader = command.ExecuteReader())
+        {
+          // TODO: check error
+        }
+      }
+
+      {
+        var command = connection.CreateCommand();
+        command.CommandText = "CREATE TABLE IF NOT EXISTS Sessions (id TEXT, userId TEXT);";
+        using (var reader = command.ExecuteReader())
+        {
+          // TODO: check error
+        }
+      }
+
+      {
+        var command = connection.CreateCommand();
+        command.CommandText = "CREATE UNIQUE INDEX IF NOT EXISTS `SessionsU` ON `Sessions` (`id` ASC);";
+        using (var reader = command.ExecuteReader())
+        {
+          // TODO: check error
+        }
+      }
+    }
+  }
+
+  public static void AddUser(string id, string pwd)
+  {
+    var seed = RandomNumberGenerator.GetBytes(32);
+    var seed64 = Convert.ToBase64String(seed);
+    var hash = PasswordHash.Compute(seed, pwd);
+
+    using (var connection = CreateConnection())
+    {
+      connection.Open();
+
+      var command = connection.CreateCommand();
+      command.CommandText = "INSERT INTO Users(id, seed, pwd) VALUES($id, $seed, $pwd)";
+      command.Parameters.AddWithValue("$id", id);
+      command.Parameters.AddWithValue("$seed", seed64);
+      command.Parameters.AddWithValue("$pwd", hash);
+
+      var inserted = command.ExecuteNonQuery();
+      if (inserted != 1)
+      {
+        throw new ArgumentException("Cannot insert");
+      }
+    }
+  }
+}
+
 public class EntityDb
 {
   private SqliteConnection _connection;
@@ -73,20 +173,6 @@ public class EntityDb
     _connection = ProjectDbStatics.CreateConnection(id);
     _connection.Open();
   }
-
-  public void SetWorldProp(string id)
-  {
-    var command = _connection.CreateCommand();
-    command.CommandText = "INSERT INTO Project(id) VALUES($id)";
-    command.Parameters.AddWithValue("$id", id);
-
-    var inserted = command.ExecuteNonQuery();
-    if (inserted != 1)
-    {
-      throw new ArgumentException("Cannot insert");
-    }
-  }
-
 
   public void InsertEntity<T>(string kind, string id, T content) where T : class
   {

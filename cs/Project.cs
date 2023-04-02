@@ -1,3 +1,15 @@
+public class WireLoginRequest
+{
+  public string name { get; set; }
+  public string pwd { get; set; }
+}
+
+public class WireLoginResponse
+{
+  public string url { get; set; }
+  public string session { get; set; }
+}
+
 public class WireGetStringsRequest
 {
   public string pattern { get; set; }

@@ -25,6 +25,8 @@ public class ProjectCollection
       return;
     }
 
+    UserDbStatics.CreateUserDb();
+
     // first create DB
     ProjectDbStatics.CreateProject(DemoProjectId);
     _projects.Add(DemoProjectId, Project.Load(DemoProjectId));

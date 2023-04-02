@@ -1,10 +1,7 @@
 var builder = WebApplication.CreateBuilder(args);
 
-
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
-
-//builder.Services.AddLettuceEncrypt().PersistDataToDirectory(new DirectoryInfo("~/LettuceEncrypt/"), "DigJsBark");
 
 var app = builder.Build();
 
@@ -28,6 +25,10 @@ app.UseAuthorization();
 //app.MapControllerRoute(
 //    name: "default",
 //    pattern: "{controller=ProjectList}/{action=ListProjects}");
+
+app.MapControllerRoute(
+    name: "login",
+    pattern: "/api/{controller=Login}");
 
 app.MapControllerRoute(
     name: "createProject",
