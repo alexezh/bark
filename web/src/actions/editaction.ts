@@ -15,7 +15,7 @@ export class EditLevelAction extends CommandAction {
   get tags(): string[] { return ['level', 'edit', 'level'] }
 
   protected onClick() {
-
+    vm.editLevel();
   }
 }
 
@@ -23,8 +23,7 @@ export class EditBlockAction extends CommandAction {
   get name(): string { return 'EditVox'; }
   get tags(): string[] { return ['edit', 'block', 'vox'] }
 
-  protected onClick() {
-    vm.editLevel();
+  protected override onClick() {
   }
 }
 

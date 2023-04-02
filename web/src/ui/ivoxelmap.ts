@@ -62,8 +62,7 @@ export interface IVoxelLevelFile {
   registerOnChangeCamera(func: () => void);
   registerOnChangeBlock(func: (blocks: FileMapBlock[]) => void);
 
-  load(name: string): Promise<void>;
-  getBlockDef(idx: number): FileMapBlockDef | undefined;
+  load(isTest: boolean): Promise<void>;
   deleteBlock(block: MapBlockCoord);
   addBlock(pos: BlockPos3, block: VoxelModel);
 }

@@ -57,6 +57,7 @@ export class MoveController2D implements IGamePhysicsInputController, IInputCont
     this.started = true;
     this.input.attach();
   }
+
   stop() {
     if (!this.started) {
       return;

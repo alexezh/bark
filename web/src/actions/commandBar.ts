@@ -3,7 +3,7 @@ import { createButton, setElementDisplay, setElementVisible } from "../lib/htmlu
 import { IAction } from "../ui/iaction";
 import { ShellProps } from "../ui/shell";
 import { UiLayer2, UiLayerProps } from "../ui/uilayer";
-import { UploadVoxAction } from "./uploadaction";
+import { ImportVoxAction } from "./importaction";
 import { MoveCameraAction } from "./movecameraaction";
 import { EditBlockAction, EditCodeAction, EditLevelAction } from "./editaction";
 
@@ -91,7 +91,7 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
     this._commandList = new CommandList(this.props);
 
     // make list of possible actions
-    this._commandList.registerAction(new UploadVoxAction(this));
+    this._commandList.registerAction(new ImportVoxAction(this));
     this._commandList.registerAction(new MoveCameraAction(this));
     this._commandList.registerAction(new EditLevelAction());
     this._commandList.registerAction(new EditBlockAction());

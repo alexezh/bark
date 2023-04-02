@@ -98,15 +98,23 @@ export class VoxelLevel implements IVoxelLevel {
     public async load(): Promise<boolean> {
         this.layers.push(new MapLayer(defaultMaterial, 0, this._blockSize));
 
-        //let mapData = await wireGetArrayRange('level', 0, -1);
-        //if (mapData === undefined) {
-        let ground = await modelCache.getVoxelModel('./assets/vox/ground.vox');
-        this.layers[0].fill(ground);
-        //} else {
+        await this.file.load(true);
 
-        //}
+        this.width = this.file.mapSize.sx;
+        this.height = this.file.mapSize.sz;
 
-        this.layers[0].build();
+        for (let fbitem of this.file.blocks) {
+            let fb = fbitem[1];
+            let block = await modelCache.getVoxelModelById(fb.blockId);
+            if (block !== undefined) {
+                this.addBlockCore(fb, block);
+            }
+        }
+
+        for (let i = 0; i < this.layers.length; i++) {
+            this.layers[i].build();
+        }
+
         return true;
     }
 
@@ -145,15 +153,27 @@ export class VoxelLevel implements IVoxelLevel {
         return this.layers[layerIdx].findBlock(point);
     }
 
-    public deleteBlock(block: MapBlockCoord) {
+    private deleteBlockCore(block: MapBlockCoord): MapLayer {
         let layer = this.layers[block.mapPos.y];
         this.scene.remove(layer.staticMesh);
         layer.deleteBlock(block);
+        return layer;
+    }
+
+    private deleteBlockByCoord(x: number, y: number, z: number): MapLayer {
+        let layer = this.layers[y];
+        this.scene.remove(layer.staticMesh);
+        layer.deleteBlockByCoord(x, z);
+        return layer;
+    }
+
+    public deleteBlock(block: MapBlockCoord) {
+        let layer = this.deleteBlockCore(block);
         layer.build();
         this.scene.add(layer.staticMesh);
     }
 
-    public addBlock(pos: BlockPos3, block: VoxelModel) {
+    private addBlockCore(pos: BlockPos3, block: VoxelModel): MapLayer {
         if (pos.y >= this.layers.length) {
             for (let i = this.layers.length - 1; i < pos.y; i++) {
                 let layer = new MapLayer(defaultMaterial, this.layers.length, this._blockSize);
@@ -164,6 +184,11 @@ export class VoxelLevel implements IVoxelLevel {
 
         let layer: MapLayer = this.layers[pos.y];
         layer.addBlock(pos, block);
+        return layer;
+    }
+
+    public addBlock(pos: BlockPos3, block: VoxelModel) {
+        let layer = this.addBlockCore(pos, block);
 
         this.scene.remove(layer.staticMesh);
         layer.build();
@@ -212,7 +237,26 @@ export class VoxelLevel implements IVoxelLevel {
     }
 
     private onFileChangeBlock(blocks: FileMapBlock[]) {
-        console.log('block changed');
+        for (let i = 0; i < blocks.length; i++) {
+            let fb = blocks[i];
+            if (fb.blockId !== 0) {
+                let block = modelCache.getVoxelModelById(fb.blockId);
+                if (block !== undefined) {
+                    this.addBlockCore(fb, block);
+                }
+            } else {
+                this.deleteBlockByCoord(fb.x, fb.y, fb.z);
+            }
+        }
+
+        for (let i = 0; i < this.layers.length; i++) {
+            let layer = this.layers[i];
+            if (layer.dirty) {
+                this.scene.remove(layer.staticMesh);
+                layer.build();
+                this.scene.add(layer.staticMesh);
+            }
+        }
     }
 };
 

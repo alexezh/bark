@@ -17,7 +17,7 @@ type UploadFile = {
   png: ImageData;
 }
 
-export class UploadVoxAction implements IAction {
+export class ImportVoxAction implements IAction {
   private static _nextId: number = 1;
   private _id: number;
   private _element: HTMLDivElement | undefined;
@@ -25,14 +25,13 @@ export class UploadVoxAction implements IAction {
   private _bar: ICommandBar;
   private parent!: HTMLElement;
 
-  get tags(): string[] { return ['upload', 'vox', 'block'] }
+  get tags(): string[] { return ['import', 'upload', 'vox', 'block'] }
+  public get name(): string { return 'Import Vox' }
 
   public constructor(bar: ICommandBar) {
-    this._id = UploadVoxAction._nextId++;
+    this._id = ImportVoxAction._nextId++;
     this._bar = bar;
   }
-
-  public get name(): string { return 'Upload' }
 
   public renderButton(parent: HTMLElement) {
     this.parent = parent;

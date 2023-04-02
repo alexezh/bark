@@ -12,6 +12,7 @@ export class MapLayer {
   private _mesh!: Mesh;
   private geometry!: BufferGeometry;
   private material: MeshPhongMaterial;
+  public dirty: boolean = true;
 
   // Z coordinate of layer in pixels
   public readonly layerY: number;
@@ -53,6 +54,7 @@ export class MapLayer {
 
     this.geometry = writer.getGeometry();
     this._mesh = new Mesh(this.geometry, this.material);
+    this.dirty = false;
   }
 
   // the tricky part is boundaries
@@ -81,6 +83,12 @@ export class MapLayer {
 
   public deleteBlock(block: MapBlockCoord) {
     this.blocks[block.idx] = undefined;
+    this.dirty = true;
+  }
+
+  public deleteBlockByCoord(x: number, z: number) {
+    this.blocks[z * this.size.w + x] = undefined;
+    this.dirty = true;
   }
 
   public getBlock(xMap: number, zMap: number): MapBlockCoord | undefined {
@@ -108,6 +116,7 @@ export class MapLayer {
   public addBlock(pos: BlockPos3, block: VoxelModel) {
     let idx = pos.z * this.size.w + pos.x;
     this.blocks[idx] = { model: block, frame: 0, topmost: false };
+    this.dirty = true;
   }
 }
 
