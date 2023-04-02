@@ -13,14 +13,13 @@ const demoWorldId = "7fa84179-dc58-4939-8678-03370fd137f3";
 export class GameApp {
   private gameContainer: HTMLDivElement | undefined;
 
-  public initializeApp(session: string | undefined, gameContainer: HTMLDivElement) {
+  public initializeApp(gameContainer: HTMLDivElement) {
 
     // first set session id
-    if (session === undefined) {
-      let account = window.localStorage.getItem('account');
-      if (account !== null && account !== undefined) {
-        session = JSON.parse(account).session;
-      }
+    let account = window.localStorage.getItem('account');
+    let session: string | undefined = undefined;
+    if (account !== null && account !== undefined) {
+      session = JSON.parse(account).session;
     }
     if (session === undefined) {
       throw new Error('Not logged in');
