@@ -3,6 +3,7 @@ import { setShell, shell } from "./ui/igameshell";
 import { createVM } from "./engine/vm";
 import { vm } from "./engine/ivm";
 import { BoxedGame } from "./python";
+import { setSessionId } from "./lib/fetchadapter";
 
 const demoWorldId = "7fa84179-dc58-4939-8678-03370fd137f3";
 
@@ -12,7 +13,21 @@ const demoWorldId = "7fa84179-dc58-4939-8678-03370fd137f3";
 export class GameApp {
   private gameContainer: HTMLDivElement | undefined;
 
-  public initializeApp(gameContainer: HTMLDivElement) {
+  public initializeApp(session: string | undefined, gameContainer: HTMLDivElement) {
+
+    // first set session id
+    if (session === undefined) {
+      let account = window.localStorage.getItem('account');
+      if (account !== null && account !== undefined) {
+        session = JSON.parse(account).session;
+      }
+    }
+    if (session === undefined) {
+      throw new Error('Not logged in');
+    }
+    setSessionId(session);
+
+    // now start initialization
     window.onresize = () => this.resizeCanvas();
 
     this.gameContainer = gameContainer;

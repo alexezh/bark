@@ -78,8 +78,41 @@
     }
 </style>
 <script>
+    function saveAccount(url, session) {
+        let account = {
+            session: session,
+            url: url
+        }
+        window.localStorage.setItem('account', JSON.stringify(account));
+    }
+
+    function loadAccount() {
+        let accountStr = window.localStorage.getItem('account');
+        if (accountStr === undefined || accountStr === null) {
+            return undefined;
+        }
+
+        let account = JSON.parse(accountStr);
+        if (account.url === undefined || account.session === undefined) {
+            return undefined;
+        }
+
+        return account;
+    }
+
+    function onLoad() {
+        let account = loadAccount();
+        if (account !== undefined) {
+            redirectToAccount(account.url, account.session);
+        }
+    }
+
+    function redirectToAccount(url) {
+        location.href = url;
+    }
+
     async function onLoginClick() {
-        console.log("login");
+        console.log("login click");
         let name = document.getElementById("userName");
         let pwd = document.getElementById("pwd");
 
@@ -87,7 +120,6 @@
     }
 
     async function login(name, pwd) {
-
         let req = {
             name: name,
             pwd: pwd
@@ -98,7 +130,8 @@
             let response = await (await fetch(`/api/login`, { method: "POST", headers: { "accept": "application/json" }, body: reqStr })).json();
 
             if (response.url !== undefined) {
-                location.href = response.url;
+                saveAccount(response.url, response.session);
+                redirectToAccount(response.url);
             } else {
                 return 'Login failed; try again';
             }
@@ -109,7 +142,7 @@
     }
 </script>
 
-<body id="body" scrolling="no">
+<body id="body" scrolling="no" onload="onLoad()">
     <div height=" 100%" width="100%">
         <div class="center-screen">
             <div class="input-container">
@@ -123,7 +156,7 @@
                     <input id="pwd" class="value" type="password"></input>
                 </div>
                 <div class="input-row">
-                    <button class="login" onclick="login()">Login</button>
+                    <button class="login" onclick="onLoginClick()">Login</button>
                 </div>
             </div>
         </div>

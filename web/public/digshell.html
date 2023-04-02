@@ -184,13 +184,13 @@
   }
 </style>
 <link rel="stylesheet" href="./nes-core.css" />
-<script src="./index.js"></script>
+<script src="./digruntime.js"></script>
 <script>
   function onLoaded() {
+    let params = new URLSearchParams(document.location.search);
+    let session = params.get("session");
     const gameContainer = document.getElementById('gameContainer');
-    //pokman.initGame(gameContainer);
-    //pokman.gameApp.setContainer(gameContainer);
-    pokman.gameApp.initializeApp(gameContainer);
+    pokman.gameApp.initializeApp(session, gameContainer);
   }
 </script>
 
