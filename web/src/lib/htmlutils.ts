@@ -53,8 +53,37 @@ export function createCommandButton(parent: HTMLElement, text: string, handler: 
 export function createTextEntry(
   parent: HTMLElement,
   text: string,
-  value: any,
-  handler: (val: string) => any): HTMLDivElement {
+  value: string,
+  handler: ((val: string) => any) | undefined): HTMLDivElement {
+
+  let d = document.createElement('div') as HTMLDivElement;
+  d.className = 'inputContainer'
+  let l = document.createElement('label') as HTMLLabelElement;
+  l.textContent = text;
+
+  let d2 = document.createElement('div') as HTMLDivElement;
+  let i = document.createElement('input') as HTMLInputElement;
+  i.type = 'text';
+  i.value = value;
+
+  d.appendChild(l);
+  d2.appendChild(i);
+  d.appendChild(i);
+
+  if (handler !== undefined) {
+    i.addEventListener('input', () => handler(i.value));
+  }
+
+  parent.appendChild(d);
+
+  return d;
+}
+
+export function createNumberEntry(
+  parent: HTMLElement,
+  text: string,
+  value: number,
+  handler: ((val: number) => any) | undefined): HTMLDivElement {
 
   let d = document.createElement('div') as HTMLDivElement;
   d.className = 'inputContainer'
@@ -64,14 +93,15 @@ export function createTextEntry(
   let d2 = document.createElement('div') as HTMLDivElement;
   let i = document.createElement('input') as HTMLInputElement;
   i.type = 'number';
-  i.maxLength = 5;
-  i.value = value;
+  i.value = value.toString();
 
   d.appendChild(l);
   d2.appendChild(i);
   d.appendChild(i);
 
-  i.addEventListener('input', () => handler(i.value));
+  if (handler !== undefined) {
+    i.addEventListener('input', () => handler(parseInt(i.value)));
+  }
 
   parent.appendChild(d);
 

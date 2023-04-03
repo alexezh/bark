@@ -1,4 +1,5 @@
 import { vm } from "../engine/ivm";
+import { IAction, ICommandBar } from "../ui/iaction";
 import { CommandAction } from "./commandaction";
 
 // display list of blocks, selects block as current
@@ -14,7 +15,7 @@ export class EditLevelAction extends CommandAction {
   get name(): string { return 'EditLevel' }
   get tags(): string[] { return ['level', 'edit', 'level'] }
 
-  protected onClick() {
+  protected override onClick(bar: ICommandBar) {
     vm.editLevel();
   }
 }
@@ -23,7 +24,7 @@ export class EditBlockAction extends CommandAction {
   get name(): string { return 'EditVox'; }
   get tags(): string[] { return ['edit', 'block', 'vox'] }
 
-  protected override onClick() {
+  protected override onClick(bar: ICommandBar) {
   }
 }
 
@@ -31,7 +32,14 @@ export class EditCodeAction extends CommandAction {
   get name(): string { return 'EditCode'; }
   get tags(): string[] { return ['edit', 'code'] }
 
-  protected onClick() {
+  protected override onClick(bar: ICommandBar) {
 
   }
 }
+
+export function registerEditActions(actions: IAction[]) {
+  actions.push(new EditLevelAction());
+  actions.push(new EditBlockAction());
+  actions.push(new EditCodeAction());
+}
+

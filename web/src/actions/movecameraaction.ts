@@ -1,23 +1,23 @@
 import { Vector3 } from "three";
 import { vm } from "../engine/ivm";
-import { ICommandBar } from "./commandBar"
-import { createButton, createCommandButton, createTextEntry } from "../lib/htmlutils";
-import { IAction } from "../ui/iaction"
+import { createButton, createCommandButton, createNumberEntry, createTextEntry } from "../lib/htmlutils";
+import { IAction, ICommandBar } from "../ui/iaction"
+import { FormPane } from "./commandaction";
 
 export class MoveCameraAction implements IAction {
   private button: HTMLButtonElement | undefined;
   private propPage: HTMLDivElement | undefined;
-  private bar: ICommandBar;
 
   get name(): string { return 'MoveCamera' }
   get tags(): string[] { return ['camera', 'edit', 'move'] }
 
-  public constructor(bar: ICommandBar) {
-    this.bar = bar;
+  public constructor() {
   }
 
-  renderButton(parent: HTMLElement) {
-    this.button = createCommandButton(parent, "MoveCamera", this.onMoveCameraClick.bind(this));
+  renderButton(parent: HTMLElement, bar: ICommandBar) {
+    this.button = createCommandButton(parent, "MoveCamera", () => {
+      this.onMoveCameraClick(bar)
+    });
   }
 
   destroyButton(parent: HTMLElement) {
@@ -29,38 +29,38 @@ export class MoveCameraAction implements IAction {
     this.button = undefined;
   }
 
-  private onMoveCameraClick() {
-    let pane = document.createElement('div');
-    pane.className = 'commandPane';
+  private onMoveCameraClick(bar: ICommandBar) {
+    let form = new FormPane();
+
     let cp = vm.camera?.position;
-    createTextEntry(pane, 'x', cp?.x, (val: string) => {
+    form.addIntField('x', cp?.x, (val: number) => {
       let camera = vm.camera;
       if (camera === undefined) {
         return;
       }
       let newPos = camera.position.clone();
-      newPos.x = parseInt(val);
+      newPos.x = val;
       camera.position = newPos;
     });
-    createTextEntry(pane, 'y', cp?.y, (val: string) => {
+    form.addIntField('y', cp?.y, (val: number) => {
       let camera = vm.camera;
       if (camera === undefined) {
         return;
       }
       let newPos = camera.position.clone();
-      newPos.y = parseInt(val);
+      newPos.y = val;
       camera.position = newPos;
     });
-    createTextEntry(pane, 'z', cp?.y, (val: string) => {
+    form.addIntField('z', cp?.y, (val: number) => {
       let camera = vm.camera;
       if (camera === undefined) {
         return;
       }
       let newPos = camera.position.clone();
-      newPos.z = parseInt(val);
+      newPos.z = val;
       camera.position = newPos;
     });
 
-    this.bar.openDetailsPane(pane);
+    bar.openDetailsPane(form.element);
   }
 }

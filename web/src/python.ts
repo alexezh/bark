@@ -63,7 +63,7 @@ export class BoxedGame implements IDigGame {
       timeoutSeconds: 0.1
     }));
 
-    await vm.loadLevel('test');
+    await vm.loadLevel('default');
     this.char = await Monky.create();
 
     vm.onStart(this.moveMonkey.bind(this));

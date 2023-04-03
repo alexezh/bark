@@ -1,22 +1,14 @@
-import { MapEditorChangeEvent, MapEditorState } from "../posh/mapeditorstate";
-import { createButton, setElementDisplay, setElementVisible } from "../lib/htmlutils";
-import { IAction } from "../ui/iaction";
+import { MapEditorState } from "../posh/mapeditorstate";
+import { createButton, setElementVisible } from "../lib/htmlutils";
+import { IAction, ICommandBar } from "../ui/iaction";
 import { ShellProps } from "../ui/shell";
 import { UiLayer2, UiLayerProps } from "../ui/uilayer";
-import { ImportVoxAction } from "./importaction";
-import { MoveCameraAction } from "./movecameraaction";
-import { EditBlockAction, EditCodeAction, EditLevelAction } from "./editaction";
+import { getActions } from "./actionregistry";
 
 export type CommandBarProps = UiLayerProps & {
   termProps: ShellProps;
   // world: World;
   mapEditorState: MapEditorState;
-}
-
-export interface ICommandBar {
-  displayError(text: string);
-  openDetailsPane(elem: HTMLElement): void;
-  closeDetailsPane(): void;
 }
 
 // list of commands and props
@@ -29,7 +21,7 @@ export class CommandList {
     this.props = props;
   }
 
-  public updateList(parent: HTMLElement) {
+  public updateList(bar: ICommandBar, parent: HTMLElement) {
     if (this.listDiv === undefined) {
       this.listDiv = document.createElement('div');
       this.listDiv.className = 'commandList';
@@ -42,7 +34,7 @@ export class CommandList {
     }
 
     for (let a of this.actions) {
-      a.renderButton(this.listDiv);
+      a.renderButton(this.listDiv, bar);
     }
 
     setElementVisible(this.listDiv, true);
@@ -91,11 +83,9 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
     this._commandList = new CommandList(this.props);
 
     // make list of possible actions
-    this._commandList.registerAction(new ImportVoxAction(this));
-    this._commandList.registerAction(new MoveCameraAction(this));
-    this._commandList.registerAction(new EditLevelAction());
-    this._commandList.registerAction(new EditBlockAction());
-    this._commandList.registerAction(new EditCodeAction());
+    for (let action of getActions()) {
+      this._commandList.registerAction(action);
+    }
 
     // <button type="button" class="nes-btn is-primary">Primary</button>
     //this.editButton = createButton(this._element, 'EDIT', (evt: any): any => props.onToggleEdit());
@@ -127,7 +117,7 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
   private onAction() {
     this._floatieVisible = !this._floatieVisible;
     if (this._floatieVisible) {
-      this._commandList.updateList(this._floatie!);
+      this._commandList.updateList(this, this._floatie!);
     }
     setElementVisible(this._floatie, this._floatieVisible);
   }

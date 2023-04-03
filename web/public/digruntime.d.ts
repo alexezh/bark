@@ -16,21 +16,19 @@ export declare class BoxedGame implements IDigGame {
     private dropObject;
 }
 
+export declare function getActions(): IAction[];
+export declare function registerActions(): void;
+
 export type CommandBarProps = UiLayerProps & {
     termProps: ShellProps;
     mapEditorState: MapEditorState;
 };
-export interface ICommandBar {
-    displayError(text: string): any;
-    openDetailsPane(elem: HTMLElement): void;
-    closeDetailsPane(): void;
-}
 export declare class CommandList {
     private actions;
     private listDiv;
     private props;
     constructor(props: CommandBarProps);
-    updateList(parent: HTMLElement): void;
+    updateList(bar: ICommandBar, parent: HTMLElement): void;
     registerAction(action: IAction): void;
     private updateListSize;
 }
@@ -51,9 +49,34 @@ export declare abstract class CommandAction implements IAction {
     abstract get name(): string;
     abstract get tags(): string[];
     private button;
-    renderButton(parent: HTMLElement): void;
+    renderButton(parent: HTMLElement, bar: ICommandBar): void;
     destroyButton(parent: HTMLElement): void;
-    protected onClick(): void;
+    protected onClick(bar: ICommandBar): void;
+}
+export declare class FormPane {
+    readonly element: HTMLDivElement;
+    private _values;
+    get values(): {
+        [id: string]: any;
+    };
+    constructor();
+    addTextField(name: string, value: string, setter?: ((val: string) => void) | undefined): void;
+    addIntField(name: string, value: number, setter?: ((val: number) => void) | undefined): void;
+    addButtom(name: string, action: () => void): void;
+}
+
+export declare class CreateProjectAction extends CommandAction {
+    get name(): string;
+    get tags(): string[];
+    protected onClick(bar: ICommandBar): void;
+    private createProject;
+}
+export declare class CreateLevelAction extends CommandAction {
+    get name(): string;
+    get tags(): string[];
+    protected onClick(bar: ICommandBar): void;
+    private createLevel;
+    static createLevelParams(name: string, sx: number, sz: number): Promise<void>;
 }
 
 export declare class SelectBlockAction extends CommandAction {
@@ -63,42 +86,29 @@ export declare class SelectBlockAction extends CommandAction {
 export declare class EditLevelAction extends CommandAction {
     get name(): string;
     get tags(): string[];
-    protected onClick(): void;
+    protected onClick(bar: ICommandBar): void;
 }
 export declare class EditBlockAction extends CommandAction {
     get name(): string;
     get tags(): string[];
-    protected onClick(): void;
+    protected onClick(bar: ICommandBar): void;
 }
 export declare class EditCodeAction extends CommandAction {
     get name(): string;
     get tags(): string[];
-    protected onClick(): void;
+    protected onClick(bar: ICommandBar): void;
 }
+export declare function registerEditActions(actions: IAction[]): void;
 
-export declare class MoveCameraAction implements IAction {
-    private button;
-    private propPage;
-    private bar;
-    get name(): string;
-    get tags(): string[];
-    constructor(bar: ICommandBar);
-    renderButton(parent: HTMLElement): void;
-    destroyButton(parent: HTMLElement): void;
-    private onMoveCameraClick;
-}
-
-export declare class UploadVoxAction implements IAction {
+export declare class ImportVoxAction implements IAction {
     private static _nextId;
     private _id;
     private _element;
     private _inputElem;
-    private _bar;
-    private parent;
     get tags(): string[];
-    constructor(bar: ICommandBar);
     get name(): string;
-    renderButton(parent: HTMLElement): void;
+    constructor();
+    renderButton(parent: HTMLElement, bar: ICommandBar): void;
     destroyButton(parent: HTMLElement): void;
     private createUploadButton;
     private processUpload;
@@ -106,6 +116,17 @@ export declare class UploadVoxAction implements IAction {
     private renderThumbnail;
     private displayPane;
     private upload;
+}
+
+export declare class MoveCameraAction implements IAction {
+    private button;
+    private propPage;
+    get name(): string;
+    get tags(): string[];
+    constructor();
+    renderButton(parent: HTMLElement, bar: ICommandBar): void;
+    destroyButton(parent: HTMLElement): void;
+    private onMoveCameraClick;
 }
 
 export interface IAnimatable {
@@ -312,9 +333,7 @@ export interface IVM {
     attachCamera(camera: ICamera): void;
     registerLevelLoaded(target: any, func: () => void): void;
     setController(controller: IInputController): any;
-    loadGame(GT: {
-        new (): IDigGame;
-    }): Promise<IDigGame>;
+    loadProject(id: string): Promise<IDigProject>;
     loadLevel(id: string): Promise<void>;
     editLevel(): any;
     start(): Promise<void>;
@@ -343,6 +362,7 @@ export declare class MapLayer {
     private _mesh;
     private geometry;
     private material;
+    dirty: boolean;
     readonly layerY: number;
     get staticMesh(): Mesh;
     constructor(material: MeshPhongMaterial, layerZ: number, blockSize: number);
@@ -351,6 +371,7 @@ export declare class MapLayer {
     build(): void;
     findBlock(point: Vector3): MapBlockCoord | undefined;
     deleteBlock(block: MapBlockCoord): void;
+    deleteBlockByCoord(x: number, z: number): void;
     getBlock(xMap: number, zMap: number): MapBlockCoord | undefined;
     addBlock(pos: BlockPos3, block: VoxelModel): void;
 }
@@ -451,9 +472,7 @@ export declare class VM implements IVM {
     attachCamera(camera: ICamera): void;
     registerLevelLoaded(target: any, func: (val: boolean) => void): void;
     setController(controller: IInputController): IInputController;
-    loadGame(GT: {
-        new (): IDigGame;
-    }): Promise<IDigGame>;
+    loadProject(id: string): Promise<IDigGame>;
     loadLevel(id: string): Promise<void>;
     start(): Promise<void>;
     stop(): void;
@@ -504,7 +523,10 @@ export declare class VoxelLevel implements IVoxelLevel {
     blockSizeToWorldSize(mapSize: BlockSize3): WorldSize3;
     blockPosToWorldPos(mapPos: BlockPos3): WorldCoord3;
     findBlock(point: Vector3): MapBlockCoord | undefined;
+    private deleteBlockCore;
+    private deleteBlockByCoord;
     deleteBlock(block: MapBlockCoord): void;
+    private addBlockCore;
     addBlock(pos: BlockPos3, block: VoxelModel): void;
     intersectBlocks(ro: IRigitBody, pos: WorldCoord3, func: (target: IRigitBody) => boolean): boolean;
     private onFileChangeBlock;
@@ -516,26 +538,21 @@ export declare class VoxelLevelFile implements IVoxelLevelFile {
     private _mapSize;
     private _zStride;
     private _yStride;
-    private _blockDefsByUri;
-    private _blockDefs;
     private _blocks;
     private _url;
-    private _nextBlockId;
     private onChangeCamera;
     private onChangeBlock;
     get blocks(): ReadonlyMap<number, FileMapBlock>;
     constructor(url: string);
-    load(): Promise<void>;
+    load(isTest: boolean): Promise<void>;
     get cameraPosition(): Vector3;
     set cameraPosition(value: Vector3);
     get mapSize(): BlockSize3;
     get blockCount(): number;
     registerOnChangeCamera(func: () => void): void;
     registerOnChangeBlock(func: (blocks: FileMapBlock[]) => void): void;
-    getBlockDef(blockId: number): FileMapBlockDef | undefined;
     deleteBlock(block: MapBlockCoord): void;
     addBlock(pos: BlockPos3, block: VoxelModel): void;
-    private createBlockId;
     private getBlockKey;
 }
 
@@ -599,7 +616,10 @@ export interface IFetchAdapter {
     get(uri: string): Promise<Response>;
     post(uri: string, body: string): Promise<any>;
 }
+export declare function getSessionId(): string | undefined;
+export declare function setSessionId(id: string): void;
 export declare function setProjectId(id: string): void;
+export declare function getProjectId(): string;
 export declare function setFetchAdapter(adapter: IFetchAdapter): void;
 export declare function fetchResource(url: string): Promise<ArrayBuffer>;
 export type WireString = {
@@ -617,6 +637,22 @@ export type WireGetArrayRange = {
     pos: number;
     count: number;
 };
+export type WireCreateProjectRequest = {
+    name: string;
+};
+export type WireCreateProjectResponse = {
+    id: string;
+};
+export type WireLevelInfo = {
+    id: string;
+    name: string;
+    sx: number;
+    sy: number;
+    sz: number;
+};
+export declare function wireCreateProject(name: string): Promise<WireCreateProjectResponse>;
+export declare function wireGetUserString(key: string): Promise<string | undefined>;
+export declare function wireSetUserString(key: string, value: string): Promise<void>;
 export declare function wireGetString(key: string): Promise<string | undefined>;
 export declare function wireGetObject<T>(key: string): Promise<T | undefined>;
 export declare function wireGetStrings(pattern: string): Promise<WireString[]>;
@@ -651,7 +687,8 @@ export declare function setElementDisplay(elem: HTMLElement | undefined, val: bo
 export declare function createTextDiv(): [HTMLDivElement, HTMLSpanElement];
 export declare function createButton(parent: HTMLElement, text: string, handler: (evt: any) => any): HTMLButtonElement;
 export declare function createCommandButton(parent: HTMLElement, text: string, handler: (evt: any) => any): HTMLButtonElement;
-export declare function createTextEntry(parent: HTMLElement, text: string, value: any, handler: (val: string) => any): HTMLDivElement;
+export declare function createTextEntry(parent: HTMLElement, text: string, value: string, handler: ((val: string) => any) | undefined): HTMLDivElement;
+export declare function createNumberEntry(parent: HTMLElement, text: string, value: number, handler: ((val: number) => any) | undefined): HTMLDivElement;
 
 export declare function perlinNoise(perilinW: number, perilinH: number, baseX: number, baseY: number, seed: number): Uint8ClampedArray;
 
@@ -959,8 +996,13 @@ export declare class CodeEditor extends UiLayer2<CodeEditorProps> {
 export interface IAction {
     get name(): string;
     get tags(): string[];
-    renderButton(parent: HTMLElement): any;
+    renderButton(parent: HTMLElement, bar: ICommandBar): any;
     destroyButton(parent: HTMLElement): any;
+}
+export interface ICommandBar {
+    displayError(text: string): any;
+    openDetailsPane(elem: HTMLElement): void;
+    closeDetailsPane(): void;
 }
 
 export interface IGameShell {
@@ -1030,8 +1072,7 @@ export interface IVoxelLevelFile {
     get blocks(): ReadonlyMap<number, FileMapBlock>;
     registerOnChangeCamera(func: () => void): any;
     registerOnChangeBlock(func: (blocks: FileMapBlock[]) => void): any;
-    load(name: string): Promise<void>;
-    getBlockDef(idx: number): FileMapBlockDef | undefined;
+    load(isTest: boolean): Promise<void>;
     deleteBlock(block: MapBlockCoord): any;
     addBlock(pos: BlockPos3, block: VoxelModel): any;
 }
@@ -1285,7 +1326,7 @@ export declare class ParticlePool {
     sprite_material: SpriteMaterial;
     constructor(scene: Scene, size: number, type: number);
     update(time: any, delta: any): void;
-    createParticle(opts: any): Particle | -1;
+    createParticle(opts: any): -1 | Particle;
     queueParticleDef(opts: any): void;
     fire(x: any, y: any, z: any): void;
     explosion(x: number, y: number, z: number, power: number, type: any): void;
@@ -1551,9 +1592,10 @@ export type VoxelFileFrame = {
 };
 export declare function makeVoxelPoint(buffer: Uint8Array, i: number): VoxelPoint;
 export declare class VoxelModel {
-    uri: string;
-    frames: VoxelModelFrame[];
-    constructor(uri: string);
+    readonly uri: string;
+    readonly id: number;
+    readonly frames: VoxelModelFrame[];
+    constructor(uri: string, id: number);
     get size(): Vector3;
 }
 export declare class VoxelModelFrame {
@@ -1576,7 +1618,10 @@ export declare class VoxelModelFrame {
 }
 
 export declare class VoxelModelCache {
-    private readonly models;
+    private readonly modelsByUrl;
+    private readonly modelsById;
+    private nextId;
+    getVoxelModelById(id: number): VoxelModel | undefined;
     getVoxelModel(url: string): Promise<VoxelModel>;
 }
 export declare let modelCache: VoxelModelCache;

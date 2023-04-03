@@ -1,13 +1,12 @@
 import { Mesh } from "three";
 import { wireSetStrings, WireString } from "../lib/fetchadapter";
-import { base64ToBytes, bytesToBase64 } from "../lib/base64";
-import { ICommandBar } from "./commandBar";
-import { IAction } from "../ui/iaction";
+import { bytesToBase64 } from "../lib/base64";
+import { IAction, ICommandBar } from "../ui/iaction";
 import { defaultMaterial } from "../ui/ivoxelmap";
 import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
 import { Vox } from "../voxel/vox";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
-import { VoxelModel, VoxelModelFrame } from "../voxel/voxelmodel";
+import { VoxelModelFrame } from "../voxel/voxelmodel";
 import { createButton } from "../lib/htmlutils";
 import { encode as PngEncode } from 'fast-png';
 
@@ -22,21 +21,17 @@ export class ImportVoxAction implements IAction {
   private _id: number;
   private _element: HTMLDivElement | undefined;
   private _inputElem: HTMLInputElement | undefined;
-  private _bar: ICommandBar;
-  private parent!: HTMLElement;
 
   get tags(): string[] { return ['import', 'upload', 'vox', 'block'] }
   public get name(): string { return 'Import Vox' }
 
-  public constructor(bar: ICommandBar) {
+  public constructor() {
     this._id = ImportVoxAction._nextId++;
-    this._bar = bar;
   }
 
-  public renderButton(parent: HTMLElement) {
-    this.parent = parent;
+  public renderButton(parent: HTMLElement, bar: ICommandBar) {
 
-    let div = this.createUploadButton();
+    let div = this.createUploadButton(bar);
     this._element = div;
 
     parent.appendChild(div);
@@ -51,7 +46,7 @@ export class ImportVoxAction implements IAction {
     this._inputElem = undefined;
   }
 
-  private createUploadButton(): HTMLDivElement {
+  private createUploadButton(bar: ICommandBar): HTMLDivElement {
     let d = document.createElement('input');
     d.id = 'upload_' + this._id;
     d.name = d.id;
@@ -60,7 +55,7 @@ export class ImportVoxAction implements IAction {
     d.multiple = true;
     d.accept = ".vox";
     d.onchange = () => {
-      this.processUpload();
+      this.processUpload(bar);
     }
     this._inputElem = d;
 
@@ -76,7 +71,7 @@ export class ImportVoxAction implements IAction {
     return div;
   }
 
-  private async processUpload() {
+  private async processUpload(bar: ICommandBar) {
     if (this._inputElem!.files === null) {
       return;
     }
@@ -84,16 +79,16 @@ export class ImportVoxAction implements IAction {
     for (let f of this._inputElem!.files) {
       let fn = f.name;
       if (!fn.endsWith('.vox')) {
-        this._bar.displayError('File extension is not .vox');
+        bar.displayError('File extension is not .vox');
         return;
       }
     }
 
-    let uploadFiles = await this.loadVox(this._inputElem!.files);
-    this.displayPane(uploadFiles);
+    let uploadFiles = await this.loadVox(bar, this._inputElem!.files);
+    this.displayPane(bar, uploadFiles);
   }
 
-  private async loadVox(files: FileList): Promise<UploadFile[]> {
+  private async loadVox(bar: ICommandBar, files: FileList): Promise<UploadFile[]> {
     let vox = new Vox();
     let tr = new ThumbnailRenderer(128, 128);
     let uploadFiles: UploadFile[] = [];
@@ -105,7 +100,7 @@ export class ImportVoxAction implements IAction {
         continue;
       }
 
-      let thumb = await this.renderThumbnail(vox, tr, data, fn);
+      let thumb = await this.renderThumbnail(bar, vox, tr, data, fn);
       if (thumb === undefined) {
         console.log('cannot render thumbnail');
         continue;
@@ -117,10 +112,15 @@ export class ImportVoxAction implements IAction {
     return uploadFiles;
   }
 
-  private async renderThumbnail(vox: Vox, tr: ThumbnailRenderer, data: ArrayBuffer, fn: string): Promise<ImageData | undefined> {
+  private async renderThumbnail(
+    bar: ICommandBar,
+    vox: Vox,
+    tr: ThumbnailRenderer,
+    data: ArrayBuffer,
+    fn: string): Promise<ImageData | undefined> {
     let voxelFile = vox.loadModel(data, fn);
     if (voxelFile === undefined || voxelFile.frames.length === 0) {
-      this._bar.displayError('Cannot load model ' + fn);
+      bar.displayError('Cannot load model ' + fn);
       return undefined;
     }
 
@@ -137,7 +137,7 @@ export class ImportVoxAction implements IAction {
     return imageData;
   }
 
-  private async displayPane(uploadFiles: UploadFile[]) {
+  private async displayPane(bar: ICommandBar, uploadFiles: UploadFile[]) {
 
     let d = document.createElement('div');
     d.className = 'commandPane';
@@ -151,12 +151,12 @@ export class ImportVoxAction implements IAction {
       d.appendChild(canvas);
     }
 
-    let upload = createButton(d, 'Upload', () => { this.upload(uploadFiles); });
+    let upload = createButton(d, 'Upload', () => { this.upload(bar, uploadFiles); });
 
-    this._bar.openDetailsPane(d);
+    bar.openDetailsPane(d);
   }
 
-  private async upload(uploadFiles: UploadFile[]) {
+  private async upload(bar: ICommandBar, uploadFiles: UploadFile[]) {
 
     let wireFiles: WireString[] = [];
     for (let file of uploadFiles) {
@@ -174,7 +174,7 @@ export class ImportVoxAction implements IAction {
 
     await wireSetStrings(wireFiles);
 
-    this._bar.closeDetailsPane();
+    bar.closeDetailsPane();
   }
 }
 

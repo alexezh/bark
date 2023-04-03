@@ -3,7 +3,7 @@ import { ICamera } from "./icamera";
 import { IGamePhysics } from "./igamephysics";
 import { Sprite3 } from "./sprite3";
 import { IRigitBody, VoxelAnimationCollection } from "../voxel/voxelmeshmodel";
-import { IDigGame } from "./idiggame";
+import { IDigGame as IDigProject } from "./idiggame";
 import { FrameClock } from "./clock";
 import { IRigitModel } from "./irigitmodel";
 import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
@@ -27,8 +27,17 @@ export interface IVM {
   attachCamera(camera: ICamera): void;
   registerLevelLoaded(target: any, func: () => void): void;
   setController(controller: IInputController);
-  loadGame(GT: { new(): IDigGame }): Promise<IDigGame>;
 
+  /**
+   * load game project (including executing bits)
+   * returns pointer to game object which then performs final initialization
+   * in IDigGame.init
+   */
+  loadProject(id: string): Promise<IDigProject>;
+
+  /**
+   * load default level of the game or specific level
+   */
   loadLevel(id: string): Promise<void>;
   editLevel();
 

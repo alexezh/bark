@@ -7,7 +7,7 @@ export interface IFetchAdapter {
 
 let fetchAdapter: IFetchAdapter | undefined = undefined;
 let sessionId: string | undefined;
-let projectId: string = 'default';
+let projectId: string = '7fa84179-dc58-4939-8678-03370fd137f3';
 let updateQueue: Queue = new Queue();
 
 export function getSessionId(): string | undefined {
@@ -16,6 +16,14 @@ export function getSessionId(): string | undefined {
 
 export function setSessionId(id: string) {
   sessionId = id;
+}
+
+export function setProjectId(id: string) {
+  projectId = id;
+}
+
+export function getProjectId(): string {
+  return projectId;
 }
 
 export function setFetchAdapter(adapter: IFetchAdapter) {
@@ -44,6 +52,47 @@ export type WireGetArrayRange = {
   pos: number;
   // -1 is whole range
   count: number;
+}
+
+export type WireCreateProjectRequest = {
+  name: string;
+}
+
+export type WireCreateProjectResponse = {
+  id: string;
+}
+
+export type WireLevelInfo = {
+  id: string;
+  name: string;
+  sx: number
+  sy: number;
+  sz: number;
+}
+
+export async function wireCreateProject(name: string): Promise<WireCreateProjectResponse> {
+  let request: WireCreateProjectRequest = {
+    name: name
+  }
+  let response = await (await fetchAdapter!.post(`/api/projectlist/createproject`, JSON.stringify(request))).json();
+
+  return response;
+}
+
+export async function wireGetUserString(key: string): Promise<string | undefined> {
+  let request = JSON.stringify({ pattern: key });
+  let files = await (await fetchAdapter!.post(`/api/user/getstrings/${sessionId}`, request)).json();
+  if (files.length !== 1) {
+    return undefined;
+  }
+
+  return files[0].data;
+}
+
+export async function wireSetUserString(key: string, value: string): Promise<void> {
+  let request: WireString[] = [{ key: key, data: value }]
+  let requestData = JSON.stringify(request);
+  let res = await (await fetchAdapter!.post(`/api/user/setstrings/${sessionId}`, requestData)).json();
 }
 
 export async function wireGetString(key: string): Promise<string | undefined> {

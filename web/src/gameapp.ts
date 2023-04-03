@@ -3,7 +3,7 @@ import { setShell, shell } from "./ui/igameshell";
 import { createVM } from "./engine/vm";
 import { vm } from "./engine/ivm";
 import { BoxedGame } from "./python";
-import { setSessionId } from "./lib/fetchadapter";
+import { setSessionId, wireGetUserString } from "./lib/fetchadapter";
 
 const demoWorldId = "7fa84179-dc58-4939-8678-03370fd137f3";
 
@@ -37,7 +37,13 @@ export class GameApp {
     setShell(new Shell(gameContainer));
 
     setTimeout(async () => {
-      await vm.loadGame(BoxedGame);
+      //let lastProject = await wireGetUserString('lastProject');
+      let lastProject = demoWorldId;
+      if (lastProject === undefined) {
+        lastProject = demoWorldId;
+      }
+
+      await vm.loadProject(lastProject);
       vm.start();
     });
   }

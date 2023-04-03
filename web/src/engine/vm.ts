@@ -17,6 +17,7 @@ import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
 import { VoxelLevelFile } from "./voxellevelfile";
 import { MoveController2D } from "./movecontroller2d";
 import { LevelEditor } from "../ui/leveleditor";
+import { BoxedGame } from "../python";
 
 export type MessageHandler = (msg: string) => Promise<void>;
 export type StartHandler = () => Promise<void>;
@@ -85,8 +86,9 @@ export class VM implements IVM {
     return controller;
   }
 
-  public async loadGame(GT: { new(): IDigGame }): Promise<IDigGame> {
-    let game = new GT();
+  public async loadProject(id: string): Promise<IDigGame> {
+    // for now create BoxedGame (as code) but use different projectId
+    let game = new BoxedGame();
     await game.init();
     this._game = game;
     return game;
