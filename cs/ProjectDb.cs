@@ -5,12 +5,32 @@ using Microsoft.Data.Sqlite;
 
 public static class PasswordHash
 {
+  const int HashSize = 32;
   public static string Compute(byte[] seed, string pwd)
   {
     var pwdData = Encoding.UTF8.GetBytes(pwd);
 
-    var hash = Rfc2898DeriveBytes.Pbkdf2(pwdData, seed, 20, HashAlgorithmName.SHA256, 32);
+    var hash = Rfc2898DeriveBytes.Pbkdf2(pwdData, seed, 20, HashAlgorithmName.SHA256, HashSize);
     return Convert.ToBase64String(hash);
+  }
+
+  public static bool Verify(string pwd, string seed64, string hash64)
+  {
+    var seed = Convert.FromBase64String(seed64);
+    var pwdData = Encoding.UTF8.GetBytes(pwd);
+    var hash1 = Convert.FromBase64String(hash64);
+
+    var hash2 = Rfc2898DeriveBytes.Pbkdf2(pwdData, seed, 20, HashAlgorithmName.SHA256, HashSize);
+    if (hash1.Length != HashSize || hash1.Length != hash2.Length)
+    {
+      return false;
+    }
+
+    for (int i = 0; i < hash1.Length; i++)
+      if (hash1[i] != hash2[i])
+        return false;
+
+    return true;
   }
 }
 
@@ -158,6 +178,57 @@ public class UserDbStatics
       {
         throw new ArgumentException("Cannot insert");
       }
+    }
+  }
+
+  private static bool VerifyUser(SqliteConnection connection, string name, string pwd)
+  {
+    var command = connection.CreateCommand();
+    command.CommandText = "SELECT * FROM Users WHERE id == $id";
+    command.Parameters.AddWithValue("$id", name);
+
+    using (var reader = command.ExecuteReader())
+    {
+      while (reader.Read())
+      {
+        var seed64 = reader["seed"] as string;
+        var hash64 = reader["pwd"] as string;
+
+        if (!PasswordHash.Verify(pwd, seed64, hash64))
+        {
+          return false;
+        }
+
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public static string LoginUser(string name, string pwd)
+  {
+    using (var connection = CreateConnection())
+    {
+      connection.Open();
+
+      if (!VerifyUser(connection, name, pwd))
+      {
+        return null;
+      }
+
+      // allocate session 
+      var session = RandomNumberGenerator.GetBytes(32);
+      var session64 = Convert.ToBase64String(session);
+
+      {
+        var command = connection.CreateCommand();
+        command.CommandText = "INSERT INTO Sessions(id, userId) VALUES($id, $userId)";
+        command.Parameters.AddWithValue("$id", session64);
+        command.Parameters.AddWithValue("$userId", name);
+      }
+
+      return session64;
     }
   }
 }

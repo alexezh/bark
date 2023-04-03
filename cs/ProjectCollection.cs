@@ -6,6 +6,17 @@ public class ProjectProps
   public string id { get; set; }
 }
 
+public class WireCreateProjectRequest
+{
+  public string name { get; set; }
+}
+
+public class WireCreateProjectResponse
+{
+  public string result { get; set; }
+  public string id { get; set; }
+}
+
 public class ProjectCollection
 {
   public static ProjectCollection Instance = new ProjectCollection();
@@ -40,7 +51,25 @@ public class ProjectCollection
       return null;
     }
 
-    _projects.TryGetValue(id, out prj);
+    if (_projects.TryGetValue(id, out prj))
+    {
+      return prj;
+    }
+
+    // load project on demand
+    prj = Project.Load(id);
+    _projects.TryAdd(id, prj);
+
+    return prj;
+  }
+
+  internal Project CreateProject(WireCreateProjectRequest request)
+  {
+    var id = Guid.NewGuid().ToString("D");
+    ProjectDbStatics.CreateProject(id);
+
+    var prj = Project.Load(id);
+    _projects.TryAdd(id, prj);
     return prj;
   }
 }

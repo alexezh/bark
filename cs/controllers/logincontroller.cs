@@ -7,14 +7,23 @@ namespace barksrv.Controllers;
 public class LoginController : Controller
 {
   [HttpPost]
-  public async Task<WireLoginResponse> GetStrings(string id)
+  public async Task<WireLoginResponse> Login()
   {
     using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
     {
       string content = await reader.ReadToEndAsync();
-      WireLoginRequest fetch = JsonSerializer.Deserialize<WireLoginRequest>(content);
+      WireLoginRequest request = JsonSerializer.Deserialize<WireLoginRequest>(content);
 
-      return new WireLoginResponse() { url = "/digshell.html" };
+      var session = UserDbStatics.LoginUser(request.name, request.pwd);
+
+      if (session == null)
+      {
+        return new WireLoginResponse() { url = null, session = null };
+      }
+      else
+      {
+        return new WireLoginResponse() { url = "/digshell.html", session = session };
+      }
     }
   }
 }

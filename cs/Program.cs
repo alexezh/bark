@@ -28,7 +28,8 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "login",
-    pattern: "/api/{controller=Login}");
+    pattern: "/api/{controller=Login}",
+      new { controller = "Login", action = "Login" });
 
 app.MapControllerRoute(
     name: "createProject",

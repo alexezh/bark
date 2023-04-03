@@ -24,17 +24,19 @@ public class Project
 {
   private readonly Dictionary<string, string> _lib = new Dictionary<string, string>();
   private EntityDb _db;
+  public readonly string id;
   public const string EntityKind = "Code";
 
   public static Project Load(string id)
   {
     var db = new EntityDb(id);
-    return new Project(db);
+    return new Project(id, db);
   }
 
-  public Project(EntityDb db)
+  public Project(string id, EntityDb db)
   {
     _db = db;
+    this.id = id;
 
     var blobs = _db.LoadEntities2(EntityKind);
     foreach (var blob in blobs)
