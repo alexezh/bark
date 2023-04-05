@@ -96,8 +96,11 @@ export class VM implements IVM {
 
   public async loadLevel(id: string): Promise<void> {
     this._levelFile = new VoxelLevelFile('levels/default');
+    await this._levelFile.load(false);
+
     this._level = new VoxelLevel(this.levelFile);
     await this._level.load();
+
     this._physics = new GamePhysics(this._level);
     this._physics.setCollideHandler(this.onCollide.bind(this));
 

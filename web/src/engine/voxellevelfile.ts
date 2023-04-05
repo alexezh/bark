@@ -1,9 +1,9 @@
 import { Vector3 } from "three";
-import { wireGetArrayRange, wireGetObject, wireSetObjectBackground } from "../lib/fetchadapter";
+import { WireDict, wireGetDict, wireGetObject, wireSetDictBackground, wireSetObjectBackground } from "../lib/fetchadapter";
 import { FileMapBlock, FileMapBlockDef, IVoxelLevelFile, MapBlockCoord, WireCamera, WireLevelInfo } from "../ui/ivoxelmap";
 import { BlockPos3, BlockSize3, WorldSize3 } from "../voxel/pos3";
 import { VoxelModel } from "../voxel/voxelmodel";
-import { VoxelModelCache, modelCache } from "../voxel/voxelmodelcache";
+import { modelCache } from "../voxel/voxelmodelcache";
 
 export class VoxelLevelFile implements IVoxelLevelFile {
   private _cameraPosition: Vector3 = new Vector3();
@@ -17,6 +17,7 @@ export class VoxelLevelFile implements IVoxelLevelFile {
   private onChangeBlock: ((blocks: FileMapBlock[]) => void) | undefined;
 
   public get blocks(): ReadonlyMap<number, FileMapBlock> { return this._blocks; };
+
   public constructor(url: string) {
     this._url = url;
   }
@@ -38,10 +39,11 @@ export class VoxelLevelFile implements IVoxelLevelFile {
         this._cameraLookAt = new Vector3(wc.xLook, wc.yLook, wc.zLook);
       }
 
-      let blocks = await wireGetArrayRange<FileMapBlock>(this._url + '/blocks', 0, -1);
-      if (blocks !== undefined) {
-        for (let b of blocks) {
-          this._blocks.set(this.getBlockKey(b.x, b.y, b.z), b);
+      let fields = await wireGetDict(this._url + '/blocks', undefined);
+      if (fields !== undefined) {
+        for (let field of fields) {
+          let fb = JSON.parse(field.value) as FileMapBlock;
+          this._blocks.set(parseInt(field.field), fb);
         }
       }
     } else {
@@ -118,6 +120,10 @@ export class VoxelLevelFile implements IVoxelLevelFile {
     if (this.onChangeBlock !== undefined) {
       this.onChangeBlock([fb]);
     }
+
+    let fields: WireDict[] = [];
+    fields.push({ field: key.toString(), value: JSON.stringify(fb) });
+    wireSetDictBackground(this._url + '/blocks', fields);
   }
 
   private getBlockKey(x: number, y: number, z: number): number {

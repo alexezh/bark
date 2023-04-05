@@ -59,7 +59,16 @@ public class ProjectDbStatics
 
       {
         var command = connection.CreateCommand();
-        command.CommandText = "CREATE TABLE IF NOT EXISTS Entities (kind TEXT, id TEXT, content TEXT)";
+        command.CommandText = "CREATE TABLE IF NOT EXISTS Entities (id TEXT, kind: INTEGER, content TEXT)";
+        using (var reader = command.ExecuteReader())
+        {
+          // TODO: check error
+        }
+      }
+
+      {
+        var command = connection.CreateCommand();
+        command.CommandText = "CREATE UNIQUE INDEX IF NOT EXISTS `Ids` ON `Entities` (`id` ASC);";
         using (var reader = command.ExecuteReader())
         {
           // TODO: check error
@@ -245,7 +254,7 @@ public class EntityDb
     _connection.Open();
   }
 
-  public void InsertEntity<T>(string kind, string id, T content) where T : class
+  public void InsertEntity<T>(int kind, string id, T content) where T : class
   {
     var contentBlob = ProjectDbStatics.SerializeEntity(content);
 
@@ -262,7 +271,7 @@ public class EntityDb
     }
   }
 
-  public void InsertEntityRaw(string kind, string id, string content)
+  public void InsertEntityRaw(int kind, string id, string content)
   {
     var command = _connection.CreateCommand();
     command.CommandText = "INSERT INTO Entities(kind, id, content) VALUES($kind, $id, $content)";
@@ -277,7 +286,7 @@ public class EntityDb
     }
   }
 
-  public void UpdateEntity<T>(string kind, string id, T content) where T : class
+  public void UpdateEntity<T>(int kind, string id, T content) where T : class
   {
     if (!TryUpdateEntity(kind, id, content))
     {
@@ -285,7 +294,7 @@ public class EntityDb
     }
   }
 
-  public void UpdateEntityRaw(string kind, string id, string content)
+  public void UpdateEntityRaw(int kind, string id, string content)
   {
     if (!TryUpdateEntityRaw(kind, id, content))
     {
@@ -293,7 +302,7 @@ public class EntityDb
     }
   }
 
-  public bool TryUpdateEntity<T>(string kind, string id, T content) where T : class
+  public bool TryUpdateEntity<T>(int kind, string id, T content) where T : class
   {
     var contentBlob = ProjectDbStatics.SerializeEntity(content);
 
@@ -312,7 +321,7 @@ public class EntityDb
     return true;
   }
 
-  public bool TryUpdateEntityRaw(string kind, string id, string content)
+  public bool TryUpdateEntityRaw(int kind, string id, string content)
   {
     var command = _connection.CreateCommand();
     command.CommandText = "UPDATE Entities SET content = $content WHERE kind == $kind AND id == $id";
@@ -329,13 +338,13 @@ public class EntityDb
     return true;
   }
 
-  internal List<string> LoadEntities(string entityKind)
+  internal List<string> LoadEntities(int kind)
   {
     var ent = new List<string>();
 
     var command = _connection.CreateCommand();
     command.CommandText = "SELECT * FROM Entities WHERE kind == $kind";
-    command.Parameters.AddWithValue("$kind", entityKind);
+    command.Parameters.AddWithValue("$kind", kind);
     using (var reader = command.ExecuteReader())
     {
       while (reader.Read())
@@ -347,13 +356,22 @@ public class EntityDb
     return ent;
   }
 
-  internal List<Tuple<string, string>> LoadEntities2(string entityKind)
+  internal List<Tuple<string, string>> LoadEntities2(int kind, string prefix = null)
   {
     var ent = new List<Tuple<string, string>>();
 
     var command = _connection.CreateCommand();
-    command.CommandText = "SELECT * FROM Entities WHERE kind == $kind";
-    command.Parameters.AddWithValue("$kind", entityKind);
+    if (prefix == null)
+    {
+      command.CommandText = "SELECT * FROM Entities WHERE kind == $kind";
+      command.Parameters.AddWithValue("$kind", kind);
+    }
+    else
+    {
+      command.CommandText = "SELECT * FROM Entities WHERE kind == $kind AND id LIKE $id";
+      command.Parameters.AddWithValue("$kind", kind);
+      command.Parameters.AddWithValue("$id", prefix + "%");
+    }
     using (var reader = command.ExecuteReader())
     {
       while (reader.Read())
@@ -367,11 +385,11 @@ public class EntityDb
     return ent;
   }
 
-  internal T LoadEntity<T>(string entityKind, string id) where T : class
+  internal T LoadEntity<T>(int kind, string id) where T : class
   {
     var command = _connection.CreateCommand();
     command.CommandText = "SELECT * FROM Entities WHERE kind == $kind AND id == $id";
-    command.Parameters.AddWithValue("$kind", entityKind);
+    command.Parameters.AddWithValue("$kind", kind);
     command.Parameters.AddWithValue("$id", id);
     using (var reader = command.ExecuteReader())
     {
@@ -379,6 +397,24 @@ public class EntityDb
       {
         var data = reader["content"] as string;
         return ProjectDbStatics.DeserializeEntity<T>(data);
+      }
+    }
+
+    return null;
+  }
+
+  internal string LoadEntity(int kind, string id)
+  {
+    var command = _connection.CreateCommand();
+    command.CommandText = "SELECT * FROM Entities WHERE kind == $kind AND id == $id";
+    command.Parameters.AddWithValue("$kind", kind);
+    command.Parameters.AddWithValue("$id", id);
+    using (var reader = command.ExecuteReader())
+    {
+      while (reader.Read())
+      {
+        var data = reader["content"] as string;
+        return data;
       }
     }
 

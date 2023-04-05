@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 public class WireLoginRequest
 {
   public string name { get; set; }
@@ -20,12 +22,43 @@ public class WireString
   public string data { get; set; }
 }
 
+public class WireDict
+{
+  public string field { get; set; }
+  public string value { get; set; }
+}
+
+public class WireGetDictRequest
+{
+  public string key { get; set; }
+  public string[] fields { get; set; }
+}
+
+public class WireSetDictRequest
+{
+  public string key { get; set; }
+  public WireDict[] fields { get; set; }
+}
+
+enum ValueKind : int
+{
+  String = 0,
+  Dict = 1
+}
+
+public class DictEntry
+{
+  public Dictionary<string, string> Data;
+  public bool IsDirty;
+}
+
 public class Project
 {
-  private readonly Dictionary<string, string> _lib = new Dictionary<string, string>();
+  private readonly Dictionary<string, DictEntry> _dictCache = new Dictionary<string, DictEntry>();
+  private readonly Queue<DictEntry> _updateQueue = new Queue<DictEntry>();
   private EntityDb _db;
   public readonly string id;
-  public const string EntityKind = "Code";
+  private static WireString[] _emptyStrings = new WireString[0];
 
   public static Project Load(string id)
   {
@@ -37,71 +70,144 @@ public class Project
   {
     _db = db;
     this.id = id;
-
-    var blobs = _db.LoadEntities2(EntityKind);
-    foreach (var blob in blobs)
-    {
-      _lib.Add(blob.Item1, blob.Item2);
-    }
   }
 
-  public IEnumerable<WireString> FetchStrings(string pattern)
+  public IEnumerable<WireString> GetStrings(string pattern)
   {
     // for now we only accept * pattern
     if (pattern.Length > 0 && pattern[pattern.Length - 1] == '*')
     {
       string prefix = pattern.Substring(0, pattern.Length - 1);
-      foreach (var e in _lib)
-      {
-        if (e.Key.StartsWith(prefix))
-        {
-          yield return new WireString() { key = e.Key, data = e.Value };
-        }
-      }
+
+      var res = _db.LoadEntities2((int)ValueKind.String, prefix);
+      return res.Select(x => new WireString() { key = x.Item1, data = x.Item2 });
     }
     else
     {
-      if (_lib.TryGetValue(pattern, out var val))
+      var res = _db.LoadEntity((int)ValueKind.String, pattern);
+      if (res != null)
       {
-        yield return new WireString() { key = pattern, data = val };
+        return new WireString[1] { new WireString() { key = pattern, data = res } };
+      }
+      else
+      {
+        return _emptyStrings;
       }
     }
   }
 
   public void SetString(string name, string data)
   {
-    if (_lib.TryGetValue(name, out var existing))
-    {
-      if (!_db.TryUpdateEntityRaw(EntityKind, name + ".bak", existing))
-      {
-        _db.InsertEntityRaw(EntityKind, name + ".bak", existing);
-      }
-    }
-
-    _lib[name] = data;
-    _db.UpdateEntityRaw(EntityKind, name, data);
+    SetStringWorker(ValueKind.String, name, data);
   }
 
   public void SetStrings(WireString[] data)
   {
     foreach (var d in data)
     {
-      if (_lib.TryGetValue(d.key, out var existing))
-      {
-        if (!_db.TryUpdateEntityRaw(EntityKind, d.key + ".bak", existing))
-        {
-          _db.InsertEntityRaw(EntityKind, d.key + ".bak", existing);
-        }
-      }
-
-      _lib[d.key] = d.data;
-      _db.InsertEntityRaw(EntityKind, d.key, d.data);
+      SetStringWorker(ValueKind.String, d.key, d.data);
     }
   }
 
-  public bool TryGet(string name, out string data)
+  private void SetStringWorker(ValueKind kind, string name, string data)
   {
-    return _lib.TryGetValue(name, out data);
+    if (!_db.TryUpdateEntityRaw((int)kind, name, data))
+    {
+      _db.InsertEntityRaw((int)kind, name, data);
+    }
+  }
+
+  public IEnumerable<WireDict> GetDict(string key, string[] fields)
+  {
+    lock (_dictCache)
+    {
+      var entry = EnsureEntry(key);
+
+      if (entry == null)
+      {
+        return null;
+      }
+
+      lock (entry)
+      {
+        if (fields == null)
+        {
+          return entry.Data.Select(x =>
+          {
+            return new WireDict() { field = x.Key, value = x.Value };
+          });
+        }
+        else
+        {
+          return fields.Select(x =>
+          {
+            if (entry.Data.TryGetValue(x, out var value))
+            {
+              return new WireDict() { field = x, value = value };
+            }
+            else
+            {
+              return null;
+            }
+          }).Where(x => x != null);
+        }
+      }
+    }
+  }
+
+  public void SetDict(string key, WireDict[] fields)
+  {
+    lock (_dictCache)
+    {
+      var entry = EnsureEntry(key, true);
+
+      lock (entry)
+      {
+        foreach (var field in fields)
+        {
+          entry.Data[field.field] = field.value;
+        }
+      }
+
+      if (!entry.IsDirty)
+      {
+        entry.IsDirty = true;
+        _updateQueue.Enqueue(entry);
+        var timer = new Timer((object state) => this.onSetDictTimer(key, entry), null, 5000, System.Threading.Timeout.Infinite);
+      }
+    }
+  }
+
+  private void onSetDictTimer(string key, DictEntry entry)
+  {
+    lock (entry)
+    {
+      var str = JsonSerializer.Serialize(entry.Data);
+      SetStringWorker(ValueKind.Dict, key, str);
+      entry.IsDirty = false;
+    }
+  }
+
+  private DictEntry EnsureEntry(string key, bool create = false)
+  {
+    if (!_dictCache.TryGetValue(key, out var entry))
+    {
+      var res = _db.LoadEntity((int)ValueKind.Dict, key);
+
+      if (res != null)
+      {
+        var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(res);
+        entry = new DictEntry() { Data = dict, IsDirty = false };
+        _dictCache[key] = entry;
+      }
+      else
+      {
+        entry = (create) ? new DictEntry() : null;
+        _dictCache[key] = entry;
+      }
+    }
+
+    return entry;
   }
 }
 

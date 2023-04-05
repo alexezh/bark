@@ -6,7 +6,6 @@ import { BlockPos3, BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { defaultMaterial, FileMapBlock, IVoxelLevel, IVoxelLevelFile, MapBlock, MapBlockCoord } from "../ui/ivoxelmap";
 import { IRigitBody } from "../voxel/voxelmeshmodel";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../voxel/mapblockrigitbody";
-import { wireGetArrayRange, wireGetObject, wireSetObjectBackground, wireSetString } from "../lib/fetchadapter";
 
 
 export class MeshModel {
@@ -97,8 +96,6 @@ export class VoxelLevel implements IVoxelLevel {
 
     public async load(): Promise<boolean> {
         this.layers.push(new MapLayer(defaultMaterial, 0, this._blockSize));
-
-        await this.file.load(true);
 
         this.width = this.file.mapSize.sx;
         this.height = this.file.mapSize.sz;

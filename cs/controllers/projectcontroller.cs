@@ -20,7 +20,7 @@ public class ProjectController : Controller
         throw new ArgumentException("Unknown world");
       }
 
-      return prj.FetchStrings(fetch.pattern);
+      return prj.GetStrings(fetch.pattern);
     }
   }
 
@@ -39,6 +39,44 @@ public class ProjectController : Controller
       }
 
       prj.SetStrings(code);
+    }
+
+    return "OK";
+  }
+
+  [HttpPost]
+  public async Task<IEnumerable<WireDict>> GetDict(string id)
+  {
+    using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
+    {
+      string content = await reader.ReadToEndAsync();
+      var request = JsonSerializer.Deserialize<WireGetDictRequest>(content);
+
+      Project prj = ProjectCollection.Instance.GetProject(id);
+      if (prj == null)
+      {
+        throw new ArgumentException("Unknown world");
+      }
+
+      return prj.GetDict(request.key, request.fields);
+    }
+  }
+
+  [HttpPost]
+  public async Task<string> SetDict(string id)
+  {
+    using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
+    {
+      string content = await reader.ReadToEndAsync();
+      var request = JsonSerializer.Deserialize<WireSetDictRequest>(content);
+
+      Project prj = ProjectCollection.Instance.GetProject(id);
+      if (prj == null)
+      {
+        return "Unknown world";
+      }
+
+      prj.SetDict(request.key, request.fields);
     }
 
     return "OK";

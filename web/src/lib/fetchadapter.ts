@@ -151,6 +151,42 @@ export function wireSetObjectBackground<T>(key: string, value: T): void {
   updateQueue.start();
 }
 
+export type WireDict = {
+  field: string;
+  value: string;
+}
+
+export type WireGetDictRequest = {
+  key: string;
+  fields: string[] | null | undefined;
+}
+
+export type WireSetDictRequest = {
+  key: string;
+  fields: WireDict[];
+}
+
+export async function wireGetDict<T>(key: string, fields: string[] | null | undefined): Promise<WireDict[] | undefined> {
+  let request: WireGetDictRequest = { key: key, fields: fields };
+  let data = await (await fetchAdapter!.post(`/api/project/getdict/${projectId}`, JSON.stringify(request))).json();
+  return data;
+}
+
+export async function wireSetDict(key: string, fields: WireDict[]): Promise<void> {
+  let valueData: string[] = [];
+  let request: WireSetDictRequest = { key: key, fields: fields };
+  let res = await (await fetchAdapter!.post(`/api/project/setarrayrange/${projectId}`, JSON.stringify(request))).json();
+}
+
+export function wireSetDictBackground<T>(key: string, fields: WireDict[]): void {
+  updateQueue.push(() => {
+    return wireSetDict(key, fields)
+  });
+
+  updateQueue.start();
+}
+
+/*
 export async function wireGetArrayRange<T>(key: string, idx: number, count: number): Promise<T[] | undefined> {
   let request: WireGetArrayRange = { key: key, pos: idx, count: count };
   let requestData = JSON.stringify(request);
@@ -171,3 +207,5 @@ export async function wireSetArrayRange<T>(key: string, idx: number, count: numb
   let requestData = JSON.stringify(request);
   let res = await (await fetchAdapter!.post(`/api/project/setarrayrange/${projectId}`, requestData)).json();
 }
+*/
+//wireSetArrayRangeBackground

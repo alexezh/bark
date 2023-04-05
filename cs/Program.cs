@@ -48,12 +48,12 @@ app.MapControllerRoute(
     pattern: "/api/{controller=Project}/{action=SetStrings}/{id?}");
 
 app.MapControllerRoute(
-    name: "getArray",
-    pattern: "/api/{controller=Project}/{action=GetArray}/{id?}");
+    name: "getDict",
+    pattern: "/api/{controller=Project}/{action=GetDict}/{id?}");
 
 app.MapControllerRoute(
-    name: "updateArray",
-    pattern: "/api/{controller=Project}/{action=SetArray}/{id?}");
+    name: "setDict",
+    pattern: "/api/{controller=Project}/{action=SetDict}/{id?}");
 
 app.MapFallbackToFile("index.html"); ;
 app.MapHub<RctHub>("/updates");
