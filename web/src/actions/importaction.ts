@@ -9,6 +9,7 @@ import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
 import { VoxelModelFrame } from "../voxel/voxelmodel";
 import { createButton } from "../lib/htmlutils";
 import { encode as PngEncode } from 'fast-png';
+import { modelCache } from "../voxel/voxelmodelcache";
 
 type UploadFile = {
   fn: string;
@@ -159,9 +160,11 @@ export class ImportVoxAction implements IAction {
   private async upload(bar: ICommandBar, uploadFiles: UploadFile[]) {
 
     let wireFiles: WireString[] = [];
+    let models: { voxUrl: string, thumbnailUrl: string }[] = [];
     for (let file of uploadFiles) {
       let dataStr = bytesToBase64(file.vox);
-      wireFiles.push({ key: 'vox/' + file.fn, data: dataStr });
+      let voxUrl = 'vox/' + file.fn;
+      wireFiles.push({ key: voxUrl, data: dataStr });
 
       let thumbName = file.fn.replace('.vox', '.png');
 
@@ -169,10 +172,16 @@ export class ImportVoxAction implements IAction {
       const png = PngEncode({ width: file.png.width, height: file.png.height, data: file.png.data })
       let pngStr = bytesToBase64(png);
 
-      wireFiles.push({ key: 'thumpnail/' + thumbName, data: pngStr });
+      let thumbUrl = 'thumbnail/' + thumbName;
+      wireFiles.push({ key: thumbUrl, data: pngStr });
+
+      models.push({ voxUrl: voxUrl, thumbnailUrl: thumbUrl });
     }
 
     await wireSetStrings(wireFiles);
+
+
+    await modelCache.addModels(models);
 
     bar.closeDetailsPane();
   }

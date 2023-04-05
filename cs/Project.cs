@@ -15,7 +15,14 @@ public class WireLoginResponse
 public class WireGetStringsRequest
 {
   public string pattern { get; set; }
+  public string[] keys { get; set; }
 }
+
+public class WireGetStringsResponse
+{
+  public WireString[] values { get; set; }
+}
+
 public class WireString
 {
   public string key { get; set; }
@@ -34,10 +41,27 @@ public class WireGetDictRequest
   public string[] fields { get; set; }
 }
 
+public class WireGetDictResponse
+{
+  public WireDict[] fields { get; set; }
+}
+
 public class WireSetDictRequest
 {
   public string key { get; set; }
   public WireDict[] fields { get; set; }
+}
+
+public class WireIncrementRequest
+{
+  public string key { get; set; }
+  public int count { get; set; }
+}
+
+public class WireIncrementResponse
+{
+  public int start { get; set; }
+  public int count { get; set; }
 }
 
 enum ValueKind : int
@@ -72,28 +96,29 @@ public class Project
     this.id = id;
   }
 
-  public IEnumerable<WireString> GetStrings(string pattern)
+  public IEnumerable<WireString> GetStringsPattern(string pattern)
   {
     // for now we only accept * pattern
-    if (pattern.Length > 0 && pattern[pattern.Length - 1] == '*')
-    {
-      string prefix = pattern.Substring(0, pattern.Length - 1);
+    string prefix = pattern.Substring(0, pattern.Length - 1);
 
-      var res = _db.LoadEntities2((int)ValueKind.String, prefix);
-      return res.Select(x => new WireString() { key = x.Item1, data = x.Item2 });
-    }
-    else
+    var res = _db.LoadEntities2((int)ValueKind.String, prefix);
+    return res.Select(x => new WireString() { key = x.Item1, data = x.Item2 });
+  }
+
+  public IEnumerable<WireString> GetStrings(string[] keys)
+  {
+    List<WireString> values = new List<WireString>();
+    // for now we only accept * pattern
+    foreach (var key in keys)
     {
-      var res = _db.LoadEntity((int)ValueKind.String, pattern);
+      var res = _db.LoadEntity((int)ValueKind.String, key);
       if (res != null)
       {
-        return new WireString[1] { new WireString() { key = pattern, data = res } };
-      }
-      else
-      {
-        return _emptyStrings;
+        values.Add(new WireString() { key = key, data = res });
       }
     }
+
+    return values;
   }
 
   public void SetString(string name, string data)
@@ -115,6 +140,21 @@ public class Project
     {
       _db.InsertEntityRaw((int)kind, name, data);
     }
+  }
+
+  public int Increment(string name, int count)
+  {
+    var res = _db.LoadEntity((int)ValueKind.String, name);
+    int idx = 0;
+    if (res != null)
+    {
+      idx = int.Parse(res);
+    }
+
+    int newIdx = idx + count;
+    SetStringWorker(ValueKind.String, name, newIdx.ToString());
+
+    return idx;
   }
 
   public IEnumerable<WireDict> GetDict(string key, string[] fields)

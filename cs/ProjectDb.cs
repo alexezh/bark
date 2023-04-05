@@ -51,7 +51,7 @@ public class ProjectDbStatics
     return File.Exists(GetDbPath(id));
   }
 
-  public static void CreateProject(string id)
+  public static void CreateProjectDb(string id)
   {
     using (var connection = CreateConnection(id))
     {
@@ -59,7 +59,7 @@ public class ProjectDbStatics
 
       {
         var command = connection.CreateCommand();
-        command.CommandText = "CREATE TABLE IF NOT EXISTS Entities (id TEXT, kind: INTEGER, content TEXT)";
+        command.CommandText = "CREATE TABLE IF NOT EXISTS Entities (id TEXT, kind, INTEGER, content TEXT)";
         using (var reader = command.ExecuteReader())
         {
           // TODO: check error

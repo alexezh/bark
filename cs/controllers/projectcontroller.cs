@@ -7,12 +7,12 @@ namespace barksrv.Controllers;
 public class ProjectController : Controller
 {
   [HttpPost]
-  public async Task<IEnumerable<WireString>> GetStrings(string id)
+  public async Task<WireGetStringsResponse> GetStrings(string id)
   {
     using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
     {
       string content = await reader.ReadToEndAsync();
-      WireGetStringsRequest fetch = JsonSerializer.Deserialize<WireGetStringsRequest>(content);
+      WireGetStringsRequest request = JsonSerializer.Deserialize<WireGetStringsRequest>(content);
 
       Project prj = ProjectCollection.Instance.GetProject(id);
       if (prj == null)
@@ -20,7 +20,7 @@ public class ProjectController : Controller
         throw new ArgumentException("Unknown world");
       }
 
-      return prj.GetStrings(fetch.pattern);
+      return new WireGetStringsResponse() { values = prj.GetStrings(request.keys).ToArray() };
     }
   }
 
@@ -35,7 +35,7 @@ public class ProjectController : Controller
       Project prj = ProjectCollection.Instance.GetProject(id);
       if (prj == null)
       {
-        return "Unknown world";
+        throw new ArgumentException("Unknown world");
       }
 
       prj.SetStrings(code);
@@ -45,7 +45,7 @@ public class ProjectController : Controller
   }
 
   [HttpPost]
-  public async Task<IEnumerable<WireDict>> GetDict(string id)
+  public async Task<WireGetDictResponse> GetDict(string id)
   {
     using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
     {
@@ -58,7 +58,7 @@ public class ProjectController : Controller
         throw new ArgumentException("Unknown world");
       }
 
-      return prj.GetDict(request.key, request.fields);
+      return new WireGetDictResponse() { fields = prj.GetDict(request.key, request.fields).ToArray() };
     }
   }
 
@@ -73,12 +73,31 @@ public class ProjectController : Controller
       Project prj = ProjectCollection.Instance.GetProject(id);
       if (prj == null)
       {
-        return "Unknown world";
+        throw new ArgumentException("Unknown world");
       }
 
       prj.SetDict(request.key, request.fields);
     }
 
     return "OK";
+  }
+
+  [HttpPost]
+  public async Task<WireIncrementResponse> Increment(string id)
+  {
+    using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
+    {
+      string content = await reader.ReadToEndAsync();
+      var request = JsonSerializer.Deserialize<WireIncrementRequest>(content);
+
+      Project prj = ProjectCollection.Instance.GetProject(id);
+      if (prj == null)
+      {
+        throw new ArgumentException("Unknown world");
+      }
+
+      int idx = prj.Increment(request.key, request.count);
+      return new WireIncrementResponse() { start = idx, count = request.count };
+    }
   }
 }

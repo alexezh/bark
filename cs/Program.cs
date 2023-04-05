@@ -55,6 +55,10 @@ app.MapControllerRoute(
     name: "setDict",
     pattern: "/api/{controller=Project}/{action=SetDict}/{id?}");
 
+app.MapControllerRoute(
+    name: "inc",
+    pattern: "/api/{controller=Project}/{action=Increment}/{id?}");
+
 app.MapFallbackToFile("index.html"); ;
 app.MapHub<RctHub>("/updates");
 

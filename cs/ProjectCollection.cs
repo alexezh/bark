@@ -39,7 +39,7 @@ public class ProjectCollection
     UserDbStatics.CreateUserDb();
 
     // first create DB
-    ProjectDbStatics.CreateProject(DemoProjectId);
+    ProjectDbStatics.CreateProjectDb(DemoProjectId);
     _projects.Add(DemoProjectId, Project.Load(DemoProjectId));
   }
 
@@ -66,7 +66,7 @@ public class ProjectCollection
   internal Project CreateProject(WireCreateProjectRequest request)
   {
     var id = Guid.NewGuid().ToString("D");
-    ProjectDbStatics.CreateProject(id);
+    ProjectDbStatics.CreateProjectDb(id);
 
     var prj = Project.Load(id);
     _projects.TryAdd(id, prj);

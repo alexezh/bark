@@ -40,6 +40,15 @@ export type WireString = {
   data: string;
 }
 
+export type WireGetStringsRequest = {
+  pattern: string | undefined;
+  keys: string[];
+}
+
+export type WireGetStringsResponse = {
+  values: WireString[];
+}
+
 export type WireSetArrayRange = {
   key: string;
   pos: number;
@@ -116,10 +125,10 @@ export async function wireGetObject<T>(key: string): Promise<T | undefined> {
   return o;
 }
 
-export async function wireGetStrings(pattern: string): Promise<WireString[]> {
-  let request = JSON.stringify({ pattern: pattern });
-  let files = await (await fetchAdapter!.post(`/api/project/getstrings/${projectId}`, request)).json();
-  return files;
+export async function wireGetStrings(keys: string[]): Promise<WireString[]> {
+  let request: WireGetStringsRequest = { keys: keys, pattern: undefined }
+  let response: WireGetStringsResponse = await (await fetchAdapter!.post(`/api/project/getstrings/${projectId}`, JSON.stringify(request))).json();
+  return response.values;
 }
 
 export async function wireSetString(key: string, value: string): Promise<void> {
@@ -161,21 +170,40 @@ export type WireGetDictRequest = {
   fields: string[] | null | undefined;
 }
 
+export type WireGetDictResponse = {
+  fields: WireDict[] | null | undefined;
+}
+
 export type WireSetDictRequest = {
   key: string;
   fields: WireDict[];
 }
 
-export async function wireGetDict<T>(key: string, fields: string[] | null | undefined): Promise<WireDict[] | undefined> {
+export type WireIncrementRequest = {
+  count: number;
+}
+
+export type WireIncrementResponse = {
+  start: number;
+  count: number;
+}
+
+export async function wireIncrement(key: string, delta: number): Promise<number | undefined> {
+  let request: WireIncrementRequest = { count: delta };
+  let data = await (await fetchAdapter!.post(`/api/project/increment/${projectId}`, JSON.stringify(request))).json();
+  return data.start;
+}
+
+export async function wireGetDict(key: string, fields: string[] | null | undefined): Promise<WireDict[] | undefined> {
   let request: WireGetDictRequest = { key: key, fields: fields };
-  let data = await (await fetchAdapter!.post(`/api/project/getdict/${projectId}`, JSON.stringify(request))).json();
-  return data;
+  let data: WireGetDictResponse = await (await fetchAdapter!.post(`/api/project/getdict/${projectId}`, JSON.stringify(request))).json();
+  return (data.fields === null) ? undefined : data.fields;
 }
 
 export async function wireSetDict(key: string, fields: WireDict[]): Promise<void> {
   let valueData: string[] = [];
   let request: WireSetDictRequest = { key: key, fields: fields };
-  let res = await (await fetchAdapter!.post(`/api/project/setarrayrange/${projectId}`, JSON.stringify(request))).json();
+  let res = await (await fetchAdapter!.post(`/api/project/setdict/${projectId}`, JSON.stringify(request))).json();
 }
 
 export function wireSetDictBackground<T>(key: string, fields: WireDict[]): void {
