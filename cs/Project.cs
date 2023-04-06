@@ -72,7 +72,7 @@ enum ValueKind : int
 
 public class DictEntry
 {
-  public Dictionary<string, string> Data;
+  public Dictionary<string, string> Data = new Dictionary<string, string>();
   public bool IsDirty;
 }
 
@@ -163,6 +163,7 @@ public class Project
     {
       var entry = EnsureEntry(key);
 
+      // null means no entry
       if (entry == null)
       {
         return null;

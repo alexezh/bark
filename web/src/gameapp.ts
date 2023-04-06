@@ -4,6 +4,7 @@ import { createVM } from "./engine/vm";
 import { vm } from "./engine/ivm";
 import { BoxedGame } from "./python";
 import { setSessionId, wireGetUserString } from "./lib/fetchadapter";
+import { createDefaultProject } from "./actions/createprojectaction";
 
 const demoWorldId = "7fa84179-dc58-4939-8678-03370fd137f3";
 
@@ -32,7 +33,7 @@ export class GameApp {
     this.gameContainer = gameContainer;
     this.resizeCanvas();
 
-    createVM(gameContainer);
+    createVM(gameContainer, createDefaultProject);
 
     setShell(new Shell(gameContainer));
 

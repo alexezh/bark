@@ -110,20 +110,3 @@ export class VoxelModelCache {
 
 export let modelCache: VoxelModelCache = new VoxelModelCache();
 
-export function getCharacterModelList(): string[] {
-  return [
-    './assets/vox/monky.vox',
-  ]
-}
-
-export function getBlockModelList(): string[] {
-  return [
-    './assets/vox/ground.vox'
-  ]
-}
-
-export function getObjectModelList(): string[] {
-  return [
-    './assets/vox/ground.vox'
-  ]
-}

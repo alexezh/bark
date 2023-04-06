@@ -28,7 +28,7 @@ class Snake extends Sprite3 {
 
 class Bomb extends Sprite3 {
   public static async create(pos: Vector3): Promise<Bomb> {
-    return await vm.createSprite(Bomb, './assets/vox/bomb.vox', pos, undefined, undefined);
+    return await vm.createSprite(Bomb, 'vox/bomb.vox', pos, undefined, undefined);
   }
 }
 
@@ -38,7 +38,7 @@ class Monky extends Mammal4 {
       move: [{ idx: 1, dur: 0.1 }, { idx: 2, dur: 0.1 }],
       stand: [{ idx: 0, dur: 0 }]
     }
-    let m = await vm.createSprite(Monky, './assets/vox/monky.vox',
+    let m = await vm.createSprite(Monky, 'vox/monky.vox',
       new Vector3(120, 20, 120),
       undefined,
       ac);

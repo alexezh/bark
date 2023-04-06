@@ -76,6 +76,11 @@ export class VoxelMeshModel {
 
     private async load(uri: string): Promise<void> {
         let vmm = await modelCache.getVoxelModel(uri);
+        if (vmm === undefined) {
+            console.log('cannot file model ' + uri);
+            return;
+        }
+
         for (let f of vmm.frames) {
             let writer = new VoxelGeometryWriter();
 

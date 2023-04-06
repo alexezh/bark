@@ -1,13 +1,14 @@
-import { WireLevelInfo, getProjectId, setProjectId, wireCreateProject, wireSetObject, wireSetUserString } from "../lib/fetchadapter";
+import { WireLevelInfo, WireProjectConfig, fetchResource, getProjectId, setProjectId, wireCreateProject, wireSetObject, wireSetUserString } from "../lib/fetchadapter";
 import { CommandAction, FormPane } from "./commandaction";
 import { v4 as uuidv4 } from 'uuid';
 import { vm } from "../engine/ivm";
 import { ICommandBar } from "../ui/iaction";
-import { VoxelModelCache, modelCache } from "../voxel/voxelmodelcache";
-import { ImportVoxAction } from "./importaction";
+import { VoxelModelCache, WireModelInfo, modelCache } from "../voxel/voxelmodelcache";
+import { ImportVoxAction, UploadFile } from "./importaction";
 import { Vox } from "../voxel/vox";
 import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
 import { VoxelLevelFile } from "../engine/voxellevelfile";
+import { FileMapBlock } from "../ui/ivoxelmap";
 
 export class CreateProjectAction extends CommandAction {
   get name(): string { return 'CreateProject' }
@@ -49,26 +50,56 @@ export class CreateProjectAction extends CommandAction {
   }
 }
 
-async function importDefaultModels(voxUrls: string[]) {
+async function importDefaultModels(voxNames: string[]): Promise<WireModelInfo[] | undefined> {
   let vox = new Vox;
   let tr = new ThumbnailRenderer(128, 128);
 
-  for (let voxUrl in voxUrls) {
-    let thumb = await ImportVoxAction.renderThumbnail(vox, tr, data, fn);
+  let uploadFiles: UploadFile[] = [];
+  for (let voxName of voxNames) {
+
+    let chunkBuffer = await fetchResource('assets/vox/' + voxName);
+    let chunkBlob = new Uint8Array(chunkBuffer);
+
+    let thumb = await ImportVoxAction.renderThumbnail(vox, tr, chunkBlob, voxName);
+    if (typeof thumb === 'string' || thumb === undefined) {
+      continue;
+    }
+
+    uploadFiles.push({
+      fn: voxName,
+      vox: chunkBlob,
+      png: thumb
+    });
   }
+
+  return ImportVoxAction.upload(uploadFiles);
 }
 
+/**
+ * creates default project with default map
+ */
 export async function createDefaultProject(): Promise<void> {
+  let projectConfig: WireProjectConfig = {
+    version: 1
+  };
 
+  await wireSetObject<WireProjectConfig>('config', projectConfig);
 
-  importDefaultModels
+  let modelInfos = await importDefaultModels(['ground.vox', 'monky.vox', 'bomb.vox']);
+  if (modelInfos === undefined) {
+    return;
+  }
 
-  VoxelModelCache.importModels();
+  let file = await VoxelLevelFile.createLevel('levels/default');
 
-  VoxelLevelFile.createLevel('levels/default');
+  let blocks: FileMapBlock[] = [];
+  for (let x = 0; x < file.mapSize.sx; x++) {
+    for (let z = 0; z < file.mapSize.sz; z++) {
+      blocks.push({ x: x, y: 0, z: z, blockId: modelInfos[0].id });
+    }
+  }
 
-
-  VoxelModelCache.addModelReferences()
+  file.addBlocks(blocks);
 }
 
 export class CreateLevelAction extends CommandAction {

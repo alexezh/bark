@@ -79,6 +79,10 @@ export type WireLevelInfo = {
   sz: number;
 }
 
+export type WireProjectConfig = {
+  version: number;
+}
+
 export async function wireCreateProject(name: string): Promise<WireCreateProjectResponse> {
   let request: WireCreateProjectRequest = {
     name: name
@@ -115,13 +119,13 @@ export async function wireGetString(key: string): Promise<string | undefined> {
 }
 
 export async function wireGetObject<T>(key: string): Promise<T | undefined> {
-  let request = JSON.stringify({ pattern: key });
-  let files = await (await fetchAdapter!.post(`/api/project/getstrings/${projectId}`, request)).json();
-  if (files.length !== 1) {
+  let request: WireGetStringsRequest = { keys: [key], pattern: undefined };
+  let response: WireGetStringsResponse = await (await fetchAdapter!.post(`/api/project/getstrings/${projectId}`, JSON.stringify(request))).json();
+  if (response.values === undefined || response.values.length !== 1) {
     return undefined;
   }
 
-  let o = JSON.parse(files[0].data);
+  let o = JSON.parse(response.values[0].data);
   return o;
 }
 
@@ -180,6 +184,7 @@ export type WireSetDictRequest = {
 }
 
 export type WireIncrementRequest = {
+  key: string;
   count: number;
 }
 
@@ -189,7 +194,7 @@ export type WireIncrementResponse = {
 }
 
 export async function wireIncrement(key: string, delta: number): Promise<number | undefined> {
-  let request: WireIncrementRequest = { count: delta };
+  let request: WireIncrementRequest = { key: key, count: delta };
   let data = await (await fetchAdapter!.post(`/api/project/increment/${projectId}`, JSON.stringify(request))).json();
   return data.start;
 }

@@ -58,7 +58,7 @@ public class ProjectController : Controller
         throw new ArgumentException("Unknown world");
       }
 
-      return new WireGetDictResponse() { fields = prj.GetDict(request.key, request.fields).ToArray() };
+      return new WireGetDictResponse() { fields = prj.GetDict(request.key, request.fields)?.ToArray() };
     }
   }
 

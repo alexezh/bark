@@ -148,16 +148,16 @@ export class LevelEditor implements ILevelEditor {
       return false;
     }
 
-    let block = await modelCache.getVoxelModel('./assets/vox/dungeon_entrance.vox');
+    let block = await modelCache.getVoxelModel('vox/dungeon_entrance.vox');
     if (block === undefined) {
       return false;
     }
 
     let pos = this.selectedBlock.mapPos;
     if (this.selectedBlock.model !== undefined) {
-      this.level.file.addBlock({ x: pos.x, y: pos.y, z: pos.z + 1 }, block);
+      this.level.file.addBlock({ x: pos.x, y: pos.y, z: pos.z + 1 }, block.id);
     } else {
-      this.level.file.addBlock({ x: pos.x, y: pos.y, z: pos.z }, block);
+      this.level.file.addBlock({ x: pos.x, y: pos.y, z: pos.z }, block.id);
     }
 
     return true;

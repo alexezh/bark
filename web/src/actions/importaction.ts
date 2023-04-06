@@ -9,9 +9,9 @@ import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
 import { VoxelModelFrame } from "../voxel/voxelmodel";
 import { createButton } from "../lib/htmlutils";
 import { encode as PngEncode } from 'fast-png';
-import { modelCache, VoxelModelCache } from "../voxel/voxelmodelcache";
+import { modelCache, VoxelModelCache, WireModelInfo } from "../voxel/voxelmodelcache";
 
-type UploadFile = {
+export type UploadFile = {
   fn: string;
   vox: Uint8Array;
   png: ImageData;
@@ -153,14 +153,17 @@ export class ImportVoxAction implements IAction {
     }
 
     let upload = createButton(d, 'Upload', () => {
-      this.upload(uploadFiles);
+      ImportVoxAction.upload(uploadFiles);
       bar.closeDetailsPane();
     });
 
     bar.openDetailsPane(d);
   }
 
-  private async upload(uploadFiles: UploadFile[]) {
+  /**
+   * return list of models (with IDs)
+   */
+  public static async upload(uploadFiles: UploadFile[]): Promise<WireModelInfo[] | undefined> {
 
     let wireFiles: WireString[] = [];
     let modelRefs: { voxUrl: string, thumbnailUrl: string }[] = [];
@@ -183,9 +186,7 @@ export class ImportVoxAction implements IAction {
 
     await wireSetStrings(wireFiles);
 
-    await VoxelModelCache.addModelReferences(modelRefs);
-
-    // TODO: load models to cache
+    return await VoxelModelCache.addModelReferences(modelRefs);
   }
 }
 

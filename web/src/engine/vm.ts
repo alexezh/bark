@@ -1,4 +1,4 @@
-import { Clock, Vector3 } from "three";
+import { Vector3 } from "three";
 import AsyncEventSource from "../lib/AsyncEventSource";
 import { ICamera } from "./icamera";
 import { animator } from "./animator";
@@ -6,7 +6,7 @@ import { FrameClock } from "./clock";
 import { VoxelLevel } from "./voxellevel";
 import { GamePhysics } from "./gamephysics";
 import { IDigGame } from "./idiggame";
-import { IGamePhysics, RigitCollisionHandler } from "./igamephysics";
+import { IGamePhysics } from "./igamephysics";
 import { IInputController, IVM, setVM } from "./ivm";
 import { Sprite3 } from "./sprite3";
 import { Ticker } from "./ticker";
@@ -15,10 +15,9 @@ import { IRigitModel } from "./irigitmodel";
 import { ParticlePool } from "../voxel/particles";
 import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
 import { VoxelLevelFile } from "./voxellevelfile";
-import { MoveController2D } from "./movecontroller2d";
 import { LevelEditor } from "../ui/leveleditor";
 import { BoxedGame } from "../python";
-import { wireGetDict } from "../lib/fetchadapter";
+import { WireProjectConfig, wireGetObject } from "../lib/fetchadapter";
 import { modelCache } from "../voxel/voxelmodelcache";
 
 export type MessageHandler = (msg: string) => Promise<void>;
@@ -39,6 +38,7 @@ export class VM implements IVM {
   private _levelFile?: IVoxelLevelFile;
   private _camera?: ICamera;
   private _game?: IDigGame;
+  private readonly _createDefaultProject: () => Promise<void>;
   private readonly _sprites: Map<number, Sprite3> = new Map<number, Sprite3>();
   private readonly _collisions: WeakMap<IRigitBody, CollisionWaiter> = new WeakMap<IRigitBody, CollisionWaiter>;
   public readonly clock!: FrameClock;
@@ -63,9 +63,10 @@ export class VM implements IVM {
     return this._levelFile;
   }
 
-  public constructor(canvas: HTMLElement) {
+  public constructor(canvas: HTMLElement, createDefaultProject: () => Promise<void>) {
     this._canvas = canvas;
     this.clock = new FrameClock();
+    this._createDefaultProject = createDefaultProject;
   }
 
   public get canvas(): HTMLElement { return this._canvas; }
@@ -90,9 +91,12 @@ export class VM implements IVM {
 
   public async loadProject(id: string): Promise<IDigGame> {
 
-    if (!await modelCache.load()) {
-      let ground = await modelCache.getVoxelModel('./assets/vox/ground.vox');
+    let projectConfig = await wireGetObject<WireProjectConfig>('config');
+    if (projectConfig === undefined) {
+      await this._createDefaultProject();
     }
+
+    await modelCache.load();
 
     // for now create BoxedGame (as code) but use different projectId
     let game = new BoxedGame();
@@ -102,7 +106,7 @@ export class VM implements IVM {
   }
 
   public async loadLevel(id: string): Promise<void> {
-    this._levelFile = new VoxelLevelFile(id);
+    this._levelFile = new VoxelLevelFile('levels/' + id);
     await this._levelFile.load(false);
 
     this._level = new VoxelLevel(this.levelFile);
@@ -315,6 +319,6 @@ export class VM implements IVM {
   }
 }
 
-export function createVM(canvas: HTMLElement) {
-  setVM(new VM(canvas));
+export function createVM(canvas: HTMLElement, createDefaultProject: () => Promise<void>) {
+  setVM(new VM(canvas, createDefaultProject));
 }

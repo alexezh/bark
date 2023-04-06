@@ -1,10 +1,8 @@
 import { Vector3 } from "three";
 import { WireDict, wireGetDict, wireGetObject, wireSetDictBackground, wireSetObject, wireSetObjectBackground } from "../lib/fetchadapter";
-import { FileMapBlock, FileMapBlockDef, IVoxelLevelFile, MapBlockCoord, WireCamera, WireLevelInfo } from "../ui/ivoxelmap";
+import { FileMapBlock, IVoxelLevelFile, MapBlockCoord, WireCamera, WireLevelInfo } from "../ui/ivoxelmap";
 import { BlockPos3, BlockSize3, WorldSize3 } from "../voxel/pos3";
-import { VoxelModel } from "../voxel/voxelmodel";
-import { VoxelModelCache, modelCache } from "../voxel/voxelmodelcache";
-import { isYieldExpression } from "typescript";
+import { forEach } from "lodash";
 
 export class VoxelLevelFile implements IVoxelLevelFile {
   private _cameraPosition: Vector3 = new Vector3();
@@ -50,7 +48,7 @@ export class VoxelLevelFile implements IVoxelLevelFile {
     }
   }
 
-  public static async createLevel(url: string): Promise<void> {
+  public static async createLevel(url: string): Promise<VoxelLevelFile> {
     let li: WireLevelInfo = {
       xMap: 100, yMap: 1, zMap: 100
     }
@@ -71,6 +69,10 @@ export class VoxelLevelFile implements IVoxelLevelFile {
       zRotation: 0,
     }
     await wireSetObject<WireCamera>(url + '/camera', camera);
+
+    let file = new VoxelLevelFile(url);
+    await file.load();
+    return file;
   }
 
   get cameraPosition(): Vector3 {
@@ -123,9 +125,9 @@ export class VoxelLevelFile implements IVoxelLevelFile {
     }
   }
 
-  addBlock(pos: BlockPos3, block: VoxelModel) {
+  public addBlock(pos: BlockPos3, blockId: number) {
     let fb: FileMapBlock = {
-      blockId: block.id,
+      blockId: blockId,
       x: pos.x,
       y: pos.y,
       z: pos.z
@@ -141,6 +143,21 @@ export class VoxelLevelFile implements IVoxelLevelFile {
     let fields: WireDict[] = [];
     fields.push({ field: key.toString(), value: JSON.stringify(fb) });
     wireSetDictBackground(this._url + '/blocks', fields);
+  }
+
+  public addBlocks(blocks: FileMapBlock[]) {
+    let fields: WireDict[] = [];
+
+    for (let block of blocks) {
+      let key = this.getBlockKey(block.x, block.y, block.z);
+      this._blocks.set(key, block);
+
+      fields.push({ field: key.toString(), value: JSON.stringify(block) });
+    }
+    wireSetDictBackground(this._url + '/blocks', fields);
+    if (this.onChangeBlock !== undefined) {
+      this.onChangeBlock(blocks);
+    }
   }
 
   private getBlockKey(x: number, y: number, z: number): number {

@@ -71,6 +71,7 @@ export declare class CreateProjectAction extends CommandAction {
     protected onClick(bar: ICommandBar): void;
     private createProject;
 }
+export declare function createDefaultProject(): Promise<void>;
 export declare class CreateLevelAction extends CommandAction {
     get name(): string;
     get tags(): string[];
@@ -100,6 +101,11 @@ export declare class EditCodeAction extends CommandAction {
 }
 export declare function registerEditActions(actions: IAction[]): void;
 
+export type UploadFile = {
+    fn: string;
+    vox: Uint8Array;
+    png: ImageData;
+};
 export declare class ImportVoxAction implements IAction {
     private static _nextId;
     private _id;
@@ -110,12 +116,12 @@ export declare class ImportVoxAction implements IAction {
     constructor();
     renderButton(parent: HTMLElement, bar: ICommandBar): void;
     destroyButton(parent: HTMLElement): void;
-    private createUploadButton;
-    private processUpload;
+    private createImportButton;
+    private processImport;
     private loadVox;
-    private renderThumbnail;
+    static renderThumbnail(vox: Vox, tr: ThumbnailRenderer, data: ArrayBuffer, fn: string): Promise<ImageData | string | undefined>;
     private displayPane;
-    private upload;
+    static upload(uploadFiles: UploadFile[]): Promise<WireModelInfo[] | undefined>;
 }
 
 export declare class MoveCameraAction implements IAction {
@@ -454,6 +460,7 @@ export declare class VM implements IVM {
     private _levelFile?;
     private _camera?;
     private _game?;
+    private readonly _createDefaultProject;
     private readonly _sprites;
     private readonly _collisions;
     readonly clock: FrameClock;
@@ -466,7 +473,7 @@ export declare class VM implements IVM {
     get physics(): IGamePhysics;
     get level(): IVoxelLevel;
     get levelFile(): IVoxelLevelFile;
-    constructor(canvas: HTMLElement);
+    constructor(canvas: HTMLElement, createDefaultProject: () => Promise<void>);
     get canvas(): HTMLElement;
     get camera(): ICamera;
     attachCamera(camera: ICamera): void;
@@ -494,7 +501,7 @@ export declare class VM implements IVM {
     private loadScene;
     private onXrSessionChanged;
 }
-export declare function createVM(canvas: HTMLElement): void;
+export declare function createVM(canvas: HTMLElement, createDefaultProject: () => Promise<void>): void;
 
 export declare class MeshModel {
     mesh: Mesh;
@@ -535,6 +542,7 @@ export declare class VoxelLevel implements IVoxelLevel {
 export declare class VoxelLevelFile implements IVoxelLevelFile {
     private _cameraPosition;
     private _cameraLookAt;
+    private _cameraRotation;
     private _mapSize;
     private _zStride;
     private _yStride;
@@ -544,7 +552,8 @@ export declare class VoxelLevelFile implements IVoxelLevelFile {
     private onChangeBlock;
     get blocks(): ReadonlyMap<number, FileMapBlock>;
     constructor(url: string);
-    load(isTest: boolean): Promise<void>;
+    load(): Promise<void>;
+    static createLevel(url: string): Promise<VoxelLevelFile>;
     get cameraPosition(): Vector3;
     set cameraPosition(value: Vector3);
     get mapSize(): BlockSize3;
@@ -552,7 +561,8 @@ export declare class VoxelLevelFile implements IVoxelLevelFile {
     registerOnChangeCamera(func: () => void): void;
     registerOnChangeBlock(func: (blocks: FileMapBlock[]) => void): void;
     deleteBlock(block: MapBlockCoord): void;
-    addBlock(pos: BlockPos3, block: VoxelModel): void;
+    addBlock(pos: BlockPos3, blockId: number): void;
+    addBlocks(blocks: FileMapBlock[]): void;
     private getBlockKey;
 }
 
@@ -626,6 +636,13 @@ export type WireString = {
     key: string;
     data: string;
 };
+export type WireGetStringsRequest = {
+    pattern: string | undefined;
+    keys: string[];
+};
+export type WireGetStringsResponse = {
+    values: WireString[];
+};
 export type WireSetArrayRange = {
     key: string;
     pos: number;
@@ -650,18 +667,45 @@ export type WireLevelInfo = {
     sy: number;
     sz: number;
 };
+export type WireProjectConfig = {
+    version: number;
+};
 export declare function wireCreateProject(name: string): Promise<WireCreateProjectResponse>;
 export declare function wireGetUserString(key: string): Promise<string | undefined>;
 export declare function wireSetUserString(key: string, value: string): Promise<void>;
 export declare function wireGetString(key: string): Promise<string | undefined>;
 export declare function wireGetObject<T>(key: string): Promise<T | undefined>;
-export declare function wireGetStrings(pattern: string): Promise<WireString[]>;
+export declare function wireGetStrings(keys: string[]): Promise<WireString[]>;
 export declare function wireSetString(key: string, value: string): Promise<void>;
 export declare function wireSetStrings(keys: WireString[]): Promise<void>;
 export declare function wireSetObject<T>(key: string, value: T): Promise<void>;
 export declare function wireSetObjectBackground<T>(key: string, value: T): void;
-export declare function wireGetArrayRange<T>(key: string, idx: number, count: number): Promise<T[] | undefined>;
-export declare function wireSetArrayRange<T>(key: string, idx: number, count: number, value: T[]): Promise<void>;
+export type WireDict = {
+    field: string;
+    value: string;
+};
+export type WireGetDictRequest = {
+    key: string;
+    fields: string[] | null | undefined;
+};
+export type WireGetDictResponse = {
+    fields: WireDict[] | null | undefined;
+};
+export type WireSetDictRequest = {
+    key: string;
+    fields: WireDict[];
+};
+export type WireIncrementRequest = {
+    count: number;
+};
+export type WireIncrementResponse = {
+    start: number;
+    count: number;
+};
+export declare function wireIncrement(key: string, delta: number): Promise<number | undefined>;
+export declare function wireGetDict(key: string, fields: string[] | null | undefined): Promise<WireDict[] | undefined>;
+export declare function wireSetDict(key: string, fields: WireDict[]): Promise<void>;
+export declare function wireSetDictBackground<T>(key: string, fields: WireDict[]): void;
 
 export declare class FetchAdapterWeb implements IFetchAdapter {
     get(uri: string): Promise<Response>;
@@ -1059,6 +1103,9 @@ export type WireCamera = {
     xLook: number;
     yLook: number;
     zLook: number;
+    xRotation: number;
+    yRotation: number;
+    zRotation: number;
 };
 export type WireLevelInfo = {
     xMap: number;
@@ -1074,7 +1121,7 @@ export interface IVoxelLevelFile {
     registerOnChangeBlock(func: (blocks: FileMapBlock[]) => void): any;
     load(isTest: boolean): Promise<void>;
     deleteBlock(block: MapBlockCoord): any;
-    addBlock(pos: BlockPos3, block: VoxelModel): any;
+    addBlock(pos: BlockPos3, blockId: number): any;
 }
 export interface IVoxelLevel {
     get worldSize(): WorldSize3;
@@ -1617,12 +1664,24 @@ export declare class VoxelModelFrame {
     build(writer: VoxelGeometryWriter): void;
 }
 
+export type WireModelInfo = {
+    id: number;
+    voxUrl: string;
+    thumbnailUrl: string;
+};
 export declare class VoxelModelCache {
     private readonly modelsByUrl;
     private readonly modelsById;
-    private nextId;
     getVoxelModelById(id: number): VoxelModel | undefined;
-    getVoxelModel(url: string): Promise<VoxelModel>;
+    getVoxelModel(url: string): VoxelModel | undefined;
+    load(): Promise<boolean>;
+    loadModelEntries(modelEntries: WireDict[]): Promise<void>;
+    static addModelReferences(models: {
+        voxUrl: string;
+        thumbnailUrl: string;
+    }[]): Promise<WireModelInfo[] | undefined>;
+    private loadModelFromString;
+    private loadModelFromArray;
 }
 export declare let modelCache: VoxelModelCache;
 export declare function getCharacterModelList(): string[];

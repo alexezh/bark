@@ -67,7 +67,7 @@ export interface IVoxelLevelFile {
 
   load(isTest: boolean): Promise<void>;
   deleteBlock(block: MapBlockCoord);
-  addBlock(pos: BlockPos3, block: VoxelModel);
+  addBlock(pos: BlockPos3, blockId: number);
 }
 
 export interface IVoxelLevel {
