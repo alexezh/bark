@@ -1,13 +1,15 @@
 import { Vector3 } from "three";
-import { WireDict, wireGetDict, wireGetObject, wireSetDictBackground, wireSetObjectBackground } from "../lib/fetchadapter";
+import { WireDict, wireGetDict, wireGetObject, wireSetDictBackground, wireSetObject, wireSetObjectBackground } from "../lib/fetchadapter";
 import { FileMapBlock, FileMapBlockDef, IVoxelLevelFile, MapBlockCoord, WireCamera, WireLevelInfo } from "../ui/ivoxelmap";
 import { BlockPos3, BlockSize3, WorldSize3 } from "../voxel/pos3";
 import { VoxelModel } from "../voxel/voxelmodel";
-import { modelCache } from "../voxel/voxelmodelcache";
+import { VoxelModelCache, modelCache } from "../voxel/voxelmodelcache";
+import { isYieldExpression } from "typescript";
 
 export class VoxelLevelFile implements IVoxelLevelFile {
   private _cameraPosition: Vector3 = new Vector3();
   private _cameraLookAt: Vector3 = new Vector3();
+  private _cameraRotation: Vector3 = new Vector3();
   private _mapSize: WorldSize3 = { sx: 0, sy: 0, sz: 0 };
   private _zStride: number = 0;
   private _yStride: number = 0;
@@ -21,44 +23,54 @@ export class VoxelLevelFile implements IVoxelLevelFile {
   public constructor(url: string) {
     this._url = url;
   }
-  public async load(isTest: boolean): Promise<void> {
 
-    if (!isTest) {
-      let wi = await wireGetObject<WireLevelInfo>(this._url + '/info');
-      if (wi !== undefined) {
-        this._mapSize = {
-          sx: wi.xMap, sy: wi.yMap, sz: wi.zMap
-        }
-      }
-      this._zStride = this._mapSize.sx * this._mapSize.sy;
-      this._yStride = this._mapSize.sx;
+  public async load(): Promise<void> {
 
-      let wc = await wireGetObject<WireCamera>(this._url + '/camera');
-      if (wc !== undefined) {
-        this._cameraPosition = new Vector3(wc.xPos, wc.yPos, wc.zPos);
-        this._cameraLookAt = new Vector3(wc.xLook, wc.yLook, wc.zLook);
-      }
-
-      let fields = await wireGetDict(this._url + '/blocks', undefined);
-      if (fields !== undefined) {
-        for (let field of fields) {
-          let fb = JSON.parse(field.value) as FileMapBlock;
-          this._blocks.set(parseInt(field.field), fb);
-        }
-      }
-    } else {
-      this._mapSize = { sx: 20, sy: 1, sz: 20 };
-      this._zStride = this._mapSize.sx * this._mapSize.sy;
-      this._yStride = this._mapSize.sx;
-
-      let ground = await modelCache.getVoxelModel('./assets/vox/ground.vox');
-      for (let x = 0; x < this._mapSize.sx; x++) {
-        for (let z = 0; z < this._mapSize.sz; z++) {
-          let key = this.getBlockKey(x, 0, z);
-          this._blocks.set(key, { x: x, y: 0, z: z, blockId: ground.id });
-        }
+    let wi = await wireGetObject<WireLevelInfo>(this._url + '/info');
+    if (wi !== undefined) {
+      this._mapSize = {
+        sx: wi.xMap, sy: wi.yMap, sz: wi.zMap
       }
     }
+    this._zStride = this._mapSize.sx * this._mapSize.sy;
+    this._yStride = this._mapSize.sx;
+
+    let wc = await wireGetObject<WireCamera>(this._url + '/camera');
+    if (wc !== undefined) {
+      this._cameraPosition = new Vector3(wc.xPos, wc.yPos, wc.zPos);
+      this._cameraLookAt = new Vector3(wc.xLook, wc.yLook, wc.zLook);
+    }
+
+    let fields = await wireGetDict(this._url + '/blocks', undefined);
+    if (fields !== undefined) {
+      for (let field of fields) {
+        let fb = JSON.parse(field.value) as FileMapBlock;
+        this._blocks.set(parseInt(field.field), fb);
+      }
+    }
+  }
+
+  public static async createLevel(url: string): Promise<void> {
+    let li: WireLevelInfo = {
+      xMap: 100, yMap: 1, zMap: 100
+    }
+
+    await wireSetObject<WireLevelInfo>(url + '/info', li);
+
+    let angleZ = Math.PI / 4;
+
+    let camera: WireCamera = {
+      xPos: 200,
+      yPos: 200,
+      zPos: 100 + Math.tan(angleZ),
+      xLook: 0,
+      yLook: 0,
+      zLook: 0,
+      xRotation: -angleZ,
+      yRotation: 0,
+      zRotation: 0,
+    }
+    await wireSetObject<WireCamera>(url + '/camera', camera);
   }
 
   get cameraPosition(): Vector3 {
@@ -67,6 +79,7 @@ export class VoxelLevelFile implements IVoxelLevelFile {
 
   set cameraPosition(value: Vector3) {
     this._cameraPosition = value;
+
     wireSetObjectBackground<WireCamera>('camera', {
       xPos: this._cameraPosition.x,
       yPos: this._cameraPosition.y,
@@ -74,8 +87,12 @@ export class VoxelLevelFile implements IVoxelLevelFile {
       xLook: this._cameraLookAt.x,
       yLook: this._cameraLookAt.y,
       zLook: this._cameraLookAt.z,
+      xRotation: this._cameraRotation.x,
+      yRotation: this._cameraRotation.y,
+      zRotation: this._cameraRotation.z
     });
   }
+
   get mapSize(): BlockSize3 {
     return this._mapSize;
   }

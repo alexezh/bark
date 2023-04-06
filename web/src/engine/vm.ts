@@ -18,6 +18,8 @@ import { VoxelLevelFile } from "./voxellevelfile";
 import { MoveController2D } from "./movecontroller2d";
 import { LevelEditor } from "../ui/leveleditor";
 import { BoxedGame } from "../python";
+import { wireGetDict } from "../lib/fetchadapter";
+import { modelCache } from "../voxel/voxelmodelcache";
 
 export type MessageHandler = (msg: string) => Promise<void>;
 export type StartHandler = () => Promise<void>;
@@ -87,6 +89,11 @@ export class VM implements IVM {
   }
 
   public async loadProject(id: string): Promise<IDigGame> {
+
+    if (!await modelCache.load()) {
+      let ground = await modelCache.getVoxelModel('./assets/vox/ground.vox');
+    }
+
     // for now create BoxedGame (as code) but use different projectId
     let game = new BoxedGame();
     await game.init();
@@ -95,7 +102,7 @@ export class VM implements IVM {
   }
 
   public async loadLevel(id: string): Promise<void> {
-    this._levelFile = new VoxelLevelFile('levels/default');
+    this._levelFile = new VoxelLevelFile(id);
     await this._levelFile.load(false);
 
     this._level = new VoxelLevel(this.levelFile);

@@ -45,6 +45,9 @@ export type WireCamera = {
   xLook: number;
   yLook: number;
   zLook: number;
+  xRotation: number;
+  yRotation: number;
+  zRotation: number;
 }
 
 export type WireLevelInfo = {

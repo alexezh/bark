@@ -3,6 +3,11 @@ import { CommandAction, FormPane } from "./commandaction";
 import { v4 as uuidv4 } from 'uuid';
 import { vm } from "../engine/ivm";
 import { ICommandBar } from "../ui/iaction";
+import { VoxelModelCache, modelCache } from "../voxel/voxelmodelcache";
+import { ImportVoxAction } from "./importaction";
+import { Vox } from "../voxel/vox";
+import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
+import { VoxelLevelFile } from "../engine/voxellevelfile";
 
 export class CreateProjectAction extends CommandAction {
   get name(): string { return 'CreateProject' }
@@ -42,6 +47,28 @@ export class CreateProjectAction extends CommandAction {
       }
     }
   }
+}
+
+async function importDefaultModels(voxUrls: string[]) {
+  let vox = new Vox;
+  let tr = new ThumbnailRenderer(128, 128);
+
+  for (let voxUrl in voxUrls) {
+    let thumb = await ImportVoxAction.renderThumbnail(vox, tr, data, fn);
+  }
+}
+
+export async function createDefaultProject(): Promise<void> {
+
+
+  importDefaultModels
+
+  VoxelModelCache.importModels();
+
+  VoxelLevelFile.createLevel('levels/default');
+
+
+  VoxelModelCache.addModelReferences()
 }
 
 export class CreateLevelAction extends CommandAction {

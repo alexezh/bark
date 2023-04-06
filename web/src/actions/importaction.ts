@@ -9,7 +9,7 @@ import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
 import { VoxelModelFrame } from "../voxel/voxelmodel";
 import { createButton } from "../lib/htmlutils";
 import { encode as PngEncode } from 'fast-png';
-import { modelCache } from "../voxel/voxelmodelcache";
+import { modelCache, VoxelModelCache } from "../voxel/voxelmodelcache";
 
 type UploadFile = {
   fn: string;
@@ -32,7 +32,7 @@ export class ImportVoxAction implements IAction {
 
   public renderButton(parent: HTMLElement, bar: ICommandBar) {
 
-    let div = this.createUploadButton(bar);
+    let div = this.createImportButton(bar);
     this._element = div;
 
     parent.appendChild(div);
@@ -47,7 +47,7 @@ export class ImportVoxAction implements IAction {
     this._inputElem = undefined;
   }
 
-  private createUploadButton(bar: ICommandBar): HTMLDivElement {
+  private createImportButton(bar: ICommandBar): HTMLDivElement {
     let d = document.createElement('input');
     d.id = 'upload_' + this._id;
     d.name = d.id;
@@ -56,7 +56,7 @@ export class ImportVoxAction implements IAction {
     d.multiple = true;
     d.accept = ".vox";
     d.onchange = () => {
-      this.processUpload(bar);
+      this.processImport(bar);
     }
     this._inputElem = d;
 
@@ -72,7 +72,7 @@ export class ImportVoxAction implements IAction {
     return div;
   }
 
-  private async processUpload(bar: ICommandBar) {
+  private async processImport(bar: ICommandBar) {
     if (this._inputElem!.files === null) {
       return;
     }
@@ -101,9 +101,11 @@ export class ImportVoxAction implements IAction {
         continue;
       }
 
-      let thumb = await this.renderThumbnail(bar, vox, tr, data, fn);
-      if (thumb === undefined) {
-        console.log('cannot render thumbnail');
+      let thumb = await ImportVoxAction.renderThumbnail(vox, tr, data, fn);
+      if (typeof thumb === 'string') {
+        bar.displayError(thumb);
+        continue;
+      } else if (thumb === undefined) {
         continue;
       }
 
@@ -113,16 +115,14 @@ export class ImportVoxAction implements IAction {
     return uploadFiles;
   }
 
-  private async renderThumbnail(
-    bar: ICommandBar,
+  public static async renderThumbnail(
     vox: Vox,
     tr: ThumbnailRenderer,
     data: ArrayBuffer,
-    fn: string): Promise<ImageData | undefined> {
+    fn: string): Promise<ImageData | string | undefined> {
     let voxelFile = vox.loadModel(data, fn);
     if (voxelFile === undefined || voxelFile.frames.length === 0) {
-      bar.displayError('Cannot load model ' + fn);
-      return undefined;
+      return 'Cannot load model ' + fn;
     }
 
     let mf = new VoxelModelFrame(voxelFile.frames[0]);
@@ -152,15 +152,18 @@ export class ImportVoxAction implements IAction {
       d.appendChild(canvas);
     }
 
-    let upload = createButton(d, 'Upload', () => { this.upload(bar, uploadFiles); });
+    let upload = createButton(d, 'Upload', () => {
+      this.upload(uploadFiles);
+      bar.closeDetailsPane();
+    });
 
     bar.openDetailsPane(d);
   }
 
-  private async upload(bar: ICommandBar, uploadFiles: UploadFile[]) {
+  private async upload(uploadFiles: UploadFile[]) {
 
     let wireFiles: WireString[] = [];
-    let models: { voxUrl: string, thumbnailUrl: string }[] = [];
+    let modelRefs: { voxUrl: string, thumbnailUrl: string }[] = [];
     for (let file of uploadFiles) {
       let dataStr = bytesToBase64(file.vox);
       let voxUrl = 'vox/' + file.fn;
@@ -175,15 +178,14 @@ export class ImportVoxAction implements IAction {
       let thumbUrl = 'thumbnail/' + thumbName;
       wireFiles.push({ key: thumbUrl, data: pngStr });
 
-      models.push({ voxUrl: voxUrl, thumbnailUrl: thumbUrl });
+      modelRefs.push({ voxUrl: voxUrl, thumbnailUrl: thumbUrl });
     }
 
     await wireSetStrings(wireFiles);
 
+    await VoxelModelCache.addModelReferences(modelRefs);
 
-    await modelCache.addModels(models);
-
-    bar.closeDetailsPane();
+    // TODO: load models to cache
   }
 }
 

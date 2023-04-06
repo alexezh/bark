@@ -12,30 +12,56 @@ export type WireModelInfo = {
 export class VoxelModelCache {
   private readonly modelsByUrl: Map<string, VoxelModel> = new Map<string, VoxelModel>();
   private readonly modelsById: Map<number, VoxelModel> = new Map<number, VoxelModel>();
-  private nextId: number = 1;
 
   public getVoxelModelById(id: number): VoxelModel | undefined {
     return this.modelsById.get(id);
   }
 
-  public async load() {
-    let dict = await wireGetDict('models', undefined);
-    let voxUrls: string[] = [];
+  public getVoxelModel(url: string): VoxelModel | undefined {
+    let model = this.modelsByUrl.get(url);
+    return model;
+  }
 
-    if (dict !== undefined) {
-      for (let modelEntry of dict) {
-        let modelInfo: WireModelInfo = JSON.parse(modelEntry.value);
-        voxUrls.push(modelInfo.voxUrl);
+
+  public async load(): Promise<boolean> {
+    let modelEntries = await wireGetDict('models', undefined);
+
+    if (modelEntries === undefined) {
+      return false;
+    }
+
+    await this.loadModelEntries(modelEntries);
+    return true;
+  }
+
+  public async loadModelEntries(modelEntries: WireDict[]): Promise<void> {
+    let voxUrls: string[] = [];
+    let modelInfos: Map<string, WireModelInfo> = new Map<string, WireModelInfo>();
+    for (let modelEntry of modelEntries) {
+      let modelInfo: WireModelInfo = JSON.parse(modelEntry.value);
+      voxUrls.push(modelInfo.voxUrl);
+      modelInfos.set(modelInfo.voxUrl, modelInfo);
+    }
+
+    // we might return different list than input
+    let voxs = await wireGetStrings(voxUrls);
+    for (let vox of voxs) {
+      let modelInfo = modelInfos.get(vox.key);
+      if (modelInfo === undefined) {
+        console.log('Unknown model:' + vox.key);
+        continue;
       }
 
-      // we might return different list than input
-      let voxs = await wireGetStrings(voxUrls);
-
+      this.loadModelFromString(modelInfo.id, vox.key, vox.data);
     }
   }
 
-  public async addModels(models: { voxUrl: string, thumbnailUrl: string }[]) {
+  /**
+   * add model references to cloud; models have to be loaded from cloud separately
+   */
+  public static async addModelReferences(models: { voxUrl: string, thumbnailUrl: string }[]): Promise<WireModelInfo[] | undefined> {
     let dict: WireDict[] = [];
+    let infos: WireModelInfo[] = [];
 
     let startIdx = await wireIncrement('modelcount', models.length);
     if (startIdx === undefined) {
@@ -48,25 +74,14 @@ export class VoxelModelCache {
         voxUrl: model.voxUrl,
         thumbnailUrl: model.thumbnailUrl
       }
+      infos.push(entry);
       dict.push({ field: entry.id.toString(), value: JSON.stringify(entry) });
       startIdx++;
     }
     await wireSetDict('models', dict);
+
+    return infos;
   }
-
-  public async getVoxelModel(url: string): Promise<VoxelModel> {
-    let model = this.modelsByUrl.get(url);
-    if (model !== undefined) {
-      return model;
-    }
-
-    let id = this.nextId++;
-    let chunkBuffer = await fetchResource(url);
-    let chunkBlob = new Uint8ClampedArray(chunkBuffer);
-
-    return this.loadModelFromArray(id, url, chunkBlob);
-  };
-
 
   private loadModelFromString(id: number, url: string, modelData64: string): VoxelModel {
     let chunkBlob = base64ToBytes(modelData64);
