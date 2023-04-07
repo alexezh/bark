@@ -206,9 +206,14 @@ export async function wireGetDict(key: string, fields: string[] | null | undefin
 }
 
 export async function wireSetDict(key: string, fields: WireDict[]): Promise<void> {
-  let valueData: string[] = [];
-  let request: WireSetDictRequest = { key: key, fields: fields };
-  let res = await (await fetchAdapter!.post(`/api/project/setdict/${projectId}`, JSON.stringify(request))).json();
+  try {
+    let valueData: string[] = [];
+    let request: WireSetDictRequest = { key: key, fields: fields };
+    let res = await (await fetchAdapter!.post(`/api/project/setdict/${projectId}`, JSON.stringify(request))).json();
+  }
+  catch (e) {
+    console.log('setDict failed:' + e);
+  }
 }
 
 export function wireSetDictBackground<T>(key: string, fields: WireDict[]): void {

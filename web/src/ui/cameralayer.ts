@@ -143,7 +143,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
         }
 
         let wsz = vm.level.worldSize;
-        console.log(`load level: ${wsz.sx} ${wsz.sy}`);
+        console.log(`onLevelLoaded: world size ${wsz.sx} ${wsz.sy} ${wsz.sz}`);
 
         // add geometry covering map on the bottom so we can handle all clicks within map
         const geometry = new PlaneGeometry(wsz.sx, wsz.sz);

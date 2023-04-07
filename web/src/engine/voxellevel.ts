@@ -95,11 +95,12 @@ export class VoxelLevel implements IVoxelLevel {
     };
 
     public async load(): Promise<boolean> {
-        this.layers.push(new MapLayer(defaultMaterial, 0, this._blockSize));
-
         this.width = this.file.mapSize.sx;
         this.height = this.file.mapSize.sz;
 
+        this.layers.push(new MapLayer(defaultMaterial, { w: this.width, h: this.height }, 0, this._blockSize));
+
+        console.log(`VoxelLevel: ${this.file.blocks.size}`);
         for (let fbitem of this.file.blocks) {
             let fb = fbitem[1];
             let block = await modelCache.getVoxelModelById(fb.blockId);
@@ -173,7 +174,7 @@ export class VoxelLevel implements IVoxelLevel {
     private addBlockCore(pos: BlockPos3, block: VoxelModel): MapLayer {
         if (pos.y >= this.layers.length) {
             for (let i = this.layers.length - 1; i < pos.y; i++) {
-                let layer = new MapLayer(defaultMaterial, this.layers.length, this._blockSize);
+                let layer = new MapLayer(defaultMaterial, { w: this.width, h: this.height }, this.layers.length, this._blockSize);
                 layer.build();
                 this.layers.push(layer);
             }
@@ -236,6 +237,7 @@ export class VoxelLevel implements IVoxelLevel {
     private onFileChangeBlock(blocks: FileMapBlock[]) {
         for (let i = 0; i < blocks.length; i++) {
             let fb = blocks[i];
+
             if (fb.blockId !== 0) {
                 let block = modelCache.getVoxelModelById(fb.blockId);
                 if (block !== undefined) {

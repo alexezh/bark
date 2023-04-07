@@ -696,6 +696,7 @@ export type WireSetDictRequest = {
     fields: WireDict[];
 };
 export type WireIncrementRequest = {
+    key: string;
     count: number;
 };
 export type WireIncrementResponse = {
@@ -1684,6 +1685,3 @@ export declare class VoxelModelCache {
     private loadModelFromArray;
 }
 export declare let modelCache: VoxelModelCache;
-export declare function getCharacterModelList(): string[];
-export declare function getBlockModelList(): string[];
-export declare function getObjectModelList(): string[];

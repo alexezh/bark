@@ -155,7 +155,7 @@ export class LevelEditor implements ILevelEditor {
 
     let pos = this.selectedBlock.mapPos;
     if (this.selectedBlock.model !== undefined) {
-      this.level.file.addBlock({ x: pos.x, y: pos.y, z: pos.z + 1 }, block.id);
+      this.level.file.addBlock({ x: pos.x, y: pos.y + 1, z: pos.z }, block.id);
     } else {
       this.level.file.addBlock({ x: pos.x, y: pos.y, z: pos.z }, block.id);
     }
@@ -177,8 +177,8 @@ export class LevelEditor implements ILevelEditor {
   private selectBlockFace(point: Vector3) {
     let block: MapBlockCoord | undefined;
 
-    if (point.z <= 0) {
-      point.z = 0;
+    if (point.y <= 0) {
+      point.y = 0;
     }
 
     block = this.level.findBlock(point);

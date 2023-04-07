@@ -83,6 +83,8 @@ export async function createDefaultProject(): Promise<void> {
     version: 1
   };
 
+  console.log('createDefaultProject');
+
   await wireSetObject<WireProjectConfig>('config', projectConfig);
 
   let modelInfos = await importDefaultModels(['ground.vox', 'monky.vox', 'bomb.vox']);

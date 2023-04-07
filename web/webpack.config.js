@@ -6,6 +6,9 @@ module.exports = {
   mode: 'development',
   entry: './src/digruntime.ts',
   devtool: 'inline-source-map',
+  optimization: {
+    concatenateModules: true,
+  },
   module: {
     rules: [
       {

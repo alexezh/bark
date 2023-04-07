@@ -3,6 +3,7 @@ import { WireDict, wireGetDict, wireGetObject, wireSetDictBackground, wireSetObj
 import { FileMapBlock, IVoxelLevelFile, MapBlockCoord, WireCamera, WireLevelInfo } from "../ui/ivoxelmap";
 import { BlockPos3, BlockSize3, WorldSize3 } from "../voxel/pos3";
 import { forEach } from "lodash";
+import { ContextExclusionPlugin } from "webpack";
 
 export class VoxelLevelFile implements IVoxelLevelFile {
   private _cameraPosition: Vector3 = new Vector3();
@@ -40,18 +41,27 @@ export class VoxelLevelFile implements IVoxelLevelFile {
     }
 
     let fields = await wireGetDict(this._url + '/blocks', undefined);
+
     if (fields !== undefined) {
       for (let field of fields) {
         let fb = JSON.parse(field.value) as FileMapBlock;
-        this._blocks.set(parseInt(field.field), fb);
+        if (fb.blockId !== 0) {
+          this._blocks.set(parseInt(field.field), fb);
+        } else {
+          console.log(`skip ${fb.x}, ${fb.z}`);
+        }
       }
     }
+
+    console.log(`VoxelLevelFile: ${fields?.length} ${this._blocks.size}`);
   }
 
   public static async createLevel(url: string): Promise<VoxelLevelFile> {
     let li: WireLevelInfo = {
       xMap: 100, yMap: 1, zMap: 100
     }
+
+    console.log(`createLevel: ${li.xMap} ${li.zMap}`);
 
     await wireSetObject<WireLevelInfo>(url + '/info', li);
 
@@ -114,15 +124,22 @@ export class VoxelLevelFile implements IVoxelLevelFile {
 
     this._blocks.delete(key)
 
+    let fb: FileMapBlock = {
+      blockId: 0,
+      x: pos.x,
+      y: pos.y,
+      z: pos.z
+    }
+
+    console.log(`deleteBlock ${pos.x}, ${pos.x}, ${pos.z}`)
+
     if (this.onChangeBlock !== undefined) {
-      let fb: FileMapBlock = {
-        blockId: 0,
-        x: pos.x,
-        y: pos.y,
-        z: pos.z
-      }
       this.onChangeBlock([fb]);
     }
+
+    let fields: WireDict[] = [];
+    fields.push({ field: key.toString(), value: JSON.stringify(fb) });
+    wireSetDictBackground(this._url + '/blocks', fields);
   }
 
   public addBlock(pos: BlockPos3, blockId: number) {
@@ -133,6 +150,7 @@ export class VoxelLevelFile implements IVoxelLevelFile {
       z: pos.z
     }
 
+    console.log(`addBlock ${pos.x}, ${pos.x}, ${pos.z}`)
     let key = this.getBlockKey(pos.x, pos.y, pos.z);
     this._blocks.set(key, fb);
 
@@ -147,6 +165,8 @@ export class VoxelLevelFile implements IVoxelLevelFile {
 
   public addBlocks(blocks: FileMapBlock[]) {
     let fields: WireDict[] = [];
+
+    console.log(`addBlocks ${blocks.length}`);
 
     for (let block of blocks) {
       let key = this.getBlockKey(block.x, block.y, block.z);

@@ -19,10 +19,10 @@ export class MapLayer {
 
   public get staticMesh(): Mesh { return this._mesh; }
 
-  public constructor(material: MeshPhongMaterial, layerZ: number, blockSize: number) {
+  public constructor(material: MeshPhongMaterial, size: GridSize, layerZ: number, blockSize: number) {
     this.material = material;
     this.blockSize = blockSize;
-    this.size = { w: 20, h: 20 };
+    this.size = size;
     this.layerY = layerZ;
     this.blocks = new Array(this.size.w * this.size.h);
   }
@@ -31,13 +31,8 @@ export class MapLayer {
 
   }
 
-  public fill(tile: VoxelModel) {
-    for (let idx = 0; idx < this.blocks.length; idx++) {
-      this.blocks[idx] = { model: tile, frame: 0, topmost: true }
-    }
-  }
-
   public build() {
+    let count = 0;
     let writer = new VoxelGeometryWriter();
     for (let z = 0; z < this.size.h; z++) {
       for (let x = 0; x < this.size.w; x++) {
@@ -48,10 +43,12 @@ export class MapLayer {
           writer.setScale(this.blockSize / model.chunk_sx);
           writer.setPosition(this.blockSize * x, this.blockSize * this.layerY, this.blockSize * z);
           model.build(writer);
+          count++;
         }
       }
     }
 
+    console.log(`MapLayer: meshes: ${count}`);
     this.geometry = writer.getGeometry();
     this._mesh = new Mesh(this.geometry, this.material);
     this.dirty = false;
