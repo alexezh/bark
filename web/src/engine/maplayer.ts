@@ -1,23 +1,24 @@
-import { BufferGeometry, Mesh, MeshPhongMaterial, Vector3 } from "three";
+import { BufferGeometry, Group, Mesh, MeshPhongMaterial, Scene, Vector3 } from "three";
 import { GridSize } from "../posh/pos";
 import { MapBlock, MapBlockCoord } from "../ui/ivoxelmap";
 import { BlockPos3 } from "../voxel/pos3";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
 import { VoxelModel } from "../voxel/voxelmodel";
 
-export class MapLayer {
+/**
+ * single layer (y coordinate) of a level
+ */
+export class MeshLevelLayer {
   private size!: GridSize;
   private blockSize: number;
   private blocks!: (MapBlock | undefined)[];
-  private _mesh!: Mesh;
-  private geometry!: BufferGeometry;
+  //private _mesh!: Mesh;
+  //private geometry!: BufferGeometry;
   private material: MeshPhongMaterial;
   public dirty: boolean = true;
 
   // Z coordinate of layer in pixels
   public readonly layerY: number;
-
-  public get staticMesh(): Mesh { return this._mesh; }
 
   public constructor(material: MeshPhongMaterial, size: GridSize, layerZ: number, blockSize: number) {
     this.material = material;
@@ -25,10 +26,6 @@ export class MapLayer {
     this.size = size;
     this.layerY = layerZ;
     this.blocks = new Array(this.size.w * this.size.h);
-  }
-
-  public load() {
-
   }
 
   public build() {
@@ -49,9 +46,21 @@ export class MapLayer {
     }
 
     console.log(`MapLayer: meshes: ${count}`);
-    this.geometry = writer.getGeometry();
+    let geometry = writer.getGeometry();
     this._mesh = new Mesh(this.geometry, this.material);
     this.dirty = false;
+  }
+
+  // use instance mesh for common things
+  // use groups of N for other blocks
+
+  //public get staticMesh(): Group { return this._mesh; }
+  public addToScene(scene: Scene) {
+
+  }
+
+  public removeFromScene(scene: Scene) {
+
   }
 
   // the tricky part is boundaries
@@ -78,16 +87,6 @@ export class MapLayer {
     };
   }
 
-  public deleteBlock(block: MapBlockCoord) {
-    this.blocks[block.idx] = undefined;
-    this.dirty = true;
-  }
-
-  public deleteBlockByCoord(x: number, z: number) {
-    this.blocks[z * this.size.w + x] = undefined;
-    this.dirty = true;
-  }
-
   public getBlock(xMap: number, zMap: number): MapBlockCoord | undefined {
     let idx = zMap * this.size.w + xMap;
     let b = this.blocks[idx];
@@ -108,6 +107,16 @@ export class MapLayer {
         sz: 1
       }
     };
+  }
+
+  public deleteBlock(block: MapBlockCoord) {
+    this.blocks[block.idx] = undefined;
+    this.dirty = true;
+  }
+
+  public deleteBlockByCoord(x: number, z: number) {
+    this.blocks[z * this.size.w + x] = undefined;
+    this.dirty = true;
   }
 
   public addBlock(pos: BlockPos3, block: VoxelModel) {

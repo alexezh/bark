@@ -1,6 +1,6 @@
 import { AmbientLight, BufferGeometry, Mesh, MeshPhongMaterial, Scene, Vector3 } from "three";
 import { modelCache } from "../voxel/voxelmodelcache";
-import { MapLayer } from "./maplayer";
+import { MeshLevelLayer } from "./maplayer";
 import { VoxelModel } from "../voxel/voxelmodel";
 import { BlockPos3, BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { defaultMaterial, FileMapBlock, IVoxelLevel, IVoxelLevelFile, MapBlock, MapBlockCoord } from "../ui/ivoxelmap";
@@ -28,7 +28,7 @@ export class VoxelLevel implements IVoxelLevel {
     public height = 100;
     private _blockSize = 16;
     private _file: IVoxelLevelFile;
-    private layers: MapLayer[] = [];
+    private layers: MeshLevelLayer[] = [];
 
     public ambient_light!: AmbientLight;
 
@@ -98,7 +98,7 @@ export class VoxelLevel implements IVoxelLevel {
         this.width = this.file.mapSize.sx;
         this.height = this.file.mapSize.sz;
 
-        this.layers.push(new MapLayer(defaultMaterial, { w: this.width, h: this.height }, 0, this._blockSize));
+        this.layers.push(new MeshLevelLayer(defaultMaterial, { w: this.width, h: this.height }, 0, this._blockSize));
 
         console.log(`VoxelLevel: ${this.file.blocks.size}`);
         for (let fbitem of this.file.blocks) {
@@ -151,14 +151,14 @@ export class VoxelLevel implements IVoxelLevel {
         return this.layers[layerIdx].findBlock(point);
     }
 
-    private deleteBlockCore(block: MapBlockCoord): MapLayer {
+    private deleteBlockCore(block: MapBlockCoord): MeshLevelLayer {
         let layer = this.layers[block.mapPos.y];
         this.scene.remove(layer.staticMesh);
         layer.deleteBlock(block);
         return layer;
     }
 
-    private deleteBlockByCoord(x: number, y: number, z: number): MapLayer {
+    private deleteBlockByCoord(x: number, y: number, z: number): MeshLevelLayer {
         let layer = this.layers[y];
         this.scene.remove(layer.staticMesh);
         layer.deleteBlockByCoord(x, z);
@@ -171,16 +171,16 @@ export class VoxelLevel implements IVoxelLevel {
         this.scene.add(layer.staticMesh);
     }
 
-    private addBlockCore(pos: BlockPos3, block: VoxelModel): MapLayer {
+    private addBlockCore(pos: BlockPos3, block: VoxelModel): MeshLevelLayer {
         if (pos.y >= this.layers.length) {
             for (let i = this.layers.length - 1; i < pos.y; i++) {
-                let layer = new MapLayer(defaultMaterial, { w: this.width, h: this.height }, this.layers.length, this._blockSize);
+                let layer = new MeshLevelLayer(defaultMaterial, { w: this.width, h: this.height }, this.layers.length, this._blockSize);
                 layer.build();
                 this.layers.push(layer);
             }
         }
 
-        let layer: MapLayer = this.layers[pos.y];
+        let layer: MeshLevelLayer = this.layers[pos.y];
         layer.addBlock(pos, block);
         return layer;
     }
@@ -214,7 +214,7 @@ export class VoxelLevel implements IVoxelLevel {
         let zEnd = Math.max(zStart + 1, Math.floor((pos.z + sz.z) / this._blockSize));
 
         for (let y = yStart; y < yEnd; y++) {
-            let layer: MapLayer = this.layers[y];
+            let layer: MeshLevelLayer = this.layers[y];
             if (layer === undefined) {
                 continue;
             }
