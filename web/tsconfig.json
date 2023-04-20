@@ -26,7 +26,8 @@
     "noEmit": false,
   },
   "types": [
-    "codeflask"
+    "codeflask",
+    "jest"
   ],
   "include": [
     "src/**/*.ts",

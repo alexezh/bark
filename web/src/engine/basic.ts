@@ -1,16 +1,4 @@
-export class Tokeniser {
-  public read(): string {
-    return '';
-  }
-
-  public peek(): string {
-    return '';
-  }
-
-  public hasToken(): boolean {
-    return false;
-  }
-}
+import { Tokeniser } from "./basictokeniser";
 
 export type AstNode = {
 
@@ -48,10 +36,6 @@ export type IfNode = StatementNode & {
   th: AstNode;
   // elif translated to el -> IfNode
   el: AstNode | undefined;
-}
-
-export class ParseError {
-
 }
 
 // parses string; produces AST
