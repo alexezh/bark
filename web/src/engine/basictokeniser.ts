@@ -6,6 +6,7 @@ export class ParseError {
 
 export enum TokenKind {
   Eol = 1,
+  // first op
   Equal,
   Less,
   Greater,
@@ -14,11 +15,13 @@ export enum TokenKind {
   Or,
   And,
   Not,
-  Assign,
   Plus,
   Minus,
   Div,
   Mul,
+  // last op
+  Assign,
+  Comma,
   Colon,
   ParenLeft,
   ParenRight,
@@ -37,6 +40,10 @@ export enum TokenKind {
   Begin,
   Proc,
   Var,
+}
+
+export function isOpTokenKind(kind: TokenKind): boolean {
+  return kind >= TokenKind.Equal && kind <= TokenKind.Mul;
 }
 
 export class Token {
@@ -89,48 +96,76 @@ export class StringReader {
     }
     return true;
   }
+
+  public skipWhite() {
+    while (!this.isEol) {
+      let c = this.peekNext();
+      if (!(c === ' ' || c === '\t')) {
+        return;
+      }
+      this.move(1);
+    }
+  }
 }
 
-export class Tokeniser {
-  private nextToken: Token | undefined;
-  private reader: StringReader;
+export class Tokenizer {
+  private nextToken: number = -1;
+  private readonly tokens: Token[] = [];
 
-  public constructor(source: string) {
-    this.reader = new StringReader(source);
-    this.readNext();
+  public static load(source: string): Tokenizer {
+    let tokenizer = new Tokenizer()
+    this.load(source);
+    return tokenizer;
   }
 
+  // read next token
   public read(): Token {
-    if (this.nextToken === undefined) {
+    if (this.nextToken === -1) {
       throw new ParseError();
     }
-    let token = this.nextToken;
-    this.readNext();
+    let token = this.tokens[this.nextToken];
+    this.nextToken++;
+    if (this.nextToken > this.tokens.length) {
+      this.nextToken = -1;
+    }
+
     return token;
   }
 
   public peek(): Token {
-    if (this.nextToken === undefined) {
+    if (this.nextToken === -1) {
       throw new ParseError();
     }
-    return this.nextToken;
+    return this.tokens[this.nextToken];
   }
 
   public hasToken(): boolean {
-    return this.nextToken !== undefined;
+    return this.nextToken !== -1;
   }
 
-  private readNext() {
-    this.nextToken = undefined;
-
-    this.skipWhite();
-    if (this.reader.isEol) {
-      this.nextToken = undefined;
-      return;
+  private load(source: string) {
+    let reader = new StringReader(source);
+    while (!reader.isEol) {
+      let token = this.readNext(reader);
+      if (token !== undefined) {
+        this.tokens.push(token);
+      }
     }
 
-    let pos = this.reader.pos;
-    let c = this.reader.readNext();
+    if (this.tokens.length > 0) {
+      this.nextToken = 0;
+    }
+  }
+
+  private readNext(reader: StringReader): Token | undefined {
+
+    reader.skipWhite();
+    if (reader.isEol) {
+      return undefined;
+    }
+
+    let pos = reader.pos;
+    let c = reader.readNext();
     if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
       this.readNumber(c, pos);
       return;
@@ -144,114 +179,88 @@ export class Tokeniser {
 
     switch (c) {
       case '>':
-        this.nextToken = new Token(TokenKind.Greater, c, pos);
-        return;
+        return new Token(TokenKind.Greater, c, pos);
       case '<':
-        this.nextToken = new Token(TokenKind.Less, c, pos);
-        return;
+        return new Token(TokenKind.Less, c, pos);
       case '=':
-        this.nextToken = new Token(TokenKind.Equal, c, pos);
-        return;
+        return new Token(TokenKind.Equal, c, pos);
       case '-':
-        this.nextToken = new Token(TokenKind.Minus, c, pos);
-        return;
+        return new Token(TokenKind.Minus, c, pos);
       case '+':
-        this.nextToken = new Token(TokenKind.Plus, c, pos);
-        return;
+        return new Token(TokenKind.Plus, c, pos);
       case '(':
-        this.nextToken = new Token(TokenKind.ParenLeft, c, pos);
-        return;
+        return new Token(TokenKind.ParenLeft, c, pos);
       case ')':
-        this.nextToken = new Token(TokenKind.ParenRight, c, pos);
-        return;
+        return new Token(TokenKind.ParenRight, c, pos);
       case '[':
-        this.nextToken = new Token(TokenKind.SquareLeft, c, pos);
-        return;
+        return new Token(TokenKind.SquareLeft, c, pos);
       case ']':
-        this.nextToken = new Token(TokenKind.SquareRight, c, pos);
-        return;
+        return new Token(TokenKind.SquareRight, c, pos);
       case '{':
-        this.nextToken = new Token(TokenKind.SquigglyLeft, c, pos);
-        return;
+        return new Token(TokenKind.SquigglyLeft, c, pos);
       case '}':
-        this.nextToken = new Token(TokenKind.SquigglyRight, c, pos);
-        return;
+        return new Token(TokenKind.SquigglyRight, c, pos);
+      case ',':
+        return new Token(TokenKind.Comma, c, pos);
       case 'o':
-        if (this.reader.peekNext() === 'r') {
-          this.nextToken = new Token(TokenKind.Or, 'or', pos);
-          this.reader.move(1);
-          return;
+        if (reader.peekNext() === 'r') {
+          reader.move(1);
+          return new Token(TokenKind.Or, 'or', pos);
         }
         break;
       case 'a':
-        if (this.reader.compare('nd')) {
-          this.nextToken = new Token(TokenKind.And, 'and', pos);
-          this.reader.move(2);
-          return;
+        if (reader.compare('nd')) {
+          reader.move(2);
+          return new Token(TokenKind.And, 'and', pos);
         }
         break;
       case 'n':
-        if (this.reader.compare('ot')) {
-          this.nextToken = new Token(TokenKind.Not, 'not', pos);
-          this.reader.move(2);
-          return;
+        if (reader.compare('ot')) {
+          reader.move(2);
+          return new Token(TokenKind.Not, 'not', pos);
         }
         break;
       case ':':
-        if (this.reader.peekNext() === '=') {
-          this.nextToken = new Token(TokenKind.Assign, ':=', pos);
-          this.reader.move(1);
-          return;
+        reader.move(1);
+        if (reader.peekNext() === '=') {
+          return new Token(TokenKind.Assign, ':=', pos);
         } else {
-          this.nextToken = new Token(TokenKind.Colon, ':', pos);
-          return;
+          return new Token(TokenKind.Colon, ':', pos);
         }
-        break;
       case '\n':
-        this.nextToken = new Token(TokenKind.Eol, '\n', pos);
+        return new Token(TokenKind.Eol, '\n', pos);
         return;
       case '\r':
-        this.nextToken = new Token(TokenKind.Eol, '\n', pos);
-        if (this.reader.peekNext() === '\n') {
-          this.reader.move(1);
+        if (reader.peekNext() === '\n') {
+          reader.move(1);
         }
-        this.nextToken = new Token(TokenKind.Assign, '\n', pos);
+        return new Token(TokenKind.Eol, '\n', pos);
         return;
     }
 
-    this.readId(c, pos);
+    this.readId(reader, c, pos);
   }
 
-  private skipWhite() {
-    while (!this.reader.isEol) {
-      let c = this.reader.peekNext();
-      if (!(c === ' ' || c === '\t')) {
-        return;
-      }
-      this.reader.move(1);
-    }
-  }
-
-  private readId(head: string, pos: number) {
+  private readId(reader: StringReader, head: string, pos: number) {
     let s: string[] = [head];
-    while (!this.reader.isEol) {
-      let c = this.reader.peekNext();
+    while (!reader.isEol) {
+      let c = reader.peekNext();
       if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
-        this.reader.readNext();
+        reader.readNext();
         s.push(c);
       } else if (c === '_') {
-        this.reader.readNext();
+        reader.readNext();
         s.push(c);
       } else {
         let name = "".concat(...s);
-        this.nextToken = new Token(this.getIdKind(name), name, pos);
+        return new Token(this.getIdKind(name), name, pos);
         return;
       }
     }
 
     // read until EOL
     let name = "".concat(...s);
-    this.nextToken = new Token(this.getIdKind(name), name, pos);
+    return new Token(this.getIdKind(name), name, pos);
   }
 
   private getIdKind(name: string): TokenKind {
@@ -271,35 +280,34 @@ export class Tokeniser {
     }
   }
 
-  private readString(head: string, pos: number) {
+  private readString(reader: StringReader, head: string, pos: number) {
     let s: string[] = [head];
-    while (!this.reader.isEol) {
-      let c = this.reader.readNext();
+    while (!reader.isEol) {
+      let c = reader.readNext();
       s.push(c);
       if (c === '\\') {
-        s.push(this.reader.readNext());
+        s.push(reader.readNext());
       } else if (c === '"') {
-        this.nextToken = new Token(TokenKind.String, "".concat(...s), pos);
+        return new Token(TokenKind.String, "".concat(...s), pos);
         return;
       }
     }
   }
 
-  private readNumber(head: string, pos: number) {
+  private readNumber(reader: StringReader, head: string, pos: number) {
     let s: string[] = [head];
-    while (!this.reader.isEol) {
-      let c = this.reader.peekNext();
+    while (!reader.isEol) {
+      let c = reader.peekNext();
       if (c >= '0' && c <= '9') {
-        this.reader.readNext();
+        reader.readNext();
         s.push(c);
       } else if (c === '.') {
-        this.reader.readNext();
+        reader.readNext();
         s.push(c);
       } else {
-        this.nextToken = new Token(TokenKind.Number, "".concat(...s), pos);
-        return;
+        return new Token(TokenKind.Number, "".concat(...s), pos);
       }
     }
-    this.nextToken = new Token(TokenKind.Number, "".concat(...s), pos);
+    return new Token(TokenKind.Number, "".concat(...s), pos);
   }
 }

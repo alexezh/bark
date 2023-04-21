@@ -1,5 +1,5 @@
 import { FuncDef } from "../posh/funcdef";
-import { ParseError, Token, TokenKind, Tokeniser as Tokenizer } from "./basictokeniser";
+import { ParseError, Token, TokenKind, Tokenizer as Tokenizer, isOpTokenKind } from "./basictokeniser";
 
 export type AstNode = {
 
@@ -44,8 +44,20 @@ export type BlockNode = {
   statements: StatementNode[];
 }
 
+export type OpNode = AstNode & {
+  op: Token;
+}
+
+export type ConstNode = AstNode & {
+  value: Token;
+}
+
+export type IdNode = AstNode & {
+  name: Token;
+}
+
 export type ExpressionNode = AstNode & {
-  //exp
+  children: AstNode[];
 }
 
 export type IfNode = StatementNode & {
@@ -275,14 +287,68 @@ export class BasicParser {
         break;
       }
 
-      params.push(this.parseExpression());
+      let checkEnd = () => {
+        if (endPred()) {
+          return true;
+        }
+        let endToken = this.tokenizer.peek();
+        if (endToken.kind === TokenKind.Comma) {
+          return true;
+        }
+        return false;
+      }
+
+      params.push(this.parseExpression(checkEnd));
     }
     return params;
   }
 
-  parseExpression(): ExpressionNode {
-    return {
+  // expression has form X op Y where X and Y can be either expression, call or id
+  parseExpression(endPred: () => boolean): ExpressionNode {
+    let children: AstNode[] = [];
 
+    while (true) {
+      if (endPred()) {
+        return { children: children };
+      }
+
+      let token = this.tokenizer.read();
+      if (isOpTokenKind(token.kind)) {
+        let op: OpNode = {
+          op: token
+        }
+        children.push(op);
+      } else {
+        switch (token.kind) {
+          case TokenKind.Number: {
+            let c: ConstNode = {
+              value: token
+            }
+            children.push(c);
+            break;
+          }
+          case TokenKind.ParenLeft: {
+            children.push(this.parseExpression(() => {
+              let endToken = this.tokenizer.peek();
+              if (endToken.kind === TokenKind.ParenRight) {
+                return true;
+              }
+              return false;
+            }));
+            this.tokenizer.read();
+            break;
+          }
+          case TokenKind.Id: {
+            // for ID we have to look ahead and see if next token 
+            // is separator or op. In this case, id is just id
+            // if next token is left paren, it is a call
+            let nextToken = this.tokenizer.peek();
+
+            children.push(c);
+            break;
+          }
+        }
+      }
     }
   }
 }
