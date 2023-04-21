@@ -1,9 +1,11 @@
+import { AstNode } from "./basic";
 
 export class ParseError {
 
 }
 
 export enum TokenKind {
+  Eol = 1,
   Equal,
   Less,
   Greater,
@@ -17,6 +19,7 @@ export enum TokenKind {
   Minus,
   Div,
   Mul,
+  Colon,
   ParenLeft,
   ParenRight,
   SquigglyLeft,
@@ -26,6 +29,14 @@ export enum TokenKind {
   String,
   Number,
   Id,
+  If,
+  Then,
+  Else,
+  ElIf,
+  End,
+  Begin,
+  Proc,
+  Var,
 }
 
 export class Token {
@@ -110,6 +121,8 @@ export class Tokeniser {
   }
 
   private readNext() {
+    this.nextToken = undefined;
+
     this.skipWhite();
     if (this.reader.isEol) {
       this.nextToken = undefined;
@@ -187,10 +200,23 @@ export class Tokeniser {
       case ':':
         if (this.reader.peekNext() === '=') {
           this.nextToken = new Token(TokenKind.Assign, ':=', pos);
-          this.reader.readNext();
+          this.reader.move(1);
+          return;
+        } else {
+          this.nextToken = new Token(TokenKind.Colon, ':', pos);
           return;
         }
         break;
+      case '\n':
+        this.nextToken = new Token(TokenKind.Eol, '\n', pos);
+        return;
+      case '\r':
+        this.nextToken = new Token(TokenKind.Eol, '\n', pos);
+        if (this.reader.peekNext() === '\n') {
+          this.reader.move(1);
+        }
+        this.nextToken = new Token(TokenKind.Assign, '\n', pos);
+        return;
     }
 
     this.readId(c, pos);
@@ -217,13 +243,32 @@ export class Tokeniser {
         this.reader.readNext();
         s.push(c);
       } else {
-        this.nextToken = new Token(TokenKind.Id, "".concat(...s), pos);
+        let name = "".concat(...s);
+        this.nextToken = new Token(this.getIdKind(name), name, pos);
         return;
       }
     }
 
     // read until EOL
-    this.nextToken = new Token(TokenKind.Id, "".concat(...s), pos);
+    let name = "".concat(...s);
+    this.nextToken = new Token(this.getIdKind(name), name, pos);
+  }
+
+  private getIdKind(name: string): TokenKind {
+    switch (name) {
+      case 'if': return TokenKind.If;
+      case 'then': return TokenKind.Then;
+      case 'else': return TokenKind.Else;
+      case 'elif': return TokenKind.ElIf;
+      case 'end': return TokenKind.End;
+      case 'begin': return TokenKind.Begin;
+      case 'or': return TokenKind.Or;
+      case 'and': return TokenKind.And;
+      case 'not': return TokenKind.Not;
+      case 'proc': return TokenKind.Proc;
+      case 'var': return TokenKind.Var;
+      default: return TokenKind.Id;
+    }
   }
 
   private readString(head: string, pos: number) {
@@ -255,5 +300,6 @@ export class Tokeniser {
         return;
       }
     }
+    this.nextToken = new Token(TokenKind.Number, "".concat(...s), pos);
   }
 }
