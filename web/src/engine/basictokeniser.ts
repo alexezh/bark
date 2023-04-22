@@ -108,6 +108,62 @@ export class StringReader {
   }
 }
 
+export type MatchResult = {
+  found: boolean;
+  used: number;
+  tokens: Token[];
+}
+
+export enum MatchTermCount {
+  maybeOne,
+  one,
+  zeroMore,
+  oneMore,
+}
+
+type MatchExpTerm = {
+  kind: TokenKind;
+  capture: boolean;
+  count: number;
+  tokens: TokenKind[];
+}
+
+export class MatchExp {
+  private terms: MatchExpTerm[] = [];
+
+  public choice(capture: boolean, termCount: MatchTermCount, ...args: TokenKind[]) {
+
+  }
+  public any(...args: TokenKind[]) {
+
+  }
+
+  public match(tokens: Token[], startIdx: number): MatchResult {
+    let term: number = 0;
+    for (let i = startIdx; i < tokens.length; i++) {
+      let token = tokens[i];
+      if (this.matchTerm(this.terms[term], token.kind)) {
+
+      }
+    }
+    //    return true;
+
+  }
+
+  private matchTerm(term: MatchExpTerm, token: TokenKind) {
+    for (let t of term.tokens) {
+      if (t === token) {
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+export function Match(): MatchExp {
+  return new MatchExp();
+}
+
 export class Tokenizer {
   private nextToken: number = -1;
   private readonly tokens: Token[] = [];
@@ -137,6 +193,12 @@ export class Tokenizer {
       throw new ParseError();
     }
     return this.tokens[this.nextToken];
+  }
+
+  // we want to say
+  // match("end__")
+  public match(exp: MatchExp): { match: boolean, lastToken: Token } {
+    return exp.match(this.tokens, this.nextToken);
   }
 
   public hasToken(): boolean {

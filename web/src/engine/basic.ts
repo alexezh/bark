@@ -1,70 +1,51 @@
-import { FuncDef } from "../posh/funcdef";
-import { ParseError, Token, TokenKind, Tokenizer as Tokenizer, isOpTokenKind } from "./basictokeniser";
+import {
+  ModuleNode,
+  AstNode,
+  FuncDefNode,
+  ParamDefNode,
+  IfNode,
+  BlockNode, VarDefNode, StatementNode, AssingmentNode, CallNode,
+  ExpressionNode, OpNode, ConstNode
+} from "./ast";
+import { Match, ParseError, Token, TokenKind, Tokenizer, isOpTokenKind } from "./basictokeniser";
 
-export type AstNode = {
 
-}
+class ParseRule {
+  private tokenizer: Tokenizer;
+  private parent: ParseRule | undefined;
+  private tokens: TokenKind[] = [];
 
-export type ModuleNode = AstNode & {
-  children: AstNode[];
-}
+  public constructor(parent: ParseRule | undefined, tokenizer: Tokenizer, ...args: TokenKind[]) {
+    this.parent = parent;
+    this.tokenizer = tokenizer;
+    this.tokens = args;
+  }
 
-export type StatementNode = AstNode & {
+  public createChild(...args: TokenKind[]): ParseRule {
+    return new ParseRule(this, this.tokenizer, ...args);
+  }
 
-}
+  public read(): Token {
 
-export type ParamDefNode = AstNode & {
-  name: Token;
-  paramType: Token;
-}
+  }
 
-export type FuncDefNode = AstNode & {
-  name: Token;
-  returnValue: Token | undefined;
-  params: ParamDefNode[];
-  body: BlockNode;
-}
+  public peek(): Token {
 
-export type VarDefNode = AstNode & {
-  name: Token;
-  value: ExpressionNode | undefined;
-}
+  }
 
-export type AssingmentNode = StatementNode & {
-  name: Token;
-  value: ExpressionNode;
-}
+  public hasToken(): boolean {
+    return false;
+  }
 
-export type CallNode = StatementNode & {
-  name: Token;
-  params: ExpressionNode[];
-}
+  public match(token: TokenKind): boolean {
+    for (let t of this.tokens) {
+      if (t === token) {
+        return true;
+      }
+    }
 
-export type BlockNode = {
-  statements: StatementNode[];
-}
-
-export type OpNode = AstNode & {
-  op: Token;
-}
-
-export type ConstNode = AstNode & {
-  value: Token;
-}
-
-export type IdNode = AstNode & {
-  name: Token;
-}
-
-export type ExpressionNode = AstNode & {
-  children: AstNode[];
-}
-
-export type IfNode = StatementNode & {
-  exp: AstNode;
-  th: AstNode;
-  // elif translated to el -> IfNode
-  el: AstNode | undefined;
+    return false;
+  }
 }
 
 // parses string; produces AST
@@ -81,23 +62,19 @@ export type IfNode = StatementNode & {
  * end calc
  */
 export class BasicParser {
-  private tokenizer: Tokenizer;
-
-  public constructor(text: string) {
-    this.tokenizer = new Tokenizer(text);
-  }
-
-  parse(): ModuleNode {
+  parse(text: string): ModuleNode {
     let children: AstNode[] = [];
+    let tokenizer = new Tokenizer(text);
+    let rule = new ParseRule(undefined, tokenizer)
 
-    while (this.tokenizer.hasToken()) {
-      let token = this.tokenizer.read();
+    while (rule.hasToken()) {
+      let token = rule.read();
       switch (token.kind) {
         case TokenKind.Proc:
-          children.push(this.parseFuncDef());
+          children.push(this.parseFuncDef(rule));
           break;
         case TokenKind.Var:
-          children.push(this.parseVarDef());
+          children.push(this.parseVarDef(rule));
           break;
       }
     }
@@ -107,15 +84,18 @@ export class BasicParser {
     }
   }
 
-  parseFuncDef(): FuncDefNode {
-    let name = this.tokenizer.read();
-    let startParam = this.tokenizer.read();
+  parseFuncDef(rule: ParseRule): FuncDefNode {
+    let name = rule.read();
+    let startParam = rule.read();
     if (startParam.kind !== TokenKind.ParenLeft) {
       throw new ParseError();
     }
+    let childRule = rule.createChild(TokenKind.ParenRight);
+
     let params: ParamDefNode[] = [];
-    while (this.tokenizer.peek().kind !== TokenKind.ParenRight) {
-      params.push(this.parseFuncParam());
+    while (childRule.hasToken()) {
+      let paramRule = childRule.createChild(TokenKind.ParenRight, TokenKind.Comma)
+      params.push(this.parseFuncParam(paramRule));
     }
     // read parentesis
     let endParam = this.tokenizer.read();
@@ -154,13 +134,13 @@ export class BasicParser {
   }
 
   // read pair name:type
-  parseFuncParam(): ParamDefNode {
-    let name = this.tokenizer.read();
-    let colon = this.tokenizer.read();
+  parseFuncParam(rule: ParseRule): ParamDefNode {
+    let name = rule.read();
+    let colon = rule.read();
     if (colon.kind !== TokenKind.Colon) {
       throw new ParseError();
     }
-    let paramType = this.tokenizer.read();
+    let paramType = rule.read();
     return {
       name: name,
       paramType: paramType
@@ -168,7 +148,7 @@ export class BasicParser {
   }
 
   parseIf(): IfNode {
-    let exp = this.parseExpression();
+    let exp = this.parseExpression(new EndMatcher(TokenKind.Then));
     let checkEnd = (): boolean => {
       let endToken = this.tokenizer.peek();
       if (endToken.kind === TokenKind.Else || endToken.kind === TokenKind.ElIf || endToken.kind === TokenKind.End) {
@@ -178,12 +158,12 @@ export class BasicParser {
       return false;
     }
 
-    let thenToken = this.tokenizer.read();
+    let thenToken = this.tokenizer.match(Match.create().One(TokenKind.Then).Any().);
     if (thenToken.kind !== TokenKind.Then) {
       throw new ParseError();
     }
 
-    let th = this.parseBlock(checkEnd);
+    let th = this.parseBlock(new EndMatcher(TokenKind.Else, TokenKind.ElIf, TokenKind.End));
     let endToken = this.tokenizer.read();
     if (endToken.kind === TokenKind.Else) {
       return {
@@ -202,11 +182,11 @@ export class BasicParser {
     }
   }
 
-  parseBlock(endPred: () => boolean): BlockNode {
+  parseBlock(endMatcher: EndMatcher): BlockNode {
     let block: BlockNode = { statements: [] };
 
     while (true) {
-      if (endPred()) {
+      if (endMatcher.match(this.tokenizer.peek())) {
         break;
       }
 
@@ -226,6 +206,8 @@ export class BasicParser {
     }
   }
 
+  // statement if either control structure, assingment or call
+  // ends with EOL or Semi
   parseStatement(): StatementNode {
     let token = this.tokenizer.read();
     switch (token.kind) {
@@ -280,35 +262,24 @@ export class BasicParser {
     }
   }
 
-  parseCallParams(endPred: () => boolean): ExpressionNode[] {
+  parseCallParams(endMatcher: EndMatcher): ExpressionNode[] {
     let params: ExpressionNode[] = [];
     while (true) {
-      if (endPred()) {
+      if (endMatcher.match(this.tokenizer.peek().kind)) {
         break;
       }
 
-      let checkEnd = () => {
-        if (endPred()) {
-          return true;
-        }
-        let endToken = this.tokenizer.peek();
-        if (endToken.kind === TokenKind.Comma) {
-          return true;
-        }
-        return false;
-      }
-
-      params.push(this.parseExpression(checkEnd));
+      params.push(this.parseExpression(endMatcher.clone().add(TokenKind.Comma)));
     }
     return params;
   }
 
   // expression has form X op Y where X and Y can be either expression, call or id
-  parseExpression(endPred: () => boolean): ExpressionNode {
+  parseExpression(endMatcher: EndMatcher): ExpressionNode {
     let children: AstNode[] = [];
 
     while (true) {
-      if (endPred()) {
+      if (endMatcher.match()) {
         return { children: children };
       }
 
@@ -328,13 +299,7 @@ export class BasicParser {
             break;
           }
           case TokenKind.ParenLeft: {
-            children.push(this.parseExpression(() => {
-              let endToken = this.tokenizer.peek();
-              if (endToken.kind === TokenKind.ParenRight) {
-                return true;
-              }
-              return false;
-            }));
+            children.push(this.parseExpression(new EndMatcher(TokenKind.ParenRight));
             this.tokenizer.read();
             break;
           }
