@@ -1,5 +1,5 @@
 import { expect, test } from '@jest/globals';
-import { BasicParser } from '../../src/engine/basic';
+import { BasicParser } from '../../src/engine/basic/basic';
 //import { test } from 'jest';
 
 test("basic", () => {

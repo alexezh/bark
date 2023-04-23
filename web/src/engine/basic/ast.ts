@@ -1,3 +1,5 @@
+import { Token } from "./basictokeniser";
+
 export type AstNode = {
 
 }

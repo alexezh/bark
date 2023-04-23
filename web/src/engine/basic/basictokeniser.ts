@@ -1,11 +1,11 @@
-import { AstNode } from "./basic";
-
 export class ParseError {
 
 }
 
 export enum TokenKind {
   Eol = 1,
+  Eof,
+  Ws,
   // first op
   Equal,
   Less,
@@ -22,13 +22,14 @@ export enum TokenKind {
   // last op
   Assign,
   Comma,
+  Semi,
   Colon,
-  ParenLeft,
-  ParenRight,
-  SquigglyLeft,
-  SquigglyRight,
-  SquareLeft,
-  SquareRight,
+  LeftParen,
+  RightParen,
+  LeftSquiggly,
+  RightSquiggly,
+  LeftSquare,
+  RightSquare,
   String,
   Number,
   Id,
@@ -50,6 +51,7 @@ export class Token {
   public readonly kind: TokenKind;
   public readonly value: string;
   public readonly pos: number;
+  public idx: number = 0;
 
   public constructor(kind: TokenKind, value: string, pos: number) {
     this.kind = kind;
@@ -97,76 +99,26 @@ export class StringReader {
     return true;
   }
 
-  public skipWhite() {
+  public skipWs(): number {
+    var wsCount = 0;
     while (!this.isEol) {
       let c = this.peekNext();
-      if (!(c === ' ' || c === '\t')) {
-        return;
+      if (!StringReader.isWs(c)) {
+        return wsCount;
       }
+      wsCount++;
       this.move(1);
     }
-  }
-}
-
-export type MatchResult = {
-  found: boolean;
-  used: number;
-  tokens: Token[];
-}
-
-export enum MatchTermCount {
-  maybeOne,
-  one,
-  zeroMore,
-  oneMore,
-}
-
-type MatchExpTerm = {
-  kind: TokenKind;
-  capture: boolean;
-  count: number;
-  tokens: TokenKind[];
-}
-
-export class MatchExp {
-  private terms: MatchExpTerm[] = [];
-
-  public choice(capture: boolean, termCount: MatchTermCount, ...args: TokenKind[]) {
-
-  }
-  public any(...args: TokenKind[]) {
-
+    return wsCount;
   }
 
-  public match(tokens: Token[], startIdx: number): MatchResult {
-    let term: number = 0;
-    for (let i = startIdx; i < tokens.length; i++) {
-      let token = tokens[i];
-      if (this.matchTerm(this.terms[term], token.kind)) {
-
-      }
-    }
-    //    return true;
-
+  public static isWs(c: string) {
+    return c === ' ' || c === '\t';
   }
-
-  private matchTerm(term: MatchExpTerm, token: TokenKind) {
-    for (let t of term.tokens) {
-      if (t === token) {
-        return true;
-      }
-    }
-    return false;
-  }
-}
-
-export function Match(): MatchExp {
-  return new MatchExp();
 }
 
 export class Tokenizer {
-  private nextToken: number = -1;
-  private readonly tokens: Token[] = [];
+  private readonly _tokens: Token[] = [];
 
   public static load(source: string): Tokenizer {
     let tokenizer = new Tokenizer()
@@ -174,54 +126,22 @@ export class Tokenizer {
     return tokenizer;
   }
 
-  // read next token
-  public read(): Token {
-    if (this.nextToken === -1) {
-      throw new ParseError();
-    }
-    let token = this.tokens[this.nextToken];
-    this.nextToken++;
-    if (this.nextToken > this.tokens.length) {
-      this.nextToken = -1;
-    }
-
-    return token;
-  }
-
-  public peek(): Token {
-    if (this.nextToken === -1) {
-      throw new ParseError();
-    }
-    return this.tokens[this.nextToken];
-  }
-
-  // we want to say
-  // match("end__")
-  public match(exp: MatchExp): { match: boolean, lastToken: Token } {
-    return exp.match(this.tokens, this.nextToken);
-  }
-
-  public hasToken(): boolean {
-    return this.nextToken !== -1;
-  }
+  public get tokens(): Token[] { return this._tokens }
 
   private load(source: string) {
     let reader = new StringReader(source);
     while (!reader.isEol) {
       let token = this.readNext(reader);
       if (token !== undefined) {
-        this.tokens.push(token);
+        token.idx = this._tokens.length;
+        this._tokens.push(token);
       }
-    }
-
-    if (this.tokens.length > 0) {
-      this.nextToken = 0;
     }
   }
 
   private readNext(reader: StringReader): Token | undefined {
 
-    reader.skipWhite();
+    reader.skipWs();
     if (reader.isEol) {
       return undefined;
     }
@@ -229,15 +149,14 @@ export class Tokenizer {
     let pos = reader.pos;
     let c = reader.readNext();
     if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
-      this.readNumber(c, pos);
+      this.readNumber(reader, c, pos);
       return;
     }
 
     if (c === '"') {
-      this.readString(c, pos);
+      this.readString(reader, c, pos);
       return;
     }
-
 
     switch (c) {
       case '>':
@@ -251,19 +170,21 @@ export class Tokenizer {
       case '+':
         return new Token(TokenKind.Plus, c, pos);
       case '(':
-        return new Token(TokenKind.ParenLeft, c, pos);
+        return new Token(TokenKind.LeftParen, c, pos);
       case ')':
-        return new Token(TokenKind.ParenRight, c, pos);
+        return new Token(TokenKind.RightParen, c, pos);
       case '[':
-        return new Token(TokenKind.SquareLeft, c, pos);
+        return new Token(TokenKind.LeftSquare, c, pos);
       case ']':
-        return new Token(TokenKind.SquareRight, c, pos);
+        return new Token(TokenKind.RightSquare, c, pos);
       case '{':
-        return new Token(TokenKind.SquigglyLeft, c, pos);
+        return new Token(TokenKind.LeftSquiggly, c, pos);
       case '}':
-        return new Token(TokenKind.SquigglyRight, c, pos);
+        return new Token(TokenKind.RightSquiggly, c, pos);
       case ',':
         return new Token(TokenKind.Comma, c, pos);
+      case ';':
+        return new Token(TokenKind.Semi, c, pos);
       case 'o':
         if (reader.peekNext() === 'r') {
           reader.move(1);
