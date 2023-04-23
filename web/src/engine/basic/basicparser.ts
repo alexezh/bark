@@ -9,12 +9,13 @@ export enum EolRule {
 export enum SemiRule {
   Inherit = 0,
   End = 1,
+  Disallow = 2,
 }
 
 export type ParserRules = {
   eolRule?: EolRule,
   semiRule?: SemiRule,
-  endTokens: TokenKind[]
+  endTokens?: TokenKind[]
 }
 
 /*
@@ -39,7 +40,7 @@ export class BasicParser {
   readonly startIdx: number;
   readonly eolRule: EolRule = EolRule.Inherit;
   readonly semiRule: SemiRule = SemiRule.Inherit;
-  readonly endTokens: TokenKind[];
+  readonly endTokens: TokenKind[] | undefined;
   private currentIdx: number;
   private _token!: Token;
 
@@ -71,28 +72,26 @@ export class BasicParser {
     return childAst;
   }
 
-  // reads until stop condition
-  // positions token at the stop position
+  /*
+    reads until stop condition
+    positions token at the stop position
+    there is slight difference with peek. Peek returns undefined
+    for end token while read positions parser to next token while
+    returning false
+  */
   public tryRead(): boolean {
     let tokens = this.tokenizer.tokens;
     while (this.currentIdx < tokens.length) {
       let token = tokens[this.currentIdx++];
       if (token.kind === TokenKind.Ws) {
         continue;
-      } else if (token.kind === TokenKind.Eol) {
-        if (this.eolRule === EolRule.WhiteSpace) {
-          continue;
-        }
+      } else if (this.isEndToken(token)) {
+        this._token = token;
+        return false;
+      } else {
+        this._token = token;
+        return true;
       }
-
-      for (let et of this.endTokens) {
-        if (et === token.kind) {
-          this._token = token;
-          return false;
-        }
-      }
-      this._token = token;
-      return true;
     }
 
     return false;
@@ -124,17 +123,9 @@ export class BasicParser {
       let token = tokens[idx++];
       if (token.kind === TokenKind.Ws) {
         continue;
-      } else if (token.kind === TokenKind.Eol) {
-        if (this.eolRule === EolRule.WhiteSpace) {
-          continue;
-        }
-        return token;
+      } else if (this.isEndToken(token)) {
+        return undefined;
       } else {
-        for (let et of this.endTokens) {
-          if (et === token.kind) {
-            return undefined;
-          }
-        }
         return token;
       }
     }
@@ -150,6 +141,9 @@ export class BasicParser {
     return token.kind === kind;
   }
 
+  /**
+   * checks if token is end token following inheritance rules
+   */
   public isEndToken(token: Token): boolean {
     if (token.kind === TokenKind.Eol) {
       if (this.eolRule === EolRule.Inherit) {
@@ -170,8 +164,26 @@ export class BasicParser {
           // assume that eol is whitespace
           return false;
         }
+      } else if (this.semiRule === SemiRule.Disallow) {
+        throw new ParseError('Cannot have ; in this context');
       } else {
         return true;
+      }
+    }
+
+    if (this.endTokens === undefined) {
+      if (this.parent !== undefined) {
+        if (this.parent.isEndToken(token)) {
+          this._token = token;
+          return false;
+        }
+      }
+    } else {
+      for (let et of this.endTokens) {
+        if (et === token.kind) {
+          this._token = token;
+          return false;
+        }
       }
     }
 

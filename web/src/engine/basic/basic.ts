@@ -42,7 +42,7 @@ function parseFuncDef(parser: BasicParser): FuncDefNode {
   let name = parser.readKind(TokenKind.Id);
   let leftParent = parser.readKind(TokenKind.LeftParen);
 
-  let params = parser.createChildParser(leftParent, parseFuncParams, EolRule.WhiteSpace, TokenKind.RightParen);
+  let params = parser.createChildParser(parseFuncParams, leftParent, { endTokens: [TokenKind.RightParen] });
 
   let returnVal: Token | undefined = undefined;
 
@@ -53,7 +53,10 @@ function parseFuncDef(parser: BasicParser): FuncDefNode {
 
   let beginBody = parser.readKind(TokenKind.Begin);
 
-  let body = parser.createChildParser(beginBody, (parser) => parseBlock(parser, TokenKind.Begin), EolRule.WhiteSpace, TokenKind.End);
+  let body = parser.createChildParser(
+    (parser) => parseBlock(parser, TokenKind.Begin),
+    beginBody,
+    { endTokens: [TokenKind.End] });
   return {
     name: name,
     params: params,
@@ -72,7 +75,7 @@ function parseFuncParams(parser: BasicParser): ParamDefNode[] {
       throw new ParseError();
     }
 
-    params.push(parser.createChildParser(parser.token, parseFuncParam, EolRule.WhiteSpace, TokenKind.Comma) as ParamDefNode);
+    params.push(parser.createChildParser(parseFuncParam, parser.token, { endTokens: [TokenKind.Comma] }) as ParamDefNode);
   }
 
   return params;
@@ -90,21 +93,26 @@ function parseFuncParam(parser: BasicParser): ParamDefNode {
 }
 
 function parseIf(parser: BasicParser): IfNode {
-  let exp = parser.createChildParser(parser.token, parseExpression, EolRule.WhiteSpace, TokenKind.Then);
+  // expression ends with then
+  let exp = parser.createChildParser(parseExpression, parser.token, { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.Then] });
 
-  let th = parser.createChildParser(parser.token,
-    (parser) => parseBlock(parser, TokenKind.Then),
-    EolRule.WhiteSpace,
-    TokenKind.Else, TokenKind.ElIf, TokenKind.End);
+  let th = parser.createChildParser(
+    (parser) => parseBlock(parser, TokenKind.Then), parser.token, {
+    endTokens: [TokenKind.Else, TokenKind.ElIf, TokenKind.End]
+  });
   let endToken = parser.token;
   if (endToken.kind === TokenKind.Else) {
     return {
-      exp: exp, th: th, el: parser.createChildParser(endToken,
-        (parser) => parseBlock(parser, TokenKind.Else), EolRule.WhiteSpace, TokenKind.End)
+      exp: exp, th: th, el: parser.createChildParser(
+        (parser) => parseBlock(parser, TokenKind.Else), endToken, {
+        endTokens: [TokenKind.End]
+      })
     }
   } else if (endToken.kind === TokenKind.ElIf) {
     return {
-      exp: exp, th: th, el: parser.createChildParser(endToken, parseIf, EolRule.WhiteSpace, TokenKind.Else, TokenKind.ElIf, TokenKind.End)
+      exp: exp, th: th, el: parser.createChildParser(parseIf, endToken, {
+        endTokens: [TokenKind.Else, TokenKind.ElIf, TokenKind.End]
+      })
     }
   } else if (endToken.kind === TokenKind.End) {
     return {
@@ -121,7 +129,9 @@ function parseBlock(parser: BasicParser, startTokenKind: TokenKind): BlockNode {
   let start = parser.readKind(startTokenKind);
 
   while (parser.tryRead()) {
-    let statement = parser.createChildParser(parser.token, parseStatement, EolRule.Token, TokenKind.Eol);
+    // we do not know how statement ends; so we will let statement
+    // parser to figure out endding
+    let statement = parseStatement(parser);
     if (statement !== undefined) {
       block.statements.push();
     }
@@ -139,7 +149,12 @@ function parseVarDef(parser: BasicParser): VarDefNode {
     // read to next token after which will be start of expression
     parser.read();
 
-    return { name: name, value: parser.createChildParser(parser.token, parseExpression, EolRule.Token, TokenKind.Eol, TokenKind.Semi) }
+    return {
+      name: name, value: parser.createChildParser(parseExpression, parser.token, {
+        eolRule: EolRule.Token,
+        semiRule: SemiRule.End
+      })
+    }
   } else {
     return { name: name, value: undefined }
   }
@@ -151,9 +166,9 @@ function parseStatement(parser: BasicParser): StatementNode | undefined {
   let token = parser.read();
   switch (token.kind) {
     case TokenKind.If:
-      return parser.createChildParser(token, parseIf, EolRule.WhiteSpace, TokenKind.End);
+      return parser.createChildParser(parseIf, token, {});
     case TokenKind.Var:
-      return parser.createChildParser(token, parseVarDef, EolRule.WhiteSpace, TokenKind.End);
+      return parser.createChildParser(parseVarDef, token, {});
   }
 
   // otherwise, it is either call or assingment
@@ -165,11 +180,17 @@ function parseStatement(parser: BasicParser): StatementNode | undefined {
   if (nextToken.kind === TokenKind.Assign) {
     let assingment: AssingmentNode = {
       name: token,
-      value: parser.createChildParser(token, parseExpression, EolRule.Token, TokenKind.Eol)
+      value: parser.createChildParser(parseExpression, token, {
+        eolRule: EolRule.Token,
+        semiRule: SemiRule.End
+      })
     }
     return assingment;
   } else {
-    return parser.createChildParser(token, parseCall, EolRule.Token, TokenKind.Eol);
+    return parser.createChildParser(parseCall, token, {
+      eolRule: EolRule.Token,
+      semiRule: SemiRule.End
+    });
   }
 }
 
@@ -189,7 +210,7 @@ function parseCall(parser: BasicParser): CallNode {
 function parseCallParams(parser: BasicParser): ExpressionNode[] {
   let params: ExpressionNode[] = [];
   while (parser.tryRead()) {
-    params.push(parser.createChildParser(parser.token, parseExpression, EolRule.Token, TokenKind.Eol, TokenKind.Comma));
+    params.push(parser.createChildParser(parseExpression, parser.token, { endTokens: [TokenKind.Comma] }));
   }
   return params;
 }
@@ -216,7 +237,11 @@ function parseExpression(parser: BasicParser): ExpressionNode {
           break;
         }
         case TokenKind.LeftParen: {
-          children.push(parser.createChildParser(token, parseExpression, EolRule.WhiteSpace, TokenKind.RightParen));
+          children.push(parser.createChildParser(parseExpression, token, {
+            eolRule: EolRule.WhiteSpace,
+            semiRule: SemiRule.Disallow,
+            endTokens: [TokenKind.RightParen]
+          }));
           break;
         }
         case TokenKind.Id: {
