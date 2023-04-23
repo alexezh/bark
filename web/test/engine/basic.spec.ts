@@ -2,6 +2,8 @@ import { expect, test } from '@jest/globals';
 import { TokenKind, Tokenizer } from '../../src/engine/basic/basictokeniser';
 import { BasicParser, EolRule } from '../../src/engine/basic/basicparser';
 import { parseModule } from '../../src/engine/basic/basic';
+import exp from 'constants';
+import { FuncDefNode } from '../../src/engine/basic/ast';
 //import { test } from 'jest';
 
 test("basic", () => {
@@ -10,9 +12,12 @@ proc foo()
 begin
   var x := 3
   print \"hello world\" + x
-end prod`);
+end`);
   let parser = new BasicParser(undefined, tokenize, 0, { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.Eof] });
   let ast = parseModule(parser);
-  expect(ast.children.length).toBe(3);
+  expect(ast.children.length).toBe(1);
+  let func = ast.children[0] as FuncDefNode;
+  expect(func.name.value).toBe('foo');
+  expect(func.body.length).toBe(2);
 });
 

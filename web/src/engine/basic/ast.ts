@@ -21,7 +21,7 @@ export type FuncDefNode = AstNode & {
   name: Token;
   returnValue: Token | undefined;
   params: ParamDefNode[];
-  body: BlockNode;
+  body: StatementNode[];
 }
 
 export type VarDefNode = AstNode & {
@@ -37,10 +37,6 @@ export type AssingmentNode = StatementNode & {
 export type CallNode = StatementNode & {
   name: Token;
   params: ExpressionNode[];
-}
-
-export type BlockNode = {
-  statements: StatementNode[];
 }
 
 export type OpNode = AstNode & {

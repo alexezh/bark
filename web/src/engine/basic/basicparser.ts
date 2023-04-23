@@ -18,6 +18,13 @@ export type ParserRules = {
   endTokens?: TokenKind[]
 }
 
+export enum TokenCategory {
+  Ws,
+  End,
+  Token,
+  Disallow,
+}
+
 /*
   parses list of tokens; produces AST
   the main challenge is with nested rules
@@ -83,9 +90,12 @@ export class BasicParser {
     let tokens = this.tokenizer.tokens;
     while (this.currentIdx < tokens.length) {
       let token = tokens[this.currentIdx++];
-      if (token.kind === TokenKind.Ws) {
+
+      let action = this.getTokenCategory(token);
+
+      if (action === TokenCategory.Ws) {
         continue;
-      } else if (this.isEndToken(token)) {
+      } else if (action === TokenCategory.End) {
         this._token = token;
         return false;
       } else {
@@ -121,9 +131,11 @@ export class BasicParser {
     let idx = this.currentIdx;
     while (idx < tokens.length) {
       let token = tokens[idx++];
-      if (token.kind === TokenKind.Ws) {
+      let action = this.getTokenCategory(token);
+
+      if (action === TokenCategory.Ws) {
         continue;
-      } else if (this.isEndToken(token)) {
+      } else if (action === TokenCategory.End) {
         return undefined;
       } else {
         return token;
@@ -144,49 +156,50 @@ export class BasicParser {
   /**
    * checks if token is end token following inheritance rules
    */
-  public isEndToken(token: Token): boolean {
-    if (token.kind === TokenKind.Eol) {
+  private getTokenCategory(token: Token): TokenCategory {
+    if (token.kind === TokenKind.Ws) {
+      return TokenCategory.Ws;
+    } else if (token.kind === TokenKind.Eol) {
       if (this.eolRule === EolRule.Inherit) {
         if (this.parent !== undefined) {
-          return this.parent.isEndToken(token);
+          return this.parent.getTokenCategory(token);
         } else {
           // assume that eol is whitespace
-          return false;
+          return TokenCategory.Ws;
         }
       } else {
-        return this.eolRule === EolRule.Token;
+        return (this.eolRule === EolRule.Token) ? TokenCategory.End : TokenCategory.Ws;
       }
     } else if (token.kind === TokenKind.Semi) {
       if (this.semiRule === SemiRule.Inherit) {
         if (this.parent !== undefined) {
-          return this.parent.isEndToken(token);
+          return this.parent.getTokenCategory(token);
         } else {
-          // assume that eol is whitespace
-          return false;
+          // assume that semi is a end token
+          return TokenCategory.Token;
         }
       } else if (this.semiRule === SemiRule.Disallow) {
         throw new ParseError('Cannot have ; in this context');
       } else {
-        return true;
+        return TokenCategory.End;
       }
     }
 
     if (this.endTokens === undefined) {
       if (this.parent !== undefined) {
-        if (this.parent.isEndToken(token)) {
-          this._token = token;
-          return false;
-        }
+        let action = this.parent.getTokenCategory(token);
+        this._token = token;
+        return action;
       }
     } else {
       for (let et of this.endTokens) {
         if (et === token.kind) {
           this._token = token;
-          return false;
+          return TokenCategory.End;
         }
       }
     }
 
-    return false;
+    return TokenCategory.Token;
   }
 }

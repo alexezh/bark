@@ -4,7 +4,7 @@ import {
   FuncDefNode,
   ParamDefNode,
   IfNode,
-  BlockNode, VarDefNode, StatementNode, AssingmentNode, CallNode,
+  VarDefNode, StatementNode, AssingmentNode, CallNode,
   ExpressionNode, OpNode, ConstNode
 } from "./ast";
 import { BasicParser, EolRule, SemiRule } from "./basicparser";
@@ -17,7 +17,7 @@ export function parseModule(parser: BasicParser): ModuleNode {
   while (parser.tryRead()) {
     switch (parser.token.kind) {
       case TokenKind.Proc:
-        children.push(parser.createChildParser(parseFuncDef, parser.token, { endTokens: [TokenKind.End] }));
+        children.push(parser.createChildParser(parseFuncDef, parser.token, { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.End] }));
         break;
       case TokenKind.Var:
         children.push(parser.createChildParser(parseVarDef, parser.token,
@@ -123,21 +123,21 @@ function parseIf(parser: BasicParser): IfNode {
   }
 }
 
-function parseBlock(parser: BasicParser, startTokenKind: TokenKind): BlockNode {
-  let block: BlockNode = { statements: [] };
+function parseBlock(parser: BasicParser, startTokenKind: TokenKind): StatementNode[] {
+  let body: StatementNode[] = [];
 
   let start = parser.readKind(startTokenKind);
 
-  while (parser.tryRead()) {
-    // we do not know how statement ends; so we will let statement
-    // parser to figure out endding
+  // we do not know how statement ends; so we will let statement
+  // parser to figure out endding
+  while (parser.peek() !== undefined) {
     let statement = parseStatement(parser);
     if (statement !== undefined) {
-      block.statements.push();
+      body.push(statement);
     }
   }
 
-  return block;
+  return body;
 }
 
 function parseVarDef(parser: BasicParser): VarDefNode {
@@ -145,15 +145,11 @@ function parseVarDef(parser: BasicParser): VarDefNode {
   let name = parser.readKind(TokenKind.Id);
   if (parser.peekKind(TokenKind.Assign)) {
     // read assingment
-    parser.read();
-    // read to next token after which will be start of expression
-    parser.read();
+    parser.readKind(TokenKind.Assign);
 
+    // we are keeping policy as is; so we can just pass parser
     return {
-      name: name, value: parser.createChildParser(parseExpression, parser.token, {
-        eolRule: EolRule.Token,
-        semiRule: SemiRule.End
-      })
+      name: name, value: parseExpression(parser)
     }
   } else {
     return { name: name, value: undefined }
@@ -168,7 +164,7 @@ function parseStatement(parser: BasicParser): StatementNode | undefined {
     case TokenKind.If:
       return parser.createChildParser(parseIf, token, {});
     case TokenKind.Var:
-      return parser.createChildParser(parseVarDef, token, {});
+      return parser.createChildParser(parseVarDef, token, { eolRule: EolRule.Token });
   }
 
   // otherwise, it is either call or assingment
@@ -178,9 +174,13 @@ function parseStatement(parser: BasicParser): StatementNode | undefined {
     return undefined;
   }
   if (nextToken.kind === TokenKind.Assign) {
+    parser.readKind(TokenKind.Assign);
+    // read first token
+    let rightSide = parser.read();
+
     let assingment: AssingmentNode = {
       name: token,
-      value: parser.createChildParser(parseExpression, token, {
+      value: parser.createChildParser(parseExpression, rightSide, {
         eolRule: EolRule.Token,
         semiRule: SemiRule.End
       })
