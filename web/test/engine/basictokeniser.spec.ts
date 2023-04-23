@@ -7,8 +7,7 @@ import { parse } from 'path';
 test("basic", () => {
   let tokenizer = Tokenizer.load('hello');
   let parser = new BasicParser(tokenizer, 0, EolOptions.WhiteSpace, TokenKind.Eof);
-  parser.tryRead();
-  expect(parser.token.value).toBe('hello');
+  expect(parser.read().value).toBe('hello');
   expect(parser.tryRead()).toBe(false);
 });
 
@@ -16,11 +15,10 @@ test("sequence", () => {
   let tokenizer = Tokenizer.load('x + y = 11.2');
   let parser = new BasicParser(tokenizer, 0, EolOptions.WhiteSpace, TokenKind.Eof);
 
-  parser.tryRead();
-  expect(parser.token.value).toBe('x');
-  expect(parser.token.value).toBe('+');
-  expect(parser.token.value).toBe('y');
-  expect(parser.token.value).toBe('=');
-  expect(parser.token.value).toBe('11.2');
+  expect(parser.read().value).toBe('x');
+  expect(parser.read().value).toBe('+');
+  expect(parser.read().value).toBe('y');
+  expect(parser.read().value).toBe('=');
+  expect(parser.read().value).toBe('11.2');
   expect(parser.tryRead()).toBe(false);
 });

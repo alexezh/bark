@@ -1,5 +1,9 @@
 export class ParseError {
+  public readonly msg: string | undefined;
 
+  public constructor(msg: string | undefined = undefined) {
+    this.msg = msg;
+  }
 }
 
 export enum TokenKind {
@@ -121,14 +125,14 @@ export class Tokenizer {
   private readonly _tokens: Token[] = [];
 
   public static load(source: string): Tokenizer {
-    let tokenizer = new Tokenizer()
-    this.load(source);
+    let tokenizer = new Tokenizer();
+    tokenizer.loadTokens(source);
     return tokenizer;
   }
 
   public get tokens(): Token[] { return this._tokens }
 
-  private load(source: string) {
+  private loadTokens(source: string) {
     let reader = new StringReader(source);
     while (!reader.isEol) {
       let token = this.readNext(reader);
@@ -148,14 +152,12 @@ export class Tokenizer {
 
     let pos = reader.pos;
     let c = reader.readNext();
-    if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
-      this.readNumber(reader, c, pos);
-      return;
+    if (c >= '0' && c <= '9') {
+      return this.readNumber(reader, c, pos);
     }
 
     if (c === '"') {
-      this.readString(reader, c, pos);
-      return;
+      return this.readString(reader, c, pos);
     }
 
     switch (c) {
@@ -204,27 +206,25 @@ export class Tokenizer {
         }
         break;
       case ':':
-        reader.move(1);
         if (reader.peekNext() === '=') {
+          reader.move(1);
           return new Token(TokenKind.Assign, ':=', pos);
         } else {
           return new Token(TokenKind.Colon, ':', pos);
         }
       case '\n':
         return new Token(TokenKind.Eol, '\n', pos);
-        return;
       case '\r':
         if (reader.peekNext() === '\n') {
           reader.move(1);
         }
         return new Token(TokenKind.Eol, '\n', pos);
-        return;
     }
 
-    this.readId(reader, c, pos);
+    return this.readId(reader, c, pos);
   }
 
-  private readId(reader: StringReader, head: string, pos: number) {
+  private readId(reader: StringReader, head: string, pos: number): Token {
     let s: string[] = [head];
     while (!reader.isEol) {
       let c = reader.peekNext();
@@ -237,7 +237,6 @@ export class Tokenizer {
       } else {
         let name = "".concat(...s);
         return new Token(this.getIdKind(name), name, pos);
-        return;
       }
     }
 
@@ -263,7 +262,7 @@ export class Tokenizer {
     }
   }
 
-  private readString(reader: StringReader, head: string, pos: number) {
+  private readString(reader: StringReader, head: string, pos: number): Token {
     let s: string[] = [head];
     while (!reader.isEol) {
       let c = reader.readNext();
@@ -272,12 +271,13 @@ export class Tokenizer {
         s.push(reader.readNext());
       } else if (c === '"') {
         return new Token(TokenKind.String, "".concat(...s), pos);
-        return;
       }
     }
+
+    throw new ParseError();
   }
 
-  private readNumber(reader: StringReader, head: string, pos: number) {
+  private readNumber(reader: StringReader, head: string, pos: number): Token {
     let s: string[] = [head];
     while (!reader.isEol) {
       let c = reader.peekNext();
