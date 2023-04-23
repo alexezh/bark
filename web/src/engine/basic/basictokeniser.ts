@@ -37,6 +37,11 @@ export enum TokenKind {
   String,
   Number,
   Id,
+  For,
+  To,
+  By,
+  Do,
+  While,
   If,
   Then,
   Else,
@@ -248,6 +253,11 @@ export class Tokenizer {
   private getIdKind(name: string): TokenKind {
     switch (name) {
       case 'if': return TokenKind.If;
+      case 'for': return TokenKind.For;
+      case 'to': return TokenKind.To;
+      case 'by': return TokenKind.By;
+      case 'do': return TokenKind.Do;
+      case 'while': return TokenKind.While;
       case 'then': return TokenKind.Then;
       case 'else': return TokenKind.Else;
       case 'elif': return TokenKind.ElIf;

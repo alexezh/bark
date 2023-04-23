@@ -5,7 +5,7 @@ import {
   ParamDefNode,
   IfNode,
   VarDefNode, StatementNode, AssingmentNode, CallNode,
-  ExpressionNode, OpNode, ConstNode
+  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode
 } from "./ast";
 import { BasicParser, EolRule, SemiRule } from "./basicparser";
 import { ParseError, Token, TokenKind, Tokenizer, isOpTokenKind } from "./basictokeniser";
@@ -123,7 +123,28 @@ function parseIf(parser: BasicParser): IfNode {
   }
 }
 
-function parseBlock(parser: BasicParser, startTokenKind: TokenKind): StatementNode[] {
+function parseFor(parser: BasicParser): ForNode {
+  // expression ends with then
+  let ft = parser.readKind(TokenKind.For);
+  let varToken = parser.readKind(TokenKind.Id);
+  let assignToken = parser.readKind(TokenKind.Assign);
+  let startExp = parser.createChildParser(parseExpression, parser.token, { endTokens: [TokenKind.To] });
+  let toTokan = parser.readKind(TokenKind.To);
+  let endExp = parser.createChildParser(parseExpression, parser.token, { endTokens: [TokenKind.Do, TokenKind.By] });
+
+  let doExp = parser.token;
+
+  let body = parser.createChildParser(
+    (parser) => parseBlock(parser, TokenKind.End), parser.token, {
+    endTokens: [TokenKind.End]
+  });
+
+  return {
+    name: varToken, startExp: startExp, endExp: endExp, byExp: undefined, body: body
+  }
+}
+
+function parseBlock(parser: BasicParser, startTokenKind: TokenKind): BlockNode {
   let body: StatementNode[] = [];
 
   let start = parser.readKind(startTokenKind);
@@ -137,7 +158,7 @@ function parseBlock(parser: BasicParser, startTokenKind: TokenKind): StatementNo
     }
   }
 
-  return body;
+  return { children: body };
 }
 
 function parseVarDef(parser: BasicParser): VarDefNode {
@@ -163,6 +184,8 @@ function parseStatement(parser: BasicParser): StatementNode | undefined {
   switch (token.kind) {
     case TokenKind.If:
       return parser.createChildParser(parseIf, token, {});
+    case TokenKind.For:
+      return parser.createChildParser(parseFor, token, {});
     case TokenKind.Var:
       return parser.createChildParser(parseVarDef, token, { eolRule: EolRule.Token });
   }

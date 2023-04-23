@@ -21,3 +21,18 @@ end`);
   expect(func.body.length).toBe(2);
 });
 
+test("for", () => {
+  let tokenize = Tokenizer.load(`
+proc foo()
+begin
+  for x := 1 to 5 by 4 do
+    print \"hello world\" + x
+  end
+end`);
+  let parser = new BasicParser(undefined, tokenize, 0, { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.Eof] });
+  let ast = parseModule(parser);
+  let func = ast.children[0] as FuncDefNode;
+  expect(func.name.value).toBe('foo');
+  expect(func.body.length).toBe(2);
+});
+
