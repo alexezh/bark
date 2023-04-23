@@ -1,7 +1,23 @@
 import { Token } from "./basictokeniser";
 
-export type AstNode = {
+export enum AstNodeKind {
+  module,
+  paramDef,
+  funcDef,
+  varDef,
+  assingment,
+  call,
+  op,
+  const,
+  id,
+  expression,
+  block,
+  if,
+  for
+}
 
+export type AstNode = {
+  kind: AstNodeKind
 }
 
 export type ModuleNode = AstNode & {

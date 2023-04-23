@@ -5,7 +5,7 @@ import {
   ParamDefNode,
   IfNode,
   VarDefNode, StatementNode, AssingmentNode, CallNode,
-  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode
+  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind
 } from "./ast";
 import { BasicParser, EolRule, SemiRule } from "./basicparser";
 import { ParseError, Token, TokenKind, Tokenizer, isOpTokenKind } from "./basictokeniser";
@@ -31,6 +31,7 @@ export function parseModule(parser: BasicParser): ModuleNode {
   }
 
   return {
+    kind: AstNodeKind.module,
     children: children
   }
 }
@@ -58,6 +59,7 @@ function parseFuncDef(parser: BasicParser): FuncDefNode {
     beginBody,
     { endTokens: [TokenKind.End] });
   return {
+    kind: AstNodeKind.funcDef,
     name: name,
     params: params,
     returnValue: returnVal,
@@ -87,6 +89,7 @@ function parseFuncParam(parser: BasicParser): ParamDefNode {
   let colon = parser.readKind(TokenKind.Colon);
   let paramType = parser.readKind(TokenKind.Id);
   return {
+    kind: AstNodeKind.paramDef,
     name: name,
     paramType: paramType
   }
@@ -103,6 +106,7 @@ function parseIf(parser: BasicParser): IfNode {
   let endToken = parser.token;
   if (endToken.kind === TokenKind.Else) {
     return {
+      kind: AstNodeKind.if,
       exp: exp, th: th, el: parser.createChildParser(
         (parser) => parseBlock(parser, TokenKind.Else), endToken, {
         endTokens: [TokenKind.End]
@@ -110,12 +114,14 @@ function parseIf(parser: BasicParser): IfNode {
     }
   } else if (endToken.kind === TokenKind.ElIf) {
     return {
+      kind: AstNodeKind.if,
       exp: exp, th: th, el: parser.createChildParser(parseIf, endToken, {
         endTokens: [TokenKind.Else, TokenKind.ElIf, TokenKind.End]
       })
     }
   } else if (endToken.kind === TokenKind.End) {
     return {
+      kind: AstNodeKind.if,
       exp: exp, th: th, el: undefined
     }
   } else {
@@ -140,6 +146,7 @@ function parseFor(parser: BasicParser): ForNode {
   });
 
   return {
+    kind: AstNodeKind.for,
     name: varToken, startExp: startExp, endExp: endExp, byExp: undefined, body: body
   }
 }
@@ -158,7 +165,10 @@ function parseBlock(parser: BasicParser, startTokenKind: TokenKind): BlockNode {
     }
   }
 
-  return { children: body };
+  return {
+    kind: AstNodeKind.block,
+    children: body
+  };
 }
 
 function parseVarDef(parser: BasicParser): VarDefNode {
@@ -170,10 +180,14 @@ function parseVarDef(parser: BasicParser): VarDefNode {
 
     // we are keeping policy as is; so we can just pass parser
     return {
+      kind: AstNodeKind.varDef,
       name: name, value: parseExpression(parser)
     }
   } else {
-    return { name: name, value: undefined }
+    return {
+      kind: AstNodeKind.varDef,
+      name: name, value: undefined
+    }
   }
 }
 
@@ -202,6 +216,7 @@ function parseStatement(parser: BasicParser): StatementNode | undefined {
     let rightSide = parser.read();
 
     let assingment: AssingmentNode = {
+      kind: AstNodeKind.assingment,
       name: token,
       value: parser.createChildParser(parseExpression, rightSide, {
         eolRule: EolRule.Token,
@@ -225,6 +240,7 @@ function parseCall(parser: BasicParser): CallNode {
   params = parseCallParams(parser);
 
   return {
+    kind: AstNodeKind.call,
     name: name,
     params: params
   }
@@ -246,6 +262,7 @@ function parseExpression(parser: BasicParser): ExpressionNode {
     let token = parser.token;
     if (isOpTokenKind(token.kind)) {
       let op: OpNode = {
+        kind: AstNodeKind.op,
         op: token
       }
       children.push(op);
@@ -254,6 +271,7 @@ function parseExpression(parser: BasicParser): ExpressionNode {
         case TokenKind.Number:
         case TokenKind.String: {
           let c: ConstNode = {
+            kind: AstNodeKind.const,
             value: token
           }
           children.push(c);
@@ -283,6 +301,7 @@ function parseExpression(parser: BasicParser): ExpressionNode {
   }
 
   return {
+    kind: AstNodeKind.expression,
     children: children
   }
 }
