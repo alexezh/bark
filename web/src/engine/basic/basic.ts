@@ -5,7 +5,7 @@ import {
   ParamDefNode,
   IfNode,
   VarDefNode, StatementNode, AssingmentNode, CallNode,
-  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind
+  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode
 } from "./ast";
 import { BasicParser, EolRule, SemiRule } from "./basicparser";
 import { ParseError, Token, TokenKind, Tokenizer, isOpTokenKind } from "./basictokeniser";
@@ -134,20 +134,30 @@ function parseFor(parser: BasicParser): ForNode {
   let ft = parser.readKind(TokenKind.For);
   let varToken = parser.readKind(TokenKind.Id);
   let assignToken = parser.readKind(TokenKind.Assign);
-  let startExp = parser.createChildParser(parseExpression, parser.token, { endTokens: [TokenKind.To] });
-  let toTokan = parser.readKind(TokenKind.To);
-  let endExp = parser.createChildParser(parseExpression, parser.token, { endTokens: [TokenKind.Do, TokenKind.By] });
+  let startToken = parser.read();
+  let startExp = parser.createChildParser(parseExpression, startToken, { endTokens: [TokenKind.To] });
+  let endToken = parser.read();
+  let endExp = parser.createChildParser(parseExpression, endToken, { endTokens: [TokenKind.Do, TokenKind.By] });
 
-  let doExp = parser.token;
+  let doToken: Token;
+  let byExp: ExpressionNode | undefined = undefined;
+  if (parser.token.kind === TokenKind.By) {
+    let expToken = parser.read();
+    byExp = parser.createChildParser(parseExpression, expToken, { endTokens: [TokenKind.Do] });
+
+    doToken = parser.token;
+  } else {
+    doToken = parser.token;
+  }
 
   let body = parser.createChildParser(
-    (parser) => parseBlock(parser, TokenKind.End), parser.token, {
+    (parser) => parseBlock(parser, TokenKind.Do), parser.token, {
     endTokens: [TokenKind.End]
   });
 
   return {
     kind: AstNodeKind.for,
-    name: varToken, startExp: startExp, endExp: endExp, byExp: undefined, body: body
+    name: varToken, startExp: startExp, endExp: endExp, byExp: byExp, body: body
   }
 }
 
@@ -291,7 +301,10 @@ function parseExpression(parser: BasicParser): ExpressionNode {
           // if next token is left paren, it is a call
           //let nextToken = parser.peek();
 
-          //children.push(c);
+          let idNode: IdNode = {
+            kind: AstNodeKind.id, name: token
+          }
+          children.push(idNode);
           break;
         }
         default:

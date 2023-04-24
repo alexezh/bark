@@ -3,7 +3,7 @@ import { TokenKind, Tokenizer } from '../../src/engine/basic/basictokeniser';
 import { BasicParser, EolRule } from '../../src/engine/basic/basicparser';
 import { parseModule } from '../../src/engine/basic/basic';
 import exp from 'constants';
-import { FuncDefNode } from '../../src/engine/basic/ast';
+import { AstNodeKind, ConstNode, ForNode, FuncDefNode } from '../../src/engine/basic/ast';
 //import { test } from 'jest';
 
 test("basic", () => {
@@ -18,7 +18,7 @@ end`);
   expect(ast.children.length).toBe(1);
   let func = ast.children[0] as FuncDefNode;
   expect(func.name.value).toBe('foo');
-  expect(func.body.length).toBe(2);
+  expect(func.body.children.length).toBe(2);
 });
 
 test("for", () => {
@@ -32,7 +32,10 @@ end`);
   let parser = new BasicParser(undefined, tokenize, 0, { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.Eof] });
   let ast = parseModule(parser);
   let func = ast.children[0] as FuncDefNode;
-  expect(func.name.value).toBe('foo');
-  expect(func.body.length).toBe(2);
+  let fr = func.body.children[0] as ForNode;
+
+  expect(fr.kind).toBe(AstNodeKind.for);
+  expect((fr.startExp.children[0] as ConstNode).value.value).toBe('1');
+  expect((fr.endExp.children[0] as ConstNode).value.value).toBe('5');
 });
 
