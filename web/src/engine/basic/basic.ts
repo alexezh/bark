@@ -5,7 +5,7 @@ import {
   ParamDefNode,
   IfNode,
   VarDefNode, StatementNode, AssingmentNode, CallNode,
-  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode
+  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode
 } from "./ast";
 import { BasicParser, EolRule, SemiRule } from "./basicparser";
 import { ParseError, Token, TokenKind, Tokenizer, isOpTokenKind } from "./basictokeniser";
@@ -201,6 +201,16 @@ function parseVarDef(parser: BasicParser): VarDefNode {
   }
 }
 
+function parseReturn(parser: BasicParser): ReturnNode {
+  let v = parser.readKind(TokenKind.Return);
+
+  // we are keeping policy as is; so we can just pass parser
+  return {
+    kind: AstNodeKind.return,
+    value: parseExpression(parser)
+  }
+}
+
 // statement if either control structure, assingment or call
 // ends with EOL or Semi
 function parseStatement(parser: BasicParser): StatementNode | undefined {
@@ -212,6 +222,8 @@ function parseStatement(parser: BasicParser): StatementNode | undefined {
       return parser.createChildParser(parseFor, token, {});
     case TokenKind.Var:
       return parser.createChildParser(parseVarDef, token, { eolRule: EolRule.Token });
+    case TokenKind.Return:
+      return parser.createChildParser(parseReturn, token, { eolRule: EolRule.Token });
   }
 
   // otherwise, it is either call or assingment

@@ -50,6 +50,7 @@ export enum TokenKind {
   Begin,
   Proc,
   Var,
+  Return,
 }
 
 export function isOpTokenKind(kind: TokenKind): boolean {
@@ -268,6 +269,7 @@ export class Tokenizer {
       case 'not': return TokenKind.Not;
       case 'proc': return TokenKind.Proc;
       case 'var': return TokenKind.Var;
+      case 'return': return TokenKind.Return;
       default: return TokenKind.Id;
     }
   }

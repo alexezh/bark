@@ -5,6 +5,7 @@ export enum AstNodeKind {
   paramDef,
   funcDef,
   varDef,
+  return,
   assingment,
   call,
   op,
@@ -24,6 +25,7 @@ export type ModuleNode = AstNode & {
   children: AstNode[];
 }
 
+
 export type StatementNode = AstNode & {
 
 }
@@ -42,6 +44,10 @@ export type FuncDefNode = AstNode & {
 
 export type VarDefNode = AstNode & {
   name: Token;
+  value: ExpressionNode | undefined;
+}
+
+export type ReturnNode = AstNode & {
   value: ExpressionNode | undefined;
 }
 
