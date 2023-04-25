@@ -20,10 +20,11 @@ class JsWriter {
 export class Transpiler {
   writer: JsWriter = new JsWriter();
 
-  public generate(ast: AstNode): string {
-    this.writer.append('(function module() {')
+  public generate(ast: ModuleNode, mainFunc: string): string {
+    // wrap to unnamed function which calls main
+    this.writer.append(`(function () {`)
     this.processNode(ast);
-    this.writer.append('})();')
+    this.writer.append(`; return ${mainFunc}(); })();`)
     return this.writer.toString();
   }
 
