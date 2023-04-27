@@ -10,7 +10,7 @@ import { VRButton } from "./vrbutton";
 import { IVoxelLevel } from "./ivoxelmap";
 import SyncEventSource from "../lib/synceventsource";
 import { ILevelEditor } from "./ileveleditor";
-import { PxSize } from "../posh/pos";
+import { PxSize } from "../lib/pos";
 //import { VRButton } from 'three/addons/webxr/VRButton';
 
 export type CameraLayerProps = UiLayerProps & {

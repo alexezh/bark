@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { v4 as uuidv4 } from 'uuid';
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
-import { GridPos } from "../posh/pos";
+import { GridPos } from "../lib/pos";
 import { IRealtimeClient } from "./igamestate";
 
 export type WireSpawnCharacterRequest = {

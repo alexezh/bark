@@ -1,12 +1,13 @@
 import { forEach } from "lodash";
-import { AstNode, AstNodeKind, ConstNode, ExpressionNode, FuncDefNode, IdNode, ModuleNode, OpNode, ReturnNode, VarDefNode } from "./ast";
-import { ParseError, isOpTokenKind } from "./basictokeniser";
+import { AssingmentNode, AstNode, AstNodeKind, BlockNode, ConstNode, ExpressionNode, ForNode, FuncDefNode, IdNode, IfNode, ModuleNode, OpNode, ReturnNode, VarDefNode } from "./ast";
+import { ParseError, Token, TokenKind, isOpTokenKind } from "./basictokeniser";
 
 class JsWriter {
   private output: string[] = [];
 
   public append(s: string) {
     this.output.push(s);
+    this.output.push('\n');
   }
   public startScope() {
     this.output.push('{')
@@ -39,13 +40,33 @@ export class Transpiler {
       case AstNodeKind.varDef:
         this.processVarDef(ast as VarDefNode);
         break;
+      case AstNodeKind.assingment:
+        this.processAssingment(ast as AssingmentNode);
+        break;
+      case AstNodeKind.if:
+        this.processIf(ast as IfNode);
+        break;
+      case AstNodeKind.for:
+        this.processFor(ast as ForNode);
+        break;
       case AstNodeKind.return:
         this.processReturn(ast as ReturnNode);
         break;
+      case AstNodeKind.block:
+        this.processBlock(ast as BlockNode);
+        break;
+      default:
+        throw new ParseError('Not implemented');
     }
   }
 
   private processModule(ast: ModuleNode) {
+    for (let n of ast.children) {
+      this.processNode(n);
+    }
+  }
+
+  private processBlock(ast: BlockNode) {
     for (let n of ast.children) {
       this.processNode(n);
     }
@@ -73,12 +94,52 @@ export class Transpiler {
     }
   }
 
+  private processAssingment(ast: AssingmentNode) {
+    let expStr = this.convertExpression(ast.value);
+    this.writer.append(`${ast.name.value} = ${expStr};`);
+  }
+
+  private processIf(ast: IfNode) {
+    let expStr = this.convertExpression(ast.exp);
+    this.writer.append(`if( ${expStr} ) {`);
+    this.processNode(ast.th);
+    if (ast.el !== undefined) {
+      if (ast.el.kind === AstNodeKind.block) {
+        this.writer.append(`} else {`);
+        this.processNode(ast.el);
+        this.writer.append(`}`);
+      } else if (ast.el.kind === AstNodeKind.if) {
+        this.writer.append('} else ')
+        // if will close the node
+        this.processIf(ast.el as IfNode);
+      }
+    }
+  }
+
+  private processFor(ast: ForNode) {
+    let startExpStr = this.convertExpression(ast.startExp);
+    let endExpStr = this.convertExpression(ast.endExp);
+    let byExpStr = `${ast.name.value} += ${(ast.byExp === undefined) ? '+1' : this.convertExpression(ast.byExp)}`;
+
+    this.writer.append(`for( let ${ast.name.value}=${startExpStr}; ${ast.name.value} < ${endExpStr}; ${byExpStr} ) {`);
+    this.processNode(ast.body);
+    this.writer.append(`}`);
+  }
+
   private processReturn(ast: ReturnNode) {
     if (ast.value !== undefined) {
       let expStr = this.convertExpression(ast.value);
       this.writer.append(`return ${expStr};`);
     } else {
       this.writer.append(`return;`);
+    }
+  }
+
+  private convertOp(token: Token): string {
+    if (token.kind === TokenKind.Equal) {
+      return '===';
+    } else {
+      return token.value;
     }
   }
 
@@ -93,7 +154,7 @@ export class Transpiler {
           tokens.push((node as IdNode).name.value);
           break;
         case AstNodeKind.op:
-          tokens.push((node as OpNode).op.value);
+          tokens.push(this.convertOp((node as OpNode).op));
           break;
         case AstNodeKind.call:
           break;

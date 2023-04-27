@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { PxPos } from "../posh/pos";
+import { PxPos } from "../lib/pos";
 
 // subset of mouse event; we use it to update things on the fly
 export class MEvent {

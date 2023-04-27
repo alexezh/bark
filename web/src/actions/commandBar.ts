@@ -1,4 +1,4 @@
-import { MapEditorState } from "../posh/mapeditorstate";
+import { MapEditorState } from "../ui/mapeditorstate";
 import { createButton, setElementVisible } from "../lib/htmlutils";
 import { IAction, ICommandBar } from "../ui/iaction";
 import { ShellProps } from "../ui/shell";

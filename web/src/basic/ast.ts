@@ -82,7 +82,7 @@ export type BlockNode = AstNode & {
 }
 
 export type IfNode = StatementNode & {
-  exp: AstNode;
+  exp: ExpressionNode;
   th: BlockNode;
   el: BlockNode | IfNode | undefined;
 }

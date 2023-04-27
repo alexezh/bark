@@ -1,6 +1,6 @@
 import { CommandBar } from "../actions/commandBar";
 import { UiCompositor2 } from "./uicompositor";
-import { createMapEditorState, mapEditorState } from "../posh/mapeditorstate";
+import { createMapEditorState, mapEditorState } from "./mapeditorstate";
 import { CodeEditor } from "./codeeditor";
 import { IGameShell as IGameShell } from "./igameshell";
 import { registerSystemCommands } from "../posh/systemcommands";

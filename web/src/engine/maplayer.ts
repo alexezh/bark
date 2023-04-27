@@ -1,5 +1,5 @@
 import { BufferGeometry, Group, Mesh, MeshPhongMaterial, Scene, Vector3 } from "three";
-import { GridSize } from "../posh/pos";
+import { GridSize } from "../lib/pos";
 import { MapBlock, MapBlockCoord } from "../ui/ivoxelmap";
 import { BlockPos3 } from "../voxel/pos3";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";

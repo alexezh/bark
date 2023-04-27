@@ -95,9 +95,11 @@ function parseFuncParam(parser: BasicParser): ParamDefNode {
   }
 }
 
-function parseIf(parser: BasicParser): IfNode {
+function parseIf(parser: BasicParser, startToken: TokenKind): IfNode {
+  let iif = parser.readKind(startToken);
+
   // expression ends with then
-  let exp = parser.createChildParser(parseExpression, parser.token, { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.Then] });
+  let exp = parser.createChildParser(parseExpression, parser.read(), { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.Then] });
 
   let th = parser.createChildParser(
     (parser) => parseBlock(parser, TokenKind.Then), parser.token, {
@@ -108,14 +110,14 @@ function parseIf(parser: BasicParser): IfNode {
     return {
       kind: AstNodeKind.if,
       exp: exp, th: th, el: parser.createChildParser(
-        (parser) => parseBlock(parser, TokenKind.Else), endToken, {
+        (parser) => parseBlock(parser, TokenKind.Else), parser.token, {
         endTokens: [TokenKind.End]
       })
     }
   } else if (endToken.kind === TokenKind.ElIf) {
     return {
       kind: AstNodeKind.if,
-      exp: exp, th: th, el: parser.createChildParser(parseIf, endToken, {
+      exp: exp, th: th, el: parser.createChildParser((parser) => parseIf(parser, TokenKind.ElIf), parser.token, {
         endTokens: [TokenKind.Else, TokenKind.ElIf, TokenKind.End]
       })
     }
@@ -161,6 +163,7 @@ function parseFor(parser: BasicParser): ForNode {
   }
 }
 
+// assumes block as something with start which should be skipped
 function parseBlock(parser: BasicParser, startTokenKind: TokenKind): BlockNode {
   let body: StatementNode[] = [];
 
@@ -217,7 +220,7 @@ function parseStatement(parser: BasicParser): StatementNode | undefined {
   let token = parser.read();
   switch (token.kind) {
     case TokenKind.If:
-      return parser.createChildParser(parseIf, token, {});
+      return parser.createChildParser((parser) => parseIf(parser, TokenKind.If), token, {});
     case TokenKind.For:
       return parser.createChildParser(parseFor, token, {});
     case TokenKind.Var:

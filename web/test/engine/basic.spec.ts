@@ -1,8 +1,8 @@
 import { expect, test } from '@jest/globals';
-import { TokenKind, Tokenizer } from '../../src/engine/basic/basictokeniser';
-import { BasicParser, EolRule } from '../../src/engine/basic/basicparser';
-import { parseModule } from '../../src/engine/basic/basic';
-import { AstNodeKind, ConstNode, ForNode, FuncDefNode } from '../../src/engine/basic/ast';
+import { TokenKind, Tokenizer } from '../../src/basic/basictokeniser';
+import { BasicParser, EolRule } from '../../src/basic/basicparser';
+import { parseModule } from '../../src/basic/basic';
+import { AstNodeKind, ConstNode, ForNode, FuncDefNode } from '../../src/basic/ast';
 
 test("basic", () => {
   let tokenize = Tokenizer.load(`

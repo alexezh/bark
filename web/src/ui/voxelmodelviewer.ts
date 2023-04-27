@@ -1,8 +1,8 @@
-import { MapEditorState, updateRect } from "../posh/mapeditorstate";
+import { MapEditorState, updateRect } from "./mapeditorstate";
 import { KeyBinder, makeMEvent } from "./keybinder";
 import { GameColors } from "../lib/gamecolors";
 import { UiLayer2, UiLayerProps } from "./uilayer";
-import { GridRect, gridRectToPxRect, PxSize } from "../posh/pos";
+import { GridRect, gridRectToPxRect, PxSize } from "../lib/pos";
 import _ from "lodash";
 
 export type TilesetListProps = UiLayerProps & {

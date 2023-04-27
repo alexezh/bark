@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { BufferGeometry, Camera, Line, LineBasicMaterial, PerspectiveCamera, Raycaster, Scene, Vector3 } from "three";
-import { mapEditorState } from "../posh/mapeditorstate";
-import { PxSize } from "../posh/pos";
+import { mapEditorState } from "./mapeditorstate";
+import { PxSize } from "../lib/pos";
 import { ILevelEditor as ILevelEditor } from "./ileveleditor";
 import { KeyBinder, MEvent } from "./keybinder";
 import { IVoxelLevel, IVoxelLevelFile, MapBlockCoord } from "./ivoxelmap";

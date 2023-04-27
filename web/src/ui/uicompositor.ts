@@ -1,4 +1,4 @@
-import { PxSize } from "../posh/pos";
+import { PxSize } from "../lib/pos";
 import { IUiLayer2 } from "./uilayer";
 
 export interface IUiCompositor {

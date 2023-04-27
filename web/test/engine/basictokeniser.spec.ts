@@ -1,7 +1,7 @@
 import { expect, test } from '@jest/globals';
-import { TokenKind, Tokenizer as Tokenizer } from '../../src/engine/basic/basictokeniser';
+import { TokenKind, Tokenizer as Tokenizer } from '../../src/basic/basictokeniser';
 import { parse } from 'path';
-import { BasicParser, EolRule } from '../../src/engine/basic/basicparser';
+import { BasicParser, EolRule } from '../../src/basic/basicparser';
 //import { test } from 'jest';
 
 test("basic", () => {
