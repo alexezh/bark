@@ -36,6 +36,9 @@ export enum TokenKind {
   RightSquare,
   String,
   Number,
+  True,
+  False,
+  Break,
   Id,
   For,
   To,
@@ -94,7 +97,7 @@ export class StringReader {
     if (this._pos + n >= this.source.length) {
       return;
     }
-    this._pos++;
+    this._pos += n;
   }
 
   public compare(s: string): boolean {
@@ -160,6 +163,17 @@ export class Tokenizer {
     let c = reader.readNext();
     if (c >= '0' && c <= '9') {
       return this.readNumber(reader, c, pos);
+    }
+    if (c === 't') {
+      if (reader.compare('rue')) {
+        reader.move(3)
+        return new Token(TokenKind.True, 'true', pos);
+      }
+    } else if (c === 'f') {
+      if (reader.compare('alse')) {
+        reader.move(4)
+        return new Token(TokenKind.False, 'false', pos);
+      }
     }
 
     if (c === '"') {
@@ -268,6 +282,9 @@ export class Tokenizer {
       case 'and': return TokenKind.And;
       case 'not': return TokenKind.Not;
       case 'proc': return TokenKind.Proc;
+      case 'true': return TokenKind.True;
+      case 'false': return TokenKind.False;
+      case 'break': return TokenKind.Break;
       case 'var': return TokenKind.Var;
       case 'return': return TokenKind.Return;
       default: return TokenKind.Id;

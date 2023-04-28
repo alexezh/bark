@@ -5,7 +5,7 @@ import {
   ParamDefNode,
   IfNode,
   VarDefNode, StatementNode, AssingmentNode, CallNode,
-  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode
+  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode, WhileNode
 } from "./ast";
 import { BasicParser, EolRule, SemiRule } from "./basicparser";
 import { ParseError, Token, TokenKind, Tokenizer, isOpTokenKind } from "./basictokeniser";
@@ -170,6 +170,22 @@ function parseFor(parser: BasicParser): ForNode {
   }
 }
 
+function parseWhile(parser: BasicParser): WhileNode {
+  // expression ends with then
+  let w = parser.readKind(TokenKind.While);
+  let exp = parser.createChildParser(parseExpression, parser.read(), { endTokens: [TokenKind.Do] });
+
+  let body = parser.createChildParser(
+    (parser) => parseBlock(parser, TokenKind.Do), parser.token, {
+    endTokens: [TokenKind.End]
+  });
+
+  return {
+    kind: AstNodeKind.while,
+    exp: exp,
+    body: body
+  }
+}
 // assumes block as something with start which should be skipped
 function parseBlock(parser: BasicParser, startTokenKind: TokenKind): BlockNode {
   let body: StatementNode[] = [];
@@ -229,10 +245,16 @@ function parseStatement(parser: BasicParser): StatementNode | undefined {
       return parser.createChildParser((parser) => parseIf(parser, TokenKind.If), token, {});
     case TokenKind.For:
       return parser.createChildParser(parseFor, token, {});
+    case TokenKind.While:
+      return parser.createChildParser(parseWhile, token, {});
     case TokenKind.Var:
       return parser.createChildParser(parseVarDef, token, { eolRule: EolRule.Token });
     case TokenKind.Return:
       return parser.createChildParser(parseReturn, token, { eolRule: EolRule.Token });
+    case TokenKind.Break:
+      return {
+        kind: AstNodeKind.break
+      };
   }
 
   // otherwise, it is either call or assingment
@@ -300,7 +322,9 @@ function parseExpression(parser: BasicParser): ExpressionNode {
     } else {
       switch (token.kind) {
         case TokenKind.Number:
-        case TokenKind.String: {
+        case TokenKind.String:
+        case TokenKind.True:
+        case TokenKind.False: {
           let c: ConstNode = {
             kind: AstNodeKind.const,
             value: token

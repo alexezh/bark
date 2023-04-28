@@ -1,5 +1,5 @@
 import { forEach } from "lodash";
-import { AssingmentNode, AstNode, AstNodeKind, BlockNode, ConstNode, ExpressionNode, ForNode, FuncDefNode, IdNode, IfNode, ModuleNode, OpNode, ReturnNode, VarDefNode } from "./ast";
+import { AssingmentNode, AstNode, AstNodeKind, BlockNode, ConstNode, ExpressionNode, ForNode, FuncDefNode, IdNode, IfNode, ModuleNode, OpNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast";
 import { ParseError, Token, TokenKind, isOpTokenKind } from "./basictokeniser";
 
 class JsWriter {
@@ -49,8 +49,14 @@ export class Transpiler {
       case AstNodeKind.for:
         this.processFor(ast as ForNode);
         break;
+      case AstNodeKind.while:
+        this.processWhile(ast as WhileNode);
+        break;
       case AstNodeKind.return:
         this.processReturn(ast as ReturnNode);
+        break;
+      case AstNodeKind.break:
+        this.processBreak(ast as StatementNode);
         break;
       case AstNodeKind.block:
         this.processBlock(ast as BlockNode);
@@ -127,6 +133,14 @@ export class Transpiler {
     this.writer.append(`}`);
   }
 
+  private processWhile(ast: WhileNode) {
+    let expStr = this.convertExpression(ast.exp);
+
+    this.writer.append(`while( ${expStr} ) {`);
+    this.processNode(ast.body);
+    this.writer.append(`}`);
+  }
+
   private processReturn(ast: ReturnNode) {
     if (ast.value !== undefined) {
       let expStr = this.convertExpression(ast.value);
@@ -134,6 +148,10 @@ export class Transpiler {
     } else {
       this.writer.append(`return;`);
     }
+  }
+
+  private processBreak(ast: StatementNode) {
+    this.writer.append(`break;`);
   }
 
   private convertOp(token: Token): string {

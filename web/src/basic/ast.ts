@@ -6,6 +6,7 @@ export enum AstNodeKind {
   funcDef,
   varDef,
   return,
+  break,
   assingment,
   call,
   op,
@@ -14,7 +15,8 @@ export enum AstNodeKind {
   expression,
   block,
   if,
-  for
+  for,
+  while
 }
 
 export type AstNode = {
@@ -93,5 +95,10 @@ export type ForNode = StatementNode & {
   startExp: ExpressionNode;
   endExp: ExpressionNode;
   byExp: ExpressionNode | undefined;
+  body: BlockNode
+}
+
+export type WhileNode = StatementNode & {
+  exp: ExpressionNode;
   body: BlockNode
 }

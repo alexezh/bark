@@ -44,3 +44,23 @@ end`);
   let val = eval(js);
   expect(eval(js)).toBe(6);
 });
+
+test("while_break", () => {
+  let tokenize = Tokenizer.load(`
+proc foo()
+begin
+  var x := 0
+  while true do
+    x := x + 3
+    break
+  end
+  return x
+end`);
+  let parser = new BasicParser(undefined, tokenize, 0, { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.Eof] });
+  let ast = parseModule(parser);
+  let trans = new Transpiler();
+  let js = trans.generate(ast, 'foo');
+
+  let val = eval(js);
+  expect(eval(js)).toBe(3);
+});
