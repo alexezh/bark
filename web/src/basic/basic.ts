@@ -101,34 +101,41 @@ function parseIf(parser: BasicParser, startToken: TokenKind): IfNode {
   // expression ends with then
   let exp = parser.createChildParser(parseExpression, parser.read(), { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.Then] });
 
-  let th = parser.createChildParser(
-    (parser) => parseBlock(parser, TokenKind.Then), parser.token, {
-    endTokens: [TokenKind.Else, TokenKind.ElIf, TokenKind.End]
-  });
-  let endToken = parser.token;
-  if (endToken.kind === TokenKind.Else) {
-    return {
-      kind: AstNodeKind.if,
-      exp: exp, th: th, el: parser.createChildParser(
+  let thBlock!: BlockNode;
+  let elIf: { exp: ExpressionNode, block: BlockNode }[] = [];
+  let elBlock!: BlockNode;
+
+  while (parser.token.kind !== TokenKind.End) {
+    let endToken = parser.token;
+
+    if (endToken.kind === TokenKind.Then) {
+      thBlock = parser.createChildParser(
+        (parser) => parseBlock(parser, TokenKind.Then), parser.token, {
+        endTokens: [TokenKind.Else, TokenKind.ElIf, TokenKind.End]
+      });
+    } else if (endToken.kind === TokenKind.Else) {
+      elBlock = parser.createChildParser(
         (parser) => parseBlock(parser, TokenKind.Else), parser.token, {
         endTokens: [TokenKind.End]
-      })
-    }
-  } else if (endToken.kind === TokenKind.ElIf) {
-    return {
-      kind: AstNodeKind.if,
-      exp: exp, th: th, el: parser.createChildParser((parser) => parseIf(parser, TokenKind.ElIf), parser.token, {
+      });
+    } else if (endToken.kind === TokenKind.ElIf) {
+      let exp = parser.createChildParser(parseExpression, parser.read(), { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.Then] });
+      let block = parser.createChildParser((parser) => parseBlock(parser, TokenKind.Then), parser.token, {
         endTokens: [TokenKind.Else, TokenKind.ElIf, TokenKind.End]
-      })
+      });
+      elIf.push({ exp: exp, block: block });
+    } else {
+      throw 'Unknown token';
     }
-  } else if (endToken.kind === TokenKind.End) {
-    return {
-      kind: AstNodeKind.if,
-      exp: exp, th: th, el: undefined
-    }
-  } else {
-    throw 'Unknown token';
   }
+
+  return {
+    kind: AstNodeKind.if,
+    exp: exp,
+    th: thBlock,
+    elif: elIf,
+    el: elBlock
+  };
 }
 
 function parseFor(parser: BasicParser): ForNode {
@@ -169,9 +176,8 @@ function parseBlock(parser: BasicParser, startTokenKind: TokenKind): BlockNode {
 
   let start = parser.readKind(startTokenKind);
 
-  // we do not know how statement ends; so we will let statement
-  // parser to figure out endding
-  while (parser.peek() !== undefined) {
+  // we are reading first token for the statement
+  while (parser.tryRead()) {
     let statement = parseStatement(parser);
     if (statement !== undefined) {
       body.push(statement);
@@ -217,7 +223,7 @@ function parseReturn(parser: BasicParser): ReturnNode {
 // statement if either control structure, assingment or call
 // ends with EOL or Semi
 function parseStatement(parser: BasicParser): StatementNode | undefined {
-  let token = parser.read();
+  let token = parser.token;
   switch (token.kind) {
     case TokenKind.If:
       return parser.createChildParser((parser) => parseIf(parser, TokenKind.If), token, {});

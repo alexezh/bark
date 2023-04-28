@@ -84,6 +84,7 @@ export type BlockNode = AstNode & {
 export type IfNode = StatementNode & {
   exp: ExpressionNode;
   th: BlockNode;
+  elif: { exp: ExpressionNode, block: BlockNode }[];
   el: BlockNode | IfNode | undefined;
 }
 

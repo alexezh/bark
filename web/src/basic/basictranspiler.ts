@@ -103,17 +103,18 @@ export class Transpiler {
     let expStr = this.convertExpression(ast.exp);
     this.writer.append(`if( ${expStr} ) {`);
     this.processNode(ast.th);
-    if (ast.el !== undefined) {
-      if (ast.el.kind === AstNodeKind.block) {
-        this.writer.append(`} else {`);
-        this.processNode(ast.el);
-        this.writer.append(`}`);
-      } else if (ast.el.kind === AstNodeKind.if) {
-        this.writer.append('} else ')
-        // if will close the node
-        this.processIf(ast.el as IfNode);
+    if (ast.elif.length > 0) {
+      for (let elif of ast.elif) {
+        let expStr = this.convertExpression(elif.exp);
+        this.writer.append(`} else if( ${expStr} ) {`);
+        this.processNode(elif.block);
       }
     }
+    if (ast.el !== undefined) {
+      this.writer.append(`} else {`);
+      this.processNode(ast.el);
+    }
+    this.writer.append(`}`);
   }
 
   private processFor(ast: ForNode) {

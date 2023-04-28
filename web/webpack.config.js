@@ -17,19 +17,6 @@ module.exports = {
         exclude: /node_modules/,
       },
       {
-        test: /\.peggjs$/,
-        exclude: /node_modules/,
-        use: [
-          {
-            loader: 'file-loader',
-            options: {
-              limit: 64 * 1024,
-              mimetype: "text/plain",
-            },
-          },
-        ],
-      },
-      {
         test: /\.json$/,
         exclude: /node_modules/,
         use: [
@@ -45,7 +32,7 @@ module.exports = {
     ],
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js', '.peggjs', '.json'],
+    extensions: ['.tsx', '.ts', '.js', '.json'],
   },
   output: {
     filename: 'digruntime.js',
