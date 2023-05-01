@@ -12,9 +12,15 @@ export enum SemiRule {
   Disallow = 2,
 }
 
+export enum EndRule {
+  Fresh = 0,
+  Inherit = 1,
+}
+
 export type ParserRules = {
   eolRule?: EolRule,
   semiRule?: SemiRule,
+  endRule?: EndRule,
   endTokens?: TokenKind[]
 }
 
@@ -47,6 +53,7 @@ export class BasicParser {
   readonly startIdx: number;
   readonly eolRule: EolRule = EolRule.Inherit;
   readonly semiRule: SemiRule = SemiRule.Inherit;
+  readonly endRule: EndRule = EndRule.Fresh;
   readonly endTokens: TokenKind[] | undefined;
   private currentIdx: number;
   private _token!: Token;
@@ -58,6 +65,7 @@ export class BasicParser {
     this.currentIdx = this.startIdx;
     this.eolRule = (rules.eolRule !== undefined) ? rules.eolRule : EolRule.Inherit;
     this.semiRule = (rules.semiRule !== undefined) ? rules.semiRule : SemiRule.Inherit;
+    this.endRule = (rules.endRule !== undefined) ? rules.endRule : EndRule.Inherit;
     this.endTokens = rules.endTokens;
   }
 
@@ -185,18 +193,20 @@ export class BasicParser {
       }
     }
 
-    if (this.endTokens === undefined) {
-      if (this.parent !== undefined) {
-        let action = this.parent.getTokenCategory(token);
-        this._token = token;
-        return action;
-      }
-    } else {
+    if (this.endTokens !== undefined) {
       for (let et of this.endTokens) {
         if (et === token.kind) {
           this._token = token;
           return TokenCategory.End;
         }
+      }
+    }
+
+    if (this.endRule === EndRule.Inherit) {
+      if (this.parent !== undefined) {
+        let action = this.parent.getTokenCategory(token);
+        this._token = token;
+        return action;
       }
     }
 

@@ -8,7 +8,7 @@ import {
   VarDefNode, StatementNode, AssingmentNode, CallNode,
   ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode, WhileNode
 } from "./ast";
-import { BasicParser, EolRule, SemiRule } from "./basicparser";
+import { BasicParser, EndRule, EolRule, SemiRule } from "./basicparser";
 import { ParseError, Token, TokenKind, Tokenizer, isOpTokenKind } from "./basictokeniser";
 
 
@@ -322,7 +322,7 @@ function parseCallParams(parser: BasicParser): ExpressionNode[] {
   let params: ExpressionNode[] = [];
   parser.readKind(TokenKind.LeftParen);
   while (parser.tryRead()) {
-    params.push(parser.createChildParser(parseExpression, parser.token, { endTokens: [TokenKind.Comma] }));
+    params.push(parser.createChildParser(parseExpression, parser.token, { endRule: EndRule.Inherit, endTokens: [TokenKind.Comma] }));
   }
   return params;
 }
