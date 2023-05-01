@@ -14,7 +14,7 @@ export class Sprite3 implements IRigitBody {
   private _speed: Vector3 = new Vector3();
   private _position: Vector3;
 
-  // if true, onCollide will record the array
+  // if set, contains object which collided with this one
   public collision: IRigitBody | undefined;
 
   public get id(): number { return this._id; }

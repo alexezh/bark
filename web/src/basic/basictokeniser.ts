@@ -36,6 +36,7 @@ export enum TokenKind {
   RightSquare,
   String,
   Number,
+  Boolean,
   True,
   False,
   Break,
@@ -248,7 +249,10 @@ export class Tokenizer {
     let s: string[] = [head];
     while (!reader.isEol) {
       let c = reader.peekNext();
-      if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+      if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+        c === '.' ||
+        (c >= '0' && c <= '9')) {
+
         reader.readNext();
         s.push(c);
       } else if (c === '_') {

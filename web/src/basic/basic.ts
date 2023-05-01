@@ -1,3 +1,4 @@
+import { nextPowerOfTwo } from "three/src/math/MathUtils";
 import {
   ModuleNode,
   AstNode,
@@ -32,6 +33,7 @@ export function parseModule(parser: BasicParser): ModuleNode {
 
   return {
     kind: AstNodeKind.module,
+    name: undefined,
     children: children
   }
 }
@@ -49,7 +51,8 @@ function parseFuncDef(parser: BasicParser): FuncDefNode {
 
   // check if we have return value
   if (parser.peekKind(TokenKind.Colon)) {
-    returnVal = parser.readKind(TokenKind.Id);
+    parser.readKind(TokenKind.Colon);
+    returnVal = parseType(parser);
   }
 
   let beginBody = parser.readKind(TokenKind.Begin);
@@ -67,6 +70,13 @@ function parseFuncDef(parser: BasicParser): FuncDefNode {
   }
 }
 
+/**
+ * later we should validate types and parse complex types
+ */
+function parseType(parser: BasicParser): Token {
+  return parser.read();
+}
+
 function parseFuncParams(parser: BasicParser): ParamDefNode[] {
   let params: ParamDefNode[] = [];
 
@@ -77,22 +87,22 @@ function parseFuncParams(parser: BasicParser): ParamDefNode[] {
       throw new ParseError();
     }
 
-    params.push(parser.createChildParser(parseFuncParam, parser.token, { endTokens: [TokenKind.Comma] }) as ParamDefNode);
+    let name = parser.token;
+    let colon = parser.readKind(TokenKind.Colon);
+    let paramType = parseType(parser);
+
+    params.push({
+      kind: AstNodeKind.paramDef,
+      name: name,
+      paramType: paramType
+    });
+
+    if (parser.peekKind(TokenKind.Comma)) {
+      parser.readKind(TokenKind.Comma);
+    }
   }
 
   return params;
-}
-
-// read pair name:type
-function parseFuncParam(parser: BasicParser): ParamDefNode {
-  let name = parser.readKind(TokenKind.Id);
-  let colon = parser.readKind(TokenKind.Colon);
-  let paramType = parser.readKind(TokenKind.Id);
-  return {
-    kind: AstNodeKind.paramDef,
-    name: name,
-    paramType: paramType
-  }
 }
 
 function parseIf(parser: BasicParser, startToken: TokenKind): IfNode {
@@ -290,7 +300,13 @@ function parseCall(parser: BasicParser): CallNode {
   let name = parser.readKind(TokenKind.Id);
 
   let params: ExpressionNode[];
-  params = parseCallParams(parser);
+  // if next token is (, it is with parentesys
+  // make nested parser which reads until )
+  if (parser.peekKind(TokenKind.LeftParen)) {
+    params = parser.createChildParser(parseCallParams, parser.token, { endTokens: [TokenKind.RightParen] })
+  } else {
+    params = parseBareCallParams(parser);
+  }
 
   return {
     kind: AstNodeKind.call,
@@ -299,7 +315,22 @@ function parseCall(parser: BasicParser): CallNode {
   }
 }
 
+/**
+ * handles calls with parentesys and commas
+ */
 function parseCallParams(parser: BasicParser): ExpressionNode[] {
+  let params: ExpressionNode[] = [];
+  parser.readKind(TokenKind.LeftParen);
+  while (parser.tryRead()) {
+    params.push(parser.createChildParser(parseExpression, parser.token, { endTokens: [TokenKind.Comma] }));
+  }
+  return params;
+}
+
+/**
+ * handles calls with white space as separator
+ */
+function parseBareCallParams(parser: BasicParser): ExpressionNode[] {
   let params: ExpressionNode[] = [];
   while (parser.tryRead()) {
     params.push(parser.createChildParser(parseExpression, parser.token, { endTokens: [TokenKind.Comma] }));
@@ -333,7 +364,7 @@ function parseExpression(parser: BasicParser): ExpressionNode {
           break;
         }
         case TokenKind.LeftParen: {
-          children.push(parser.createChildParser(parseExpression, token, {
+          children.push(parser.createChildParser(parseExpression, parser.read(), {
             eolRule: EolRule.WhiteSpace,
             semiRule: SemiRule.Disallow,
             endTokens: [TokenKind.RightParen]
@@ -344,12 +375,23 @@ function parseExpression(parser: BasicParser): ExpressionNode {
           // for ID we have to look ahead and see if next token 
           // is separator or op. In this case, id is just id
           // if next token is left paren, it is a call
-          //let nextToken = parser.peek();
-
-          let idNode: IdNode = {
-            kind: AstNodeKind.id, name: token
+          let nextToken = parser.peek();
+          if (nextToken !== undefined) {
+            if (isOpTokenKind(nextToken.kind)) {
+              let idNode: IdNode = {
+                kind: AstNodeKind.id, name: token
+              }
+              children.push(idNode);
+            } else {
+              children.push(parser.createChildParser(parseCall, token, {}));
+            }
+          } else {
+            let idNode: IdNode = {
+              kind: AstNodeKind.id, name: token
+            }
+            children.push(idNode);
           }
-          children.push(idNode);
+
           break;
         }
         default:

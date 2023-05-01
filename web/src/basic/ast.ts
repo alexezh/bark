@@ -24,6 +24,7 @@ export type AstNode = {
 }
 
 export type ModuleNode = AstNode & {
+  name: string | undefined,
   children: AstNode[];
 }
 
