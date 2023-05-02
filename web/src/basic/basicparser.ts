@@ -12,16 +12,15 @@ export enum SemiRule {
   Disallow = 2,
 }
 
-export enum EndRule {
-  Fresh = 0,
-  Inherit = 1,
-}
-
 export type ParserRules = {
   eolRule?: EolRule,
   semiRule?: SemiRule,
-  endRule?: EndRule,
   endTokens?: TokenKind[]
+}
+
+export enum EndRule {
+  Pass,
+  Inherit,
 }
 
 export enum TokenCategory {
@@ -53,34 +52,58 @@ export class BasicParser {
   readonly startIdx: number;
   readonly eolRule: EolRule = EolRule.Inherit;
   readonly semiRule: SemiRule = SemiRule.Inherit;
-  readonly endRule: EndRule = EndRule.Fresh;
+  readonly endRule: EndRule = EndRule.Pass;
   readonly endTokens: TokenKind[] | undefined;
   private currentIdx: number;
   private _token!: Token;
+  private _isEos: boolean = false;
 
-  constructor(parent: BasicParser | undefined, tokenizer: Tokenizer, startIdx: number, rules: ParserRules) {
+  constructor(parent: BasicParser | undefined, tokenizer: Tokenizer, startIdx: number, rules: ParserRules, endRule: EndRule | undefined = undefined) {
     this.parent = parent;
     this.tokenizer = tokenizer;
     this.startIdx = startIdx;
     this.currentIdx = this.startIdx;
     this.eolRule = (rules.eolRule !== undefined) ? rules.eolRule : EolRule.Inherit;
     this.semiRule = (rules.semiRule !== undefined) ? rules.semiRule : SemiRule.Inherit;
-    this.endRule = (rules.endRule !== undefined) ? rules.endRule : EndRule.Inherit;
+    this.endRule = (endRule !== undefined) ? endRule : EndRule.Pass;
     this.endTokens = rules.endTokens;
   }
 
-  // creates a parser which reads up to endToken
-  // when parsing is done, parser has position on the end token
-  public createChildParser<T>(
+  public parseNestedScope<T>(
     func: (parser: BasicParser) => T,
     startToken: Token,
     parseRule: ParserRules): T {
 
+    let res = this.parseScopeCore(func, startToken, parseRule, EndRule.Inherit);
+    // if we inherited and current token is last one; we just return
+    let action = this.getTokenCategory(this._token);
+    if (action === TokenCategory.End) {
+      this._isEos = true;
+    }
+
+    return res;
+  }
+
+  // creates a parser which reads up to endToken
+  // when parsing is done, parser has position on the end token
+  public parseScope<T>(
+    func: (parser: BasicParser) => T,
+    startToken: Token,
+    parseRule: ParserRules): T {
+
+    return this.parseScopeCore(func, startToken, parseRule, EndRule.Pass);
+  }
+
+  private parseScopeCore<T>(
+    func: (parser: BasicParser) => T,
+    startToken: Token,
+    parseRule: ParserRules,
+    endRule: EndRule) {
+
     // create parser starting with token index
-    let parser = new BasicParser(this, this.tokenizer, startToken.idx, parseRule);
+    let parser = new BasicParser(this, this.tokenizer, startToken.idx, parseRule, endRule);
     let childAst = func(parser);
 
-    // move our index to match child parser
     this.currentIdx = parser.currentIdx;
     this._token = parser._token;
 
@@ -95,6 +118,12 @@ export class BasicParser {
     returning false
   */
   public tryRead(): boolean {
+
+    // if we positioned at the end, return false
+    if (this._isEos) {
+      return false;
+    }
+
     let tokens = this.tokenizer.tokens;
     while (this.currentIdx < tokens.length) {
       let token = tokens[this.currentIdx++];

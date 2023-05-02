@@ -18,10 +18,10 @@ export function parseModule(parser: BasicParser): ModuleNode {
   while (parser.tryRead()) {
     switch (parser.token.kind) {
       case TokenKind.Proc:
-        children.push(parser.createChildParser(parseFuncDef, parser.token, { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.End] }));
+        children.push(parser.parseScope(parseFuncDef, parser.token, { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.End] }));
         break;
       case TokenKind.Var:
-        children.push(parser.createChildParser(parseVarDef, parser.token,
+        children.push(parser.parseScope(parseVarDef, parser.token,
           {
             eolRule: EolRule.Token,
             semiRule: SemiRule.End,
@@ -45,7 +45,7 @@ function parseFuncDef(parser: BasicParser): FuncDefNode {
   let name = parser.readKind(TokenKind.Id);
   let leftParent = parser.readKind(TokenKind.LeftParen);
 
-  let params = parser.createChildParser(parseFuncParams, leftParent, { endTokens: [TokenKind.RightParen] });
+  let params = parser.parseScope(parseFuncParams, leftParent, { endTokens: [TokenKind.RightParen] });
 
   let returnVal: Token | undefined = undefined;
 
@@ -57,7 +57,7 @@ function parseFuncDef(parser: BasicParser): FuncDefNode {
 
   let beginBody = parser.readKind(TokenKind.Begin);
 
-  let body = parser.createChildParser(
+  let body = parser.parseScope(
     (parser) => parseBlock(parser, TokenKind.Begin),
     beginBody,
     { endTokens: [TokenKind.End] });
@@ -109,7 +109,7 @@ function parseIf(parser: BasicParser, startToken: TokenKind): IfNode {
   let iif = parser.readKind(startToken);
 
   // expression ends with then
-  let exp = parser.createChildParser(parseExpression, parser.read(), { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.Then] });
+  let exp = parser.parseScope(parseExpression, parser.read(), { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.Then] });
 
   let thBlock!: BlockNode;
   let elIf: { exp: ExpressionNode, block: BlockNode }[] = [];
@@ -119,18 +119,18 @@ function parseIf(parser: BasicParser, startToken: TokenKind): IfNode {
     let endToken = parser.token;
 
     if (endToken.kind === TokenKind.Then) {
-      thBlock = parser.createChildParser(
+      thBlock = parser.parseScope(
         (parser) => parseBlock(parser, TokenKind.Then), parser.token, {
         endTokens: [TokenKind.Else, TokenKind.ElIf, TokenKind.End]
       });
     } else if (endToken.kind === TokenKind.Else) {
-      elBlock = parser.createChildParser(
+      elBlock = parser.parseScope(
         (parser) => parseBlock(parser, TokenKind.Else), parser.token, {
         endTokens: [TokenKind.End]
       });
     } else if (endToken.kind === TokenKind.ElIf) {
-      let exp = parser.createChildParser(parseExpression, parser.read(), { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.Then] });
-      let block = parser.createChildParser((parser) => parseBlock(parser, TokenKind.Then), parser.token, {
+      let exp = parser.parseScope(parseExpression, parser.read(), { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.Then] });
+      let block = parser.parseScope((parser) => parseBlock(parser, TokenKind.Then), parser.token, {
         endTokens: [TokenKind.Else, TokenKind.ElIf, TokenKind.End]
       });
       elIf.push({ exp: exp, block: block });
@@ -154,22 +154,22 @@ function parseFor(parser: BasicParser): ForNode {
   let varToken = parser.readKind(TokenKind.Id);
   let assignToken = parser.readKind(TokenKind.Assign);
   let startToken = parser.read();
-  let startExp = parser.createChildParser(parseExpression, startToken, { endTokens: [TokenKind.To] });
+  let startExp = parser.parseScope(parseExpression, startToken, { endTokens: [TokenKind.To] });
   let endToken = parser.read();
-  let endExp = parser.createChildParser(parseExpression, endToken, { endTokens: [TokenKind.Do, TokenKind.By] });
+  let endExp = parser.parseScope(parseExpression, endToken, { endTokens: [TokenKind.Do, TokenKind.By] });
 
   let doToken: Token;
   let byExp: ExpressionNode | undefined = undefined;
   if (parser.token.kind === TokenKind.By) {
     let expToken = parser.read();
-    byExp = parser.createChildParser(parseExpression, expToken, { endTokens: [TokenKind.Do] });
+    byExp = parser.parseScope(parseExpression, expToken, { endTokens: [TokenKind.Do] });
 
     doToken = parser.token;
   } else {
     doToken = parser.token;
   }
 
-  let body = parser.createChildParser(
+  let body = parser.parseScope(
     (parser) => parseBlock(parser, TokenKind.Do), parser.token, {
     endTokens: [TokenKind.End]
   });
@@ -183,9 +183,9 @@ function parseFor(parser: BasicParser): ForNode {
 function parseWhile(parser: BasicParser): WhileNode {
   // expression ends with then
   let w = parser.readKind(TokenKind.While);
-  let exp = parser.createChildParser(parseExpression, parser.read(), { endTokens: [TokenKind.Do] });
+  let exp = parser.parseScope(parseExpression, parser.read(), { endTokens: [TokenKind.Do] });
 
-  let body = parser.createChildParser(
+  let body = parser.parseScope(
     (parser) => parseBlock(parser, TokenKind.Do), parser.token, {
     endTokens: [TokenKind.End]
   });
@@ -248,19 +248,22 @@ function parseReturn(parser: BasicParser): ReturnNode {
 
 // statement if either control structure, assingment or call
 // ends with EOL or Semi
+//
+// some rules (such as assign) support single line
+// other rules are more flexible
 function parseStatement(parser: BasicParser): StatementNode | undefined {
   let token = parser.token;
   switch (token.kind) {
     case TokenKind.If:
-      return parser.createChildParser((parser) => parseIf(parser, TokenKind.If), token, {});
+      return parser.parseScope((parser) => parseIf(parser, TokenKind.If), token, {});
     case TokenKind.For:
-      return parser.createChildParser(parseFor, token, {});
+      return parser.parseScope(parseFor, token, {});
     case TokenKind.While:
-      return parser.createChildParser(parseWhile, token, {});
+      return parser.parseScope(parseWhile, token, {});
     case TokenKind.Var:
-      return parser.createChildParser(parseVarDef, token, { eolRule: EolRule.Token });
+      return parser.parseScope(parseVarDef, token, { eolRule: EolRule.Token });
     case TokenKind.Return:
-      return parser.createChildParser(parseReturn, token, { eolRule: EolRule.Token });
+      return parser.parseScope(parseReturn, token, { eolRule: EolRule.Token });
     case TokenKind.Break:
       return {
         kind: AstNodeKind.break
@@ -281,14 +284,14 @@ function parseStatement(parser: BasicParser): StatementNode | undefined {
     let assingment: AssingmentNode = {
       kind: AstNodeKind.assingment,
       name: token,
-      value: parser.createChildParser(parseExpression, rightSide, {
+      value: parser.parseScope(parseExpression, rightSide, {
         eolRule: EolRule.Token,
         semiRule: SemiRule.End
       })
     }
     return assingment;
   } else {
-    return parser.createChildParser(parseCall, token, {
+    return parser.parseScope(parseCall, token, {
       eolRule: EolRule.Token,
       semiRule: SemiRule.End
     });
@@ -303,7 +306,7 @@ function parseCall(parser: BasicParser): CallNode {
   // if next token is (, it is with parentesys
   // make nested parser which reads until )
   if (parser.peekKind(TokenKind.LeftParen)) {
-    params = parser.createChildParser(parseCallParams, parser.token, { endTokens: [TokenKind.RightParen] })
+    params = parser.parseScope(parseCallParams, parser.read(), { endTokens: [TokenKind.RightParen] })
   } else {
     params = parseBareCallParams(parser);
   }
@@ -322,7 +325,7 @@ function parseCallParams(parser: BasicParser): ExpressionNode[] {
   let params: ExpressionNode[] = [];
   parser.readKind(TokenKind.LeftParen);
   while (parser.tryRead()) {
-    params.push(parser.createChildParser(parseExpression, parser.token, { endRule: EndRule.Inherit, endTokens: [TokenKind.Comma] }));
+    params.push(parser.parseNestedScope(parseExpression, parser.token, { endTokens: [TokenKind.Comma] }));
   }
   return params;
 }
@@ -333,7 +336,7 @@ function parseCallParams(parser: BasicParser): ExpressionNode[] {
 function parseBareCallParams(parser: BasicParser): ExpressionNode[] {
   let params: ExpressionNode[] = [];
   while (parser.tryRead()) {
-    params.push(parser.createChildParser(parseExpression, parser.token, { endTokens: [TokenKind.Comma] }));
+    params.push(parser.parseScope(parseExpression, parser.token, { endTokens: [TokenKind.Comma] }));
   }
   return params;
 }
@@ -364,7 +367,7 @@ function parseExpression(parser: BasicParser): ExpressionNode {
           break;
         }
         case TokenKind.LeftParen: {
-          children.push(parser.createChildParser(parseExpression, parser.read(), {
+          children.push(parser.parseScope(parseExpression, parser.read(), {
             eolRule: EolRule.WhiteSpace,
             semiRule: SemiRule.Disallow,
             endTokens: [TokenKind.RightParen]
@@ -383,7 +386,7 @@ function parseExpression(parser: BasicParser): ExpressionNode {
               }
               children.push(idNode);
             } else {
-              children.push(parser.createChildParser(parseCall, token, {}));
+              children.push(parser.parseScope(parseCall, token, {}));
             }
           } else {
             let idNode: IdNode = {
