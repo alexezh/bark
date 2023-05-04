@@ -73,6 +73,7 @@ export class BasicParser {
     this.tokenizer = tokenizer;
     this.startIdx = startIdx;
     this.currentIdx = this.startIdx;
+    this.ctx = new ParserContext();
   }
 
   public withContext<T>(func: (parser: BasicParser, ...args: any[]) => T, ...args: any[]): T {

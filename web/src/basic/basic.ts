@@ -14,8 +14,13 @@ import { ParseError, Token, TokenKind, isOpTokenKind } from "./basictokeniser";
 export function parseModule(parser: BasicParser): ModuleNode {
   let children: AstNode[] = [];
 
-  while (parser.tryRead()) {
-    switch (parser.token.kind) {
+  while (!parser.isEos) {
+    let token = parser.peek();
+    if (token === undefined) {
+      break;
+    }
+
+    switch (token.kind) {
       case TokenKind.Proc:
         children.push(parser.withContext(parseFuncDef));
         break;
@@ -37,7 +42,7 @@ export function parseModule(parser: BasicParser): ModuleNode {
 // proc foo(params):return begin ... end
 function parseFuncDef(parser: BasicParser): FuncDefNode {
 
-  parser.setEol(true);
+  parser.setEol(false);
   parser.setEndRule([TokenKind.End]);
 
   let v = parser.readKind(TokenKind.Proc);
@@ -79,7 +84,7 @@ function parseFuncParams(parser: BasicParser, endTokens: TokenKind[]): ParamDefN
   parser.setEndRule(endTokens);
   let leftParen = parser.readKind(TokenKind.LeftParen);
 
-  while (parser.isEos) {
+  while (!parser.isEos) {
     parser.read();
 
     if (parser.token.kind !== TokenKind.Id) {
@@ -312,7 +317,7 @@ function parseCall(parser: BasicParser): CallNode {
     params = parser.withContext((parser) => {
       parser.setEndRule([TokenKind.RightParen]);
       parser.readKind(TokenKind.LeftParen);
-      while (parser.isEos) {
+      while (!parser.isEos) {
         params.push(parser.withContext((parser) => {
           parser.setEol(true);
           return parseExpression(parser);
@@ -322,7 +327,7 @@ function parseCall(parser: BasicParser): CallNode {
 
     })
   } else {
-    while (parser.isEos) {
+    while (!parser.isEos) {
       params.push(parser.withContext((parser) => {
         parser.setEndRule([TokenKind.Comma]);
         return parser.withContext(parseExpression);
@@ -345,7 +350,7 @@ function parseExpression(parser: BasicParser, endTokens: TokenKind[] | undefined
 
   let children: AstNode[] = [];
 
-  while (parser.isEos) {
+  while (!parser.isEos) {
     let token = parser.read();
     if (isOpTokenKind(token.kind)) {
       let op: OpNode = {
