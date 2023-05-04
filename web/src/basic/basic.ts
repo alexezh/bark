@@ -1,4 +1,3 @@
-import { nextPowerOfTwo } from "three/src/math/MathUtils";
 import {
   ModuleNode,
   AstNode,
@@ -8,8 +7,8 @@ import {
   VarDefNode, StatementNode, AssingmentNode, CallNode,
   ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode, WhileNode
 } from "./ast";
-import { BasicParser, EndRule, EolRule, SemiRule } from "./basicparser";
-import { ParseError, Token, TokenKind, Tokenizer, isOpTokenKind } from "./basictokeniser";
+import { BasicParser } from "./basicparser";
+import { ParseError, Token, TokenKind, isOpTokenKind } from "./basictokeniser";
 
 
 export function parseModule(parser: BasicParser): ModuleNode {
@@ -39,7 +38,7 @@ export function parseModule(parser: BasicParser): ModuleNode {
 function parseFuncDef(parser: BasicParser): FuncDefNode {
 
   parser.setEol(true);
-  parser.setEndToken([TokenKind.End]);
+  parser.setEndRule([TokenKind.End]);
 
   let v = parser.readKind(TokenKind.Proc);
   let name = parser.readKind(TokenKind.Id);
@@ -77,7 +76,7 @@ function parseType(parser: BasicParser): Token {
 function parseFuncParams(parser: BasicParser, endTokens: TokenKind[]): ParamDefNode[] {
   let params: ParamDefNode[] = [];
 
-  parser.setEndToken(endTokens);
+  parser.setEndRule(endTokens);
   let leftParen = parser.readKind(TokenKind.LeftParen);
 
   while (parser.isEos) {
@@ -119,7 +118,7 @@ function parseIf(parser: BasicParser, startToken: TokenKind): IfNode {
 
   try {
     parser.pushContext();
-    parser.setEndToken([TokenKind.End]);
+    parser.setEndRule([TokenKind.End]);
 
     while (!parser.isEos) {
       let endToken = parser.token;
@@ -195,7 +194,7 @@ function parseWhile(parser: BasicParser): WhileNode {
 }
 // assumes block as something with start which should be skipped
 function parseBlock(parser: BasicParser, startTokenKind: TokenKind, endTokens: TokenKind[]): BlockNode {
-  parser.setEndToken(endTokens);
+  parser.setEndRule(endTokens);
   let body: StatementNode[] = [];
 
   let start = parser.readKind(startTokenKind);
@@ -254,7 +253,7 @@ function parseReturn(parser: BasicParser): ReturnNode {
 function parseStatement(parser: BasicParser): StatementNode | undefined {
   try {
     parser.pushContext();
-    parser.setEndToken([TokenKind.Semi]);
+    parser.setEndRule([TokenKind.Semi]);
 
     let token = parser.peek();
     if (token === undefined) {
@@ -311,11 +310,11 @@ function parseCall(parser: BasicParser): CallNode {
   // make nested parser which reads until )
   if (parser.peekKind(TokenKind.LeftParen)) {
     params = parser.withContext((parser) => {
-      parser.setEndToken([TokenKind.RightParen]);
+      parser.setEndRule([TokenKind.RightParen]);
       parser.readKind(TokenKind.LeftParen);
       while (parser.isEos) {
         params.push(parser.withContext((parser) => {
-          parser.setWs(true);
+          parser.setEol(true);
           return parseExpression(parser);
         }));
       }
@@ -325,7 +324,7 @@ function parseCall(parser: BasicParser): CallNode {
   } else {
     while (parser.isEos) {
       params.push(parser.withContext((parser) => {
-        parser.setEndToken([TokenKind.Comma]);
+        parser.setEndRule([TokenKind.Comma]);
         return parser.withContext(parseExpression);
       }));
     }
@@ -341,7 +340,7 @@ function parseCall(parser: BasicParser): CallNode {
 // expression has form X op Y where X and Y can be either expression, call or id
 function parseExpression(parser: BasicParser, endTokens: TokenKind[] | undefined = undefined): ExpressionNode {
   if (endTokens !== undefined) {
-    parser.setEndToken(endTokens);
+    parser.setEndRule(endTokens);
   }
 
   let children: AstNode[] = [];
@@ -369,7 +368,7 @@ function parseExpression(parser: BasicParser, endTokens: TokenKind[] | undefined
         }
         case TokenKind.LeftParen: {
           children.push(parser.withContext((parser) => {
-            parser.setEndToken([TokenKind.RightParen]);
+            parser.setEndRule([TokenKind.RightParen]);
             parser.setSemi(false);
             return parseExpression(parser);
           }));

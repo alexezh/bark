@@ -40,6 +40,8 @@ export class ParserContext {
   public wsRule?: boolean;
   public eolRule?: boolean;
   public endTokens: TokenKind[] | undefined;
+  public inheritEndTokens: boolean = true;
+  public isEos: boolean = false;
 }
 
 /*
@@ -62,13 +64,8 @@ export class BasicParser {
   readonly parent: BasicParser | undefined;
   readonly tokenizer: Tokenizer;
   readonly startIdx: number;
-  readonly eolRule: EolRule = EolRule.Inherit;
-  readonly semiRule: SemiRule = SemiRule.Inherit;
-  readonly endRule: EndRule = EndRule.Pass;
-  readonly endTokens: TokenKind[] | undefined;
   private currentIdx: number;
   private _token!: Token;
-  private _isEos: boolean = false;
   private ctx!: ParserContext;
 
   constructor(parent: BasicParser | undefined, tokenizer: Tokenizer, startIdx: number, rules: ParserRules, endRule: EndRule | undefined = undefined) {
@@ -76,10 +73,6 @@ export class BasicParser {
     this.tokenizer = tokenizer;
     this.startIdx = startIdx;
     this.currentIdx = this.startIdx;
-    this.eolRule = (rules.eolRule !== undefined) ? rules.eolRule : EolRule.Inherit;
-    this.semiRule = (rules.semiRule !== undefined) ? rules.semiRule : SemiRule.Inherit;
-    this.endRule = (endRule !== undefined) ? endRule : EndRule.Pass;
-    this.endTokens = rules.endTokens;
   }
 
   public withContext<T>(func: (parser: BasicParser, ...args: any[]) => T, ...args: any[]): T {
@@ -99,25 +92,32 @@ export class BasicParser {
     }
 
     this.ctx = this.ctx.prev;
+    let category = this.getTokenCategory(this._token);
+    if (category === TokenCategory.End) {
+      this.ctx.isEos = true;
+    }
   }
 
+  /**
+   * if true; eol is end token
+   */
   public setEol(eolRule: boolean) {
     this.ctx.eolRule = eolRule;
   }
 
-  public setWs(wsRule: boolean) {
-    this.ctx.wsRule = wsRule;
+  public setEndRule(tokens: TokenKind[], inherit: boolean = true) {
+    this.ctx.endTokens = tokens;
+    this.ctx.inheritEndTokens = inherit;
   }
 
-  public setEndToken(tokens: TokenKind[]) {
-    this.ctx.endTokens = tokens
-  }
-
+  /**
+   * if true, semi is allowed
+   */
   public setSemi(semiRule: boolean) {
     this.ctx.semiRule = semiRule;
   }
 
-  public get isEos(): boolean { return this._isEos; }
+  public get isEos(): boolean { return this.ctx.isEos; }
 
   /**
    * move reader to specific token
@@ -126,59 +126,13 @@ export class BasicParser {
   public moveTo(token: Token) {
     this.currentIdx = token.idx;
   }
-  /*
-    public parseNestedScope<T>(
-      func: (parser: BasicParser) => T,
-      startToken: Token,
-      parseRule: ParserRules): T {
-  
-      let res = this.parseScopeCore(func, startToken, parseRule, EndRule.Inherit);
-      // if we inherited and current token is last one; we just return
-      let action = this.getTokenCategory(this._token);
-      if (action === TokenCategory.End) {
-        this._isEos = true;
-      }
-  
-      return res;
-    }
-  
-    // creates a parser which reads up to endToken
-    // when parsing is done, parser has position on the end token
-    public parseScope<T>(
-      func: (parser: BasicParser) => T,
-      startToken: Token,
-      parseRule: ParserRules): T {
-  
-      return this.parseScopeCore(func, startToken, parseRule, EndRule.Pass);
-    }
-  
-    private parseScopeCore<T>(
-      func: (parser: BasicParser) => T,
-      startToken: Token,
-      parseRule: ParserRules,
-      endRule: EndRule) {
-  
-      // create parser starting with token index
-      let parser = new BasicParser(this, this.tokenizer, startToken.idx, parseRule, endRule);
-      let childAst = func(parser);
-  
-      this.currentIdx = parser.currentIdx;
-      this._token = parser._token;
-  
-      return childAst;
-    }
-  */
-  /*
-    reads until stop condition
-    positions token at the stop position
-    there is slight difference with peek. Peek returns undefined
-    for end token while read positions parser to next token while
-    returning false
-  */
+
+  public get token(): Token { return this._token };
+
   public tryRead(): boolean {
 
     // if we positioned at the end, return false
-    if (this._isEos) {
+    if (this.ctx.isEos) {
       return false;
     }
 
@@ -219,8 +173,6 @@ export class BasicParser {
     return this.token;
   }
 
-  public get token(): Token { return this._token };
-
   public peek(): Token | undefined {
     let tokens = this.tokenizer.tokens;
     let idx = this.currentIdx;
@@ -252,49 +204,46 @@ export class BasicParser {
    * checks if token is end token following inheritance rules
    */
   private getTokenCategory(token: Token): TokenCategory {
+    let ctx = this.ctx;
+
     if (token.kind === TokenKind.Ws) {
       return TokenCategory.Ws;
     } else if (token.kind === TokenKind.Eol) {
-      if (this.eolRule === EolRule.Inherit) {
+      if (ctx.eolRule === undefined) {
         if (this.parent !== undefined) {
           return this.parent.getTokenCategory(token);
         } else {
-          // assume that eol is whitespace
           return TokenCategory.Ws;
         }
       } else {
-        return (this.eolRule === EolRule.Token) ? TokenCategory.End : TokenCategory.Ws;
+        return (ctx.eolRule) ? TokenCategory.End : TokenCategory.Ws;
       }
     } else if (token.kind === TokenKind.Semi) {
-      if (this.semiRule === SemiRule.Inherit) {
+      if (ctx.semiRule === undefined) {
         if (this.parent !== undefined) {
           return this.parent.getTokenCategory(token);
         } else {
           // assume that semi is a end token
           return TokenCategory.Token;
         }
-      } else if (this.semiRule === SemiRule.Disallow) {
-        throw new ParseError('Cannot have ; in this context');
-      } else {
+      } else if (ctx.semiRule) {
         return TokenCategory.End;
+      } else {
+        throw new ParseError();
       }
     }
 
-    if (this.endTokens !== undefined) {
-      for (let et of this.endTokens) {
+    if (ctx.endTokens !== undefined) {
+      for (let et of ctx.endTokens) {
         if (et === token.kind) {
-          this._token = token;
           return TokenCategory.End;
         }
       }
     }
 
-    if (this.endRule === EndRule.Inherit) {
-      if (this.parent !== undefined) {
-        let action = this.parent.getTokenCategory(token);
-        this._token = token;
-        return action;
-      }
+    if (ctx.inheritEndTokens && this.parent !== undefined) {
+      let action = this.parent.getTokenCategory(token);
+      return action;
     }
 
     return TokenCategory.Token;
