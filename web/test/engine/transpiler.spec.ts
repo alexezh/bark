@@ -101,8 +101,8 @@ test("bomb", () => {
   while true do
     var collision:= Level.waitCollide bomb 0.1
     if collision = null then
-      speed := Math.min(speed * 1.1, 100);
-      changeSpeedBy bomb 0, -speed, 0
+      speed := Math.min speed * 1.1 100;
+      changeSpeedBy bomb 0 -speed 0
     else
       if collision is Sprite then
         vm.send "KilledMonkey"

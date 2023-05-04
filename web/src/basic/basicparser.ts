@@ -30,6 +30,18 @@ export enum TokenCategory {
   Disallow,
 }
 
+export class ParserContext {
+  public prev: ParserContext | undefined = undefined;
+  public constructor(prev: ParserContext | undefined = undefined) {
+    this.prev = prev;
+  }
+
+  public semiRule?: boolean;
+  public wsRule?: boolean;
+  public eolRule?: boolean;
+  public endTokens: TokenKind[] | undefined;
+}
+
 /*
   parses list of tokens; produces AST
   the main challenge is with nested rules
@@ -57,6 +69,7 @@ export class BasicParser {
   private currentIdx: number;
   private _token!: Token;
   private _isEos: boolean = false;
+  private ctx!: ParserContext;
 
   constructor(parent: BasicParser | undefined, tokenizer: Tokenizer, startIdx: number, rules: ParserRules, endRule: EndRule | undefined = undefined) {
     this.parent = parent;
@@ -69,47 +82,92 @@ export class BasicParser {
     this.endTokens = rules.endTokens;
   }
 
-  public parseNestedScope<T>(
-    func: (parser: BasicParser) => T,
-    startToken: Token,
-    parseRule: ParserRules): T {
-
-    let res = this.parseScopeCore(func, startToken, parseRule, EndRule.Inherit);
-    // if we inherited and current token is last one; we just return
-    let action = this.getTokenCategory(this._token);
-    if (action === TokenCategory.End) {
-      this._isEos = true;
-    }
-
+  public withContext<T>(func: (parser: BasicParser, ...args: any[]) => T, ...args: any[]): T {
+    this.pushContext();
+    let res = func(this, ...args);
+    this.popContext();
     return res;
   }
 
-  // creates a parser which reads up to endToken
-  // when parsing is done, parser has position on the end token
-  public parseScope<T>(
-    func: (parser: BasicParser) => T,
-    startToken: Token,
-    parseRule: ParserRules): T {
-
-    return this.parseScopeCore(func, startToken, parseRule, EndRule.Pass);
+  public pushContext() {
+    this.ctx = new ParserContext(this.ctx);
   }
 
-  private parseScopeCore<T>(
-    func: (parser: BasicParser) => T,
-    startToken: Token,
-    parseRule: ParserRules,
-    endRule: EndRule) {
+  public popContext() {
+    if (this.ctx.prev === undefined) {
+      throw new ParseError();
+    }
 
-    // create parser starting with token index
-    let parser = new BasicParser(this, this.tokenizer, startToken.idx, parseRule, endRule);
-    let childAst = func(parser);
-
-    this.currentIdx = parser.currentIdx;
-    this._token = parser._token;
-
-    return childAst;
+    this.ctx = this.ctx.prev;
   }
 
+  public setEol(eolRule: boolean) {
+    this.ctx.eolRule = eolRule;
+  }
+
+  public setWs(wsRule: boolean) {
+    this.ctx.wsRule = wsRule;
+  }
+
+  public setEndToken(tokens: TokenKind[]) {
+    this.ctx.endTokens = tokens
+  }
+
+  public setSemi(semiRule: boolean) {
+    this.ctx.semiRule = semiRule;
+  }
+
+  public get isEos(): boolean { return this._isEos; }
+
+  /**
+   * move reader to specific token
+   * next read will return this token
+   */
+  public moveTo(token: Token) {
+    this.currentIdx = token.idx;
+  }
+  /*
+    public parseNestedScope<T>(
+      func: (parser: BasicParser) => T,
+      startToken: Token,
+      parseRule: ParserRules): T {
+  
+      let res = this.parseScopeCore(func, startToken, parseRule, EndRule.Inherit);
+      // if we inherited and current token is last one; we just return
+      let action = this.getTokenCategory(this._token);
+      if (action === TokenCategory.End) {
+        this._isEos = true;
+      }
+  
+      return res;
+    }
+  
+    // creates a parser which reads up to endToken
+    // when parsing is done, parser has position on the end token
+    public parseScope<T>(
+      func: (parser: BasicParser) => T,
+      startToken: Token,
+      parseRule: ParserRules): T {
+  
+      return this.parseScopeCore(func, startToken, parseRule, EndRule.Pass);
+    }
+  
+    private parseScopeCore<T>(
+      func: (parser: BasicParser) => T,
+      startToken: Token,
+      parseRule: ParserRules,
+      endRule: EndRule) {
+  
+      // create parser starting with token index
+      let parser = new BasicParser(this, this.tokenizer, startToken.idx, parseRule, endRule);
+      let childAst = func(parser);
+  
+      this.currentIdx = parser.currentIdx;
+      this._token = parser._token;
+  
+      return childAst;
+    }
+  */
   /*
     reads until stop condition
     positions token at the stop position
