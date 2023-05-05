@@ -23,11 +23,10 @@ export enum EndRule {
   Inherit,
 }
 
-export enum TokenCategory {
-  Ws,
-  End,
-  Token,
-  Disallow,
+export enum IsEndTokenResult {
+  No,
+  Direct,
+  Inherited,
 }
 
 export class ParserContext {
@@ -36,12 +35,41 @@ export class ParserContext {
     this.prev = prev;
   }
 
-  public semiRule?: boolean;
-  public wsRule?: boolean;
-  public eolRule?: boolean;
   public endTokens: TokenKind[] | undefined;
   public inheritEndTokens: boolean = true;
   public isEos: boolean = false;
+
+  isEndToken(token: Token): boolean {
+    if (this.endTokens === undefined) {
+      return false;
+    }
+
+    for (let et of this.endTokens) {
+      if (et === token.kind) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  isEndTokenDeep(token: Token): IsEndTokenResult {
+    if (this.isEndToken(token)) {
+      return IsEndTokenResult.Direct;
+    }
+
+    let cur: ParserContext | undefined = this;
+    while (cur !== undefined) {
+      if (cur.inheritEndTokens && cur.prev !== undefined) {
+        if (cur.prev.isEndToken(token)) {
+          return IsEndTokenResult.Inherited;
+        }
+      }
+      cur = cur.prev;
+    }
+
+    return IsEndTokenResult.No;
+  }
 }
 
 /*
@@ -61,22 +89,28 @@ export class ParserContext {
   statemens where we want one statement per line. All child parser might inherit this rule
 */
 export class BasicParser {
-  readonly parent: BasicParser | undefined;
   readonly tokenizer: Tokenizer;
-  readonly startIdx: number;
   private currentIdx: number;
+  // cached value at currentIdx
   private _token!: Token;
+  private tokens: Token[];
   private ctx!: ParserContext;
 
-  constructor(parent: BasicParser | undefined, tokenizer: Tokenizer, startIdx: number, rules: ParserRules, endRule: EndRule | undefined = undefined) {
-    this.parent = parent;
+  constructor(tokenizer: Tokenizer) {
     this.tokenizer = tokenizer;
-    this.startIdx = startIdx;
-    this.currentIdx = this.startIdx;
+    this.tokens = this.tokenizer.tokens;
+    this.currentIdx = 0;
     this.ctx = new ParserContext();
   }
 
-  public withContext<T>(func: (parser: BasicParser, ...args: any[]) => T, ...args: any[]): T {
+  /**
+   * we need to pass start token as rules might change
+   * for instance, we might say that \n is a token while it was ws for the
+   * outer rule 
+   */
+  public withContext<T>(token: Token, func: (parser: BasicParser, ...args: any[]) => T, ...args: any[]): T {
+    this.currentIdx = token.idx;
+    this._token = this.tokens[this.currentIdx];
     this.pushContext();
     let res = func(this, ...args);
     this.popContext();
@@ -93,8 +127,17 @@ export class BasicParser {
     }
 
     this.ctx = this.ctx.prev;
-    let category = this.getTokenCategory(this._token);
-    if (category === TokenCategory.End) {
+
+    // child parse might have ended due to parent end token
+    // check if it is and decide
+
+    let deepRes = this.ctx.isEndTokenDeep(this._token);
+    if (deepRes === IsEndTokenResult.Direct) {
+      // consume token
+      this.currentIdx++;
+      this.ctx.isEos = true;
+    } else if (deepRes === IsEndTokenResult.Inherited) {
+      // just mark this layer as eos; we will consume token on upper lauer
       this.ctx.isEos = true;
     }
   }
@@ -102,23 +145,10 @@ export class BasicParser {
   /**
    * if true; eol is end token
    */
-  public setEol(eolRule: boolean) {
-    this.ctx.eolRule = eolRule;
-  }
-
   public setEndRule(tokens: TokenKind[], inherit: boolean = true) {
     this.ctx.endTokens = tokens;
     this.ctx.inheritEndTokens = inherit;
   }
-
-  /**
-   * if true, semi is allowed
-   */
-  public setSemi(semiRule: boolean) {
-    this.ctx.semiRule = semiRule;
-  }
-
-  public get isEos(): boolean { return this.ctx.isEos; }
 
   /**
    * move reader to specific token
@@ -137,19 +167,27 @@ export class BasicParser {
       return false;
     }
 
-    let tokens = this.tokenizer.tokens;
-    while (this.currentIdx < tokens.length) {
-      let token = tokens[this.currentIdx++];
+    while (this.currentIdx < this.tokens.length) {
+      // get the current token; do not consume it yet
+      let token = this.tokens[this.currentIdx];
+      this._token = token;
 
-      let action = this.getTokenCategory(token);
-
-      if (action === TokenCategory.Ws) {
+      if (token.kind === TokenKind.Ws) {
+        this.currentIdx++;
         continue;
-      } else if (action === TokenCategory.End) {
-        this._token = token;
+      }
+
+      let deepRes = this.ctx.isEndTokenDeep(token);
+
+      if (deepRes === IsEndTokenResult.Direct) {
+        // if this is end token on our level, read it
+        this.currentIdx++;
+        return false;
+      } else if (deepRes === IsEndTokenResult.Inherited) {
+        // if this is parent end token, leave it to parent to read
         return false;
       } else {
-        this._token = token;
+        this.currentIdx++;
         return true;
       }
     }
@@ -162,28 +200,45 @@ export class BasicParser {
       throw new ParseError();
     }
 
-    return this._token;
+    return this._token!;
   }
 
   // throws in case of error
   public readKind(kind: TokenKind): Token {
-    this.tryRead();
+    if (!this.tryRead()) {
+      throw new ParseError();
+    }
     if (this.token.kind !== kind) {
       throw new ParseError();
     }
-    return this.token;
+    return this._token!;
+  }
+
+  public hasToken(): boolean {
+    return this.peek() !== undefined;
   }
 
   public peek(): Token | undefined {
+    if (this.ctx.isEos) {
+      return undefined;
+    }
+
     let tokens = this.tokenizer.tokens;
     let idx = this.currentIdx;
     while (idx < tokens.length) {
       let token = tokens[idx++];
-      let action = this.getTokenCategory(token);
 
-      if (action === TokenCategory.Ws) {
+      if (token.kind === TokenKind.Ws) {
         continue;
-      } else if (action === TokenCategory.End) {
+      }
+
+      let deepRes = this.ctx.isEndTokenDeep(token);
+
+      if (deepRes === IsEndTokenResult.Direct) {
+        // if this is end token on our level, read it
+        return undefined;
+      } else if (deepRes === IsEndTokenResult.Inherited) {
+        // if this is parent end token, leave it to parent to read
         return undefined;
       } else {
         return token;
@@ -199,54 +254,5 @@ export class BasicParser {
       return false;
     }
     return token.kind === kind;
-  }
-
-  /**
-   * checks if token is end token following inheritance rules
-   */
-  private getTokenCategory(token: Token): TokenCategory {
-    let ctx = this.ctx;
-
-    if (token.kind === TokenKind.Ws) {
-      return TokenCategory.Ws;
-    } else if (token.kind === TokenKind.Eol) {
-      if (ctx.eolRule === undefined) {
-        if (this.parent !== undefined) {
-          return this.parent.getTokenCategory(token);
-        } else {
-          return TokenCategory.Ws;
-        }
-      } else {
-        return (ctx.eolRule) ? TokenCategory.End : TokenCategory.Ws;
-      }
-    } else if (token.kind === TokenKind.Semi) {
-      if (ctx.semiRule === undefined) {
-        if (this.parent !== undefined) {
-          return this.parent.getTokenCategory(token);
-        } else {
-          // assume that semi is a end token
-          return TokenCategory.Token;
-        }
-      } else if (ctx.semiRule) {
-        return TokenCategory.End;
-      } else {
-        throw new ParseError();
-      }
-    }
-
-    if (ctx.endTokens !== undefined) {
-      for (let et of ctx.endTokens) {
-        if (et === token.kind) {
-          return TokenCategory.End;
-        }
-      }
-    }
-
-    if (ctx.inheritEndTokens && this.parent !== undefined) {
-      let action = this.parent.getTokenCategory(token);
-      return action;
-    }
-
-    return TokenCategory.Token;
   }
 }

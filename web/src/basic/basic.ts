@@ -14,7 +14,11 @@ import { ParseError, Token, TokenKind, isOpTokenKind } from "./basictokeniser";
 export function parseModule(parser: BasicParser): ModuleNode {
   let children: AstNode[] = [];
 
-  while (!parser.isEos) {
+  // we always treat semi as a break for rule
+  // it might not be valid in some cases, but it is error anyway
+  parser.setEndRule([TokenKind.Semi]);
+
+  while (parser.hasToken()) {
     let token = parser.peek();
     if (token === undefined) {
       break;
@@ -22,11 +26,10 @@ export function parseModule(parser: BasicParser): ModuleNode {
 
     switch (token.kind) {
       case TokenKind.Proc:
-        children.push(parser.withContext(parseFuncDef));
+        children.push(parser.withContext(token, parseFuncDef));
         break;
       case TokenKind.Var:
-        parser.setSemi(true);
-        children.push(parser.withContext(parseVarDef));
+        children.push(parser.withContext(token, parseVarDef));
         break;
     }
   }
@@ -42,13 +45,12 @@ export function parseModule(parser: BasicParser): ModuleNode {
 // proc foo(params):return begin ... end
 function parseFuncDef(parser: BasicParser): FuncDefNode {
 
-  parser.setEol(false);
   parser.setEndRule([TokenKind.End]);
 
   let v = parser.readKind(TokenKind.Proc);
   let name = parser.readKind(TokenKind.Id);
 
-  let params = parser.withContext(parseFuncParams, [TokenKind.RightParen]);
+  let params = parser.withContext(parser.readKind(TokenKind.LeftParen), parseFuncParams, [TokenKind.RightParen]);
 
   let returnVal: Token | undefined = undefined;
 
@@ -58,9 +60,7 @@ function parseFuncDef(parser: BasicParser): FuncDefNode {
     returnVal = parseType(parser);
   }
 
-  let beginBody = parser.readKind(TokenKind.Begin);
-
-  let body = parser.withContext(parseBlock, TokenKind.Begin, [TokenKind.End]);
+  let body = parser.withContext(parser.readKind(TokenKind.Begin), parseBlock, TokenKind.Begin, [TokenKind.End]);
 
   return {
     kind: AstNodeKind.funcDef,
@@ -84,7 +84,7 @@ function parseFuncParams(parser: BasicParser, endTokens: TokenKind[]): ParamDefN
   parser.setEndRule(endTokens);
   let leftParen = parser.readKind(TokenKind.LeftParen);
 
-  while (!parser.isEos) {
+  while (parser.hasToken()) {
     parser.read();
 
     if (parser.token.kind !== TokenKind.Id) {
@@ -113,7 +113,7 @@ function parseIf(parser: BasicParser, startToken: TokenKind): IfNode {
   let iif = parser.readKind(startToken);
 
   // expression ends with then
-  let exp = parser.withContext((parser) => {
+  let exp = parser.withContext(parser.read(), (parser) => {
     return parseExpression(parser, [TokenKind.Then]);
   });
 
@@ -125,18 +125,18 @@ function parseIf(parser: BasicParser, startToken: TokenKind): IfNode {
     parser.pushContext();
     parser.setEndRule([TokenKind.End]);
 
-    while (!parser.isEos) {
+    while (parser.hasToken()) {
       let endToken = parser.token;
 
       if (endToken.kind === TokenKind.Then) {
-        thBlock = parser.withContext(parseBlock, TokenKind.Then, [TokenKind.Else, TokenKind.ElIf]);
+        thBlock = parser.withContext(endToken, parseBlock, TokenKind.Then, [TokenKind.Else, TokenKind.ElIf]);
       } else if (endToken.kind === TokenKind.Else) {
-        elBlock = parser.withContext(parseBlock, TokenKind.Else);
+        elBlock = parser.withContext(endToken, parseBlock, TokenKind.Else);
       } else if (endToken.kind === TokenKind.ElIf) {
-        let exp = parser.withContext((parser) => {
+        let exp = parser.withContext(parser.read(), (parser) => {
           return parseExpression(parser, [TokenKind.Then]);
         });
-        let block = parser.withContext(parseBlock, TokenKind.Then, [TokenKind.Else, TokenKind.ElIf]);
+        let block = parser.withContext(parser.token, parseBlock, TokenKind.Then, [TokenKind.Else, TokenKind.ElIf]);
         elIf.push({ exp: exp, block: block });
       } else {
         throw 'Unknown token';
@@ -161,22 +161,22 @@ function parseFor(parser: BasicParser): ForNode {
   let ft = parser.readKind(TokenKind.For);
   let varToken = parser.readKind(TokenKind.Id);
   let assignToken = parser.readKind(TokenKind.Assign);
-  let startExp = parser.withContext(parseExpression, [TokenKind.To]);
-  let endToken = parser.read();
-  let endExp = parser.withContext(parseExpression, [TokenKind.Do, TokenKind.By]);
+  let startExp = parser.withContext(parser.read(), parseExpression, [TokenKind.To]);
+  let endToken = parser.readKind(TokenKind.To);
+  let endExp = parser.withContext(parser.read(), parseExpression, [TokenKind.Do, TokenKind.By]);
 
   let doToken: Token;
   let byExp: ExpressionNode | undefined = undefined;
   if (parser.token.kind === TokenKind.By) {
-    let expToken = parser.read();
-    byExp = parser.withContext(parseExpression, [TokenKind.Do]);
+    let expToken = parser.readKind(TokenKind.By);
+    byExp = parser.withContext(parser.read(), parseExpression, [TokenKind.Do]);
 
     doToken = parser.token;
   } else {
     doToken = parser.token;
   }
 
-  let body = parser.withContext(parseBlock, TokenKind.Do[TokenKind.End]);
+  let body = parser.withContext(doToken, parseBlock, TokenKind.Do[TokenKind.End]);
 
   return {
     kind: AstNodeKind.for,
@@ -187,9 +187,9 @@ function parseFor(parser: BasicParser): ForNode {
 function parseWhile(parser: BasicParser): WhileNode {
   // expression ends with then
   let w = parser.readKind(TokenKind.While);
-  let exp = parser.withContext(parseExpression, [TokenKind.Do]);
+  let exp = parser.withContext(parser.read(), parseExpression, [TokenKind.Do]);
 
-  let body = parser.withContext(parseBlock, TokenKind.Do, [TokenKind.End]);
+  let body = parser.withContext(parser.token, parseBlock, TokenKind.Do, [TokenKind.End]);
 
   return {
     kind: AstNodeKind.while,
@@ -205,7 +205,7 @@ function parseBlock(parser: BasicParser, startTokenKind: TokenKind, endTokens: T
   let start = parser.readKind(startTokenKind);
 
   // we are reading first token for the statement
-  while (parser.tryRead()) {
+  while (parser.hasToken()) {
     let statement = parseStatement(parser);
     if (statement !== undefined) {
       body.push(statement);
@@ -219,7 +219,7 @@ function parseBlock(parser: BasicParser, startTokenKind: TokenKind, endTokens: T
 }
 
 function parseVarDef(parser: BasicParser): VarDefNode {
-  parser.setEol(true);
+  parser.setEndRule([TokenKind.Eol]);
 
   let v = parser.readKind(TokenKind.Var);
   let name = parser.readKind(TokenKind.Id);
@@ -241,6 +241,7 @@ function parseVarDef(parser: BasicParser): VarDefNode {
 }
 
 function parseReturn(parser: BasicParser): ReturnNode {
+  parser.setEndRule([TokenKind.Eol]);
   let v = parser.readKind(TokenKind.Return);
 
   // we are keeping policy as is; so we can just pass parser
@@ -266,15 +267,15 @@ function parseStatement(parser: BasicParser): StatementNode | undefined {
     }
     switch (token.kind) {
       case TokenKind.If:
-        return parser.withContext(parseIf, TokenKind.If);
+        return parser.withContext(token, parseIf, TokenKind.If);
       case TokenKind.For:
-        return parser.withContext(parseFor);
+        return parser.withContext(token, parseFor);
       case TokenKind.While:
-        return parser.withContext(parseWhile);
+        return parser.withContext(token, parseWhile);
       case TokenKind.Var:
-        return parser.withContext(parseVarDef);
+        return parser.withContext(token, parseVarDef);
       case TokenKind.Return:
-        return parser.withContext(parseReturn);
+        return parser.withContext(token, parseReturn);
       case TokenKind.Break:
         return {
           kind: AstNodeKind.break
@@ -283,6 +284,7 @@ function parseStatement(parser: BasicParser): StatementNode | undefined {
 
     // otherwise, it is either call or assingment
     // the latter can be detected by having :=
+    parser.read();
     let nextToken = parser.peek();
     if (nextToken === undefined) {
       return undefined;
@@ -293,12 +295,12 @@ function parseStatement(parser: BasicParser): StatementNode | undefined {
       let assingment: AssingmentNode = {
         kind: AstNodeKind.assingment,
         name: token,
-        value: parser.withContext(parseExpression)
+        value: parser.withContext(parser.read(), parseExpression)
       }
       return assingment;
     } else {
-      parser.setEol(true);
-      return parser.withContext(parseCall);
+      parser.setEndRule([TokenKind.Eol]);
+      return parser.withContext(token, parseCall);
     }
   }
   finally {
@@ -314,12 +316,12 @@ function parseCall(parser: BasicParser): CallNode {
   // if next token is (, it is with parentesys
   // make nested parser which reads until )
   if (parser.peekKind(TokenKind.LeftParen)) {
-    params = parser.withContext((parser) => {
+    params = parser.withContext(parser.readKind(TokenKind.LeftParen), (parser) => {
       parser.setEndRule([TokenKind.RightParen]);
       parser.readKind(TokenKind.LeftParen);
-      while (!parser.isEos) {
-        params.push(parser.withContext((parser) => {
-          parser.setEol(true);
+      while (parser.hasToken()) {
+        params.push(parser.withContext(parser.token, (parser) => {
+          parser.setEndRule([TokenKind.Eol]);
           return parseExpression(parser);
         }));
       }
@@ -327,10 +329,10 @@ function parseCall(parser: BasicParser): CallNode {
 
     })
   } else {
-    while (!parser.isEos) {
-      params.push(parser.withContext((parser) => {
+    while (parser.hasToken()) {
+      params.push(parser.withContext(parser.token, (parser) => {
         parser.setEndRule([TokenKind.Comma]);
-        return parser.withContext(parseExpression);
+        return parseExpression(parser);
       }));
     }
   }
@@ -350,7 +352,7 @@ function parseExpression(parser: BasicParser, endTokens: TokenKind[] | undefined
 
   let children: AstNode[] = [];
 
-  while (!parser.isEos) {
+  while (parser.hasToken()) {
     let token = parser.read();
     if (isOpTokenKind(token.kind)) {
       let op: OpNode = {
@@ -372,9 +374,8 @@ function parseExpression(parser: BasicParser, endTokens: TokenKind[] | undefined
           break;
         }
         case TokenKind.LeftParen: {
-          children.push(parser.withContext((parser) => {
+          children.push(parser.withContext(parser.read(), (parser) => {
             parser.setEndRule([TokenKind.RightParen]);
-            parser.setSemi(false);
             return parseExpression(parser);
           }));
           break;

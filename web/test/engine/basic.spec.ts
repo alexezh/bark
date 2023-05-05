@@ -11,7 +11,7 @@ begin
   var x := 3
   print \"hello world\" + x
 end`);
-  let parser = new BasicParser(undefined, tokenize, 0, { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.Eof] }, EndRule.Pass);
+  let parser = new BasicParser(tokenize);
   let ast = parseModule(parser);
   expect(ast.children.length).toBe(1);
   let func = ast.children[0] as FuncDefNode;
@@ -27,7 +27,7 @@ begin
     print \"hello world\" + x
   end
 end`);
-  let parser = new BasicParser(undefined, tokenize, 0, { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.Eof] }, EndRule.Pass);
+  let parser = new BasicParser(tokenize);
   let ast = parseModule(parser);
   let func = ast.children[0] as FuncDefNode;
   let fr = func.body.children[0] as ForNode;

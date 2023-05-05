@@ -7,7 +7,7 @@ import { Transpiler } from '../../src/basic/basictranspiler';
 
 function runProg(text: string): any {
   let tokenize = Tokenizer.load(text);
-  let parser = new BasicParser(undefined, tokenize, 0, { eolRule: EolRule.WhiteSpace, endTokens: [TokenKind.Eof] });
+  let parser = new BasicParser(tokenize);
   let ast = parseModule(parser);
   let trans = new Transpiler();
   let js = trans.generate(ast, 'foo');
