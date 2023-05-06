@@ -109,6 +109,8 @@ function parseFuncParams(parser: BasicParser, endTokens: TokenKind[]): ParamDefN
 }
 
 function parseIf(parser: BasicParser, startToken: TokenKind): IfNode {
+  parser.setEndRule([TokenKind.End]);
+
   let iif = parser.readKind(startToken);
 
   // expression ends with then
@@ -198,6 +200,7 @@ function parseWhile(parser: BasicParser): WhileNode {
     body: body
   }
 }
+
 // assumes block as something with start which should be skipped
 function parseBlock(parser: BasicParser, startTokenKind: TokenKind, endTokens: TokenKind[]): BlockNode {
   parser.setEndRule(endTokens);
@@ -226,20 +229,20 @@ function parseBlock(parser: BasicParser, startTokenKind: TokenKind, endTokens: T
 // other rules are more flexible
 function parseStatement(token: Token, parser: BasicParser): StatementNode | undefined {
   try {
-    parser.pushContext();
+    parser.pushContext('statement');
     parser.setEndRule([TokenKind.Semi]);
 
     switch (token.kind) {
       case TokenKind.If:
-        return parser.withContext(token, parseIf, TokenKind.If);
+        return parser.withContext2('if', token, parseIf, TokenKind.If);
       case TokenKind.For:
-        return parser.withContext(token, parseFor);
+        return parser.withContext2('for', token, parseFor);
       case TokenKind.While:
-        return parser.withContext(token, parseWhile);
+        return parser.withContext2('while', token, parseWhile);
       case TokenKind.Var:
-        return parser.withContext(token, parseVarDef);
+        return parser.withContext2('var', token, parseVarDef);
       case TokenKind.Return:
-        return parser.withContext(token, parseReturn);
+        return parser.withContext2('return', token, parseReturn);
       case TokenKind.Break:
         return {
           kind: AstNodeKind.break
@@ -391,6 +394,8 @@ function parseExpressionCore(parser: BasicParser): ExpressionNode {
   // if token is op - it is expression, otherwise if it is id or parentesys
   // it is a function call
   if (isOpTokenKind(token.kind)) {
+    left = makeIdNode(ltoken);
+
     op = {
       kind: AstNodeKind.op,
       op: token
@@ -401,7 +406,7 @@ function parseExpressionCore(parser: BasicParser): ExpressionNode {
   } else if (token.kind === TokenKind.Id) {
     // move back so we can read id inside call
     parser.moveTo(token);
-    right = parseCall(parser);
+    left = parseCall(parser);
   } else {
     throw new ParseError();
   }
