@@ -161,13 +161,11 @@ function parseFor(parser: BasicParser): ForNode {
   let varToken = parser.readKind(TokenKind.Id);
   let assignToken = parser.readKind(TokenKind.Assign);
   let startExp = parser.withContext(parser.read(), parseExpression, [TokenKind.To]);
-  let endToken = parser.readKind(TokenKind.To);
   let endExp = parser.withContext(parser.read(), parseExpression, [TokenKind.Do, TokenKind.By]);
 
   let doToken: Token;
   let byExp: ExpressionNode | undefined = undefined;
   if (parser.token.kind === TokenKind.By) {
-    let expToken = parser.readKind(TokenKind.By);
     byExp = parser.withContext(parser.read(), parseExpression, [TokenKind.Do]);
 
     doToken = parser.token;
@@ -175,7 +173,7 @@ function parseFor(parser: BasicParser): ForNode {
     doToken = parser.token;
   }
 
-  let body = parser.withContext(doToken, parseBlock, TokenKind.Do[TokenKind.End]);
+  let body = parser.withContext(doToken, parseBlock, TokenKind.Do, [TokenKind.End]);
 
   return {
     kind: AstNodeKind.for,
@@ -205,7 +203,7 @@ function parseBlock(parser: BasicParser, startTokenKind: TokenKind, endTokens: T
 
   // we are reading first token for the statement
   while (parser.tryRead()) {
-    let statement = parseStatement(parser);
+    let statement = parseStatement(parser.token, parser);
     if (statement !== undefined) {
       body.push(statement);
     }
@@ -217,53 +215,16 @@ function parseBlock(parser: BasicParser, startTokenKind: TokenKind, endTokens: T
   };
 }
 
-function parseVarDef(parser: BasicParser): VarDefNode {
-  parser.setEndRule([TokenKind.Eol]);
-
-  let v = parser.readKind(TokenKind.Var);
-  let name = parser.readKind(TokenKind.Id);
-  if (parser.peekKind(TokenKind.Assign)) {
-    // read assingment
-    parser.readKind(TokenKind.Assign);
-
-    // we are keeping policy as is; so we can just pass parser
-    return {
-      kind: AstNodeKind.varDef,
-      name: name, value: parseExpression(parser)
-    }
-  } else {
-    return {
-      kind: AstNodeKind.varDef,
-      name: name, value: undefined
-    }
-  }
-}
-
-function parseReturn(parser: BasicParser): ReturnNode {
-  parser.setEndRule([TokenKind.Eol]);
-  let v = parser.readKind(TokenKind.Return);
-
-  // we are keeping policy as is; so we can just pass parser
-  return {
-    kind: AstNodeKind.return,
-    value: parseExpression(parser)
-  }
-}
-
 // statement if either control structure, assingment or call
 // ends with EOL or Semi
 //
 // some rules (such as assign) support single line
 // other rules are more flexible
-function parseStatement(parser: BasicParser): StatementNode | undefined {
+function parseStatement(token: Token, parser: BasicParser): StatementNode | undefined {
   try {
     parser.pushContext();
     parser.setEndRule([TokenKind.Semi]);
 
-    let token = parser.peek();
-    if (token === undefined) {
-      return;
-    }
     switch (token.kind) {
       case TokenKind.If:
         return parser.withContext(token, parseIf, TokenKind.If);
@@ -298,12 +259,48 @@ function parseStatement(parser: BasicParser): StatementNode | undefined {
       }
       return assingment;
     } else {
+      parser.ignoreEol(false);
       parser.setEndRule([TokenKind.Eol]);
       return parser.withContext(token, parseCall);
     }
   }
   finally {
     parser.popContext();
+  }
+}
+
+function parseVarDef(parser: BasicParser): VarDefNode {
+  parser.ignoreEol(false);
+  parser.setEndRule([TokenKind.Eol]);
+
+  let v = parser.readKind(TokenKind.Var);
+  let name = parser.readKind(TokenKind.Id);
+  if (parser.peekKind(TokenKind.Assign)) {
+    // read assingment
+    parser.readKind(TokenKind.Assign);
+
+    // we are keeping policy as is; so we can just pass parser
+    return {
+      kind: AstNodeKind.varDef,
+      name: name, value: parseExpression(parser)
+    }
+  } else {
+    return {
+      kind: AstNodeKind.varDef,
+      name: name, value: undefined
+    }
+  }
+}
+
+function parseReturn(parser: BasicParser): ReturnNode {
+  parser.ignoreEol(false);
+  parser.setEndRule([TokenKind.Eol]);
+  let v = parser.readKind(TokenKind.Return);
+
+  // we are keeping policy as is; so we can just pass parser
+  return {
+    kind: AstNodeKind.return,
+    value: parseExpression(parser)
   }
 }
 
@@ -320,6 +317,7 @@ function parseCall(parser: BasicParser): CallNode {
       parser.readKind(TokenKind.LeftParen);
       while (parser.tryRead()) {
         params.push(parser.withContext(parser.token, (parser) => {
+          parser.ignoreEol(false);
           parser.setEndRule([TokenKind.Eol]);
           return parseExpression(parser);
         }));
@@ -345,9 +343,12 @@ function parseCall(parser: BasicParser): CallNode {
 
 // expression has form X op Y where X and Y can be either expression, call or id
 function parseExpression(parser: BasicParser, endTokens: TokenKind[] | undefined = undefined): ExpressionNode {
-  if (endTokens !== undefined) {
-    parser.setEndRule(endTokens);
+  parser.ignoreEol(false);
+  if (endTokens === undefined) {
+    endTokens = [];
   }
+  endTokens.push(TokenKind.Eol);
+  parser.setEndRule(endTokens);
 
   let children: AstNode[] = [];
 

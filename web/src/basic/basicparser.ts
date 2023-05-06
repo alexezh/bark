@@ -37,6 +37,7 @@ export class ParserContext {
 
   public endTokens: TokenKind[] | undefined;
   public inheritEndTokens: boolean = true;
+  public ignoreEol: boolean = true;
   public isEos: boolean = false;
 
   isEndToken(token: Token): boolean {
@@ -150,6 +151,10 @@ export class BasicParser {
     this.ctx.inheritEndTokens = inherit;
   }
 
+  public ignoreEol(val: boolean) {
+    this.ctx.ignoreEol = val;
+  }
+
   /**
    * move reader to specific token
    * next read will return this token
@@ -172,7 +177,7 @@ export class BasicParser {
       let token = this.tokens[this.nextIdx];
       this._token = token;
 
-      if (token.kind === TokenKind.Ws) {
+      if (this.isWsToken(token)) {
         this.nextIdx++;
         continue;
       }
@@ -224,7 +229,7 @@ export class BasicParser {
     while (idx < tokens.length) {
       let token = tokens[idx++];
 
-      if (token.kind === TokenKind.Ws) {
+      if (this.isWsToken(token)) {
         continue;
       }
 
@@ -250,5 +255,9 @@ export class BasicParser {
       return false;
     }
     return token.kind === kind;
+  }
+
+  private isWsToken(token: Token) {
+    return token.kind === TokenKind.Ws || (this.ctx.ignoreEol && token.kind === TokenKind.Eol);
   }
 }
