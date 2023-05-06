@@ -165,11 +165,11 @@ export class BasicParser {
 
   public get token(): Token { return this._token };
 
-  public tryRead(): boolean {
+  public tryRead(): Token | undefined {
 
     // if we positioned at the end, return false
     if (this.ctx.isEos) {
-      return false;
+      return undefined;
     }
 
     while (this.nextIdx < this.tokens.length) {
@@ -187,17 +187,17 @@ export class BasicParser {
       if (deepRes === IsEndTokenResult.Direct) {
         // if this is end token on our level, read it
         this.nextIdx++;
-        return false;
+        return undefined;
       } else if (deepRes === IsEndTokenResult.Inherited) {
         // if this is parent end token, leave it to parent to read
-        return false;
+        return undefined;
       } else {
         this.nextIdx++;
-        return true;
+        return this._token;
       }
     }
 
-    return false;
+    return undefined;
   }
 
   public read(): Token {

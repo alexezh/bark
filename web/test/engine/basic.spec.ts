@@ -33,7 +33,7 @@ end`);
   let fr = func.body.children[0] as ForNode;
 
   expect(fr.kind).toBe(AstNodeKind.for);
-  expect((fr.startExp.children[0] as ConstNode).value.value).toBe('1');
-  expect((fr.endExp.children[0] as ConstNode).value.value).toBe('5');
+  expect((fr.startExp.left as ConstNode).value.value).toBe('1');
+  expect((fr.endExp.left as ConstNode).value.value).toBe('5');
 });
 

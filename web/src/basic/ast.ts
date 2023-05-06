@@ -72,12 +72,28 @@ export type ConstNode = AstNode & {
   value: Token;
 }
 
+export function makeConstNode(token: Token): ConstNode {
+  return {
+    kind: AstNodeKind.const,
+    value: token
+  }
+}
+
 export type IdNode = AstNode & {
   name: Token;
 }
 
+export function makeIdNode(token: Token): IdNode {
+  return {
+    kind: AstNodeKind.id,
+    name: token
+  }
+}
+
 export type ExpressionNode = AstNode & {
-  children: AstNode[];
+  left: AstNode | undefined;
+  op: AstNode | undefined;
+  right: AstNode | undefined;
 }
 
 export type BlockNode = AstNode & {

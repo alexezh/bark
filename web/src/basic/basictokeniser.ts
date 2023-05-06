@@ -34,11 +34,13 @@ export enum TokenKind {
   RightSquiggly,
   LeftSquare,
   RightSquare,
+  // const start
   String,
   Number,
   Boolean,
   True,
   False,
+  // const end
   Break,
   Id,
   For,
@@ -59,6 +61,10 @@ export enum TokenKind {
 
 export function isOpTokenKind(kind: TokenKind): boolean {
   return kind >= TokenKind.Equal && kind <= TokenKind.Mul;
+}
+
+export function isConstTokenKind(kind: TokenKind): boolean {
+  return kind >= TokenKind.String && kind <= TokenKind.False;
 }
 
 export class Token {

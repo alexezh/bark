@@ -164,23 +164,42 @@ export class Transpiler {
 
   private convertExpression(ast: ExpressionNode): string {
     let tokens: string[] = [];
-    for (let node of ast.children) {
-      switch (node.kind) {
-        case AstNodeKind.const:
-          tokens.push((node as ConstNode).value.value);
-          break;
-        case AstNodeKind.id:
-          tokens.push((node as IdNode).name.value);
-          break;
-        case AstNodeKind.op:
-          tokens.push(this.convertOp((node as OpNode).op));
-          break;
-        case AstNodeKind.call:
-          break;
-        default:
-          throw new ParseError();
-      }
+    if (ast.left) {
+      this.convertExpressionToken(ast.left, tokens);
+    }
+    if (ast.op) {
+      this.convertExpressionToken(ast.op, tokens);
+    }
+    if (ast.right) {
+      this.convertExpressionToken(ast.right, tokens);
     }
     return tokens.join(' ');
+  }
+
+  private convertExpressionNode(ast: ExpressionNode, tokens: string[]): void {
+    if (ast.left) {
+      this.convertExpressionToken(ast.left, tokens);
+    }
+  }
+
+  private convertExpressionToken(ast: AstNode, tokens: string[]): void {
+    switch (ast.kind) {
+      case AstNodeKind.const:
+        tokens.push((ast as ConstNode).value.value);
+        break;
+      case AstNodeKind.expression:
+        this.convertExpressionNode(ast as ExpressionNode, tokens);
+        break;
+      case AstNodeKind.id:
+        tokens.push((ast as IdNode).name.value);
+        break;
+      case AstNodeKind.op:
+        tokens.push(this.convertOp((ast as OpNode).op));
+        break;
+      case AstNodeKind.call:
+        break;
+      default:
+        throw new ParseError();
+    }
   }
 }
