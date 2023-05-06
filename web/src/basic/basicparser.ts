@@ -90,8 +90,8 @@ export class ParserContext {
 */
 export class BasicParser {
   readonly tokenizer: Tokenizer;
-  private currentIdx: number;
-  // cached value at currentIdx
+  private nextIdx: number;
+  // cached value at nextIdx-1
   private _token!: Token;
   private tokens: Token[];
   private ctx!: ParserContext;
@@ -99,7 +99,7 @@ export class BasicParser {
   constructor(tokenizer: Tokenizer) {
     this.tokenizer = tokenizer;
     this.tokens = this.tokenizer.tokens;
-    this.currentIdx = 0;
+    this.nextIdx = 0;
     this.ctx = new ParserContext();
   }
 
@@ -109,8 +109,8 @@ export class BasicParser {
    * outer rule 
    */
   public withContext<T>(token: Token, func: (parser: BasicParser, ...args: any[]) => T, ...args: any[]): T {
-    this.currentIdx = token.idx;
-    this._token = this.tokens[this.currentIdx];
+    this.nextIdx = token.idx;
+    this._token = this.tokens[this.nextIdx];
     this.pushContext();
     let res = func(this, ...args);
     this.popContext();
@@ -134,7 +134,7 @@ export class BasicParser {
     let deepRes = this.ctx.isEndTokenDeep(this._token);
     if (deepRes === IsEndTokenResult.Direct) {
       // consume token
-      this.currentIdx++;
+      this.nextIdx++;
       this.ctx.isEos = true;
     } else if (deepRes === IsEndTokenResult.Inherited) {
       // just mark this layer as eos; we will consume token on upper lauer
@@ -155,7 +155,7 @@ export class BasicParser {
    * next read will return this token
    */
   public moveTo(token: Token) {
-    this.currentIdx = token.idx;
+    this.nextIdx = token.idx;
   }
 
   public get token(): Token { return this._token };
@@ -167,13 +167,13 @@ export class BasicParser {
       return false;
     }
 
-    while (this.currentIdx < this.tokens.length) {
+    while (this.nextIdx < this.tokens.length) {
       // get the current token; do not consume it yet
-      let token = this.tokens[this.currentIdx];
+      let token = this.tokens[this.nextIdx];
       this._token = token;
 
       if (token.kind === TokenKind.Ws) {
-        this.currentIdx++;
+        this.nextIdx++;
         continue;
       }
 
@@ -181,13 +181,13 @@ export class BasicParser {
 
       if (deepRes === IsEndTokenResult.Direct) {
         // if this is end token on our level, read it
-        this.currentIdx++;
+        this.nextIdx++;
         return false;
       } else if (deepRes === IsEndTokenResult.Inherited) {
         // if this is parent end token, leave it to parent to read
         return false;
       } else {
-        this.currentIdx++;
+        this.nextIdx++;
         return true;
       }
     }
@@ -214,17 +214,13 @@ export class BasicParser {
     return this._token!;
   }
 
-  public hasToken(): boolean {
-    return this.peek() !== undefined;
-  }
-
   public peek(): Token | undefined {
     if (this.ctx.isEos) {
       return undefined;
     }
 
     let tokens = this.tokenizer.tokens;
-    let idx = this.currentIdx;
+    let idx = this.nextIdx;
     while (idx < tokens.length) {
       let token = tokens[idx++];
 

@@ -18,8 +18,8 @@ export function parseModule(parser: BasicParser): ModuleNode {
   // it might not be valid in some cases, but it is error anyway
   parser.setEndRule([TokenKind.Semi]);
 
-  while (parser.hasToken()) {
-    let token = parser.peek();
+  while (parser.tryRead()) {
+    let token = parser.token;
     if (token === undefined) {
       break;
     }
@@ -84,8 +84,7 @@ function parseFuncParams(parser: BasicParser, endTokens: TokenKind[]): ParamDefN
   parser.setEndRule(endTokens);
   let leftParen = parser.readKind(TokenKind.LeftParen);
 
-  while (parser.hasToken()) {
-    parser.read();
+  while (parser.tryRead()) {
 
     if (parser.token.kind !== TokenKind.Id) {
       throw new ParseError();
@@ -125,7 +124,7 @@ function parseIf(parser: BasicParser, startToken: TokenKind): IfNode {
     parser.pushContext();
     parser.setEndRule([TokenKind.End]);
 
-    while (parser.hasToken()) {
+    while (parser.tryRead()) {
       let endToken = parser.token;
 
       if (endToken.kind === TokenKind.Then) {
@@ -205,7 +204,7 @@ function parseBlock(parser: BasicParser, startTokenKind: TokenKind, endTokens: T
   let start = parser.readKind(startTokenKind);
 
   // we are reading first token for the statement
-  while (parser.hasToken()) {
+  while (parser.tryRead()) {
     let statement = parseStatement(parser);
     if (statement !== undefined) {
       body.push(statement);
@@ -319,7 +318,7 @@ function parseCall(parser: BasicParser): CallNode {
     params = parser.withContext(parser.readKind(TokenKind.LeftParen), (parser) => {
       parser.setEndRule([TokenKind.RightParen]);
       parser.readKind(TokenKind.LeftParen);
-      while (parser.hasToken()) {
+      while (parser.tryRead()) {
         params.push(parser.withContext(parser.token, (parser) => {
           parser.setEndRule([TokenKind.Eol]);
           return parseExpression(parser);
@@ -329,7 +328,7 @@ function parseCall(parser: BasicParser): CallNode {
 
     })
   } else {
-    while (parser.hasToken()) {
+    while (parser.tryRead()) {
       params.push(parser.withContext(parser.token, (parser) => {
         parser.setEndRule([TokenKind.Comma]);
         return parseExpression(parser);
@@ -352,8 +351,8 @@ function parseExpression(parser: BasicParser, endTokens: TokenKind[] | undefined
 
   let children: AstNode[] = [];
 
-  while (parser.hasToken()) {
-    let token = parser.read();
+  while (parser.tryRead()) {
+    let token = parser.token;
     if (isOpTokenKind(token.kind)) {
       let op: OpNode = {
         kind: AstNodeKind.op,
