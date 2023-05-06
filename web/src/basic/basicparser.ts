@@ -36,6 +36,8 @@ export class ParserContext {
   public inheritEndTokens: boolean = true;
   public ignoreEol: boolean = true;
   public isEos: boolean = false;
+  public isGreedy: boolean = true;
+  public endResult: IsEndTokenResult = IsEndTokenResult.No;
 
   public constructor(prev: ParserContext | undefined = undefined, name: string | undefined = undefined) {
     this.prev = prev;
@@ -112,9 +114,11 @@ export class BasicParser {
   /**
    * we need to pass start token as rules might change
    * for instance, we might say that \n is a token while it was ws for the
-   * outer rule 
+   * outer rule
+   * 
+   * consumes the end token 
    */
-  public withContext<T>(token: Token, func: (parser: BasicParser, ...args: any[]) => T, ...args: any[]): T {
+  public withContextGreedy<T>(token: Token, func: (parser: BasicParser, ...args: any[]) => T, ...args: any[]): T {
     this.nextIdx = token.idx;
     this._token = this.tokens[this.nextIdx];
     this.pushContext();
@@ -123,7 +127,20 @@ export class BasicParser {
     return res;
   }
 
-  public withContext2<T>(name: string, token: Token, func: (parser: BasicParser, ...args: any[]) => T, ...args: any[]): T {
+  /**
+   * non-greedy version. stops on end token
+   */
+  public withContext<T>(name: string, token: Token, func: (parser: BasicParser, ...args: any[]) => T, ...args: any[]): T {
+    this.nextIdx = token.idx;
+    this._token = this.tokens[this.nextIdx];
+    this.pushContext(name);
+    this.ctx.isGreedy = false;
+    let res = func(this, ...args);
+    this.popContext();
+    return res;
+  }
+
+  public withContextGreedy2<T>(name: string, token: Token, func: (parser: BasicParser, ...args: any[]) => T, ...args: any[]): T {
     this.nextIdx = token.idx;
     this._token = this.tokens[this.nextIdx];
     this.pushContext(name);
@@ -147,13 +164,14 @@ export class BasicParser {
     let childCtx = this.ctx;
     this.ctx = this.ctx.prev;
 
-    if (this._token === undefined) {
+    if (childCtx.endResult === IsEndTokenResult.Direct || this._token === undefined) {
       // nothing to do; we already consumed the token
     } else {
-      let deepRes = this.ctx.isEndTokenDeep(this._token);
+      let deepRes = this.ctx.isEndTokenDeep(this._token!);
       if (deepRes === IsEndTokenResult.Direct) {
         // consume token
         this.nextIdx++;
+        this.ctx.endResult = IsEndTokenResult.Direct;
         this.ctx.isEos = true;
       } else if (deepRes === IsEndTokenResult.Inherited) {
         // just mark this layer as eos; we will consume token on upper lauer
@@ -204,11 +222,15 @@ export class BasicParser {
       let deepRes = this.ctx.isEndTokenDeep(token);
 
       if (deepRes === IsEndTokenResult.Direct) {
+        this.ctx.endResult = IsEndTokenResult.Direct;
         // if this is end token on our level, read it
-        this.nextIdx++;
+        if (this.ctx.isGreedy) {
+          this.nextIdx++;
+        }
         this._token = undefined;
         return undefined;
       } else if (deepRes === IsEndTokenResult.Inherited) {
+        this.ctx.endResult = IsEndTokenResult.Inherited;
         // if this is parent end token, leave it to parent to read
         return undefined;
       } else {
@@ -229,14 +251,18 @@ export class BasicParser {
   }
 
   // throws in case of error
-  public readKind(kind: TokenKind): Token {
+  public readKind(...kind: TokenKind[]): Token {
     if (!this.tryRead()) {
       throw new ParseError();
     }
-    if (this.token.kind !== kind) {
-      throw new ParseError();
+
+    for (let target of kind) {
+      if (this.token.kind === target) {
+        return this._token!;
+      }
     }
-    return this._token!;
+
+    throw new ParseError();
   }
 
   public peek(): Token | undefined {

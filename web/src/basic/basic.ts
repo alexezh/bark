@@ -26,10 +26,10 @@ export function parseModule(parser: BasicParser): ModuleNode {
 
     switch (token.kind) {
       case TokenKind.Proc:
-        children.push(parser.withContext(token, parseFuncDef));
+        children.push(parser.withContextGreedy(token, parseFuncDef));
         break;
       case TokenKind.Var:
-        children.push(parser.withContext(token, parseVarDef));
+        children.push(parser.withContextGreedy(token, parseVarDef));
         break;
     }
   }
@@ -50,7 +50,7 @@ function parseFuncDef(parser: BasicParser): FuncDefNode {
   let v = parser.readKind(TokenKind.Proc);
   let name = parser.readKind(TokenKind.Id);
 
-  let params = parser.withContext(parser.readKind(TokenKind.LeftParen), parseFuncParams, [TokenKind.RightParen]);
+  let params = parser.withContextGreedy(parser.readKind(TokenKind.LeftParen), parseFuncParams, [TokenKind.RightParen]);
 
   let returnVal: Token | undefined = undefined;
 
@@ -60,7 +60,7 @@ function parseFuncDef(parser: BasicParser): FuncDefNode {
     returnVal = parseType(parser);
   }
 
-  let body = parser.withContext(parser.readKind(TokenKind.Begin), parseBlock, TokenKind.Begin, [TokenKind.End]);
+  let body = parser.withContextGreedy(parser.readKind(TokenKind.Begin), parseBlock, TokenKind.Begin, [TokenKind.End]);
 
   return {
     kind: AstNodeKind.funcDef,
@@ -114,7 +114,7 @@ function parseIf(parser: BasicParser, startToken: TokenKind): IfNode {
   let iif = parser.readKind(startToken);
 
   // expression ends with then
-  let exp = parser.withContext(parser.read(), parseExpression, [TokenKind.Then]);
+  let exp = parser.withContext('if_cond', parser.read(), parseExpression, [TokenKind.Then]);
 
   let thBlock!: BlockNode;
   let elIf: { exp: ExpressionNode, block: BlockNode }[] = [];
@@ -122,7 +122,6 @@ function parseIf(parser: BasicParser, startToken: TokenKind): IfNode {
 
   try {
     // move back to then token so we can run loop
-    parser.moveTo(parser.token);
     parser.pushContext();
     parser.setEndRule([TokenKind.End]);
 
@@ -130,21 +129,15 @@ function parseIf(parser: BasicParser, startToken: TokenKind): IfNode {
       let endToken = parser.token;
 
       if (endToken.kind === TokenKind.Then) {
-        thBlock = parser.withContext(endToken, parseBlock, TokenKind.Then, [TokenKind.Else, TokenKind.ElIf]);
+        thBlock = parser.withContext('then', endToken, parseBlock, TokenKind.Then, [TokenKind.Else, TokenKind.ElIf]);
       } else if (endToken.kind === TokenKind.Else) {
-        elBlock = parser.withContext(endToken, parseBlock, TokenKind.Else);
+        elBlock = parser.withContext('if_else', endToken, parseBlock, TokenKind.Else);
       } else if (endToken.kind === TokenKind.ElIf) {
-        let exp = parser.withContext(parser.read(), parseExpression, [TokenKind.Then]);
-        let block = parser.withContext(parser.token, parseBlock, TokenKind.Then, [TokenKind.Else, TokenKind.ElIf]);
+        let exp = parser.withContext('elif_cond', parser.read(), parseExpression, [TokenKind.Then]);
+        let block = parser.withContext('if_elif', parser.read(), parseBlock, TokenKind.Then, [TokenKind.Else, TokenKind.ElIf]);
         elIf.push({ exp: exp, block: block });
       } else {
         throw 'Unknown token';
-      }
-
-      // we are still in the moddile of if
-      // ideally, we should have an option for making end call non-greedy
-      if (parser.token.kind === TokenKind.Else || parser.token.kind === TokenKind.ElIf) {
-        parser.moveTo(parser.token);
       }
     }
 
@@ -166,20 +159,22 @@ function parseFor(parser: BasicParser): ForNode {
   let ft = parser.readKind(TokenKind.For);
   let varToken = parser.readKind(TokenKind.Id);
   let assignToken = parser.readKind(TokenKind.Assign);
-  let startExp = parser.withContext(parser.read(), parseExpression, [TokenKind.To]);
-  let endExp = parser.withContext(parser.read(), parseExpression, [TokenKind.Do, TokenKind.By]);
+  let startExp = parser.withContextGreedy(parser.read(), parseExpression, [TokenKind.To]);
+  let endExp = parser.withContext('do', parser.read(), parseExpression, [TokenKind.Do, TokenKind.By]);
 
+  parser.readKind(TokenKind.Do, TokenKind.By);
   let doToken: Token;
   let byExp: ExpressionNode | undefined = undefined;
   if (parser.token.kind === TokenKind.By) {
-    byExp = parser.withContext(parser.read(), parseExpression, [TokenKind.Do]);
+    byExp = parser.withContext('by', parser.read(), parseExpression, [TokenKind.Do]);
+    parser.readKind(TokenKind.Do);
 
     doToken = parser.token;
   } else {
     doToken = parser.token;
   }
 
-  let body = parser.withContext(doToken, parseBlock, TokenKind.Do, [TokenKind.End]);
+  let body = parser.withContextGreedy(doToken, parseBlock, TokenKind.Do, [TokenKind.End]);
 
   return {
     kind: AstNodeKind.for,
@@ -190,9 +185,9 @@ function parseFor(parser: BasicParser): ForNode {
 function parseWhile(parser: BasicParser): WhileNode {
   // expression ends with then
   let w = parser.readKind(TokenKind.While);
-  let exp = parser.withContext(parser.read(), parseExpression, [TokenKind.Do]);
+  let exp = parser.withContextGreedy(parser.read(), parseExpression, [TokenKind.Do]);
 
-  let body = parser.withContext(parser.token, parseBlock, TokenKind.Do, [TokenKind.End]);
+  let body = parser.withContextGreedy(parser.token, parseBlock, TokenKind.Do, [TokenKind.End]);
 
   return {
     kind: AstNodeKind.while,
@@ -234,15 +229,15 @@ function parseStatement(token: Token, parser: BasicParser): StatementNode | unde
 
     switch (token.kind) {
       case TokenKind.If:
-        return parser.withContext2('if', token, parseIf, TokenKind.If);
+        return parser.withContextGreedy2('if', token, parseIf, TokenKind.If);
       case TokenKind.For:
-        return parser.withContext2('for', token, parseFor);
+        return parser.withContextGreedy2('for', token, parseFor);
       case TokenKind.While:
-        return parser.withContext2('while', token, parseWhile);
+        return parser.withContextGreedy2('while', token, parseWhile);
       case TokenKind.Var:
-        return parser.withContext2('var', token, parseVarDef);
+        return parser.withContextGreedy2('var', token, parseVarDef);
       case TokenKind.Return:
-        return parser.withContext2('return', token, parseReturn);
+        return parser.withContextGreedy2('return', token, parseReturn);
       case TokenKind.Break:
         return {
           kind: AstNodeKind.break
@@ -261,13 +256,13 @@ function parseStatement(token: Token, parser: BasicParser): StatementNode | unde
       let assingment: AssingmentNode = {
         kind: AstNodeKind.assingment,
         name: token,
-        value: parser.withContext(parser.read(), parseExpression)
+        value: parser.withContextGreedy(parser.read(), parseExpression)
       }
       return assingment;
     } else {
       parser.ignoreEol(false);
       parser.setEndRule([TokenKind.Eol]);
-      return parser.withContext(token, parseCall);
+      return parser.withContextGreedy(token, parseCall);
     }
   }
   finally {
@@ -318,11 +313,11 @@ function parseCall(parser: BasicParser): CallNode {
   // if next token is (, it is with parentesys
   // make nested parser which reads until )
   if (parser.peekKind(TokenKind.LeftParen)) {
-    params = parser.withContext(parser.readKind(TokenKind.LeftParen), (parser) => {
+    params = parser.withContextGreedy(parser.readKind(TokenKind.LeftParen), (parser) => {
       parser.setEndRule([TokenKind.RightParen]);
       parser.readKind(TokenKind.LeftParen);
       while (parser.tryRead()) {
-        params.push(parser.withContext(parser.token, parseExpression));
+        params.push(parser.withContextGreedy(parser.token, parseExpression));
       }
       return params;
 
@@ -332,7 +327,7 @@ function parseCall(parser: BasicParser): CallNode {
     // this is bit tricky since ws can be added between id and op
     // so we assume that two ids are two parameters; and id + op is one parameter
     while (parser.tryRead()) {
-      params.push(parser.withContext(parser.token, parseExpression, [TokenKind.Comma]));
+      params.push(parser.withContextGreedy(parser.token, parseExpression, [TokenKind.Comma]));
     }
   }
 
@@ -365,7 +360,7 @@ function parseExpressionCore(parser: BasicParser): ExpressionNode {
 
   let left: AstNode | undefined;
   if (ltoken.kind === TokenKind.LeftParen) {
-    left = parser.withContext(parser.read(), parseExpression, [TokenKind.RightParen]);
+    left = parser.withContextGreedy(parser.read(), parseExpression, [TokenKind.RightParen]);
   } else if (isConstTokenKind(ltoken.kind)) {
     left = makeConstNode(ltoken);
   }
