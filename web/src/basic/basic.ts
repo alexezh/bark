@@ -365,7 +365,7 @@ function parseExpressionCore(parser: BasicParser): ExpressionNode {
     throw new ParseError();
   }
 
-  // function with parentesys is easy
+  // if parentesis in expression, start recursive parse
   let left: AstNode | undefined;
   if (ltoken.kind === TokenKind.LeftParen) {
     left = parser.withContextGreedy(parser.read(), parseExpression, [TokenKind.RightParen]);
@@ -406,6 +406,10 @@ function parseExpressionCore(parser: BasicParser): ExpressionNode {
 
     // get right part via recursion
     right = parseExpressionCore(parser);
+  } else if (token.kind === TokenKind.LeftParen) {
+    // function call with parentesis is easy
+    parser.moveTo(ltoken);
+    left = parseCall(parser);
   } else if (token.kind === TokenKind.Id || isConstTokenKind(token.kind)) {
     // now the hard part; we have "foo bar" or "foo 2" which is function call
     // but "foo foo bar" is ambiguous; we do not know if this is foo(foo, bar) or foo(foo(bar))
