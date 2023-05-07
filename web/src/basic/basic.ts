@@ -5,7 +5,7 @@ import {
   ParamDefNode,
   IfNode,
   VarDefNode, StatementNode, AssingmentNode, CallNode,
-  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode, WhileNode, makeConstNode, makeIdNode
+  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode, WhileNode, makeConstNode, makeIdNode, CallParamNode
 } from "./ast";
 import { BasicParser } from "./basicparser";
 import { ParseError, Token, TokenKind, isConstTokenKind, isOpTokenKind } from "./basictokeniser";
@@ -312,7 +312,7 @@ function parseCall(parser: BasicParser): CallNode {
 
     let name = parser.readKind(TokenKind.Id);
 
-    let params: ExpressionNode[] = [];
+    let params: CallParamNode[] = [];
     // if next token is (, it is with parentesys
     // make nested parser which reads until )
     if (parser.peekKind(TokenKind.LeftParen)) {
@@ -320,7 +320,7 @@ function parseCall(parser: BasicParser): CallNode {
         parser.setEndRule([TokenKind.RightParen]);
         parser.readKind(TokenKind.LeftParen);
         while (parser.tryRead()) {
-          params.push(parser.withContextGreedy(parser.token, parseExpression, [TokenKind.Comma]));
+          params.push(parser.withContextGreedy(parser.token, parseCallParam, [TokenKind.Comma]));
         }
         return params;
 
@@ -330,7 +330,7 @@ function parseCall(parser: BasicParser): CallNode {
       // this is bit tricky since ws can be added between id and op
       // so we assume that two ids are two parameters; and id + op is one parameter
       while (parser.tryRead()) {
-        params.push(parser.withContextGreedy(parser.token, parseExpression));
+        params.push(parser.withContextGreedy(parser.token, parseCallParam));
       }
     }
 
@@ -343,6 +343,22 @@ function parseCall(parser: BasicParser): CallNode {
   finally {
     parser.callDepth--;
   }
+}
+
+function parseCallParam(parser: BasicParser, endTokens: TokenKind[] | undefined = undefined): CallParamNode {
+
+  let name = parser.read();
+  if (parser.peekKind(TokenKind.Assign)) {
+    parser.readKind(TokenKind.Assign);
+    let exp = parseExpression(parser);
+    let param = exp as CallParamNode;
+    param.name = name;
+    return param;
+  } else {
+    parser.moveTo(name);
+    return parseExpression(parser, endTokens) as CallParamNode;
+  }
+
 }
 
 // expression has form "X op Y" where X and Y can be either expression, call or id

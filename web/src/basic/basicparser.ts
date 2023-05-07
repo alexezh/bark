@@ -200,6 +200,7 @@ export class BasicParser {
    */
   public moveTo(token: Token) {
     this.nextIdx = token.idx;
+    this._token = undefined;
   }
 
   public get token(): Token { return this._token! };

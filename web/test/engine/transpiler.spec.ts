@@ -94,6 +94,22 @@ test('nestedcalls', () => {
   expect(res).toBe(11);
 });
 
+test('namedargs', () => {
+  let res = runProg(`
+
+  proc bar(val: number, val2: number): number
+  begin
+    return val + val2
+  end
+
+  proc foo(val: number): number
+  begin
+    return bar val1:=1 val2:=10
+  end
+`)
+  expect(res).toBe(11);
+});
+
 test("bomb", () => {
   let c = `
 
@@ -101,7 +117,7 @@ test("bomb", () => {
   bomb.setPosition randInt(50, 150) 50 randInt(50, 150)
 
   var speed:= 10;
-  bomb.setSpeed x:=0, y:=-speed, z:=0
+  bomb.setSpeed x:=0 y:=-speed z:=0
 
   var monky:= createSprite 'vox/monky.vox'
 
