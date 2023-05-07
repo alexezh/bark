@@ -62,6 +62,22 @@ end`);
   expect(res).toBe(3);
 });
 
+test('multipleparams', () => {
+  let res = runProg(`
+
+  proc bar(val: number, val2: number): number
+  begin
+    return val + val2
+  end
+
+  proc foo(val: number): number
+  begin
+    return bar 1+1 10
+  end
+`)
+  expect(res).toBe(12);
+});
+
 test('nestedcalls', () => {
   let res = runProg(`
 

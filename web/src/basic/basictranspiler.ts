@@ -1,5 +1,5 @@
 import { forEach } from "lodash";
-import { AssingmentNode, AstNode, AstNodeKind, BlockNode, ConstNode, ExpressionNode, ForNode, FuncDefNode, IdNode, IfNode, ModuleNode, OpNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast";
+import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ConstNode, ExpressionNode, ForNode, FuncDefNode, IdNode, IfNode, ModuleNode, OpNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast";
 import { ParseError, Token, TokenKind, isOpTokenKind } from "./basictokeniser";
 
 class JsWriter {
@@ -162,8 +162,27 @@ export class Transpiler {
     }
   }
 
+  private convertCall(ast: CallNode, tokens: string[]): void {
+    tokens.push(ast.name.value);
+    tokens.push('(');
+    let addComma = false;
+    for (let p of ast.params) {
+      if (addComma) {
+        tokens.push(',');
+      }
+      addComma = true;
+      this.convertExpressionNode(p, tokens);
+    }
+    tokens.push(')');
+  }
+
   private convertExpression(ast: ExpressionNode): string {
     let tokens: string[] = [];
+    this.convertExpressionNode(ast, tokens);
+    return tokens.join(' ');
+  }
+
+  private convertExpressionNode(ast: ExpressionNode, tokens: string[]): void {
     if (ast.left) {
       this.convertExpressionToken(ast.left, tokens);
     }
@@ -172,13 +191,6 @@ export class Transpiler {
     }
     if (ast.right) {
       this.convertExpressionToken(ast.right, tokens);
-    }
-    return tokens.join(' ');
-  }
-
-  private convertExpressionNode(ast: ExpressionNode, tokens: string[]): void {
-    if (ast.left) {
-      this.convertExpressionToken(ast.left, tokens);
     }
   }
 
@@ -197,6 +209,7 @@ export class Transpiler {
         tokens.push(this.convertOp((ast as OpNode).op));
         break;
       case AstNodeKind.call:
+        this.convertCall(ast as CallNode, tokens);
         break;
       default:
         throw new ParseError();

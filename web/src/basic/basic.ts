@@ -185,9 +185,9 @@ function parseFor(parser: BasicParser): ForNode {
 function parseWhile(parser: BasicParser): WhileNode {
   // expression ends with then
   let w = parser.readKind(TokenKind.While);
-  let exp = parser.withContextGreedy(parser.read(), parseExpression, [TokenKind.Do]);
+  let exp = parser.withContext('while_cond', parser.read(), parseExpression, [TokenKind.Do]);
 
-  let body = parser.withContextGreedy(parser.token, parseBlock, TokenKind.Do, [TokenKind.End]);
+  let body = parser.withContextGreedy2('while', parser.read(), parseBlock, TokenKind.Do, [TokenKind.End]);
 
   return {
     kind: AstNodeKind.while,
@@ -307,34 +307,41 @@ function parseReturn(parser: BasicParser): ReturnNode {
 
 // calls do not require parentesus
 function parseCall(parser: BasicParser): CallNode {
-  let name = parser.readKind(TokenKind.Id);
+  try {
+    parser.callDepth++;
 
-  let params: ExpressionNode[] = [];
-  // if next token is (, it is with parentesys
-  // make nested parser which reads until )
-  if (parser.peekKind(TokenKind.LeftParen)) {
-    params = parser.withContextGreedy(parser.readKind(TokenKind.LeftParen), (parser) => {
-      parser.setEndRule([TokenKind.RightParen]);
-      parser.readKind(TokenKind.LeftParen);
+    let name = parser.readKind(TokenKind.Id);
+
+    let params: ExpressionNode[] = [];
+    // if next token is (, it is with parentesys
+    // make nested parser which reads until )
+    if (parser.peekKind(TokenKind.LeftParen)) {
+      params = parser.withContextGreedy(parser.readKind(TokenKind.LeftParen), (parser) => {
+        parser.setEndRule([TokenKind.RightParen]);
+        parser.readKind(TokenKind.LeftParen);
+        while (parser.tryRead()) {
+          params.push(parser.withContextGreedy(parser.token, parseExpression, [TokenKind.Comma]));
+        }
+        return params;
+
+      })
+    } else {
+      // go through parameters separated by Ws
+      // this is bit tricky since ws can be added between id and op
+      // so we assume that two ids are two parameters; and id + op is one parameter
       while (parser.tryRead()) {
         params.push(parser.withContextGreedy(parser.token, parseExpression));
       }
-      return params;
+    }
 
-    })
-  } else {
-    // go through parameters separated by Ws
-    // this is bit tricky since ws can be added between id and op
-    // so we assume that two ids are two parameters; and id + op is one parameter
-    while (parser.tryRead()) {
-      params.push(parser.withContextGreedy(parser.token, parseExpression, [TokenKind.Comma]));
+    return {
+      kind: AstNodeKind.call,
+      name: name,
+      params: params
     }
   }
-
-  return {
-    kind: AstNodeKind.call,
-    name: name,
-    params: params
+  finally {
+    parser.callDepth--;
   }
 }
 
@@ -358,6 +365,7 @@ function parseExpressionCore(parser: BasicParser): ExpressionNode {
     throw new ParseError();
   }
 
+  // function with parentesys is easy
   let left: AstNode | undefined;
   if (ltoken.kind === TokenKind.LeftParen) {
     left = parser.withContextGreedy(parser.read(), parseExpression, [TokenKind.RightParen]);
@@ -398,10 +406,20 @@ function parseExpressionCore(parser: BasicParser): ExpressionNode {
 
     // get right part via recursion
     right = parseExpressionCore(parser);
-  } else if (token.kind === TokenKind.Id) {
-    // move back so we can read id inside call
-    parser.moveTo(token);
-    left = parseCall(parser);
+  } else if (token.kind === TokenKind.Id || isConstTokenKind(token.kind)) {
+    // now the hard part; we have "foo bar" or "foo 2" which is function call
+    // but "foo foo bar" is ambiguous; we do not know if this is foo(foo, bar) or foo(foo(bar))
+    // we are going to assume the former
+
+    if (parser.callDepth > 0) {
+      // treat ltoken as id
+      parser.moveTo(token);
+      parser.triggerEos();
+      left = makeIdNode(ltoken);
+    } else {
+      parser.moveTo(ltoken);
+      left = parseCall(parser);
+    }
   } else {
     throw new ParseError();
   }

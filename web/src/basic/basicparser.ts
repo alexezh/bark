@@ -103,6 +103,7 @@ export class BasicParser {
   private _token: Token | undefined;
   private tokens: Token[];
   private ctx!: ParserContext;
+  public callDepth: number = 0;
 
   constructor(tokenizer: Tokenizer) {
     this.tokenizer = tokenizer;
@@ -203,6 +204,9 @@ export class BasicParser {
 
   public get token(): Token { return this._token! };
 
+  public triggerEos(): void {
+    this.ctx.isEos = true;
+  }
   public tryRead(): Token | undefined {
 
     // if we positioned at the end, return false
