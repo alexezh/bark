@@ -171,6 +171,7 @@ export class BasicParser {
       if (deepRes === IsEndTokenResult.Direct) {
         // consume token
         this.nextIdx++;
+        this._token = undefined;
         this.ctx.endResult = IsEndTokenResult.Direct;
         this.ctx.isEos = true;
       } else if (deepRes === IsEndTokenResult.Inherited) {
