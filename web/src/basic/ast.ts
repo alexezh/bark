@@ -1,4 +1,3 @@
-import { Token } from "./basictokeniser";
 
 export enum AstNodeKind {
   module = 0,

@@ -1,6 +1,8 @@
 import { forEach } from "lodash";
 import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ConstNode, ExpressionNode, ForNode, FuncDefNode, IdNode, IfNode, ModuleNode, OpNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast";
-import { ParseError, Token, TokenKind, isOpTokenKind } from "./basictokeniser";
+import { isOpTokenKind } from "./basictokeniser";
+import { ParseError, ParseErrorCode } from "./parseerror";
+import { Token, TokenKind } from "./token";
 
 class JsWriter {
   private output: string[] = [];
@@ -212,7 +214,7 @@ export class Transpiler {
         this.convertCall(ast as CallNode, tokens);
         break;
       default:
-        throw new ParseError();
+        throw new ParseError(ParseErrorCode.InvalidToken, undefined, `Invalid token`);
     }
   }
 }

@@ -8,7 +8,9 @@ import {
   ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode, WhileNode, makeConstNode, makeIdNode, CallParamNode
 } from "./ast";
 import { BasicParser } from "./basicparser";
-import { ParseError, Token, TokenKind, isConstTokenKind, isOpTokenKind } from "./basictokeniser";
+import { isConstTokenKind, isOpTokenKind } from "./basictokeniser";
+import { ParseError, ParseErrorCode } from "./parseerror";
+import { Token, TokenKind } from "./token";
 
 
 export function parseModule(parser: BasicParser): ModuleNode {
@@ -87,7 +89,7 @@ function parseFuncParams(parser: BasicParser, endTokens: TokenKind[]): ParamDefN
   while (parser.tryRead()) {
 
     if (parser.token.kind !== TokenKind.Id) {
-      throw new ParseError();
+      throw new ParseError(ParseErrorCode.InvalidFuncParams, parser.token, `Invalid token ${parser.token.value}; expect name`);
     }
 
     let name = parser.token;
@@ -378,7 +380,7 @@ function parseExpressionCore(parser: BasicParser): ExpressionNode {
   let ltoken = parser.read();
 
   if (isOpTokenKind(ltoken.kind)) {
-    throw new ParseError();
+    throw new ParseError(ParseErrorCode.InvalidExpression, ltoken, 'Expression starts with op');
   }
 
   // if parentesis in expression, start recursive parse
@@ -396,7 +398,7 @@ function parseExpressionCore(parser: BasicParser): ExpressionNode {
     if (ltoken.kind === TokenKind.Id) {
       left = makeIdNode(ltoken)
     } else if (left === undefined) {
-      throw new ParseError();
+      throw new ParseError(ParseErrorCode.InvalidExpression, ltoken, `Invalid token ${ltoken.value}; expect name or constant`);
     }
 
     return {
@@ -441,7 +443,7 @@ function parseExpressionCore(parser: BasicParser): ExpressionNode {
       left = parseCall(parser);
     }
   } else {
-    throw new ParseError();
+    throw new ParseError(ParseErrorCode.InvalidExpression, ltoken, `Invalid token ${ltoken.value}; expect name or constant`);
   }
 
 

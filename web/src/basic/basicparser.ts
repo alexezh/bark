@@ -1,4 +1,6 @@
-import { ParseError, Token, TokenKind, Tokenizer } from "./basictokeniser";
+import { Tokenizer } from "./basictokeniser";
+import { ParseError, ParseErrorCode } from "./parseerror";
+import { Token, TokenKind } from "./token";
 
 export enum EolRule {
   Inherit = 0,
@@ -156,7 +158,7 @@ export class BasicParser {
 
   public popContext() {
     if (this.ctx.prev === undefined) {
-      throw new ParseError();
+      throw new ParseError(ParseErrorCode.InvalidArg, this._token, 'Incorrect context stack');
     }
 
     // the tricky part of this logic is handling inheritance. When we break on child
@@ -250,7 +252,7 @@ export class BasicParser {
 
   public read(): Token {
     if (!this.tryRead()) {
-      throw new ParseError();
+      throw new ParseError(ParseErrorCode.ReadEos, this._token, 'No more tokens');
     }
 
     return this._token!;
@@ -259,7 +261,7 @@ export class BasicParser {
   // throws in case of error
   public readKind(...kind: TokenKind[]): Token {
     if (!this.tryRead()) {
-      throw new ParseError();
+      throw new ParseError(ParseErrorCode.ReadEos, this._token, 'No more tokens');
     }
 
     for (let target of kind) {
@@ -268,7 +270,7 @@ export class BasicParser {
       }
     }
 
-    throw new ParseError();
+    throw new ParseError(ParseErrorCode.WrongToken, this._token, `Incorrect token ${this.token.kind}`);
   }
 
   public peek(): Token | undefined {
