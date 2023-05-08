@@ -1,8 +1,8 @@
 import { AstNode, AstNodeKind, FuncDefNode, ModuleNode, ParamDefNode, StatementNode } from "./ast";
-import { Token, TokenKind } from "./basictokeniser";
+import { Token, TokenKind } from "./token";
 
 function typeNameToTokenKind(name: string): TokenKind {
-  switch (parts[1]) {
+  switch (name) {
     case 'number': return TokenKind.Number;
     case 'string': return TokenKind.String;
     case 'boolean': return TokenKind.Boolean;
@@ -10,6 +10,7 @@ function typeNameToTokenKind(name: string): TokenKind {
   }
 }
 
+/*
 export function addSystemFunc(name: string, params: string[], rval: string, impl: any): FuncDefNode {
   let paramDefs: ParamDefNode[] = [];
   for (let param of params) {
@@ -32,11 +33,12 @@ export function addSystemFunc(name: string, params: string[], rval: string, impl
       body:
   }
 }
+*/
 
 export function createMath(): ModuleNode {
   let funcs: FuncDefNode[] = [];
 
-  funcs.push(addSystemFunc('min', ['val:number'], 'number', Math.min))
+  //  funcs.push(addSystemFunc('min', ['val:number'], 'number', Math.min))
   return {
     kind: AstNodeKind.module,
     name: 'Math',

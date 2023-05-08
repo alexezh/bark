@@ -118,7 +118,7 @@ export class VoxelLevel implements IVoxelLevel {
 
     public loadScene(scene: Scene) {
         this.scene = scene;
-        this.scene.add(this.layers[0].staticMesh);
+        this.layers[0].addToScene(this.scene);
 
         this.ambient_light = new AmbientLight(0xFFFFFF, 0.8);
         this.scene.add(this.ambient_light);
@@ -151,24 +151,19 @@ export class VoxelLevel implements IVoxelLevel {
         return this.layers[layerIdx].findBlock(point);
     }
 
-    private deleteBlockCore(block: MapBlockCoord): MeshLevelLayer {
-        let layer = this.layers[block.mapPos.y];
-        this.scene.remove(layer.staticMesh);
-        layer.deleteBlock(block);
-        return layer;
-    }
-
+    /**
+     * delete block and mark layer as dirty
+     */
     private deleteBlockByCoord(x: number, y: number, z: number): MeshLevelLayer {
         let layer = this.layers[y];
-        this.scene.remove(layer.staticMesh);
         layer.deleteBlockByCoord(x, z);
         return layer;
     }
 
     public deleteBlock(block: MapBlockCoord) {
-        let layer = this.deleteBlockCore(block);
-        layer.build();
-        this.scene.add(layer.staticMesh);
+        let layer = this.layers[block.mapPos.y];
+        layer.deleteBlock(block);
+        layer.updateScene(this.scene);
     }
 
     private addBlockCore(pos: BlockPos3, block: VoxelModel): MeshLevelLayer {
@@ -188,9 +183,7 @@ export class VoxelLevel implements IVoxelLevel {
     public addBlock(pos: BlockPos3, block: VoxelModel) {
         let layer = this.addBlockCore(pos, block);
 
-        this.scene.remove(layer.staticMesh);
-        layer.build();
-        this.scene.add(layer.staticMesh);
+        layer.updateScene(this.scene);
     }
 
     public intersectBlocks(ro: IRigitBody,
@@ -251,9 +244,9 @@ export class VoxelLevel implements IVoxelLevel {
         for (let i = 0; i < this.layers.length; i++) {
             let layer = this.layers[i];
             if (layer.dirty) {
-                this.scene.remove(layer.staticMesh);
+                layer.removeFromScene(this.scene);
                 layer.build();
-                this.scene.add(layer.staticMesh);
+                layer.addToScene(this.scene);
             }
         }
     }

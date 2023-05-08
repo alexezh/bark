@@ -1,18 +1,7 @@
 import { BufferAttribute, BufferGeometry } from "three";
 
 export class VoxelGeometryWriter {
-  private triangles = 0;
-  //public shadow_blocks = [];
-  private total_blocks = 0;
   public dirty = true;
-  private positions = 0;
-  // number of colors
-  private colors = 0;
-  //public geometry!: BufferGeometry;
-  //public v!: BufferAttribute;
-  //public c!: BufferAttribute;
-  //public prev_len = 0;
-  //private idx: number = 0;
   private v: number[] = [];
   private c: number[] = [];
   private start_x: number = 0;
@@ -58,10 +47,6 @@ export class VoxelGeometryWriter {
       v.setXYZ(i, vertices[idx], vertices[idx + 1], vertices[idx + 2]);
       c.setXYZ(i, colors[idx], colors[idx + 1], colors[idx + 2]);
     }
-    //for (var i = 0; i < vertices.length; i += 3) {
-    //  v.setXYZ((i / 3) | 0, vertices[i], vertices[i + 1], vertices[i + 2]);
-    //  c.setXYZW((i / 3) | 0, colors[i], colors[i + 1], colors[i + 2], 1);
-    //}
 
     let geometry = new BufferGeometry();
     geometry.setAttribute('position', v);

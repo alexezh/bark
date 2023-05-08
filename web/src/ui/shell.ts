@@ -3,14 +3,9 @@ import { UiCompositor2 } from "./uicompositor";
 import { createMapEditorState, mapEditorState } from "./mapeditorstate";
 import { CodeEditor } from "./codeeditor";
 import { IGameShell as IGameShell } from "./igameshell";
-import { registerSystemCommands } from "../posh/systemcommands";
 import { decorateCommand } from "../lib/termcolors";
 import { CameraLayer } from "./cameralayer";
 import { IVoxelLevel } from "./ivoxelmap";
-
-//registerRegionCommands();
-registerSystemCommands();
-//registerMapCommands();
 
 export class ShellProps {
   public width: number = 0;
