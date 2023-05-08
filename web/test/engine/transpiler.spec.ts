@@ -1,19 +1,29 @@
 import { expect, test } from '@jest/globals';
-import { TokenKind, Tokenizer } from '../../src/basic/basictokeniser';
+import { Tokenizer } from '../../src/basic/basictokeniser';
 import { BasicParser, EolRule } from '../../src/basic/basicparser';
 import { parseModule } from '../../src/basic/basic';
-import { AstNodeKind, ConstNode, ForNode, FuncDefNode } from '../../src/basic/ast';
 import { Transpiler } from '../../src/basic/basictranspiler';
+import { ParseError } from '../../src/basic/parseerror';
 
 function runProg(text: string): any {
-  let tokenize = Tokenizer.load(text);
-  let parser = new BasicParser(tokenize);
-  let ast = parseModule(parser);
-  let trans = new Transpiler();
-  let js = trans.generate(ast, 'foo');
+  try {
+    let tokenize = Tokenizer.load(text);
+    let parser = new BasicParser(tokenize);
+    let ast = parseModule(parser);
+    let trans = new Transpiler();
+    let js = trans.generate(ast, 'foo');
 
-  let val = eval(js);
-  return val;
+    let val = eval(js);
+    return val;
+  }
+  catch (e) {
+    if (e instanceof ParseError) {
+      console.log(e.msg);
+    } else {
+      console.log(e);
+    }
+    throw e;
+  }
 }
 
 test("basic", () => {
@@ -111,44 +121,48 @@ test('namedargs', () => {
 });
 
 test("bomb", () => {
-  let c = `
+  let res = runProg(`
 
-  var bomb:= createSprite 'vox/bomb.vox'
-  bomb.setPosition randInt(50, 150) 50 randInt(50, 150)
+  proc foo() begin
+    var bomb:= createSprite 'vox/bomb.vox'
+    setPosition bomb randInt(50, 150) 50 randInt(50, 150)
 
-  var speed:= 10;
-  bomb.setSpeed x:=0 y:=-speed z:=0
+    var speed:= 10;
+    setSpeed bomb x:=0 y:=-speed z:=0
 
-  var monky:= createSprite 'vox/monky.vox'
+    var monky:= createSprite 'vox/monky.vox'
 
-  var ma:= addAnimation monky 'move'
-  addFrame ma idx:= 1 dur:=0.1 
-  addFrame ma idx:= 2 dur:=0.1
+    var ma:= addAnimation monky 'move'
+    addFrame ma idx:= 1 dur:=0.1 
+    addFrame ma idx:= 2 dur:=0.1
 
-  var ma:= monky.addAnimation 'stand'
-  addFrame ma idx:= 0 dur:=0
+    var ma:= addAnimation monky 'stand'
+    addFrame ma idx:= 0 dur:=0
 
-  var level:= vm.loadLevel 'default'
+    var level:= vm.loadLevel 'default'
 
-  while true do
-    var collision:= Level.waitCollide bomb 0.1
-    if collision = null then
-      speed := Math.min speed * 1.1 100;
-      changeSpeedBy bomb 0 -speed 0
-    else
-      if collision is Sprite then
-        vm.send "KilledMonkey"
-      elif collision is MapBlock then
-        for b of collision.blocks do
-          Level.deleteBlock level b
-          Level.createExplosion collision.position;
-        end
-        removeSprite bomb
+    while true do
+      var collision := Level.waitCollide bomb 0.1
+      if collision = null then
+        speed := Math.min speed * 1.1 100;
+        changeSpeedBy bomb 0 -speed 0
       else
-        removeSprite bomb
+        if collision typeof Sprite then
+          vm.send "KilledMonkey"
+        elif collision typeof MapBlock then
+          foreach b in collision.blocks do
+            Level.deleteBlock level b
+            Level.createExplosion collision.position;
+          end
+          removeSprite bomb
+        else
+          removeSprite bomb
+        end
+        break;
       end
-      break;
     end
-  end
-    `
+  end 
+    `);
+
+  expect(res).toBe(11);
 })

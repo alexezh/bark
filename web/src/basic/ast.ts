@@ -1,3 +1,4 @@
+import { Token } from "./token";
 
 export enum AstNodeKind {
   module = 0,
@@ -15,6 +16,7 @@ export enum AstNodeKind {
   block,
   if,
   for,
+  foreach,
   while
 }
 
@@ -116,6 +118,12 @@ export type ForNode = StatementNode & {
   startExp: ExpressionNode;
   endExp: ExpressionNode;
   byExp: ExpressionNode | undefined;
+  body: BlockNode
+}
+
+export type ForEachNode = StatementNode & {
+  name: Token;
+  exp: ExpressionNode | undefined;
   body: BlockNode
 }
 

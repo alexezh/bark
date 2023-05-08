@@ -31,7 +31,7 @@ export class StringReader {
   }
 
   public move(n: number): void {
-    if (this._pos + n >= this.source.length) {
+    if (this._pos + n > this.source.length) {
       return;
     }
     this._pos += n;
@@ -113,7 +113,7 @@ export class Tokenizer {
       }
     }
 
-    if (c === '"') {
+    if (c === '"' || c === '\'') {
       return this.readString(reader, c, pos);
     }
 
@@ -209,6 +209,8 @@ export class Tokenizer {
     switch (name) {
       case 'if': return TokenKind.If;
       case 'for': return TokenKind.For;
+      case 'foreach': return TokenKind.Foreach;
+      case 'in': return TokenKind.In;
       case 'to': return TokenKind.To;
       case 'by': return TokenKind.By;
       case 'do': return TokenKind.Do;
@@ -221,6 +223,7 @@ export class Tokenizer {
       case 'or': return TokenKind.Or;
       case 'and': return TokenKind.And;
       case 'not': return TokenKind.Not;
+      case 'typeof': return TokenKind.Typeof;
       case 'proc': return TokenKind.Proc;
       case 'true': return TokenKind.True;
       case 'false': return TokenKind.False;
@@ -238,7 +241,7 @@ export class Tokenizer {
       s.push(c);
       if (c === '\\') {
         s.push(reader.readNext());
-      } else if (c === '"') {
+      } else if (c === '"' || c === '\'') {
         return new Token(TokenKind.String, "".concat(...s), pos);
       }
     }

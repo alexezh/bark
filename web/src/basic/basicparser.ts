@@ -44,6 +44,11 @@ export class ParserContext {
   public constructor(prev: ParserContext | undefined = undefined, name: string | undefined = undefined) {
     this.prev = prev;
     this.name = name;
+
+    // cache ignore flag
+    if (prev !== undefined) {
+      this.ignoreEol = prev.ignoreEol;
+    }
   }
 
   isEndToken(token: Token): boolean {

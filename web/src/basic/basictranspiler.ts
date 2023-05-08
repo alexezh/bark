@@ -64,7 +64,7 @@ export class Transpiler {
         this.processBlock(ast as BlockNode);
         break;
       default:
-        throw new ParseError('Not implemented');
+        throw new ParseError(ParseErrorCode.NotImpl, undefined, 'Not implemented');
     }
   }
 

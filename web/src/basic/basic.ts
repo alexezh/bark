@@ -5,7 +5,7 @@ import {
   ParamDefNode,
   IfNode,
   VarDefNode, StatementNode, AssingmentNode, CallNode,
-  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode, WhileNode, makeConstNode, makeIdNode, CallParamNode
+  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode, WhileNode, makeConstNode, makeIdNode, CallParamNode, ForEachNode
 } from "./ast";
 import { BasicParser } from "./basicparser";
 import { isConstTokenKind, isOpTokenKind } from "./basictokeniser";
@@ -131,15 +131,15 @@ function parseIf(parser: BasicParser, startToken: TokenKind): IfNode {
       let endToken = parser.token;
 
       if (endToken.kind === TokenKind.Then) {
-        thBlock = parser.withContext('then', endToken, parseBlock, TokenKind.Then, [TokenKind.Else, TokenKind.ElIf]);
+        thBlock = parser.withContext('then', endToken, parseBlock, TokenKind.Then, [TokenKind.End, TokenKind.Else, TokenKind.ElIf]);
       } else if (endToken.kind === TokenKind.Else) {
-        elBlock = parser.withContext('if_else', endToken, parseBlock, TokenKind.Else);
+        elBlock = parser.withContext('if_else', endToken, parseBlock, TokenKind.Else, [TokenKind.End]);
       } else if (endToken.kind === TokenKind.ElIf) {
         let exp = parser.withContext('elif_cond', parser.read(), parseExpression, [TokenKind.Then]);
-        let block = parser.withContext('if_elif', parser.read(), parseBlock, TokenKind.Then, [TokenKind.Else, TokenKind.ElIf]);
+        let block = parser.withContext('if_elif', parser.read(), parseBlock, TokenKind.Then, [TokenKind.Else, TokenKind.ElIf, TokenKind.End]);
         elIf.push({ exp: exp, block: block });
       } else {
-        throw 'Unknown token';
+        throw new ParseError(ParseErrorCode.WrongToken, endToken, 'Unknown token');
       }
     }
 
@@ -184,6 +184,23 @@ function parseFor(parser: BasicParser): ForNode {
   }
 }
 
+function parseForEach(parser: BasicParser): ForEachNode {
+  // expression ends with then
+  let ft = parser.readKind(TokenKind.Foreach);
+  let varToken = parser.readKind(TokenKind.Id);
+  let intoken = parser.readKind(TokenKind.In);
+  let exp = parser.withContext('in_exp', parser.read(), parseExpression, [TokenKind.Do]);
+
+  let doToken = parser.readKind(TokenKind.Do);
+
+  let body = parser.withContextGreedy(doToken, parseBlock, TokenKind.Do, [TokenKind.End]);
+
+  return {
+    kind: AstNodeKind.foreach,
+    name: varToken, exp: exp, body: body
+  }
+}
+
 function parseWhile(parser: BasicParser): WhileNode {
   // expression ends with then
   let w = parser.readKind(TokenKind.While);
@@ -200,7 +217,9 @@ function parseWhile(parser: BasicParser): WhileNode {
 
 // assumes block as something with start which should be skipped
 function parseBlock(parser: BasicParser, startTokenKind: TokenKind, endTokens: TokenKind[]): BlockNode {
-  parser.setEndRule(endTokens);
+  // block ends with well defined token such as end
+  // we are not going to inherit anything
+  parser.setEndRule(endTokens, false);
   let body: StatementNode[] = [];
 
   let start = parser.readKind(startTokenKind);
@@ -234,6 +253,8 @@ function parseStatement(token: Token, parser: BasicParser): StatementNode | unde
         return parser.withContextGreedy2('if', token, parseIf, TokenKind.If);
       case TokenKind.For:
         return parser.withContextGreedy2('for', token, parseFor);
+      case TokenKind.Foreach:
+        return parser.withContextGreedy2('foreach', token, parseForEach);
       case TokenKind.While:
         return parser.withContextGreedy2('while', token, parseWhile);
       case TokenKind.Var:
@@ -325,9 +346,11 @@ function parseCall(parser: BasicParser): CallNode {
           params.push(parser.withContextGreedy(parser.token, parseCallParam, [TokenKind.Comma]));
         }
         return params;
-
       })
     } else {
+      parser.ignoreEol(false);
+      parser.setEndRule([TokenKind.Eol]);
+
       // go through parameters separated by Ws
       // this is bit tricky since ws can be added between id and op
       // so we assume that two ids are two parameters; and id + op is one parameter
@@ -349,16 +372,22 @@ function parseCall(parser: BasicParser): CallNode {
 
 function parseCallParam(parser: BasicParser, endTokens: TokenKind[] | undefined = undefined): CallParamNode {
 
-  let name = parser.read();
+  if (endTokens !== undefined) {
+    parser.setEndRule(endTokens);
+  }
+
+  let token = parser.read();
   if (parser.peekKind(TokenKind.Assign)) {
     parser.readKind(TokenKind.Assign);
     let exp = parseExpression(parser);
     let param = exp as CallParamNode;
-    param.name = name;
+    param.name = token;
     return param;
   } else {
-    parser.moveTo(name);
-    return parseExpression(parser, endTokens) as CallParamNode;
+    parser.moveTo(token);
+
+    // use core version here to avoid matching EOL on multiple levels
+    return parseExpressionCore(parser) as CallParamNode;
   }
 
 }
@@ -379,73 +408,81 @@ function parseExpression(parser: BasicParser, endTokens: TokenKind[] | undefined
 function parseExpressionCore(parser: BasicParser): ExpressionNode {
   let ltoken = parser.read();
 
-  if (isOpTokenKind(ltoken.kind)) {
-    throw new ParseError(ParseErrorCode.InvalidExpression, ltoken, 'Expression starts with op');
-  }
-
-  // if parentesis in expression, start recursive parse
-  let left: AstNode | undefined;
-  if (ltoken.kind === TokenKind.LeftParen) {
-    left = parser.withContextGreedy(parser.read(), parseExpression, [TokenKind.RightParen]);
-  } else if (isConstTokenKind(ltoken.kind)) {
-    left = makeConstNode(ltoken);
-  }
-
-  let token = parser.tryRead();
-
-  // if we do not have any token, it is constant
-  if (token === undefined) {
-    if (ltoken.kind === TokenKind.Id) {
-      left = makeIdNode(ltoken)
-    } else if (left === undefined) {
-      throw new ParseError(ParseErrorCode.InvalidExpression, ltoken, `Invalid token ${ltoken.value}; expect name or constant`);
-    }
-
-    return {
-      kind: AstNodeKind.expression,
-      left: left,
-      op: undefined,
-      right: undefined
-    }
-  }
-
+  // unary operation
   let op: OpNode | undefined;
+  let left: AstNode | undefined;
   let right: AstNode | undefined;
 
-  // if token is op - it is expression, otherwise if it is id or parentesys
-  // it is a function call
-  if (isOpTokenKind(token.kind)) {
-    left = makeIdNode(ltoken);
-
+  if (isOpTokenKind(ltoken.kind)) {
     op = {
       kind: AstNodeKind.op,
-      op: token
+      op: ltoken
     }
 
     // get right part via recursion
     right = parseExpressionCore(parser);
-  } else if (token.kind === TokenKind.LeftParen) {
-    // function call with parentesis is easy
-    parser.moveTo(ltoken);
-    left = parseCall(parser);
-  } else if (token.kind === TokenKind.Id || isConstTokenKind(token.kind)) {
-    // now the hard part; we have "foo bar" or "foo 2" which is function call
-    // but "foo foo bar" is ambiguous; we do not know if this is foo(foo, bar) or foo(foo(bar))
-    // we are going to assume the former
+  } else {
 
-    if (parser.callDepth > 0) {
-      // treat ltoken as id
-      parser.moveTo(token);
-      parser.triggerEos();
+    // if parentesis in expression, start recursive parse
+    if (ltoken.kind === TokenKind.LeftParen) {
+      left = parser.withContextGreedy(parser.read(), parseExpression, [TokenKind.RightParen]);
+    } else if (isConstTokenKind(ltoken.kind)) {
+      left = makeConstNode(ltoken);
+    }
+
+    let token = parser.tryRead();
+
+    // if we do not have any token, it is constant
+    if (token === undefined) {
+      if (ltoken.kind === TokenKind.Id) {
+        left = makeIdNode(ltoken)
+      } else if (left === undefined) {
+        throw new ParseError(ParseErrorCode.InvalidExpression, ltoken, `Invalid token ${ltoken.value}; expect name or constant`);
+      }
+
+      return {
+        kind: AstNodeKind.expression,
+        left: left,
+        op: undefined,
+        right: undefined
+      }
+    }
+
+
+
+    // if token is op - it is expression, otherwise if it is id or parentesys
+    // it is a function call
+    if (isOpTokenKind(token.kind)) {
       left = makeIdNode(ltoken);
-    } else {
+
+      op = {
+        kind: AstNodeKind.op,
+        op: token
+      }
+
+      // get right part via recursion
+      right = parseExpressionCore(parser);
+    } else if (token.kind === TokenKind.LeftParen) {
+      // function call with parentesis is easy
       parser.moveTo(ltoken);
       left = parseCall(parser);
-    }
-  } else {
-    throw new ParseError(ParseErrorCode.InvalidExpression, ltoken, `Invalid token ${ltoken.value}; expect name or constant`);
-  }
+    } else if (token.kind === TokenKind.Id || isConstTokenKind(token.kind)) {
+      // now the hard part; we have "foo bar" or "foo 2" which is function call
+      // but "foo foo bar" is ambiguous; we do not know if this is foo(foo, bar) or foo(foo(bar))
+      // we are going to assume the former
 
+      if (parser.callDepth > 0) {
+        // treat ltoken as id
+        parser.moveTo(token);
+        parser.triggerEos();
+        left = makeIdNode(ltoken);
+      } else {
+        left = parser.withContext('exp_call', ltoken, parseCall);
+      }
+    } else {
+      throw new ParseError(ParseErrorCode.InvalidExpression, ltoken, `Invalid token ${ltoken.value}; expect name or constant`);
+    }
+  }
 
   return {
     kind: AstNodeKind.expression,

@@ -1,0 +1,11 @@
+assume following tables
+Table customer contain columns customerid, name, contactid. 
+Table sale contain id, customerid, date of sale, total dollar amount of sale.
+assume query language with following operations.
+Operation group which takes unique value in column and produces sum of values in other columns. As group table by column sum(column)
+Operation join takes two tables and creates combines records with the same value of a column. As join table1 and table2 by column
+Operation select produces a table filtered by specific value. As select table where column equal X
+Date field contains complete date (year, month, day, hour, minute)
+Given user input, produce a sequence of operations from list above to produce the result for the user or say not enough information. 
+Do not use sql or other languages but use operations above. Do not provide examples
+User input: print total sales by month where contactid is 2 
