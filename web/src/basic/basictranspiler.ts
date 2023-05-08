@@ -1,5 +1,5 @@
 import { forEach } from "lodash";
-import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ConstNode, ExpressionNode, ForNode, FuncDefNode, IdNode, IfNode, ModuleNode, OpNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast";
+import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ConstNode, ExpressionNode, ForEachNode, ForNode, FuncDefNode, IdNode, IfNode, ModuleNode, OpNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast";
 import { isOpTokenKind } from "./basictokeniser";
 import { ParseError, ParseErrorCode } from "./parseerror";
 import { Token, TokenKind } from "./token";
@@ -51,6 +51,9 @@ export class Transpiler {
       case AstNodeKind.for:
         this.processFor(ast as ForNode);
         break;
+      case AstNodeKind.foreach:
+        this.processForEach(ast as ForEachNode);
+        break;
       case AstNodeKind.while:
         this.processWhile(ast as WhileNode);
         break;
@@ -62,6 +65,9 @@ export class Transpiler {
         break;
       case AstNodeKind.block:
         this.processBlock(ast as BlockNode);
+        break;
+      case AstNodeKind.call:
+        this.processCall(ast as CallNode);
         break;
       default:
         throw new ParseError(ParseErrorCode.NotImpl, undefined, 'Not implemented');
@@ -135,6 +141,14 @@ export class Transpiler {
     this.writer.append(`}`);
   }
 
+  private processForEach(ast: ForEachNode) {
+    let expStr = this.convertExpression(ast.exp);
+
+    this.writer.append(`for( let ${ast.name.value} of ${expStr} ) {`);
+    this.processNode(ast.body);
+    this.writer.append(`}`);
+  }
+
   private processWhile(ast: WhileNode) {
     let expStr = this.convertExpression(ast.exp);
 
@@ -162,6 +176,12 @@ export class Transpiler {
     } else {
       return token.value;
     }
+  }
+
+  private processCall(ast: CallNode): string {
+    let tokens: string[] = [];
+    this.convertCall(ast, tokens);
+    return tokens.join(' ');
   }
 
   private convertCall(ast: CallNode, tokens: string[]): void {

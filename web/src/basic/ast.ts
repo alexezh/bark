@@ -123,7 +123,7 @@ export type ForNode = StatementNode & {
 
 export type ForEachNode = StatementNode & {
   name: Token;
-  exp: ExpressionNode | undefined;
+  exp: ExpressionNode;
   body: BlockNode
 }
 

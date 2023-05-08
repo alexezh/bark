@@ -283,9 +283,7 @@ function parseStatement(token: Token, parser: BasicParser): StatementNode | unde
       }
       return assingment;
     } else {
-      parser.ignoreEol(false);
-      parser.setEndRule([TokenKind.Eol]);
-      return parser.withContextGreedy(token, parseCall);
+      return parser.withContextGreedy(token, parseCall, [TokenKind.Eol]);
     }
   }
   finally {
@@ -329,8 +327,12 @@ function parseReturn(parser: BasicParser): ReturnNode {
 }
 
 // calls do not require parentesus
-function parseCall(parser: BasicParser): CallNode {
+function parseCall(parser: BasicParser, endTokens: TokenKind[] | undefined = undefined): CallNode {
   try {
+    if (endTokens !== undefined) {
+      parser.setEndRule(endTokens);
+    }
+
     parser.callDepth++;
 
     let name = parser.readKind(TokenKind.Id);
