@@ -143,7 +143,7 @@ export class MeshLevelLayer {
 
   public deleteBlock(block: MapBlockCoord) {
     this.blocks[block.idx] = undefined;
-    let sliceIdx = Math.floor(block.idx / this.sliceZSize);
+    let sliceIdx = Math.floor(block.mapPos.z / this.sliceZSize);
     this._meshDirty[sliceIdx] = true;
     this.dirty = true;
   }

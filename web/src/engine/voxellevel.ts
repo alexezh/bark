@@ -182,7 +182,6 @@ export class VoxelLevel implements IVoxelLevel {
 
     public addBlock(pos: BlockPos3, block: VoxelModel) {
         let layer = this.addBlockCore(pos, block);
-
         layer.updateScene(this.scene);
     }
 
