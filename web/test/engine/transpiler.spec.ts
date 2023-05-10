@@ -145,7 +145,7 @@ test("bomb", () => {
     var speed:= 10;
     setSpeed bomb x:=0 y:=-speed z:=0
 
-    var monky:= vm.createSprite 'vox/monky.vox'
+    var monky:= Vm.createSprite 'vox/monky.vox'
 
     var ma:= Sprite.addAnimation monky 'move'
     Sprite.addFrame ma idx:= 1 dur:=0.1 
@@ -154,17 +154,17 @@ test("bomb", () => {
     ma:= Sprite.addAnimation monky 'stand'
     Sprite.addFrame ma idx:= 0 dur:=0
 
-    var level:= vm.loadLevel 'default'
+    var level:= Vm.loadLevel 'default'
 
     while true do
-      var collision := vm.waitCollide bomb 0.1
+      var collision := Vm.waitCollide bomb 0.1
       if collision = null then
         speed := Math.min speed * 1.1 100;
         Sprite.changeSpeedBy bomb 0 -speed 0
       else
-        if collision typeof Sprite then
-          vm.send "KilledMonkey"
-        elif collision typeof MapBlock then
+        if collision is Sprite then
+          Vm.send "KilledMonkey"
+        elif collision is Block then
           foreach b in collision.blocks do
             Level.deleteBlock level b
             Level.createExplosion collision.position;

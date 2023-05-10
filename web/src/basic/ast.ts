@@ -4,6 +4,7 @@ export enum AstNodeKind {
   module = 0,
   paramDef,
   funcDef,
+  typeDef,
   varDef,
   return,
   break,
@@ -26,6 +27,7 @@ export type AstNode = {
 
 export type ModuleNode = AstNode & {
   name: string | undefined,
+  types: TypeDefNode[];
   children: AstNode[];
 }
 
@@ -43,7 +45,18 @@ export type FuncDefNode = AstNode & {
   name: Token;
   returnType: Token | undefined;
   params: ParamDefNode[];
+  isAsync: boolean;
   body: BlockNode | Function;
+}
+
+export type FieldDef = {
+  name: Token;
+  fieldType: Token;
+}
+
+export type TypeDefNode = AstNode & {
+  name: Token;
+  fields: FieldDef[];
 }
 
 export type VarDefNode = AstNode & {
@@ -60,7 +73,7 @@ export type AssingmentNode = StatementNode & {
   value: ExpressionNode;
 }
 
-export type CallParamNode = ExpressionNode & {
+export type CallParamNode = AstNode & {
   name: Token | undefined;
   value: ExpressionNode;
 }
@@ -131,3 +144,44 @@ export type WhileNode = StatementNode & {
   exp: ExpressionNode;
   body: BlockNode
 }
+
+export function forEachChild(ast: AstNode, func: (ast: AstNode) => void) {
+  switch (ast.kind) {
+    case AstNodeKind.module:
+      (ast as ModuleNode).children.forEach(func);
+      break;
+    case AstNodeKind.funcDef:
+      let body = (ast as FuncDefNode).body;
+      if (body instanceof Function) {
+        ;
+      } else {
+        body.statements.forEach(func);
+      }
+      break;
+    case AstNodeKind.return:
+      break;
+    case AstNodeKind.assingment:
+      break;
+    case AstNodeKind.call:
+      break;
+    case AstNodeKind.op:
+      break;
+    case AstNodeKind.const:
+      break;
+    case AstNodeKind.id:
+      break;
+    case AstNodeKind.expression:
+      break;
+    case AstNodeKind.block:
+      break;
+    case AstNodeKind.if:
+      break;
+    case AstNodeKind.for:
+      break;
+    case AstNodeKind.foreach:
+      break;
+    case AstNodeKind.while:
+      break;
+  }
+}
+

@@ -39,6 +39,7 @@ export function parseModule(parser: BasicParser): ModuleNode {
   return {
     kind: AstNodeKind.module,
     name: undefined,
+    types: [],
     children: children
   }
 }
@@ -69,6 +70,7 @@ function parseFuncDef(parser: BasicParser): FuncDefNode {
     name: name,
     params: params,
     returnType: returnVal,
+    isAsync: false,
     body: body
   }
 }

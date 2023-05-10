@@ -4,6 +4,9 @@ import { ModuleCache } from "./modulecache";
 import { ParseError, ParseErrorCode } from "./parseerror";
 import { Token, TokenKind } from "./token";
 
+/**
+ * generates Js function from ast
+ */
 export class Transpiler {
   writer: JsWriter = new JsWriter();
 
