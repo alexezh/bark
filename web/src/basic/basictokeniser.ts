@@ -128,6 +128,10 @@ export class Tokenizer {
         return new Token(TokenKind.Minus, c, pos);
       case '+':
         return new Token(TokenKind.Plus, c, pos);
+      case '*':
+        return new Token(TokenKind.Mul, c, pos);
+      case '/':
+        return new Token(TokenKind.Div, c, pos);
       case '(':
         return new Token(TokenKind.LeftParen, c, pos);
       case ')':

@@ -1,41 +1,28 @@
-import { forEach } from "lodash";
 import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ConstNode, ExpressionNode, ForEachNode, ForNode, FuncDefNode, IdNode, IfNode, ModuleNode, OpNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast";
-import { isOpTokenKind } from "./basictokeniser";
+import { JsWriter } from "./jswriter";
+import { ModuleCache } from "./modulecache";
 import { ParseError, ParseErrorCode } from "./parseerror";
 import { Token, TokenKind } from "./token";
-
-class JsWriter {
-  private output: string[] = [];
-
-  public append(s: string) {
-    this.output.push(s);
-    this.output.push('\n');
-  }
-  public startScope() {
-    this.output.push('{')
-  }
-
-  public toString(): string {
-    return ''.concat(...this.output);
-  }
-}
 
 export class Transpiler {
   writer: JsWriter = new JsWriter();
 
-  public generate(ast: ModuleNode, mainFunc: string): string {
+  public load(ast: ModuleNode, mainFunction: string, moduleCache: ModuleCache | undefined = undefined): Function {
     // wrap to unnamed function which calls main
-    this.writer.append(`(function () {`)
-    this.processNode(ast);
-    this.writer.append(`; return ${mainFunc}(); })();`)
-    return this.writer.toString();
+    if (moduleCache !== undefined) {
+      moduleCache.writeModuleVars('__loader', this.writer);
+    }
+
+    this.processModule(ast as ModuleNode);
+
+    this.writer.append(`return ${mainFunction}();`)
+
+    let jsText = this.writer.toString();
+    return new Function('__loader', jsText);
   }
 
   private processNode(ast: AstNode) {
     switch (ast.kind) {
-      case AstNodeKind.module:
-        this.processModule(ast as ModuleNode);
-        break;
       case AstNodeKind.funcDef:
         this.processFuncDef(ast as FuncDefNode);
         break;
@@ -81,7 +68,7 @@ export class Transpiler {
   }
 
   private processBlock(ast: BlockNode) {
-    for (let n of ast.children) {
+    for (let n of ast.statements) {
       this.processNode(n);
     }
   }
@@ -92,9 +79,13 @@ export class Transpiler {
       params.push(t.name.value);
     }
 
-    this.writer.append(`function ${ast.name.value}(${params.join(',')}) {`);
-    for (let s of ast.body.children) {
-      this.processNode(s);
+    if (ast.body instanceof Function) {
+      // nothing for us to do here
+    } else {
+      this.writer.append(`function ${ast.name.value}(${params.join(',')}) {`);
+      for (let s of ast.body.statements) {
+        this.processNode(s);
+      }
     }
     this.writer.append(`}`);
   }
@@ -116,17 +107,17 @@ export class Transpiler {
   private processIf(ast: IfNode) {
     let expStr = this.convertExpression(ast.exp);
     this.writer.append(`if( ${expStr} ) {`);
-    this.processNode(ast.th);
+    this.processBlock(ast.th);
     if (ast.elif.length > 0) {
       for (let elif of ast.elif) {
         let expStr = this.convertExpression(elif.exp);
         this.writer.append(`} else if( ${expStr} ) {`);
-        this.processNode(elif.block);
+        this.processBlock(elif.block);
       }
     }
     if (ast.el !== undefined) {
       this.writer.append(`} else {`);
-      this.processNode(ast.el);
+      this.processBlock(ast.el);
     }
     this.writer.append(`}`);
   }
@@ -173,19 +164,24 @@ export class Transpiler {
   private convertOp(token: Token): string {
     if (token.kind === TokenKind.Equal) {
       return '===';
+    } else if (token.kind === TokenKind.Typeof) {
+      return 'isinstanceof';
     } else {
       return token.value;
     }
   }
 
-  private processCall(ast: CallNode): string {
+  private processCall(ast: CallNode) {
     let tokens: string[] = [];
     this.convertCall(ast, tokens);
-    return tokens.join(' ');
+    this.writer.append(tokens.join(''));
   }
 
   private convertCall(ast: CallNode, tokens: string[]): void {
     tokens.push(ast.name.value);
+    if (ast.name.value === 'vm.send') {
+      console.log('send');
+    }
     tokens.push('(');
     let addComma = false;
     for (let p of ast.params) {

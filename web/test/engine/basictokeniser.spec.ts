@@ -7,7 +7,7 @@ test("basic", () => {
   let tokenizer = Tokenizer.load('hello');
   let parser = new BasicParser(tokenizer);
   expect(parser.read().value).toBe('hello');
-  expect(parser.tryRead()).toBe(false);
+  expect(parser.tryRead()).toBe(undefined);
 });
 
 test("sequence", () => {
@@ -19,5 +19,5 @@ test("sequence", () => {
   expect(parser.read().value).toBe('y');
   expect(parser.read().value).toBe('=');
   expect(parser.read().value).toBe('11.2');
-  expect(parser.tryRead()).toBe(false);
+  expect(parser.tryRead()).toBe(undefined);
 });

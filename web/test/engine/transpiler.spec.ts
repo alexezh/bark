@@ -4,16 +4,18 @@ import { BasicParser, EolRule } from '../../src/basic/basicparser';
 import { parseModule } from '../../src/basic/basic';
 import { Transpiler } from '../../src/basic/basictranspiler';
 import { ParseError } from '../../src/basic/parseerror';
+import { ModuleCache } from '../../src/basic/modulecache';
+import { createSystemModules } from '../../src/basic/systemdef';
 
-function runProg(text: string): any {
+function runProg(text: string, moduleCache: ModuleCache | undefined = undefined): any {
   try {
     let tokenize = Tokenizer.load(text);
     let parser = new BasicParser(tokenize);
     let ast = parseModule(parser);
     let trans = new Transpiler();
-    let js = trans.generate(ast, 'foo');
+    let js = trans.load(ast, 'foo', moduleCache);
 
-    let val = eval(js);
+    let val = js(moduleCache);
     return val;
   }
   catch (e) {
@@ -120,6 +122,19 @@ test('namedargs', () => {
   expect(res).toBe(11);
 });
 
+test('systemcalls', () => {
+  let cache = createSystemModules();
+  let res = runProg(`
+
+  proc foo(): Sprite
+  begin
+    Vm.createSprite 'test'
+    return 42;
+  end
+`, cache);
+  expect(res).toBe(42);
+});
+
 test("bomb", () => {
   let res = runProg(`
 
@@ -130,22 +145,22 @@ test("bomb", () => {
     var speed:= 10;
     setSpeed bomb x:=0 y:=-speed z:=0
 
-    var monky:= createSprite 'vox/monky.vox'
+    var monky:= vm.createSprite 'vox/monky.vox'
 
-    var ma:= addAnimation monky 'move'
-    addFrame ma idx:= 1 dur:=0.1 
-    addFrame ma idx:= 2 dur:=0.1
+    var ma:= Sprite.addAnimation monky 'move'
+    Sprite.addFrame ma idx:= 1 dur:=0.1 
+    Sprite.addFrame ma idx:= 2 dur:=0.1
 
-    var ma:= addAnimation monky 'stand'
-    addFrame ma idx:= 0 dur:=0
+    ma:= Sprite.addAnimation monky 'stand'
+    Sprite.addFrame ma idx:= 0 dur:=0
 
     var level:= vm.loadLevel 'default'
 
     while true do
-      var collision := Level.waitCollide bomb 0.1
+      var collision := vm.waitCollide bomb 0.1
       if collision = null then
         speed := Math.min speed * 1.1 100;
-        changeSpeedBy bomb 0 -speed 0
+        Sprite.changeSpeedBy bomb 0 -speed 0
       else
         if collision typeof Sprite then
           vm.send "KilledMonkey"
@@ -154,9 +169,9 @@ test("bomb", () => {
             Level.deleteBlock level b
             Level.createExplosion collision.position;
           end
-          removeSprite bomb
+          Level.removeSprite bomb
         else
-          removeSprite bomb
+          Level.removeSprite bomb
         end
         break;
       end

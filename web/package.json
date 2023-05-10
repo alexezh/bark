@@ -46,7 +46,6 @@
     "@types/three": "^0.148.0",
     "@types/uuid": "^8.3.3",
     "assert": "^2.0.0",
-    "codeflask": "^1.4.1",
     "declaration-bundler-webpack-plugin": "^1.0.3",
     "dts-webpack-bundler": "^1.0.3",
     "fast-png": "^6.1.0",

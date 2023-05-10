@@ -41,9 +41,9 @@ export type ParamDefNode = AstNode & {
 
 export type FuncDefNode = AstNode & {
   name: Token;
-  returnValue: Token | undefined;
+  returnType: Token | undefined;
   params: ParamDefNode[];
-  body: BlockNode;
+  body: BlockNode | Function;
 }
 
 export type VarDefNode = AstNode & {
@@ -103,14 +103,14 @@ export type ExpressionNode = AstNode & {
 }
 
 export type BlockNode = AstNode & {
-  children: StatementNode[];
+  statements: StatementNode[];
 }
 
 export type IfNode = StatementNode & {
   exp: ExpressionNode;
   th: BlockNode;
   elif: { exp: ExpressionNode, block: BlockNode }[];
-  el: BlockNode | IfNode | undefined;
+  el: BlockNode | undefined;
 }
 
 export type ForNode = StatementNode & {

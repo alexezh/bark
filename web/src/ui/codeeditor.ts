@@ -1,13 +1,21 @@
 import { UiLayer2, UiLayerProps } from "./uilayer";
 import { KeyBinder } from "./keybinder";
-import CodeFlask from 'codeflask';
 import { createButton, setElementVisible } from "../lib/htmlutils";
+import { ModuleNode } from "../basic/ast";
 
 export type CodeEditorProps = UiLayerProps & {
 }
 
+export class CodeArea {
+  private module: ModuleNode | undefined;
+
+  public render() {
+
+  }
+}
+
+// editor is bar on the side and code area
 export class CodeEditor extends UiLayer2<CodeEditorProps> {
-  private flask: CodeFlask;
   private onSave: ((text: string) => void) | undefined;
   private onCancel: (() => void) | undefined;
   private saveButton: HTMLButtonElement;
@@ -23,10 +31,10 @@ export class CodeEditor extends UiLayer2<CodeEditorProps> {
     bar.className = 'codeEditorBar';
     div.appendChild(bar);
     this.saveButton = createButton(bar, 'SAVE', (evt: any): any => {
-      const code = this.flask.getCode();
-      if (this.onSave !== undefined) {
-        this.onSave(code);
-      }
+      //const code = this.flask.getCode();
+      // if (this.onSave !== undefined) {
+      //   this.onSave(code);
+      // }
     });
     createButton(bar, 'CANCEL', (evt: any): any => {
       if (this.onCancel !== undefined) {
@@ -40,7 +48,7 @@ export class CodeEditor extends UiLayer2<CodeEditorProps> {
     let text = document.createElement('div');
     div.appendChild(text);
 
-    this.flask = new CodeFlask(text, { language: 'js' });
+    //    this.flask = new CodeFlask(text, { language: 'js' });
   }
 
   public load(
@@ -51,19 +59,19 @@ export class CodeEditor extends UiLayer2<CodeEditorProps> {
     this.onSave = onSave;
     this.onCancel = onCancel;
 
-    setElementVisible(this.saveButton, this.onSave !== undefined);
+    // setElementVisible(this.saveButton, this.onSave !== undefined);
 
-    if (text === undefined || text === null) {
-      this.flask.updateCode('');
-    } else {
-      this.flask.updateCode(text);
-    }
+    // if (text === undefined || text === null) {
+    //   this.flask.updateCode('');
+    // } else {
+    //   this.flask.updateCode(text);
+    // }
   }
 
   private onMacro() {
-    let code = this.flask.getCode();
-    code = JSON.parse(code);
-    this.flask.updateCode(code);
+    // let code = this.flask.getCode();
+    // code = JSON.parse(code);
+    // this.flask.updateCode(code);
   }
 }
 

@@ -26,7 +26,7 @@ end`);
   expect(ast.children.length).toBe(1);
   let func = ast.children[0] as FuncDefNode;
   expect(func.name.value).toBe('foo');
-  expect(func.body.children.length).toBe(2);
+  expect(func.body.statements.length).toBe(2);
 });
 
 test("for", () => {
@@ -38,7 +38,7 @@ begin
   end
 end`);
   let func = ast.children[0] as FuncDefNode;
-  let fr = func.body.children[0] as ForNode;
+  let fr = func.body.statements[0] as ForNode;
 
   expect(fr.kind).toBe(AstNodeKind.for);
   expect((fr.startExp.left as ConstNode).value.value).toBe('1');
@@ -54,7 +54,7 @@ begin
   end
 end`);
   let func = ast.children[0] as FuncDefNode;
-  let fr = func.body.children[0] as ForNode;
+  let fr = func.body.statements[0] as ForNode;
 
   expect(fr.kind).toBe(AstNodeKind.foreach);
 });
@@ -77,10 +77,10 @@ begin
   return z;
 end`);
   let func = ast.children[0] as FuncDefNode;
-  let if1 = func.body.children[3] as IfNode;
+  let if1 = func.body.statements[3] as IfNode;
 
   expect(if1.kind).toBe(AstNodeKind.if);
-  let if2 = if1.th.children[0] as IfNode;
+  let if2 = if1.th.statements[0] as IfNode;
   expect(if2.kind).toBe(AstNodeKind.if);
 });
 
@@ -95,6 +95,6 @@ test("calls", () => {
   end
 `);
   let func = ast.children[0] as FuncDefNode;
-  expect(func.body.children.length).toBe(4);
+  expect(func.body.statements.length).toBe(4);
 })
 

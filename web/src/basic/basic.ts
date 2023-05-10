@@ -68,7 +68,7 @@ function parseFuncDef(parser: BasicParser): FuncDefNode {
     kind: AstNodeKind.funcDef,
     name: name,
     params: params,
-    returnValue: returnVal,
+    returnType: returnVal,
     body: body
   }
 }
@@ -234,7 +234,7 @@ function parseBlock(parser: BasicParser, startTokenKind: TokenKind, endTokens: T
 
   return {
     kind: AstNodeKind.block,
-    children: body
+    statements: body
   };
 }
 
