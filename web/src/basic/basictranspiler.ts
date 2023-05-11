@@ -85,7 +85,11 @@ export class Transpiler {
     if (ast.body instanceof Function) {
       // nothing for us to do here
     } else {
-      this.writer.append(`function ${ast.name.value}(${params.join(',')}) {`);
+      if (ast.isAsync) {
+        this.writer.append(`async function ${ast.name.value}(${params.join(',')}) {`);
+      } else {
+        this.writer.append(`function ${ast.name.value}(${params.join(',')}) {`);
+      }
       for (let s of ast.body.statements) {
         this.processNode(s);
       }
@@ -181,10 +185,16 @@ export class Transpiler {
   }
 
   private convertCall(ast: CallNode, tokens: string[]): void {
-    tokens.push(ast.name.value);
-    if (ast.name.value === 'vm.send') {
-      console.log('send');
+    if (!ast.funcDef) {
+      throw new ParseError(ParseErrorCode.UnknownFunctionName, ast.name, 'Function not bound');
     }
+
+    if (ast.funcDef.isAsync) {
+      tokens.push('await ' + ast.name.value);
+    } else {
+      tokens.push(ast.name.value);
+    }
+
     tokens.push('(');
     let addComma = false;
     for (let p of ast.params) {

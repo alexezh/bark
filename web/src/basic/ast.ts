@@ -73,14 +73,14 @@ export type AssingmentNode = StatementNode & {
   value: ExpressionNode;
 }
 
-export type CallParamNode = AstNode & {
+export type CallParamNode = ExpressionNode & {
   name: Token | undefined;
-  value: ExpressionNode;
 }
 
 export type CallNode = StatementNode & {
   name: Token;
   params: CallParamNode[];
+  funcDef?: FuncDefNode;
 }
 
 export type OpNode = AstNode & {

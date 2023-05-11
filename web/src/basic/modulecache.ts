@@ -2,11 +2,13 @@ import { AstNodeKind, FuncDefNode, ModuleNode } from "./ast";
 import { JsWriter } from "./jswriter";
 
 export class ModuleCache {
-  private modules: Map<string, { [key: string]: Function }> = new Map<string, { [key: string]: Function }>();
+  private readonly astModules: Map<string, ModuleNode> = new Map<string, ModuleNode>();
+  private readonly modules: Map<string, { [key: string]: Function }> = new Map<string, { [key: string]: Function }>();
 
-  public
   public registerSystemModule(name: string, ast: ModuleNode) {
     let module: { [key: string]: Function } = {};
+
+    this.astModules.set(name, ast);
     for (let item of ast.children) {
       if (item.kind === AstNodeKind.funcDef) {
         let funcDef = item as FuncDefNode;
@@ -22,6 +24,12 @@ export class ModuleCache {
       throw 'Cannot find module:' + name;
     }
     return value;
+  }
+
+  public forEachAstModule(func: (node: ModuleNode) => void) {
+    for (let x of this.astModules) {
+      func(x[1]);
+    }
   }
 
   public writeModuleVars(loaderVar: string, writer: JsWriter) {

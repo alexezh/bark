@@ -6,6 +6,8 @@ import { Transpiler } from '../../src/basic/basictranspiler';
 import { ParseError } from '../../src/basic/parseerror';
 import { ModuleCache } from '../../src/basic/modulecache';
 import { createSystemModules } from '../../src/basic/systemdef';
+import { validateModule } from '../../src/basic/checker';
+
 
 function runProg(text: string, moduleCache: ModuleCache | undefined = undefined): any {
   try {
@@ -13,6 +15,7 @@ function runProg(text: string, moduleCache: ModuleCache | undefined = undefined)
     let parser = new BasicParser(tokenize);
     let ast = parseModule(parser);
     let trans = new Transpiler();
+    validateModule(ast, moduleCache);
     let js = trans.load(ast, 'foo', moduleCache);
 
     let val = js(moduleCache);
@@ -91,6 +94,7 @@ test('multipleparams', () => {
 });
 
 test('nestedcalls', () => {
+  let cache = createSystemModules();
   let res = runProg(`
 
   proc bar(val: number, val2: number): number
@@ -102,7 +106,7 @@ test('nestedcalls', () => {
   begin
     return bar Math.min(1, 2) 10
   end
-`)
+`, cache)
   expect(res).toBe(11);
 });
 
@@ -133,6 +137,19 @@ test('systemcalls', () => {
   end
 `, cache);
   expect(res).toBe(42);
+});
+
+test('asynccall', async () => {
+  let cache = createSystemModules();
+  let res = runProg(`
+
+  proc foo(): Sprite
+  begin
+    Vm.waitCollide 'test'
+    return 42;
+  end
+`, cache);
+  expect(await res).toBe(42);
 });
 
 test("bomb", () => {

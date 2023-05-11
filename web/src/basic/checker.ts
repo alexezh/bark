@@ -1,24 +1,82 @@
 import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForEachNode, ForNode, FuncDefNode, IfNode, ModuleNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast"
+import { ModuleCache } from "./modulecache";
 import { ParseError, ParseErrorCode } from "./parseerror";
 
 class ValidationContext {
   parent: ValidationContext | undefined;
   readonly node: AstNode;
+  readonly funcDefs: Map<string, FuncDefNode>;
+  readonly validated: WeakMap<AstNode, boolean>;
 
   public constructor(node: AstNode, parent: ValidationContext | undefined) {
     this.node = node;
     this.parent = parent;
+    if (parent) {
+      this.funcDefs = parent.funcDefs;
+      this.validated = parent.validated;
+    } else {
+      this.funcDefs = new Map<string, FuncDefNode>();
+      this.validated = new WeakMap<AstNode, boolean>();
+    }
   }
 }
 
-export function validateModule(ast: ModuleNode) {
+function updateAsyncFlag(ctx: ValidationContext | undefined) {
+  while (ctx) {
+    if (ctx.node.kind === AstNodeKind.funcDef) {
+      let fd = ctx.node as FuncDefNode;
+      if (fd.isAsync) {
+        break;
+      }
+      fd.isAsync = true;
+    }
+    ctx = ctx.parent;
+  }
+}
+
+function getRootContext(ctx: ValidationContext): ValidationContext {
+  while (ctx) {
+    if (ctx.parent === undefined) {
+      return ctx;
+    }
+    ctx = ctx.parent;
+  }
+  throw 'Invalid chain';
+}
+
+export function validateModule(ast: ModuleNode, cache: ModuleCache | undefined) {
   let ctx = new ValidationContext(ast, undefined);
+
+  if (cache) {
+    cache.forEachAstModule((module: ModuleNode) => {
+      for (let node of module.children) {
+        if (node.kind === AstNodeKind.funcDef) {
+          let fd = node as FuncDefNode;
+          ctx.funcDefs.set(module.name + '.' + fd.name.value, fd);
+        }
+      }
+    });
+  }
+
+  // first fill in method defs
+  for (let node of ast.children) {
+    if (node.kind === AstNodeKind.funcDef) {
+      let fd = node as FuncDefNode;
+      ctx.funcDefs.set(fd.name.value, fd);
+    }
+  }
+
   for (let node of ast.children) {
     validateNode(ctx, node);
   }
 }
 
 function validateNode(parentCtx: ValidationContext, ast: AstNode) {
+  if (parentCtx.validated.get(ast)) {
+    return;
+  }
+
+  parentCtx.validated.set(ast, true);
   switch (ast.kind) {
     case AstNodeKind.funcDef:
       validateFuncDef(parentCtx, ast as FuncDefNode);
@@ -50,6 +108,13 @@ function validateNode(parentCtx: ValidationContext, ast: AstNode) {
     case AstNodeKind.block:
       validateBlock(parentCtx, ast as BlockNode);
       break;
+    case AstNodeKind.const:
+    case AstNodeKind.op:
+    case AstNodeKind.id:
+      break;
+    case AstNodeKind.expression:
+      validateExpression(parentCtx, ast as ExpressionNode);
+      break;
     case AstNodeKind.call:
       validateCall(parentCtx, ast as CallNode);
       break;
@@ -62,7 +127,8 @@ function validateFuncDef(parentCtx: ValidationContext, ast: FuncDefNode) {
   if (ast.body instanceof Function) {
     ;
   } else {
-    validateBlock(parentCtx, ast.body);
+    let ctx = new ValidationContext(ast, parentCtx);
+    validateBlock(ctx, ast.body);
   }
 }
 function validateVarDef(parentCtx: ValidationContext, ast: VarDefNode) {
@@ -124,8 +190,25 @@ function validateBlock(parentCtx: ValidationContext, ast: BlockNode) {
 }
 
 function validateCall(parentCtx: ValidationContext, ast: CallNode) {
+  let ctx = new ValidationContext(ast, parentCtx);
+
+  let fd = ctx.funcDefs.get(ast.name.value);
+  if (fd === undefined) {
+    throw new ParseError(ParseErrorCode.UnknownFunctionName, ast.name, `Unknown function name ${ast.name.value}`);
+  }
+
+  ast.funcDef = fd;
+
+  // first validate the method we are calling
+  validateNode(getRootContext(parentCtx), fd);
+
+  // now we have async flag, set it on our chain of calls
+  if (fd.isAsync) {
+    updateAsyncFlag(ctx);
+  }
+
   for (let param of ast.params) {
-    validateExpression(parentCtx, param.value);
+    validateExpression(parentCtx, param);
   }
 }
 

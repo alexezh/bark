@@ -26,7 +26,9 @@ end`);
   expect(ast.children.length).toBe(1);
   let func = ast.children[0] as FuncDefNode;
   expect(func.name.value).toBe('foo');
-  expect(func.body.statements.length).toBe(2);
+  if (!(func.body instanceof Function)) {
+    expect(func.body.statements.length).toBe(2);
+  }
 });
 
 test("for", () => {
@@ -38,11 +40,13 @@ begin
   end
 end`);
   let func = ast.children[0] as FuncDefNode;
-  let fr = func.body.statements[0] as ForNode;
+  if (!(func.body instanceof Function)) {
+    let fr = func.body.statements[0] as ForNode;
 
-  expect(fr.kind).toBe(AstNodeKind.for);
-  expect((fr.startExp.left as ConstNode).value.value).toBe('1');
-  expect((fr.endExp.left as ConstNode).value.value).toBe('5');
+    expect(fr.kind).toBe(AstNodeKind.for);
+    expect((fr.startExp.left as ConstNode).value.value).toBe('1');
+    expect((fr.endExp.left as ConstNode).value.value).toBe('5');
+  }
 });
 
 test("foreach", () => {
@@ -54,9 +58,11 @@ begin
   end
 end`);
   let func = ast.children[0] as FuncDefNode;
-  let fr = func.body.statements[0] as ForNode;
+  if (!(func.body instanceof Function)) {
+    let fr = func.body.statements[0] as ForNode;
 
-  expect(fr.kind).toBe(AstNodeKind.foreach);
+    expect(fr.kind).toBe(AstNodeKind.foreach);
+  }
 });
 
 test("nestedblocks", () => {
@@ -77,11 +83,13 @@ begin
   return z;
 end`);
   let func = ast.children[0] as FuncDefNode;
-  let if1 = func.body.statements[3] as IfNode;
+  if (!(func.body instanceof Function)) {
+    let if1 = func.body.statements[3] as IfNode;
 
-  expect(if1.kind).toBe(AstNodeKind.if);
-  let if2 = if1.th.statements[0] as IfNode;
-  expect(if2.kind).toBe(AstNodeKind.if);
+    expect(if1.kind).toBe(AstNodeKind.if);
+    let if2 = if1.th.statements[0] as IfNode;
+    expect(if2.kind).toBe(AstNodeKind.if);
+  }
 });
 
 test("calls", () => {
@@ -95,6 +103,8 @@ test("calls", () => {
   end
 `);
   let func = ast.children[0] as FuncDefNode;
-  expect(func.body.statements.length).toBe(4);
+  if (!(func.body instanceof Function)) {
+    expect(func.body.statements.length).toBe(4);
+  }
 })
 

@@ -9,6 +9,7 @@ export enum ParseErrorCode {
   InvalidExpression,
   InvalidFuncParams,
   InvalidToken,
+  UnknownFunctionName,
   NotImpl,
 }
 
