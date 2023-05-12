@@ -10,13 +10,19 @@ export class Mammal4Model implements IRigitModel {
   private _dir: Vector3 = new Vector3();
 
   get size(): Vector3 { return this._size; }
-  async load(uri: string, animations: VoxelAnimationCollection | undefined): Promise<void> {
-    let main = await VoxelMeshModel.create(uri, animations);
+  async load(uri: string): Promise<void> {
+    let main = await VoxelMeshModel.create(uri);
     this.meshModels.main = main;
     this._size = main.size;
     this.meshModels.main.setPosition(new Vector3(-this._size.x / 2, -this._size.y / 2, 0));
   }
 
+  addAnimation(name: string) {
+    this.meshModels.main.animations[name] = [];
+  }
+  addFrame(name: string, idx: number, duration: number) {
+    this.meshModels.main.animations[name].push({ idx: idx, dur: duration });
+  }
 
   public animate(id: string) {
     for (let m of Object.keys(this.meshModels)) {
@@ -77,12 +83,5 @@ export class Mammal4Model implements IRigitModel {
   // recalc from physics
   public update() {
 
-  }
-}
-
-// TODO: define animation sets left/right/etc
-export class Mammal4 extends Sprite3 {
-  public constructor(pos: Vector3, size: Vector3) {
-    super(pos, size, new Mammal4Model());
   }
 }

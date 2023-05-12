@@ -1,4 +1,3 @@
-import { Sprite } from "three";
 import { StaticCubeModel } from "../../engine/avatars/staticcubemodel";
 import { vm } from "../../engine/ivm";
 import { Sprite3 } from "../../engine/sprite3";

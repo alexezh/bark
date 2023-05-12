@@ -1,57 +1,39 @@
 import { vm } from "./engine/ivm";
 import { Sprite3 } from "./engine/sprite3";
 import { Vector3, Vector4 } from "three";
-import { IRigitBody, VoxelAnimationCollection } from "./voxel/voxelmeshmodel";
 import { MoveController2D } from "./engine/movecontroller2d";
 import { IDigGame } from "./engine/idiggame";
 import { randInt } from "three/src/math/MathUtils";
-import { Mammal4 } from "./engine/avatars/mammal4";
+import { Mammal4Model } from "./engine/avatars/mammal4";
 import { MapBlockRigitBody } from "./voxel/mapblockrigitbody";
+import { StaticCubeModel } from "./engine/avatars/staticcubemodel";
 
 
-class Snake extends Sprite3 {
-  private sprite!: Sprite3;
-
-  //public static async create(): Promise<Snake> {
-  // let snake = await vm.createSprite(
-  //   Snake,
-  //   './assets/vox/snakehead.',
-  //   new Vector3(0, 0, 0), new RoapModel(), undefined);
-
-  //vm.onInput(snake.onKey.bind(this));
-
-  // vm.physics.attachInputController(new MoveController2D(this))
-  //vm.physics.addRigitObject(snake.sprite, undefined);
-  //return snake;
-  //}
+async function createBomb(pos: Vector3): Promise<Sprite3> {
+  let sprite = await vm.createSprite('bomb', 'vox/bomb.vox', new StaticCubeModel());
+  sprite.setPosition(pos);
+  return sprite;
 }
 
-class Bomb extends Sprite3 {
-  public static async create(pos: Vector3): Promise<Bomb> {
-    return await vm.createSprite(Bomb, 'vox/bomb.vox', pos, undefined, undefined);
-  }
-}
+async function createMonky(): Promise<Sprite3> {
+  let m = await vm.createSprite('monky', 'vox/monky.vox', new Mammal4Model());
+  m.setPosition(new Vector3(120, 20, 120));
 
-class Monky extends Mammal4 {
-  public static async create(): Promise<Monky> {
-    let ac: VoxelAnimationCollection = {
-      move: [{ idx: 1, dur: 0.1 }, { idx: 2, dur: 0.1 }],
-      stand: [{ idx: 0, dur: 0 }]
-    }
-    let m = await vm.createSprite(Monky, 'vox/monky.vox',
-      new Vector3(120, 20, 120),
-      undefined,
-      ac);
+  m.rigit.addAnimation('move');
+  m.rigit.addFrame('move', 1, 0.1);
+  m.rigit.addFrame('move', 2, 0.1);
 
-    //inputController!.onKeyAction(this.onKey.bind(this));
-    return m;
-  }
+  m.rigit.addAnimation('stand');
+  m.rigit.addFrame('stand', 0, 0);
+
+  //inputController!.onKeyAction(this.onKey.bind(this));
+  return m;
 }
 
 let inputController: MoveController2D | undefined;
 
 export class BoxedGame implements IDigGame {
-  private char!: Monky;
+  private char!: Sprite3;
 
   public async init(): Promise<void> {
     // create controller and options such as repeat rate and so on
@@ -64,7 +46,7 @@ export class BoxedGame implements IDigGame {
     }));
 
     await vm.loadLevel('default');
-    this.char = await Monky.create();
+    this.char = await createMonky();
 
     vm.onStart(this.moveMonkey.bind(this));
     vm.onStart(this.dropObject.bind(this));
@@ -83,9 +65,9 @@ export class BoxedGame implements IDigGame {
       let ev = await vm!.readInput();
 
       if (ev.speedX !== 0 || ev.speedZ !== 0) {
-        this.char.animate('move');
+        this.char.rigit.animate('move');
       } else {
-        this.char.animate('stand');
+        this.char.rigit.animate('stand');
       }
       this.char.setSpeed(new Vector3(ev.speedX, 0, ev.speedZ));
     });
@@ -96,26 +78,26 @@ export class BoxedGame implements IDigGame {
   private async dropObject(): Promise<void> {
     console.log("start dropObject");
     vm.forever(async () => {
-      let bomb = await Bomb.create(new Vector3(randInt(50, 150), 50, randInt(50, 150)));
+      let bomb = await createBomb(new Vector3(randInt(50, 150), 50, randInt(50, 150)));
       let speed = 10;
 
       bomb.speed.add(new Vector3(0, -speed, 0));
 
       while (true) {
-        let collision = await vm.waitCollide([bomb], 0.1);
+        let collision = await vm.waitCollide(bomb, 0.1);
         if (collision === undefined) {
           speed = Math.min(speed * 1.1, 100);
           bomb.speed.set(0, -speed, 0);
         } else {
-          if (collision.collision instanceof Monky) {
+          if (collision instanceof Sprite3) {
             vm.send('KilledMonkey');
-          } else if (collision.collision instanceof MapBlockRigitBody) {
-            for (let b of (collision.collision as MapBlockRigitBody).blocks) {
+          } else if (collision instanceof MapBlockRigitBody) {
+            for (let b of (collision as MapBlockRigitBody).blocks) {
               vm.level.deleteBlock(b);
               vm.createExplosion(collision.position);
             }
             vm.removeSprite(bomb);
-          } else {
+          } else { // boundary
             vm.removeSprite(bomb);
           }
           break;
