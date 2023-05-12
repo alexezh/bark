@@ -57,10 +57,10 @@ export interface IVM {
    */
   onRenderFrame(): void;
 
-  createSprite<T extends Sprite3>(
-    AT: { new(...args: any[]): T; }, uri: string, pos: Vector3,
-    rm: IRigitModel | undefined,
-    ac: VoxelAnimationCollection | undefined): Promise<T>;
+  createSprite(
+    name: string,
+    uri: string,
+    rm: IRigitModel | undefined): Promise<Sprite3>;
   removeSprite(sprite: Sprite3);
   forever(func: () => Promise<void>): Promise<void>;
 
@@ -71,7 +71,7 @@ export interface IVM {
   // multiple threads can call wait on different groups of sprites
   // as an alternative, app code can register handler on sprite level and
   // get all information there
-  waitCollide(sprite: Sprite3[], timeout: number): Promise<Sprite3>;
+  waitCollide(sprite: Sprite3, timeout: number): Promise<IRigitBody | null>;
 
   createExplosion(pos: Vector3): void;
 

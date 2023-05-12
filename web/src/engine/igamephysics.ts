@@ -12,7 +12,7 @@ export interface IGamePhysicsInputController {
   //onAfterMove();
 }
 
-export type RigitCollisionHandler = (target: IRigitBody[]) => void;
+export type RigitCollisionHandler = (collisions: { source: IRigitBody, target: IRigitBody }[]) => void;
 
 export interface IGamePhysics {
   addRigitObject(ro: IRigitBody, onCollide: RigitCollisionHandler | undefined): void;

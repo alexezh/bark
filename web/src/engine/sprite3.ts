@@ -5,19 +5,18 @@ import { IRigitBody, RigitBodyKind, VoxelAnimationCollection, VoxelMeshModel } f
 import { StaticCubeModel } from "./avatars/staticcubemodel";
 
 // main object for compositing content
-export class Sprite3 implements IRigitBody {
+export class Sprite3 implements IRigitBody, IDigSprite {
   private static _nextId: number = 1;
   private _id: number;
+  private _name: string;
   public owner: any;
   public rigit: IRigitModel;
   private _inactive: boolean = false;
   private _speed: Vector3 = new Vector3();
   private _position: Vector3;
 
-  // if set, contains object which collided with this one
-  public collision: IRigitBody | undefined;
-
   public get id(): number { return this._id; }
+  public get name(): string { return this._name; }
   public get inactive(): boolean { return this._inactive }
   public get kind(): RigitBodyKind { return RigitBodyKind.sprite; }
 
@@ -25,20 +24,21 @@ export class Sprite3 implements IRigitBody {
   public get position(): Vector3 { return this._position };
   public get size(): Vector3 { return this.rigit.size };
 
-  public constructor(pos: Vector3, size: Vector3, rigit?: IRigitModel) {
+  public get x(): number { return this._position.x };
+  public get y(): number { return this._position.y };
+  public get z(): number { return this._position.z };
+
+  public constructor(name: string, rigit?: IRigitModel) {
     this._id = Sprite3._nextId++;
+    this._name = name;
     this.rigit = rigit ?? new StaticCubeModel();
-    this._position = pos;
+    this._position = new Vector3();
   }
 
-  public async load(uri: string, animations: VoxelAnimationCollection | undefined): Promise<void> {
-    await this.rigit!.load(uri, animations);
+  public async load(uri: string): Promise<void> {
+    await this.rigit!.load(uri);
     this.rigit.setPosition(this._position);
     this.rigit.setDirection(this.speed);
-  }
-
-  public animate(id: string) {
-    this.rigit.animate(id);
   }
 
   public addToScene(scene: Scene) {
@@ -72,17 +72,5 @@ export class Sprite3 implements IRigitBody {
     // move meshes; we should run this through rigitmodel to update
     // position correctly
     this.rigit.setPosition(pos);
-  }
-
-  public setCollision(obj: IRigitBody | undefined): void {
-    if (obj !== undefined) {
-      if (this.collision !== undefined) {
-        return;
-      }
-
-      this.collision = obj;
-    } else {
-      this.collision = undefined;
-    }
   }
 }

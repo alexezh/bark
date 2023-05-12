@@ -47,7 +47,7 @@ export class GamePhysics implements IGamePhysics {
       return;
     }
 
-    let collisions: IRigitBody[] = [];
+    let collisions: { source: IRigitBody, target: IRigitBody }[] = [];
 
     for (let o of this.bodies) {
       if (o.inactive) {
@@ -65,8 +65,7 @@ export class GamePhysics implements IGamePhysics {
         return true;
       })) {
         o.setSpeed(new Vector3(0, 0, 0));
-        o.setCollision(intersectBody!);
-        collisions.push(o);
+        collisions.push({ source: o, target: intersectBody! });
       } else {
         o.onMove(p);
       }

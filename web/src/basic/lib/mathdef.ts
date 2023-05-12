@@ -1,5 +1,5 @@
-import { AstNodeKind, FuncDefNode, ModuleNode, ParamDefNode, StatementNode } from "./ast";
-import { addSystemFunc } from "./systemfunc";
+import { AstNodeKind, FuncDefNode, ModuleNode, ParamDefNode, StatementNode } from "../ast";
+import { addSystemFunc } from "../systemfunc";
 
 
 export function createMath(): ModuleNode {

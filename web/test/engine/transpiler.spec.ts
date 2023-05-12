@@ -5,7 +5,7 @@ import { parseModule } from '../../src/basic/basic';
 import { Transpiler } from '../../src/basic/basictranspiler';
 import { ParseError } from '../../src/basic/parseerror';
 import { ModuleCache } from '../../src/basic/modulecache';
-import { createSystemModules } from '../../src/basic/systemdef';
+import { createSystemModules } from '../../src/basic/lib/systemdef';
 import { validateModule } from '../../src/basic/checker';
 
 
@@ -149,6 +149,7 @@ test('asynccall', async () => {
     return 42;
   end
 `, cache);
+  expect(res instanceof Promise).toBe(true);
   expect(await res).toBe(42);
 });
 
@@ -156,11 +157,13 @@ test("bomb", () => {
   let res = runProg(`
 
   proc foo() begin
-    var bomb:= createSprite 'vox/bomb.vox'
-    setPosition bomb randInt(50, 150) 50 randInt(50, 150)
+    var level:= Vm.loadLevel 'default'
+
+    var bomb:= Vm.createSprite 'vox/bomb.vox'
+    Sprite.setPosition bomb randInt(50, 150) 50 randInt(50, 150)
 
     var speed:= 10;
-    setSpeed bomb x:=0 y:=-speed z:=0
+    Sprite.setSpeed bomb x:=0 y:=-speed z:=0
 
     var monky:= Vm.createSprite 'vox/monky.vox'
 
@@ -170,8 +173,6 @@ test("bomb", () => {
 
     ma:= Sprite.addAnimation monky 'stand'
     Sprite.addFrame ma idx:= 0 dur:=0
-
-    var level:= Vm.loadLevel 'default'
 
     while true do
       var collision := Vm.waitCollide bomb 0.1

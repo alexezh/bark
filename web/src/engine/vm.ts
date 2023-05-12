@@ -26,7 +26,9 @@ export type StartHandler = () => Promise<void>;
 type CollisionWaiter = {
   // if resolve is undefined, there is no waiter
   // possibly waiter was already completed
-  resolve: ((res: IRigitBody | undefined) => void) | undefined;
+  resolve: ((res: IRigitBody | null) => void) | undefined;
+  // array of objects sprite collided with
+  targets: IRigitBody[];
 }
 
 export class VM implements IVM {
@@ -40,6 +42,9 @@ export class VM implements IVM {
   private _game?: IDigGame;
   private readonly _createDefaultProject: () => Promise<void>;
   private readonly _sprites: Map<number, Sprite3> = new Map<number, Sprite3>();
+  /**
+   * maps sprite waiting for collision to waiters
+   */
   private readonly _collisions: WeakMap<IRigitBody, CollisionWaiter> = new WeakMap<IRigitBody, CollisionWaiter>;
   public readonly clock!: FrameClock;
   private inputController: IInputController | undefined;
@@ -181,15 +186,13 @@ export class VM implements IVM {
     }
   }
 
-  public async createSprite<T extends Sprite3>(
-    AT: { new(...args: any[]): T; },
+  public async createSprite(
+    name: string,
     uri: string,
-    pos: Vector3,
-    rm: IRigitModel | undefined = undefined,
-    animations: VoxelAnimationCollection | undefined = undefined): Promise<T> {
+    rm: IRigitModel | undefined = undefined): Promise<Sprite3> {
 
-    let s = new AT(pos);
-    await s.load(uri, animations);
+    let s = new Sprite3(name, rm);
+    await s.load(uri);
 
     this._sprites.set(s.id, s);
     this.physics.addRigitObject(s, undefined);
@@ -219,37 +222,32 @@ export class VM implements IVM {
     return this.inputController!.readInput();
   }
 
-  public waitCollide(sprites: Sprite3[], seconds: number): Promise<Sprite3> {
-    let waiter: CollisionWaiter = { resolve: undefined };
-    let p: Promise<Sprite3> = new Promise<Sprite3>((resolve) => {
-      waiter.resolve = (target: IRigitBody | undefined) => {
-        resolve(target as Sprite3);
-        for (let sprite of sprites) {
-          this._collisions.delete(sprite);
-        }
-      }
-    });
+  public waitCollide(sprite: Sprite3, seconds: number): Promise<IRigitBody | null> {
+    let waiter = this._collisions.get(sprite);
+    if (waiter !== undefined && waiter.targets.length > 0) {
+      let target = waiter.targets.shift()!;
 
-    // first check if we have collisions recorded on any sprite
-    for (let sprite of sprites) {
-      if (this._collisions.get(sprite)) {
-        // remove from detection list
-        this._collisions.delete(sprite);
-        waiter.resolve!(sprite);
-        return p;
-      }
+      return new Promise<IRigitBody>((resolve) => {
+        resolve(target);
+      });
     }
 
-    // if none of sprites triggered; wait on them
-    for (let sprite of sprites) {
+    if (waiter === undefined) {
+      waiter = { resolve: undefined, targets: [] };
       this._collisions.set(sprite, waiter);
     }
 
+    let p: Promise<IRigitBody | null> = new Promise<IRigitBody | null>((resolve) => {
+      waiter!.resolve = (target: IRigitBody | null) => {
+        resolve(target);
+      }
+    });
+
     setTimeout(() => {
       // if we have not resolved waiter yet, resolve it
-      if (waiter.resolve !== undefined) {
-        waiter.resolve(undefined);
-        waiter.resolve = undefined;
+      if (waiter!.resolve !== undefined) {
+        waiter!.resolve(null);
+        waiter!.resolve = undefined;
       }
     }, seconds * 1000);
     return p;
@@ -284,17 +282,22 @@ export class VM implements IVM {
 
   }
 
-  public onCollide(ros: IRigitBody[]) {
+  public onCollide(collections: { source: IRigitBody, target: IRigitBody }[]) {
     // record collisions
-    for (let ro of ros) {
-      let waiter = this._collisions.get(ro);
-      if (waiter !== undefined && waiter.resolve !== undefined) {
-        waiter.resolve(ro);
-        // reset waiter after first resolve
-        waiter.resolve = undefined;
-        this._collisions.delete(ro);
+    for (let c of collections) {
+      let waiter = this._collisions.get(c.source);
+      if (waiter !== undefined) {
+        if (waiter.resolve !== undefined) {
+          waiter.resolve(c.target);
+          // reset waiter after first resolve
+          waiter.resolve = undefined;
+        } else {
+          waiter.targets.push(c.target);
+        }
       } else {
-        this._collisions.set(ro, { resolve: undefined });
+        let waiter: CollisionWaiter = { resolve: undefined, targets: [] }
+        waiter.targets.push(c.target);
+        this._collisions.set(c.source, waiter);
       }
     }
   }

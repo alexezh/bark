@@ -33,7 +33,6 @@ export interface IRigitBody {
 
     setSpeed(speed: Vector3): void;
     onMove(pos: Vector3): void;
-    setCollision(obj: IRigitBody | undefined): void;
 }
 
 export type VoxelAnimationFrame = {
@@ -57,21 +56,20 @@ export class VoxelMeshModel {
     // index in frames array
     private currentAnimationFrame: number = 0;
     private lastFrameTick: number = 0;
-    private readonly animations: VoxelAnimationCollection | undefined;
+    public readonly animations: VoxelAnimationCollection = {};
 
     // size in world units
     // computed as voxels multiplied by scale factor
     public get size(): Vector3 { return this._size; };
 
-    public static async create(uri: string, animations: VoxelAnimationCollection | undefined = undefined): Promise<VoxelMeshModel> {
-        let o = new VoxelMeshModel(animations);
+    public static async create(uri: string): Promise<VoxelMeshModel> {
+        let o = new VoxelMeshModel();
         await o.load(uri);
         return o;
     }
 
-    public constructor(animations: VoxelAnimationCollection | undefined) {
+    public constructor() {
         this.material = GameColors.material;
-        this.animations = animations;
     }
 
     private async load(uri: string): Promise<void> {

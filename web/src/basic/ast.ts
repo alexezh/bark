@@ -55,7 +55,8 @@ export type FieldDef = {
 }
 
 export type TypeDefNode = AstNode & {
-  name: Token;
+  digName: Token;
+  systemName: string | undefined;
   fields: FieldDef[];
 }
 

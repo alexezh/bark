@@ -9,10 +9,18 @@ export class StaticCubeModel implements IRigitModel {
   private _position!: Vector3;
 
   get size(): Vector3 { return this._size; }
-  async load(uri: string, animations: VoxelAnimationCollection | undefined): Promise<void> {
-    let m = await VoxelMeshModel.create(uri, animations);
+  async load(uri: string): Promise<void> {
+    let m = await VoxelMeshModel.create(uri);
     this.meshModel = m;
     this._size = m.size;
+    // animations: VoxelAnimationCollection | undefined
+  }
+
+  addAnimation(name: string) {
+    this.meshModel.animations[name] = [];
+  }
+  addFrame(name: string, idx: number, duration: number) {
+    this.meshModel.animations[name].push({ idx: idx, dur: duration });
   }
 
   animate(id: string) {

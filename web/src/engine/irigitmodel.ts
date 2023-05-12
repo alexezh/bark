@@ -4,8 +4,11 @@ import { VoxelAnimationCollection, VoxelMeshModel } from "../voxel/voxelmeshmode
 export interface IRigitModel {
   get size(): Vector3;
 
-  load(uri: string, animations: VoxelAnimationCollection | undefined): Promise<void>;
+  load(uri: string): Promise<void>;
   animate(id: string);
+  addAnimation(name: string);
+  addFrame(name: string, idx: number, duration: number);
+  //animations: VoxelAnimationCollection | undefined
 
   addToScene(scene: Scene);
   removeFromScene(scene: Scene);

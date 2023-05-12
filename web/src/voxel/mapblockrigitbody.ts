@@ -3,7 +3,7 @@ import { IRigitBody, RigitBodyKind } from "./voxelmeshmodel";
 import { MapBlock, MapBlockCoord } from "../ui/ivoxelmap";
 import { WorldCoord3 } from "./pos3";
 
-export class MapBlockRigitBody implements IRigitBody {
+export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   private mapBlock: MapBlockCoord;
   private pos: Vector3;
 
@@ -26,11 +26,9 @@ export class MapBlockRigitBody implements IRigitBody {
   }
   onMove(pos: Vector3): void {
   }
-  setCollision(obj: IRigitBody): void {
-  }
 }
 
-export class MapBoundaryRigitBody implements IRigitBody {
+export class MapBoundaryRigitBody implements IRigitBody, IDigBoundary {
   private _size: Vector3;
   private _pos: Vector3;
 
@@ -49,7 +47,5 @@ export class MapBoundaryRigitBody implements IRigitBody {
   setSpeed(speed: Vector3): void {
   }
   onMove(pos: Vector3): void {
-  }
-  setCollision(obj: IRigitBody): void {
   }
 }
