@@ -8,7 +8,7 @@ import {
   ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode, WhileNode, makeConstNode, makeIdNode, CallParamNode, ForEachNode
 } from "./ast";
 import { BasicParser } from "./basicparser";
-import { isConstTokenKind, isOpTokenKind } from "./basictokeniser";
+import { isConstTokenKind, isOpTokenKind } from "./lexer";
 import { ParseError, ParseErrorCode } from "./parseerror";
 import { Token, TokenKind } from "./token";
 

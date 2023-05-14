@@ -5,6 +5,8 @@ import { RigitBodyKind } from "../../voxel/voxelmeshmodel";
 import { AstNodeKind, FuncDefNode, ModuleNode, TypeDefNode } from "../ast";
 import { addSystemFunc, addSystemType } from "../systemfunc";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../../voxel/mapblockrigitbody";
+import { Vector3 } from "three";
+import { MoveController2D } from "../../engine/movecontroller2d";
 
 let s = `proc changeSpeed(bomb: Bomb, x: number, y: number, z: number);
 proc randInt(mm: number, ma: number);
@@ -47,14 +49,52 @@ async function waitCollide(sprite: IDigSprite, timeout: number): Promise<Sprite3
   }
 }
 
-export function createVmModule(): ModuleNode {
+function deleteBlock() {
+  //vm.level.deleteBlock();
+}
+
+function createExplosion(x: number, y: number, z: number) {
+  vm.createExplosion(new Vector3(x, y, z));
+}
+
+async function send(text: string): Promise<void> {
+  vm.send(text);
+}
+
+function setMoveController2D(keySpeedX: number,
+  keySpeedZ: number,
+  thumbSpeedX: number,
+  thumbSpeedZ: number,
+  timeoutSeconds: number) {
+
+  // create controller and options such as repeat rate and so on
+  vm.setController(new MoveController2D({
+    keySpeedX: keySpeedX,
+    keySpeedZ: keySpeedZ,
+    thumbSpeedX: thumbSpeedX,
+    thumbSpeedZ: thumbSpeedZ,
+    timeoutSeconds: timeoutSeconds
+  }));
+}
+
+export function createAppModule(): ModuleNode {
   let funcs: FuncDefNode[] = [];
   let types: TypeDefNode[] = [];
 
+  funcs.push(addSystemFunc('waitCollide', ['sprite: Sprite', 'timeout: number'], 'Sprite | Block | null', true, waitCollide));
+  funcs.push(addSystemFunc('send', ['test: string'], 'VOID', true, send));
+
+  funcs.push(addSystemFunc('setMoveController2D', [
+    'keySpeedX:number',
+    'keySpeedZ:number',
+    'thumbSpeedX:number',
+    'thumbSpeedZ:number',
+    'timeoutSeconds:number'], 'void', false, setMoveController2D));
   funcs.push(addSystemFunc('createCubeSprite', ['name:string', 'url:string'], 'Sprite', false, createCubeSprite));
   funcs.push(addSystemFunc('removeSprite', ['sprite:Sprite'], 'void', false, removeSprite));
-  funcs.push(addSystemFunc('createLevel', ['name:string'], 'void', false, loadLevel));
-  funcs.push(addSystemFunc('waitCollide', ['sprite: Sprite', 'timeout: number'], 'Sprite | Block', true, waitCollide));
+  funcs.push(addSystemFunc('loadLevel', ['name:string'], 'void', false, loadLevel));
+  funcs.push(addSystemFunc('deleteBlock', ['block:block'], 'void', false, deleteBlock));
+  funcs.push(addSystemFunc('createExplosion', ['x: number', 'y: number', 'z: number'], 'void', false, createExplosion));
 
   types.push(addSystemType('Sprite', 'Sprite3', ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
   types.push(addSystemType('Block', 'MapBlockRigitBody', ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
@@ -62,7 +102,7 @@ export function createVmModule(): ModuleNode {
 
   return {
     kind: AstNodeKind.module,
-    name: 'Vm',
+    name: 'App',
     types: types,
     children: funcs
   }

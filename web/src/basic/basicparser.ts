@@ -1,4 +1,4 @@
-import { Tokenizer } from "./basictokeniser";
+import { BasicLexer } from "./lexer";
 import { ParseError, ParseErrorCode } from "./parseerror";
 import { Token, TokenKind } from "./token";
 
@@ -104,7 +104,7 @@ export class ParserContext {
   statemens where we want one statement per line. All child parser might inherit this rule
 */
 export class BasicParser {
-  readonly tokenizer: Tokenizer;
+  readonly tokenizer: BasicLexer;
   private nextIdx: number;
   // cached value at nextIdx-1
   private _token: Token | undefined;
@@ -112,7 +112,7 @@ export class BasicParser {
   private ctx!: ParserContext;
   public callDepth: number = 0;
 
-  constructor(tokenizer: Tokenizer) {
+  constructor(tokenizer: BasicLexer) {
     this.tokenizer = tokenizer;
     this.tokens = this.tokenizer.tokens;
     this.nextIdx = 0;

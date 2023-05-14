@@ -18,7 +18,8 @@ export enum AstNodeKind {
   if,
   for,
   foreach,
-  while
+  while,
+  on,
 }
 
 export type AstNode = {
@@ -79,6 +80,12 @@ export type CallParamNode = ExpressionNode & {
 }
 
 export type CallNode = StatementNode & {
+  name: Token;
+  params: CallParamNode[];
+  funcDef?: FuncDefNode;
+}
+
+export type OnNode = StatementNode & {
   name: Token;
   params: CallParamNode[];
   funcDef?: FuncDefNode;

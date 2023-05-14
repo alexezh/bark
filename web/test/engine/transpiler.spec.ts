@@ -1,5 +1,5 @@
 import { expect, test } from '@jest/globals';
-import { Tokenizer } from '../../src/basic/basictokeniser';
+import { BasicLexer } from '../../src/basic/lexer';
 import { BasicParser, EolRule } from '../../src/basic/basicparser';
 import { parseModule } from '../../src/basic/basic';
 import { Transpiler } from '../../src/basic/basictranspiler';
@@ -11,7 +11,7 @@ import { validateModule } from '../../src/basic/checker';
 
 function runProg(text: string, moduleCache: ModuleCache | undefined = undefined): any {
   try {
-    let tokenize = Tokenizer.load(text);
+    let tokenize = BasicLexer.load(text);
     let parser = new BasicParser(tokenize);
     let ast = parseModule(parser);
     let trans = new Transpiler();
@@ -153,19 +153,34 @@ test('asynccall', async () => {
   expect(await res).toBe(42);
 });
 
+test("events", () => {
+  let res = runProg(`
+
+  var x: number := 3;
+  
+  on load() begin
+    x := 4;
+  end
+
+  proc foo() begin
+    
+  end
+);`)
+  expect(res).toBe(11);
+})
+
 test("bomb", () => {
   let res = runProg(`
 
-  proc foo() begin
-    var level:= Vm.loadLevel 'default'
+  var monky: Sprite;
+  
+  on load() begin
+    var level:= App.loadLevel 'default'
+    App.setMoveController2D(10, 10, 10, 10, 0.1)
+  end
 
-    var bomb:= Vm.createSprite 'vox/bomb.vox'
-    Sprite.setPosition bomb randInt(50, 150) 50 randInt(50, 150)
-
-    var speed:= 10;
-    Sprite.setSpeed bomb x:=0 y:=-speed z:=0
-
-    var monky:= Vm.createSprite 'vox/monky.vox'
+  on start() begin
+    monky:= App.createSprite 'monky' 'vox/monky.vox'
 
     var ma:= Sprite.addAnimation monky 'move'
     Sprite.addFrame ma idx:= 1 dur:=0.1 
@@ -174,22 +189,33 @@ test("bomb", () => {
     ma:= Sprite.addAnimation monky 'stand'
     Sprite.addFrame ma idx:= 0 dur:=0
 
+    App.send()
+  end
+
+  event startBomb() begin
+
+    var bomb:= App.createSprite 'bomb' 'vox/bomb.vox'
+    Sprite.setPosition bomb randInt(50, 150) 50 randInt(50, 150)
+
+    var speed:= 10;
+    Sprite.setSpeed bomb x:=0 y:=-speed z:=0
+
     while true do
-      var collision := Vm.waitCollide bomb 0.1
+      var collision := App.waitCollide bomb 0.1
       if collision = null then
         speed := Math.min speed * 1.1 100;
         Sprite.changeSpeedBy bomb 0 -speed 0
       else
         if collision is Sprite then
-          Vm.send "KilledMonkey"
+          App.send "KilledMonkey"
         elif collision is Block then
           foreach b in collision.blocks do
-            Level.deleteBlock level b
-            Level.createExplosion collision.position;
+            App.deleteBlock b
+            App.createExplosion collision.position;
           end
-          Level.removeSprite bomb
+          App.removeSprite bomb
         else
-          Level.removeSprite bomb
+          App.removeSprite bomb
         end
         break;
       end

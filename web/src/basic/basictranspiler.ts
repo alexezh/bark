@@ -1,4 +1,4 @@
-import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ConstNode, ExpressionNode, ForEachNode, ForNode, FuncDefNode, IdNode, IfNode, ModuleNode, OpNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast";
+import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ConstNode, ExpressionNode, ForEachNode, ForNode, FuncDefNode, IdNode, IfNode, ModuleNode, OnNode, OpNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast";
 import { JsWriter } from "./jswriter";
 import { ModuleCache } from "./modulecache";
 import { ParseError, ParseErrorCode } from "./parseerror";
@@ -7,243 +7,254 @@ import { Token, TokenKind } from "./token";
 /**
  * generates Js function from ast
  */
-export class Transpiler {
-  writer: JsWriter = new JsWriter();
 
-  public load(ast: ModuleNode, mainFunction: string, moduleCache: ModuleCache | undefined = undefined): Function {
-    // wrap to unnamed function which calls main
-    if (moduleCache !== undefined) {
-      moduleCache.writeModuleVars('__loader', this.writer);
-    }
+export function transpile(ast: ModuleNode, mainFunction: string, moduleCache: ModuleCache | undefined = undefined): Function {
+  let writer: JsWriter = new JsWriter();
 
-    this.processModule(ast as ModuleNode);
-
-    this.writer.append(`return ${mainFunction}();`)
-
-    let jsText = this.writer.toString();
-    return new Function('__loader', jsText);
+  // wrap to unnamed function which calls main
+  if (moduleCache !== undefined) {
+    moduleCache.writeModuleVars('__loader', writer);
   }
 
-  private processNode(ast: AstNode) {
-    switch (ast.kind) {
-      case AstNodeKind.funcDef:
-        this.processFuncDef(ast as FuncDefNode);
-        break;
-      case AstNodeKind.varDef:
-        this.processVarDef(ast as VarDefNode);
-        break;
-      case AstNodeKind.assingment:
-        this.processAssingment(ast as AssingmentNode);
-        break;
-      case AstNodeKind.if:
-        this.processIf(ast as IfNode);
-        break;
-      case AstNodeKind.for:
-        this.processFor(ast as ForNode);
-        break;
-      case AstNodeKind.foreach:
-        this.processForEach(ast as ForEachNode);
-        break;
-      case AstNodeKind.while:
-        this.processWhile(ast as WhileNode);
-        break;
-      case AstNodeKind.return:
-        this.processReturn(ast as ReturnNode);
-        break;
-      case AstNodeKind.break:
-        this.processBreak(ast as StatementNode);
-        break;
-      case AstNodeKind.block:
-        this.processBlock(ast as BlockNode);
-        break;
-      case AstNodeKind.call:
-        this.processCall(ast as CallNode);
-        break;
-      default:
-        throw new ParseError(ParseErrorCode.NotImpl, undefined, 'Not implemented');
-    }
+  processModule(ast as ModuleNode, writer);
+
+  writer.append(`return ${mainFunction}();`)
+
+  let jsText = writer.toString();
+  return new Function('__loader', jsText);
+}
+
+function processNode(ast: AstNode, writer: JsWriter) {
+  switch (ast.kind) {
+    case AstNodeKind.funcDef:
+      processFuncDef(ast as FuncDefNode, writer);
+      break;
+    case AstNodeKind.varDef:
+      processVarDef(ast as VarDefNode, writer);
+      break;
+    case AstNodeKind.assingment:
+      processAssingment(ast as AssingmentNode, writer);
+      break;
+    case AstNodeKind.if:
+      processIf(ast as IfNode, writer);
+      break;
+    case AstNodeKind.for:
+      processFor(ast as ForNode, writer);
+      break;
+    case AstNodeKind.foreach:
+      processForEach(ast as ForEachNode, writer);
+      break;
+    case AstNodeKind.while:
+      processWhile(ast as WhileNode, writer);
+      break;
+    case AstNodeKind.return:
+      processReturn(ast as ReturnNode, writer);
+      break;
+    case AstNodeKind.break:
+      processBreak(ast as StatementNode, writer);
+      break;
+    case AstNodeKind.block:
+      processBlock(ast as BlockNode, writer);
+      break;
+    case AstNodeKind.call:
+      processCall(ast as CallNode, writer);
+      break;
+    case AstNodeKind.on:
+      processOn(ast as OnNode, writer);
+      break;
+    default:
+      throw new ParseError(ParseErrorCode.NotImpl, undefined, 'Not implemented');
+  }
+}
+
+function processModule(ast: ModuleNode, writer: JsWriter) {
+  for (let n of ast.children) {
+    processNode(n, writer);
+  }
+}
+
+function processBlock(ast: BlockNode, writer: JsWriter) {
+  for (let n of ast.statements) {
+    processNode(n, writer);
+  }
+}
+
+function processFuncDef(ast: FuncDefNode, writer: JsWriter) {
+  let params: string[] = [];
+  for (let t of ast.params) {
+    params.push(t.name.value);
   }
 
-  private processModule(ast: ModuleNode) {
-    for (let n of ast.children) {
-      this.processNode(n);
-    }
-  }
-
-  private processBlock(ast: BlockNode) {
-    for (let n of ast.statements) {
-      this.processNode(n);
-    }
-  }
-
-  private processFuncDef(ast: FuncDefNode) {
-    let params: string[] = [];
-    for (let t of ast.params) {
-      params.push(t.name.value);
-    }
-
-    if (ast.body instanceof Function) {
-      // nothing for us to do here
+  if (ast.body instanceof Function) {
+    // nothing for us to do here
+  } else {
+    if (ast.isAsync) {
+      writer.append(`async function ${ast.name.value}(${params.join(',')}) {`);
     } else {
-      if (ast.isAsync) {
-        this.writer.append(`async function ${ast.name.value}(${params.join(',')}) {`);
-      } else {
-        this.writer.append(`function ${ast.name.value}(${params.join(',')}) {`);
-      }
-      for (let s of ast.body.statements) {
-        this.processNode(s);
-      }
+      writer.append(`function ${ast.name.value}(${params.join(',')}) {`);
     }
-    this.writer.append(`}`);
-  }
-
-  private processVarDef(ast: VarDefNode) {
-    if (ast.value !== undefined) {
-      let expStr = this.convertExpression(ast.value);
-      this.writer.append(`let ${ast.name.value} = ${expStr};`);
-    } else {
-      this.writer.append(`let ${ast.name.value};`);
+    for (let s of ast.body.statements) {
+      processNode(s, writer);
     }
   }
+  writer.append(`}`);
+}
 
-  private processAssingment(ast: AssingmentNode) {
-    let expStr = this.convertExpression(ast.value);
-    this.writer.append(`${ast.name.value} = ${expStr};`);
+function processVarDef(ast: VarDefNode, writer: JsWriter) {
+  if (ast.value !== undefined) {
+    let expStr = convertExpression(ast.value, writer);
+    writer.append(`let ${ast.name.value} = ${expStr};`);
+  } else {
+    writer.append(`let ${ast.name.value};`);
   }
+}
 
-  private processIf(ast: IfNode) {
-    let expStr = this.convertExpression(ast.exp);
-    this.writer.append(`if( ${expStr} ) {`);
-    this.processBlock(ast.th);
-    if (ast.elif.length > 0) {
-      for (let elif of ast.elif) {
-        let expStr = this.convertExpression(elif.exp);
-        this.writer.append(`} else if( ${expStr} ) {`);
-        this.processBlock(elif.block);
-      }
-    }
-    if (ast.el !== undefined) {
-      this.writer.append(`} else {`);
-      this.processBlock(ast.el);
-    }
-    this.writer.append(`}`);
-  }
+function processAssingment(ast: AssingmentNode, writer: JsWriter) {
+  let expStr = convertExpression(ast.value, writer);
+  writer.append(`${ast.name.value} = ${expStr};`);
+}
 
-  private processFor(ast: ForNode) {
-    let startExpStr = this.convertExpression(ast.startExp);
-    let endExpStr = this.convertExpression(ast.endExp);
-    let byExpStr = `${ast.name.value} += ${(ast.byExp === undefined) ? '+1' : this.convertExpression(ast.byExp)}`;
-
-    this.writer.append(`for( let ${ast.name.value}=${startExpStr}; ${ast.name.value} < ${endExpStr}; ${byExpStr} ) {`);
-    this.processNode(ast.body);
-    this.writer.append(`}`);
-  }
-
-  private processForEach(ast: ForEachNode) {
-    let expStr = this.convertExpression(ast.exp);
-
-    this.writer.append(`for( let ${ast.name.value} of ${expStr} ) {`);
-    this.processNode(ast.body);
-    this.writer.append(`}`);
-  }
-
-  private processWhile(ast: WhileNode) {
-    let expStr = this.convertExpression(ast.exp);
-
-    this.writer.append(`while( ${expStr} ) {`);
-    this.processNode(ast.body);
-    this.writer.append(`}`);
-  }
-
-  private processReturn(ast: ReturnNode) {
-    if (ast.value !== undefined) {
-      let expStr = this.convertExpression(ast.value);
-      this.writer.append(`return ${expStr};`);
-    } else {
-      this.writer.append(`return;`);
+function processIf(ast: IfNode, writer: JsWriter) {
+  let expStr = convertExpression(ast.exp, writer);
+  writer.append(`if( ${expStr} ) {`);
+  processBlock(ast.th, writer);
+  if (ast.elif.length > 0) {
+    for (let elif of ast.elif) {
+      let expStr = convertExpression(elif.exp, writer);
+      writer.append(`} else if( ${expStr} ) {`);
+      processBlock(elif.block, writer);
     }
   }
+  if (ast.el !== undefined) {
+    writer.append(`} else {`);
+    processBlock(ast.el, writer);
+  }
+  writer.append(`}`);
+}
 
-  private processBreak(ast: StatementNode) {
-    this.writer.append(`break;`);
+function processFor(ast: ForNode, writer: JsWriter) {
+  let startExpStr = convertExpression(ast.startExp, writer);
+  let endExpStr = convertExpression(ast.endExp, writer);
+  let byExpStr = `${ast.name.value} += ${(ast.byExp === undefined) ? '+1' : convertExpression(ast.byExp, writer)}`;
+
+  writer.append(`for( let ${ast.name.value}=${startExpStr}; ${ast.name.value} < ${endExpStr}; ${byExpStr} ) {`);
+  processNode(ast.body, writer);
+  writer.append(`}`);
+}
+
+function processForEach(ast: ForEachNode, writer: JsWriter) {
+  let expStr = convertExpression(ast.exp, writer);
+
+  writer.append(`for( let ${ast.name.value} of ${expStr} ) {`);
+  processNode(ast.body, writer);
+  writer.append(`}`);
+}
+
+function processWhile(ast: WhileNode, writer: JsWriter) {
+  let expStr = convertExpression(ast.exp, writer);
+
+  writer.append(`while( ${expStr} ) {`);
+  processNode(ast.body, writer);
+  writer.append(`}`);
+}
+
+function processReturn(ast: ReturnNode, writer: JsWriter) {
+  if (ast.value !== undefined) {
+    let expStr = convertExpression(ast.value, writer);
+    writer.append(`return ${expStr};`);
+  } else {
+    writer.append(`return;`);
+  }
+}
+
+function processBreak(ast: StatementNode, writer: JsWriter) {
+  writer.append(`break;`);
+}
+
+function convertOp(token: Token): string {
+  if (token.kind === TokenKind.Equal) {
+    return '===';
+  } else if (token.kind === TokenKind.Typeof) {
+    return 'isinstanceof';
+  } else {
+    return token.value;
+  }
+}
+
+function processCall(ast: CallNode, writer: JsWriter) {
+  let tokens: string[] = [];
+  convertCall(ast, tokens, writer);
+  writer.append(tokens.join(''));
+}
+
+function processOn(ast: CallNode, writer: JsWriter) {
+
+  //vm.onStart(moveMonkey.bind(this));
+
+  let tokens: string[] = [];
+  convertCall(ast, tokens, writer);
+  writer.append(tokens.join(''));
+}
+
+function convertCall(ast: CallNode, tokens: string[], writer: JsWriter): void {
+  if (!ast.funcDef) {
+    throw new ParseError(ParseErrorCode.UnknownFunctionName, ast.name, 'Function not bound');
   }
 
-  private convertOp(token: Token): string {
-    if (token.kind === TokenKind.Equal) {
-      return '===';
-    } else if (token.kind === TokenKind.Typeof) {
-      return 'isinstanceof';
-    } else {
-      return token.value;
-    }
+  if (ast.funcDef.isAsync) {
+    tokens.push('await ' + ast.name.value);
+  } else {
+    tokens.push(ast.name.value);
   }
 
-  private processCall(ast: CallNode) {
-    let tokens: string[] = [];
-    this.convertCall(ast, tokens);
-    this.writer.append(tokens.join(''));
+  tokens.push('(');
+  let addComma = false;
+  for (let p of ast.params) {
+    if (addComma) {
+      tokens.push(',');
+    }
+    addComma = true;
+    convertExpressionNode(p, tokens, writer);
   }
+  tokens.push(')');
+}
 
-  private convertCall(ast: CallNode, tokens: string[]): void {
-    if (!ast.funcDef) {
-      throw new ParseError(ParseErrorCode.UnknownFunctionName, ast.name, 'Function not bound');
-    }
+function convertExpression(ast: ExpressionNode, writer: JsWriter): string {
+  let tokens: string[] = [];
+  convertExpressionNode(ast, tokens, writer);
+  return tokens.join(' ');
+}
 
-    if (ast.funcDef.isAsync) {
-      tokens.push('await ' + ast.name.value);
-    } else {
-      tokens.push(ast.name.value);
-    }
-
-    tokens.push('(');
-    let addComma = false;
-    for (let p of ast.params) {
-      if (addComma) {
-        tokens.push(',');
-      }
-      addComma = true;
-      this.convertExpressionNode(p, tokens);
-    }
-    tokens.push(')');
+function convertExpressionNode(ast: ExpressionNode, tokens: string[], writer: JsWriter): void {
+  if (ast.left) {
+    convertExpressionToken(ast.left, tokens, writer);
   }
-
-  private convertExpression(ast: ExpressionNode): string {
-    let tokens: string[] = [];
-    this.convertExpressionNode(ast, tokens);
-    return tokens.join(' ');
+  if (ast.op) {
+    convertExpressionToken(ast.op, tokens, writer);
   }
-
-  private convertExpressionNode(ast: ExpressionNode, tokens: string[]): void {
-    if (ast.left) {
-      this.convertExpressionToken(ast.left, tokens);
-    }
-    if (ast.op) {
-      this.convertExpressionToken(ast.op, tokens);
-    }
-    if (ast.right) {
-      this.convertExpressionToken(ast.right, tokens);
-    }
+  if (ast.right) {
+    convertExpressionToken(ast.right, tokens, writer);
   }
+}
 
-  private convertExpressionToken(ast: AstNode, tokens: string[]): void {
-    switch (ast.kind) {
-      case AstNodeKind.const:
-        tokens.push((ast as ConstNode).value.value);
-        break;
-      case AstNodeKind.expression:
-        this.convertExpressionNode(ast as ExpressionNode, tokens);
-        break;
-      case AstNodeKind.id:
-        tokens.push((ast as IdNode).name.value);
-        break;
-      case AstNodeKind.op:
-        tokens.push(this.convertOp((ast as OpNode).op));
-        break;
-      case AstNodeKind.call:
-        this.convertCall(ast as CallNode, tokens);
-        break;
-      default:
-        throw new ParseError(ParseErrorCode.InvalidToken, undefined, `Invalid token`);
-    }
+function convertExpressionToken(ast: AstNode, tokens: string[], writer: JsWriter): void {
+  switch (ast.kind) {
+    case AstNodeKind.const:
+      tokens.push((ast as ConstNode).value.value);
+      break;
+    case AstNodeKind.expression:
+      convertExpressionNode(ast as ExpressionNode, tokens, writer);
+      break;
+    case AstNodeKind.id:
+      tokens.push((ast as IdNode).name.value);
+      break;
+    case AstNodeKind.op:
+      tokens.push(convertOp((ast as OpNode).op));
+      break;
+    case AstNodeKind.call:
+      convertCall(ast as CallNode, tokens, writer);
+      break;
+    default:
+      throw new ParseError(ParseErrorCode.InvalidToken, undefined, `Invalid token`);
   }
 }

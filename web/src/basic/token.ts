@@ -52,6 +52,8 @@ export enum TokenKind {
   Proc,
   Var,
   Return,
+  On,
+  Event,
 }
 
 export class Token {

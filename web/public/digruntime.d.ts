@@ -135,6 +135,364 @@ export declare class MoveCameraAction implements IAction {
     private onMoveCameraClick;
 }
 
+export declare enum AstNodeKind {
+    module = 0,
+    paramDef = 1,
+    funcDef = 2,
+    typeDef = 3,
+    varDef = 4,
+    return = 5,
+    break = 6,
+    assingment = 7,
+    call = 8,
+    op = 9,
+    const = 10,
+    id = 11,
+    expression = 12,
+    block = 13,
+    if = 14,
+    for = 15,
+    foreach = 16,
+    while = 17
+}
+export type AstNode = {
+    kind: AstNodeKind;
+};
+export type ModuleNode = AstNode & {
+    name: string | undefined;
+    types: TypeDefNode[];
+    children: AstNode[];
+};
+export type ParamDefNode = AstNode & {
+    name: Token;
+    paramType: Token;
+};
+export type FuncDefNode = AstNode & {
+    name: Token;
+    returnType: Token | undefined;
+    params: ParamDefNode[];
+    isAsync: boolean;
+    body: BlockNode | Function;
+};
+export type FieldDef = {
+    name: Token;
+    fieldType: Token;
+};
+export type TypeDefNode = AstNode & {
+    digName: Token;
+    systemName: string | undefined;
+    fields: FieldDef[];
+};
+export type VarDefNode = AstNode & {
+    name: Token;
+    value: ExpressionNode | undefined;
+};
+export type ReturnNode = AstNode & {
+    value: ExpressionNode | undefined;
+};
+export type AssingmentNode = StatementNode & {
+    name: Token;
+    value: ExpressionNode;
+};
+export type CallParamNode = ExpressionNode & {
+    name: Token | undefined;
+};
+export type CallNode = StatementNode & {
+    name: Token;
+    params: CallParamNode[];
+    funcDef?: FuncDefNode;
+};
+export type OpNode = AstNode & {
+    op: Token;
+};
+export type ConstNode = AstNode & {
+    value: Token;
+};
+export declare function makeConstNode(token: Token): ConstNode;
+export type IdNode = AstNode & {
+    name: Token;
+};
+export declare function makeIdNode(token: Token): IdNode;
+export type ExpressionNode = AstNode & {
+    left: AstNode | undefined;
+    op: AstNode | undefined;
+    right: AstNode | undefined;
+};
+export type BlockNode = AstNode & {
+    statements: StatementNode[];
+};
+export type IfNode = StatementNode & {
+    exp: ExpressionNode;
+    th: BlockNode;
+    elif: {
+        exp: ExpressionNode;
+        block: BlockNode;
+    }[];
+    el: BlockNode | undefined;
+};
+export type ForNode = StatementNode & {
+    name: Token;
+    startExp: ExpressionNode;
+    endExp: ExpressionNode;
+    byExp: ExpressionNode | undefined;
+    body: BlockNode;
+};
+export type ForEachNode = StatementNode & {
+    name: Token;
+    exp: ExpressionNode;
+    body: BlockNode;
+};
+export type WhileNode = StatementNode & {
+    exp: ExpressionNode;
+    body: BlockNode;
+};
+export declare function forEachChild(ast: AstNode, func: (ast: AstNode) => void): void;
+
+export declare function parseModule(parser: BasicParser): ModuleNode;
+export declare class BasicGenerator {
+}
+
+export declare enum EolRule {
+    Inherit = 0,
+    WhiteSpace = 1,
+    Token = 2
+}
+export declare enum SemiRule {
+    Inherit = 0,
+    End = 1,
+    Disallow = 2
+}
+export type ParserRules = {
+    eolRule?: EolRule;
+    semiRule?: SemiRule;
+    endTokens?: TokenKind[];
+};
+export declare enum EndRule {
+    Pass = 0,
+    Inherit = 1
+}
+export declare enum IsEndTokenResult {
+    No = 0,
+    Direct = 1,
+    Inherited = 2
+}
+export declare class ParserContext {
+    prev: ParserContext | undefined;
+    name: string | undefined;
+    endTokens: TokenKind[] | undefined;
+    inheritEndTokens: boolean;
+    ignoreEol: boolean;
+    isEos: boolean;
+    isGreedy: boolean;
+    endResult: IsEndTokenResult;
+    constructor(prev?: ParserContext | undefined, name?: string | undefined);
+    isEndToken(token: Token): boolean;
+    isEndTokenDeep(token: Token): IsEndTokenResult;
+}
+export declare class BasicParser {
+    readonly tokenizer: Tokenizer;
+    private nextIdx;
+    private _token;
+    private tokens;
+    private ctx;
+    callDepth: number;
+    constructor(tokenizer: Tokenizer);
+    withContextGreedy<T>(token: Token, func: (parser: BasicParser, ...args: any[]) => T, ...args: any[]): T;
+    withContext<T>(name: string, token: Token, func: (parser: BasicParser, ...args: any[]) => T, ...args: any[]): T;
+    withContextGreedy2<T>(name: string, token: Token, func: (parser: BasicParser, ...args: any[]) => T, ...args: any[]): T;
+    pushContext(name?: string | undefined): void;
+    popContext(): void;
+    setEndRule(tokens: TokenKind[], inherit?: boolean): void;
+    ignoreEol(val: boolean): void;
+    moveTo(token: Token): void;
+    get token(): Token;
+    triggerEos(): void;
+    tryRead(): Token | undefined;
+    read(): Token;
+    readKind(...kind: TokenKind[]): Token;
+    peek(): Token | undefined;
+    peekKind(kind: TokenKind): boolean;
+    private isWsToken;
+}
+
+export declare function isOpTokenKind(kind: TokenKind): boolean;
+export declare function isConstTokenKind(kind: TokenKind): boolean;
+export declare class StringReader {
+    private source;
+    private _pos;
+    constructor(source: string);
+    get pos(): number;
+    get isEol(): boolean;
+    readNext(): string;
+    peekNext(): string;
+    move(n: number): void;
+    compare(s: string): boolean;
+    skipWs(): number;
+    static isWs(c: string): boolean;
+}
+export declare class Tokenizer {
+    private readonly _tokens;
+    static load(source: string): Tokenizer;
+    get tokens(): Token[];
+    private loadTokens;
+    private readNext;
+    private readId;
+    private getIdKind;
+    private readString;
+    private readNumber;
+}
+
+export declare class Transpiler {
+    writer: JsWriter;
+    load(ast: ModuleNode, mainFunction: string, moduleCache?: ModuleCache | undefined): Function;
+    private processNode;
+    private processModule;
+    private processBlock;
+    private processFuncDef;
+    private processVarDef;
+    private processAssingment;
+    private processIf;
+    private processFor;
+    private processForEach;
+    private processWhile;
+    private processReturn;
+    private processBreak;
+    private convertOp;
+    private processCall;
+    private convertCall;
+    private convertExpression;
+    private convertExpressionNode;
+    private convertExpressionToken;
+}
+
+export declare function validateModule(ast: ModuleNode, cache: ModuleCache | undefined): void;
+
+interface IDigSprite {
+    get x(): number;
+    get y(): number;
+    get z(): number;
+    get name(): string;
+    get id(): number;
+}
+interface IDigBlock {
+    get x(): number;
+    get y(): number;
+    get z(): number;
+}
+interface IDigBoundary {
+    get x(): number;
+    get y(): number;
+    get z(): number;
+}
+
+export declare class JsWriter {
+    private output;
+    append(s: string): void;
+    toString(): string;
+}
+export declare class CodeLib {
+    getCode(name: string): string;
+}
+
+export declare class ModuleCache {
+    private readonly astModules;
+    private readonly modules;
+    registerSystemModule(name: string, ast: ModuleNode): void;
+    getModule(name: string): {
+        [key: string]: Function;
+    };
+    forEachAstModule(func: (node: ModuleNode) => void): void;
+    writeModuleVars(loaderVar: string, writer: JsWriter): void;
+}
+
+export declare enum ParseErrorCode {
+    Unknown = 0,
+    NoStringEnding = 1,
+    ReadEos = 2,
+    WrongToken = 3,
+    InvalidArg = 4,
+    InvalidExpression = 5,
+    InvalidFuncParams = 6,
+    InvalidToken = 7,
+    UnknownFunctionName = 8,
+    NotImpl = 9
+}
+export declare class ParseError {
+    readonly msg: string;
+    readonly code: ParseErrorCode;
+    readonly token: Token | undefined;
+    constructor(code: ParseErrorCode, token: Token | undefined, msg: string);
+}
+
+export declare function addSystemType(digName: string, systemName: string, fields: string[]): TypeDefNode;
+export declare function addSystemFunc(name: string, params: string[], rval: string, isAsync: boolean, impl: Function): FuncDefNode;
+
+export declare enum TokenKind {
+    Eol = 1,
+    Eof = 2,
+    Ws = 3,
+    Equal = 4,
+    Less = 5,
+    Greater = 6,
+    LessOrEqual = 7,
+    GreaterOrEqual = 8,
+    Or = 9,
+    And = 10,
+    Not = 11,
+    Typeof = 12,
+    Plus = 13,
+    Minus = 14,
+    Div = 15,
+    Mul = 16,
+    Assign = 17,
+    Comma = 18,
+    Semi = 19,
+    Colon = 20,
+    LeftParen = 21,
+    RightParen = 22,
+    LeftSquiggly = 23,
+    RightSquiggly = 24,
+    LeftSquare = 25,
+    RightSquare = 26,
+    String = 27,
+    Number = 28,
+    Boolean = 29,
+    True = 30,
+    False = 31,
+    Break = 32,
+    Id = 33,
+    For = 34,
+    Foreach = 35,
+    In = 36,
+    To = 37,
+    By = 38,
+    Do = 39,
+    While = 40,
+    If = 41,
+    Then = 42,
+    Else = 43,
+    ElIf = 44,
+    End = 45,
+    Begin = 46,
+    Proc = 47,
+    Var = 48,
+    Return = 49
+}
+export declare class Token {
+    readonly kind: TokenKind;
+    readonly value: string;
+    readonly pos: number;
+    idx: number;
+    constructor(kind: TokenKind, value: string, pos: number);
+}
+
+export declare function createAppModule(): ModuleNode;
+export declare function createSpriteModule(): ModuleNode;
+
+export declare function createMath(): ModuleNode;
+
+export declare function createSystemModules(): ModuleCache;
+
 export interface IAnimatable {
     get id(): number;
     get startTime(): number;
@@ -296,7 +654,10 @@ export interface IDigGame {
 export type CreateMoveAnimation = (sprite: Sprite3, pos: Vector3) => IAnimatable;
 export interface IGamePhysicsInputController {
 }
-export type RigitCollisionHandler = (target: IRigitBody[]) => void;
+export type RigitCollisionHandler = (collisions: {
+    source: IRigitBody;
+    target: IRigitBody;
+}[]) => void;
 export interface IGamePhysics {
     addRigitObject(ro: IRigitBody, onCollide: RigitCollisionHandler | undefined): void;
     removeRigitObject(ro: IRigitBody): void;
@@ -312,8 +673,10 @@ export interface IRealtimeClient {
 
 export interface IRigitModel {
     get size(): Vector3;
-    load(uri: string, animations: VoxelAnimationCollection | undefined): Promise<void>;
+    load(uri: string): Promise<void>;
     animate(id: string): any;
+    addAnimation(name: string): any;
+    addFrame(name: string, idx: number, duration: number): any;
     addToScene(scene: Scene): any;
     removeFromScene(scene: Scene): any;
     setPosition(pos: Vector3): void;
@@ -345,13 +708,11 @@ export interface IVM {
     start(): Promise<void>;
     stop(): void;
     onRenderFrame(): void;
-    createSprite<T extends Sprite3>(AT: {
-        new (...args: any[]): T;
-    }, uri: string, pos: Vector3, rm: IRigitModel | undefined, ac: VoxelAnimationCollection | undefined): Promise<T>;
+    createSprite(name: string, uri: string, rm: IRigitModel | undefined): Promise<Sprite3>;
     removeSprite(sprite: Sprite3): any;
     forever(func: () => Promise<void>): Promise<void>;
     readInput(): Promise<any>;
-    waitCollide(sprite: Sprite3[], timeout: number): Promise<Sprite3>;
+    waitCollide(sprite: Sprite3, timeout: number): Promise<IRigitBody | null>;
     createExplosion(pos: Vector3): void;
     sleep(ms: number): Promise<void>;
     send(msg: string): Promise<void>;
@@ -361,24 +722,27 @@ export interface IVM {
 export declare let vm: IVM;
 export declare function setVM(val: IVM): void;
 
-export declare class MapLayer {
+export declare class MeshLevelLayer {
     private size;
     private blockSize;
     private blocks;
     private _mesh;
-    private geometry;
+    private _meshDirty;
     private material;
     dirty: boolean;
+    private sliceCount;
+    private sliceZSize;
     readonly layerY: number;
-    get staticMesh(): Mesh;
-    constructor(material: MeshPhongMaterial, layerZ: number, blockSize: number);
-    load(): void;
-    fill(tile: VoxelModel): void;
+    constructor(material: MeshPhongMaterial, size: GridSize, layerY: number, blockSize: number);
     build(): void;
+    private buildSlice;
+    addToScene(scene: Scene): void;
+    removeFromScene(scene: Scene): void;
+    updateScene(scene: Scene): void;
     findBlock(point: Vector3): MapBlockCoord | undefined;
+    getBlock(xMap: number, zMap: number): MapBlockCoord | undefined;
     deleteBlock(block: MapBlockCoord): void;
     deleteBlockByCoord(x: number, z: number): void;
-    getBlock(xMap: number, zMap: number): MapBlockCoord | undefined;
     addBlock(pos: BlockPos3, block: VoxelModel): void;
 }
 
@@ -411,31 +775,33 @@ export declare class MoveController2D implements IGamePhysicsInputController, II
     private attachGamepad;
 }
 
-export declare class Sprite3 implements IRigitBody {
+export declare class Sprite3 implements IRigitBody, IDigSprite {
     private static _nextId;
     private _id;
+    private _name;
     owner: any;
     rigit: IRigitModel;
     private _inactive;
     private _speed;
     private _position;
-    collision: IRigitBody | undefined;
     get id(): number;
+    get name(): string;
     get inactive(): boolean;
     get kind(): RigitBodyKind;
     get speed(): Vector3;
     get position(): Vector3;
     get size(): Vector3;
-    constructor(pos: Vector3, size: Vector3, rigit?: IRigitModel);
-    load(uri: string, animations: VoxelAnimationCollection | undefined): Promise<void>;
-    animate(id: string): void;
+    get x(): number;
+    get y(): number;
+    get z(): number;
+    constructor(name: string, rigit?: IRigitModel);
+    load(uri: string): Promise<void>;
     addToScene(scene: Scene): void;
     removeFromScene(scene: Scene): void;
     onRender(tick: number): void;
     setPosition(pos: Vector3): void;
     setSpeed(speed: Vector3): void;
     onMove(pos: Vector3): void;
-    setCollision(obj: IRigitBody | undefined): void;
 }
 
 export declare class Ticker {
@@ -485,19 +851,20 @@ export declare class VM implements IVM {
     stop(): void;
     editLevel(): void;
     onRenderFrame(): void;
-    createSprite<T extends Sprite3>(AT: {
-        new (...args: any[]): T;
-    }, uri: string, pos: Vector3, rm?: IRigitModel | undefined, animations?: VoxelAnimationCollection | undefined): Promise<T>;
+    createSprite(name: string, uri: string, rm?: IRigitModel | undefined): Promise<Sprite3>;
     removeSprite(sprite: Sprite3): Promise<void>;
     forever(func: () => Promise<void>): Promise<void>;
     readInput(): Promise<any>;
-    waitCollide(sprites: Sprite3[], seconds: number): Promise<Sprite3>;
+    waitCollide(sprite: Sprite3, seconds: number): Promise<IRigitBody | null>;
     createExplosion(pos: Vector3): void;
     sleep(seconds: number): Promise<void>;
     send(msg: string): Promise<void>;
     onStart(func: () => Promise<void>): void;
     onMessage(func: () => Promise<void>): void;
-    onCollide(ros: IRigitBody[]): void;
+    onCollide(collections: {
+        source: IRigitBody;
+        target: IRigitBody;
+    }[]): void;
     private loadScene;
     private onXrSessionChanged;
 }
@@ -530,7 +897,6 @@ export declare class VoxelLevel implements IVoxelLevel {
     blockSizeToWorldSize(mapSize: BlockSize3): WorldSize3;
     blockPosToWorldPos(mapPos: BlockPos3): WorldCoord3;
     findBlock(point: Vector3): MapBlockCoord | undefined;
-    private deleteBlockCore;
     private deleteBlockByCoord;
     deleteBlock(block: MapBlockCoord): void;
     private addBlockCore;
@@ -574,7 +940,9 @@ export declare class Mammal4Model implements IRigitModel {
     private _size;
     private _dir;
     get size(): Vector3;
-    load(uri: string, animations: VoxelAnimationCollection | undefined): Promise<void>;
+    load(uri: string): Promise<void>;
+    addAnimation(name: string): void;
+    addFrame(name: string, idx: number, duration: number): void;
     animate(id: string): void;
     addToScene(scene: Scene): void;
     removeFromScene(scene: Scene): void;
@@ -583,9 +951,6 @@ export declare class Mammal4Model implements IRigitModel {
     setDirection(dir: Vector3): void;
     update(): void;
 }
-export declare class Mammal4 extends Sprite3 {
-    constructor(pos: Vector3, size: Vector3);
-}
 
 
 export declare class StaticCubeModel implements IRigitModel {
@@ -593,7 +958,9 @@ export declare class StaticCubeModel implements IRigitModel {
     private _size;
     private _position;
     get size(): Vector3;
-    load(uri: string, animations: VoxelAnimationCollection | undefined): Promise<void>;
+    load(uri: string): Promise<void>;
+    addAnimation(name: string): void;
+    addFrame(name: string, idx: number, duration: number): void;
     animate(id: string): void;
     addToScene(scene: Scene): void;
     removeFromScene(scene: Scene): void;
@@ -737,165 +1104,6 @@ export declare function createNumberEntry(parent: HTMLElement, text: string, val
 
 export declare function perlinNoise(perilinW: number, perilinH: number, baseX: number, baseY: number, seed: number): Uint8ClampedArray;
 
-export declare function PRNG(): any;
-
-export default class SyncEventSource<T> {
-    private callbackSym;
-    private handlers;
-    private gaps;
-    add(obj: any, func: (val: T) => void): void;
-    private invokeWorker;
-    invoke(...args: any[]): void;
-}
-
-export declare const resetColor = "\u001B[0m";
-export declare const greenText = "\u001B[1;3;32m";
-export declare const redText = "\u001B[1;3;31m";
-export declare function decorateCommand(s: string): string;
-export declare function decorateSay(s: string): string;
-
-export type PtObj = {
-    kind: string;
-};
-export type PtCall = PtObj & {
-    name: object;
-    params: object[];
-};
-export type PtSequence = PtObj & {
-    name: object;
-    expressions: object[];
-};
-export declare enum AstNodeKind {
-    Sequence = 0,
-    Func = 1,
-    Param = 2,
-    Value = 3
-}
-export declare class AstNode {
-    name: string;
-    value: any;
-    kind: AstNodeKind;
-    children: AstNode[];
-    constructor(kind: AstNodeKind, name: string, value: any);
-}
-export declare function createFuncCall(name: string, args?: any): AstNode;
-export declare function intParam(name: string, value: any): AstNode;
-export declare function stringParam(name: string, value: any): AstNode;
-export declare function formatAst(node: AstNode): string;
-
-export declare enum FuncCategory {
-    edit = 0,
-    ui = 1,
-    help = 2
-}
-export declare enum ParamType {
-    _int = 0,
-    _real = 1,
-    _string = 2,
-    _boolean = 3
-}
-export declare function paramTypeFromString(s: string): ParamType;
-export type ParamDef = {
-    name: string;
-    t: ParamType;
-    optional: boolean;
-    default?: any;
-};
-export declare class FuncDef {
-    readonly name: string;
-    readonly category: FuncCategory;
-    constructor(name: string, category: FuncCategory);
-    getParamDefs(): ParamDef[];
-    help(): string;
-    eval(ast: AstNode): string | undefined;
-    parse(parts: string[]): AstNode | string | undefined;
-    createAst<T>(x: T): AstNode;
-}
-export declare class GenericFuncDef extends FuncDef {
-    private params;
-    constructor(name: string, category: FuncCategory);
-    getParamDefs(): ParamDef[];
-    protected createParamDefs(): ParamDef[];
-    help(): string;
-    helpUsage(): string;
-    eval(ast: AstNode): string | undefined;
-    protected evalCore(params: any): string | undefined;
-    createAst<T>(x: T): AstNode;
-    private makeParam;
-}
-export declare function combineParams(a: ParamDef[], b: ParamDef[]): ParamDef[];
-export declare function buildFuncAst(ptCall: PtCall): AstNode;
-
-export declare class GenericEditorFuncDef extends GenericFuncDef {
-    mapEditorState: MapEditorState;
-    constructor(name: string, mapEditorState: MapEditorState);
-}
-export declare function createCoordinateParams(funcDef: GenericEditorFuncDef): ParamDef[];
-export type CoordinateParams = {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-};
-export declare function coordinateParamsToRect(params: CoordinateParams): {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-};
-
-export declare class BindKeyDef extends GenericEditorFuncDef {
-    static funcName: string;
-    constructor(mapEditorState: MapEditorState);
-    createParamDefs(): ParamDef[];
-    help(): string;
-    protected evalCore(params: any): string | undefined;
-}
-export declare class ShowKeyBindingsDef extends GenericEditorFuncDef {
-    static funcName: string;
-    private keyBindings;
-    constructor(mapEditorState: MapEditorState);
-    createParamDefs(): ParamDef[];
-    help(): string;
-    addKeyBinding(key: string, desc: string): void;
-    descriptKeyBindings(): string;
-    protected evalCore(params: any): string | undefined;
-}
-
-export type MapBitmap = {
-    w: number;
-    h: number;
-    data: Uint8ClampedArray;
-};
-export declare function createMapBitmap(w: number, h: number): MapBitmap;
-export declare function updateRect(rect: GridRect, xNew: number, yNew: number): GridRect;
-export type MapEditorUpdate = {
-    isEditMode?: boolean;
-    region?: GridRect;
-    scrollSize?: PxSize;
-    map?: IVoxelLevel;
-};
-export declare class MapEditorState {
-    private _isEditMode;
-    private _region?;
-    private _currentLayer?;
-    private _scrollSize;
-    private _world;
-    private eventSource;
-    get isEditMode(): boolean;
-    get currentLayer(): any | undefined;
-    get region(): GridRect | undefined;
-    get cameraSize(): PxSize | undefined;
-    get world(): any | undefined;
-    get currentTileLayer(): any | undefined;
-    static unknownLayerError: string;
-    constructor();
-    onChanged(target: any, func: (evt: MapEditorChangeEvent) => void): void;
-    update(val: MapEditorUpdate): void;
-}
-export declare let mapEditorState: MapEditorState;
-export declare function createMapEditorState(): void;
-
 export type GridPos = {
     x: number;
     y: number;
@@ -938,59 +1146,22 @@ export declare function clipRect(rect: GridRect, width: number, height: number):
 export declare function areRectEqual(r1: GridRect, r2: GridRect): boolean;
 export declare function isRectOverlap(r1: GridRect, r2: GridRect): boolean;
 
-export type PoshFunction = {
-    params: ParamDef[];
-    help: string | undefined;
-    (args: any): void;
-};
-export declare function registerFunction(name: string, args: string[], func: (args: any) => void, help?: string | undefined): void;
-export declare function getFunction(name: string): PoshFunction | undefined;
-export declare function evalFunction(ast: AstNode): string | undefined;
-export declare function printHelp(func: PoshFunction): void;
-export declare function printEditModeError(): void;
-export declare function printNoRegion(): void;
+export declare function PRNG(): any;
 
-export interface IRepl {
-    getFunc(s: string): FuncDef;
-    evalFunc<T>(name: string, x: T): string | undefined;
-    onPrint: ((s: string) => void) | undefined;
-    evalAst(ast: AstNode, noEcho?: boolean): void;
-    getVar(name: string): any | undefined;
-    setVar(name: string, value: any | undefined): void;
-    onVarChanged(target: any, func: (evt: VarChangedEvent) => void): void;
-}
-export declare class Repl implements IRepl {
-    private readonly funcDefs;
-    readonly vars: {
-        [id: string]: any;
-    };
-    onPrint: ((s: string) => void) | undefined;
-    private varChangedSource;
-    constructor();
-    addFunc(funcDef: FuncDef): void;
-    getFunc(s: string): FuncDef;
-    evalFunc<T>(name: string, x: T): string | undefined;
-    getVar(name: string): any | undefined;
-    setVar(name: string, value: any | undefined): void;
-    evalAst(ast: AstNode, noEcho?: boolean): string | undefined;
-    help(filter: string | undefined): string | undefined;
-    onVarChanged(target: any, func: (evt: VarChangedEvent) => void): void;
-    processLine(s: string): string | undefined;
-    private evalAstWorker;
-    private buildAst;
-    private buildSequenceAst;
-    private buildFuncAst;
-    private unknownCommand;
+export default class SyncEventSource<T> {
+    private callbackSym;
+    private handlers;
+    private gaps;
+    add(obj: any, func: (val: T) => void): void;
+    private invokeWorker;
+    invoke(...args: any[]): void;
 }
 
-export type LoginParams = {
-    name: string;
-};
-export declare function login(args: {
-    name: string;
-}): void;
-export declare function logout(): void;
-export declare function registerSystemCommands(): void;
+export declare const resetColor = "\u001B[0m";
+export declare const greenText = "\u001B[1;3;32m";
+export declare const redText = "\u001B[1;3;31m";
+export declare function decorateCommand(s: string): string;
+export declare function decorateSay(s: string): string;
 
 export type CameraLayerProps = UiLayerProps & {
     scale: number;
@@ -1028,8 +1199,11 @@ export declare class CameraLayer extends UiLayer2<CameraLayerProps> implements I
     render(): void;
 }
 
+export declare class CodeArea {
+    private module;
+    render(): void;
+}
 export declare class CodeEditor extends UiLayer2<CodeEditorProps> {
-    private flask;
     private onSave;
     private onCancel;
     private saveButton;
@@ -1194,6 +1368,40 @@ export declare class LevelEditor implements ILevelEditor {
     private buildSelectionBox;
 }
 
+export type MapBitmap = {
+    w: number;
+    h: number;
+    data: Uint8ClampedArray;
+};
+export declare function createMapBitmap(w: number, h: number): MapBitmap;
+export declare function updateRect(rect: GridRect, xNew: number, yNew: number): GridRect;
+export type MapEditorUpdate = {
+    isEditMode?: boolean;
+    region?: GridRect;
+    scrollSize?: PxSize;
+    map?: IVoxelLevel;
+};
+export declare class MapEditorState {
+    private _isEditMode;
+    private _region?;
+    private _currentLayer?;
+    private _scrollSize;
+    private _world;
+    private eventSource;
+    get isEditMode(): boolean;
+    get currentLayer(): any | undefined;
+    get region(): GridRect | undefined;
+    get cameraSize(): PxSize | undefined;
+    get world(): any | undefined;
+    get currentTileLayer(): any | undefined;
+    static unknownLayerError: string;
+    constructor();
+    onChanged(target: any, func: (evt: MapEditorChangeEvent) => void): void;
+    update(val: MapEditorUpdate): void;
+}
+export declare let mapEditorState: MapEditorState;
+export declare function createMapEditorState(): void;
+
 export declare class ShellProps {
     width: number;
     height: number;
@@ -1329,9 +1537,9 @@ export declare class KeyboardState {
     eventMatches(event: any, keyDesc: any): boolean;
 }
 
-export declare class MapBlockRigitBody implements IRigitBody {
+export declare class MapBlockRigitBody implements IRigitBody, IDigBlock {
     private mapBlock;
-    private pos;
+    private _pos;
     constructor(mapBlock: MapBlockCoord, pos: WorldCoord3);
     get id(): number;
     get inactive(): boolean;
@@ -1340,12 +1548,14 @@ export declare class MapBlockRigitBody implements IRigitBody {
     get speed(): Vector3;
     get position(): Vector3;
     get size(): Vector3;
+    get x(): number;
+    get y(): number;
+    get z(): number;
     get blocks(): MapBlockCoord[];
     setSpeed(speed: Vector3): void;
     onMove(pos: Vector3): void;
-    setCollision(obj: IRigitBody): void;
 }
-export declare class MapBoundaryRigitBody implements IRigitBody {
+export declare class MapBoundaryRigitBody implements IRigitBody, IDigBoundary {
     private _size;
     private _pos;
     constructor(pos: Vector3, size: Vector3);
@@ -1356,9 +1566,11 @@ export declare class MapBoundaryRigitBody implements IRigitBody {
     get speed(): Vector3;
     get position(): Vector3;
     get size(): Vector3;
+    get x(): number;
+    get y(): number;
+    get z(): number;
     setSpeed(speed: Vector3): void;
     onMove(pos: Vector3): void;
-    setCollision(obj: IRigitBody): void;
 }
 
 export declare class ParticlePool {
@@ -1556,11 +1768,7 @@ export declare class Vox {
 }
 
 export declare class VoxelGeometryWriter {
-    private triangles;
-    private total_blocks;
     dirty: boolean;
-    private positions;
-    private colors;
     private v;
     private c;
     private start_x;
@@ -1589,7 +1797,6 @@ export interface IRigitBody {
     get size(): Vector3;
     setSpeed(speed: Vector3): void;
     onMove(pos: Vector3): void;
-    setCollision(obj: IRigitBody | undefined): void;
 }
 export type VoxelAnimationFrame = {
     idx: number;
@@ -1609,10 +1816,10 @@ export declare class VoxelMeshModel {
     private currentAnimation;
     private currentAnimationFrame;
     private lastFrameTick;
-    private readonly animations;
+    readonly animations: VoxelAnimationCollection;
     get size(): Vector3;
-    static create(uri: string, animations?: VoxelAnimationCollection | undefined): Promise<VoxelMeshModel>;
-    constructor(animations: VoxelAnimationCollection | undefined);
+    static create(uri: string): Promise<VoxelMeshModel>;
+    constructor();
     private load;
     playAnimation(name: string): void;
     onRender(tick: number): void;

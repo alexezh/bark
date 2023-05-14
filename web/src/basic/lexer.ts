@@ -67,11 +67,11 @@ export class StringReader {
   }
 }
 
-export class Tokenizer {
+export class BasicLexer {
   private readonly _tokens: Token[] = [];
 
-  public static load(source: string): Tokenizer {
-    let tokenizer = new Tokenizer();
+  public static load(source: string): BasicLexer {
+    let tokenizer = new BasicLexer();
     tokenizer.loadTokens(source);
     return tokenizer;
   }
@@ -218,6 +218,8 @@ export class Tokenizer {
       case 'to': return TokenKind.To;
       case 'by': return TokenKind.By;
       case 'do': return TokenKind.Do;
+      case 'on': return TokenKind.On;
+      case 'event': return TokenKind.Event;
       case 'while': return TokenKind.While;
       case 'then': return TokenKind.Then;
       case 'else': return TokenKind.Else;
