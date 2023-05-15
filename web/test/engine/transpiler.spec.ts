@@ -38,7 +38,7 @@ function createSystemModule(): ModuleNode {
 
   funcs.push(addSystemFunc(module, 'waitCollide', ['sprite: Sprite', 'timeout: number'], 'Sprite | Block | null', true, waitCollideMock));
   funcs.push(addSystemFunc(module, 'sendMessage', ['address: string', 'text: string'], 'void', true, sendMessageMock));
-  funcs.push(addSystemFunc(module, 'min', ['v1: number', 'v2: number'], 'number', true, minMock));
+  funcs.push(addSystemFunc(module, 'min', ['v1: number', 'v2: number'], 'number', false, minMock));
 
   return module;
 }

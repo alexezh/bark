@@ -1,12 +1,12 @@
 import { expect, test } from '@jest/globals';
-import { Tokenizer } from '../../src/basic/basictokeniser';
+import { BasicLexer } from '../../src/basic/lexer';
 import { BasicParser, EndRule, EolRule } from '../../src/basic/basicparser';
 import { parseModule } from '../../src/basic/basic';
 import { AstNodeKind, ConstNode, ForNode, FuncDefNode, IfNode, ModuleNode } from '../../src/basic/ast';
 
 function loadModule(text: string): ModuleNode {
   try {
-    let tokenize = Tokenizer.load(text);
+    let tokenize = BasicLexer.load(text);
     let parser = new BasicParser(tokenize);
     let ast = parseModule(parser);
     return ast;
@@ -23,8 +23,8 @@ begin
   var x := 3
   print \"hello world\" + x
 end`);
-  expect(ast.children.length).toBe(1);
-  let func = ast.children[0] as FuncDefNode;
+  expect(ast.procs.length).toBe(1);
+  let func = ast.procs[0] as FuncDefNode;
   expect(func.name.value).toBe('foo');
   if (!(func.body instanceof Function)) {
     expect(func.body.statements.length).toBe(2);
@@ -39,7 +39,7 @@ begin
     print \"hello world\" + x
   end
 end`);
-  let func = ast.children[0] as FuncDefNode;
+  let func = ast.procs[0] as FuncDefNode;
   if (!(func.body instanceof Function)) {
     let fr = func.body.statements[0] as ForNode;
 
@@ -57,7 +57,7 @@ begin
     print \"hello world\" + x
   end
 end`);
-  let func = ast.children[0] as FuncDefNode;
+  let func = ast.procs[0] as FuncDefNode;
   if (!(func.body instanceof Function)) {
     let fr = func.body.statements[0] as ForNode;
 
@@ -82,7 +82,7 @@ begin
   end
   return z;
 end`);
-  let func = ast.children[0] as FuncDefNode;
+  let func = ast.procs[0] as FuncDefNode;
   if (!(func.body instanceof Function)) {
     let if1 = func.body.statements[3] as IfNode;
 
@@ -102,7 +102,7 @@ test("calls", () => {
     setSpeed bomb x:=0 y:=-speed z:=0
   end
 `);
-  let func = ast.children[0] as FuncDefNode;
+  let func = ast.procs[0] as FuncDefNode;
   if (!(func.body instanceof Function)) {
     expect(func.body.statements.length).toBe(4);
   }

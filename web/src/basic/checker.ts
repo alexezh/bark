@@ -49,7 +49,11 @@ export function validateModule(module: ModuleNode, loader: ICodeLoader | undefin
 
   if (loader) {
     for (let proc of loader.functions()) {
-      ctx.funcDefs.set(proc.module.name + '.' + proc.name.value, proc);
+      if (proc.module.name === undefined) {
+        ctx.funcDefs.set(proc.name.value, proc);
+      } else {
+        ctx.funcDefs.set(proc.module.name + '.' + proc.name.value, proc);
+      }
     };
   } else {
     // first fill in method defs
