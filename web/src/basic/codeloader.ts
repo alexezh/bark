@@ -25,11 +25,15 @@ export class CodeLoader implements ICodeLoader {
     this.modules.set(name, module);
   }
 
-  public addUserModule(name: string, text: string) {
-    let tokenize = BasicLexer.load(text);
-    let parser = new BasicParser(tokenize);
-    let ast = parseModule(parser);
-    this._userModules.set(name, ast);
+  public addUserModule(name: string, text: string | ModuleNode) {
+    if (typeof (text) === 'string') {
+      let tokenize = BasicLexer.load(text);
+      let parser = new BasicParser(tokenize);
+      let ast = parseModule(parser);
+      this._userModules.set(name, ast);
+    } else {
+      this._userModules.set(name, text);
+    }
   }
 
   public *systemModules(): Iterable<ModuleNode> {
@@ -41,7 +45,7 @@ export class CodeLoader implements ICodeLoader {
   public *userFunctions(): Iterable<FuncDefNode> {
     for (let m of this._userModules) {
       for (let node of m[1].procs) {
-        yield node[1];
+        yield node as FuncDefNode;
       }
     }
   }
@@ -49,12 +53,12 @@ export class CodeLoader implements ICodeLoader {
   public *functions(): Iterable<FuncDefNode> {
     for (let m of this._systemModules) {
       for (let node of m[1].procs) {
-        yield node[1];
+        yield node as FuncDefNode;
       }
     }
     for (let m of this._userModules) {
       for (let node of m[1].procs) {
-        yield node[1];
+        yield node as FuncDefNode;
       }
     }
   }
@@ -62,7 +66,7 @@ export class CodeLoader implements ICodeLoader {
   public *userOns(): Iterable<OnNode> {
     for (let m of this._userModules) {
       for (let node of m[1].on) {
-        yield node[1];
+        yield node as OnNode;
       }
     }
   }

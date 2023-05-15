@@ -18,7 +18,7 @@ export interface IInputController {
 }
 
 export interface ICodeLoader {
-  addUserModule(name: string, text: string);
+  addUserModule(name: string, text: string | ModuleNode);
   addSystemModule(name: string, module: ModuleNode);
 
   systemModules(): Iterable<ModuleNode>;

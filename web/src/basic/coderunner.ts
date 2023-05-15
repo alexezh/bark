@@ -1,4 +1,4 @@
-import { IVMCodeRunner } from "../engine/ivm";
+import { ICodeLoader, IVMCodeRunner } from "../engine/ivm";
 import { ModuleNode } from "./ast";
 
 export type MessageHandler = (msg: any) => Promise<void>;
@@ -18,10 +18,15 @@ export class CodeRunner implements IVMCodeRunner {
   // so it is safe to enumerate even if handler changes it
   private _messageHandlers: Map<string, MessageHandler[]> = new Map<string, MessageHandler[]>;
 
-  public async load(): Promise<void> {
-    // invoke game root function
-    // it will register handlers which we invoke next
-    //create();
+  public async load(loader: ICodeLoader | Function): Promise<void> {
+    if (loader instanceof Function) {
+      loader(this);
+    } else {
+      let js = loader.getFunction();
+
+      // invoke game root function
+      js(this);
+    }
 
     // first tell game to load
     for (let h of this._loadHandlers) {
@@ -64,7 +69,7 @@ export class CodeRunner implements IVMCodeRunner {
     this._startHandlers.push(func);
   }
 
-  public async invokeOnStart(): Promise<void> {
+  public async start(): Promise<void> {
     // first tell game to load
     for (let h of this._startHandlers) {
       await h();

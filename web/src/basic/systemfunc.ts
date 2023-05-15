@@ -1,4 +1,4 @@
-import { AstNodeKind, FieldDef, FuncDefNode, ParamDefNode, TypeDefNode } from "./ast";
+import { AstNodeKind, FieldDef, FuncDefNode, ModuleNode, ParamDefNode, TypeDefNode } from "./ast";
 import { Token, TokenKind } from "./token";
 
 function typeNameToTokenKind(name: string): TokenKind {
@@ -31,7 +31,7 @@ export function addSystemType(digName: string, systemName: string, fields: strin
   }
 }
 
-export function addSystemFunc(name: string, params: string[], rval: string, isAsync: boolean, impl: Function): FuncDefNode {
+export function addSystemFunc(module: ModuleNode, name: string, params: string[], rval: string, isAsync: boolean, impl: Function): FuncDefNode {
   let paramDefs: ParamDefNode[] = [];
   for (let param of params) {
     let parts = param.split(':');
@@ -49,6 +49,7 @@ export function addSystemFunc(name: string, params: string[], rval: string, isAs
 
   return {
     kind: AstNodeKind.funcDef,
+    module: module,
     name: new Token(TokenKind.Id, name, 0),
     params: paramDefs,
     returnType: returnType,

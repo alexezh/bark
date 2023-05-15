@@ -9,28 +9,33 @@ import { Token, TokenKind } from "./token";
  */
 
 export function transpile(mainFunction: string | undefined, loader: ICodeLoader): Function {
-  let writer: JsWriter = new JsWriter();
+  try {
+    let writer: JsWriter = new JsWriter();
 
-  // wrap to unnamed function which calls main
-  for (let module of loader.systemModules()) {
-    writer.append(`let ${module[0]} = __loader.getModule(\'${module[0]}\');`);
+    // wrap to unnamed function which calls main
+    for (let module of loader.systemModules()) {
+      writer.append(`let ${module.name} = __loader.getModule(\'${module.name}\');`);
+    }
+
+    for (let n of loader.userOns()) {
+      processOn(n, writer);
+    }
+
+    // write function body
+    for (let n of loader.userFunctions()) {
+      processNode(n, writer);
+    }
+
+    if (mainFunction !== undefined) {
+      writer.append(`return ${mainFunction}();`)
+    }
+
+    let jsText = writer.toString();
+    return new Function('__loader', jsText);
   }
-
-  for (let n of loader.userOns()) {
-    processOn(n, writer);
+  catch (e) {
+    throw e;
   }
-
-  // write function body
-  for (let n of loader.userFunctions()) {
-    processNode(n, writer);
-  }
-
-  if (mainFunction !== undefined) {
-    writer.append(`return ${mainFunction}();`)
-  }
-
-  let jsText = writer.toString();
-  return new Function('__loader', jsText);
 }
 
 function processNode(ast: AstNode, writer: JsWriter) {
@@ -189,7 +194,7 @@ function processCall(ast: CallNode, writer: JsWriter) {
 
 function processOn(ast: OnNode, writer: JsWriter) {
 
-  writer.append('vm.onStart(() => {')
+  writer.append('Vm.onStart(() => {')
 
   processBlock(ast.body, writer);
   //vm.onStart(moveMonkey.bind(this));

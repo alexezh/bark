@@ -19,7 +19,9 @@ import { LevelEditor } from "../ui/leveleditor";
 import { boxedGame } from "../python";
 import { WireProjectConfig, wireGetObject } from "../lib/fetchadapter";
 import { modelCache } from "../voxel/voxelmodelcache";
-import { CodeLoader, MessageHandler } from "../basic/modulecache";
+import { MessageHandler } from "../basic/coderunner";
+import { CodeLoader } from "../basic/codeloader";
+import { CodeRunner } from "../basic/coderunner";
 
 type CollisionWaiter = {
   // if resolve is undefined, there is no waiter
@@ -40,6 +42,7 @@ export class VM implements IVM {
   private _camera?: ICamera;
   private readonly _createDefaultProject: () => Promise<void>;
   private readonly _sprites: Map<number, Sprite3> = new Map<number, Sprite3>();
+  private readonly _runner: CodeRunner = new CodeRunner();
   private readonly _loader: CodeLoader = new CodeLoader();
 
   /**
@@ -123,7 +126,7 @@ export class VM implements IVM {
     console.log('VM: start');
     this.resetVm();
 
-    this._loader.load(boxedGame);
+    this._runner.load(boxedGame);
 
     // now we are loaded; time to start
     // once we start camera and input, we start game handlers
@@ -135,14 +138,14 @@ export class VM implements IVM {
     animator.start(this._ticker);
     this._running = true;
 
-    this._loader.invokeOnStart();
+    this._runner.start();
   }
 
   private resetVm() {
     this.levelEditor?.dispose();
     this.levelEditor = undefined;
     this.camera.setEditor(undefined);
-    this._loader.reset();
+    this._runner.reset();
   }
 
   public stop() {
@@ -154,19 +157,19 @@ export class VM implements IVM {
   }
 
   public async sendMesssage(address: string, msg: any): Promise<void> {
-    this._loader.sendMesssage(address, msg);
+    this._runner.sendMesssage(address, msg);
   }
 
   public onMessage(address: string, func: MessageHandler) {
-    this._loader.onMessage(address, func);
+    this._runner.onMessage(address, func);
   }
 
   public onLoad(func: () => Promise<void>) {
-    this._loader.onLoad(func);
+    this._runner.onLoad(func);
   }
 
   public onStart(func: () => Promise<void>) {
-    this._loader.onStart(func);
+    this._runner.onStart(func);
   }
 
   public editLevel(): void {

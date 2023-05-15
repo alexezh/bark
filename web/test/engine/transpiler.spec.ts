@@ -3,23 +3,63 @@ import { BasicLexer } from '../../src/basic/lexer';
 import { BasicParser, EolRule } from '../../src/basic/basicparser';
 import { parseModule } from '../../src/basic/basic';
 import { ParseError } from '../../src/basic/parseerror';
-import { ModuleCache } from '../../src/basic/modulecache';
-import { createAllModules } from '../../src/basic/lib/all';
 import { validateModule } from '../../src/basic/checker';
 import { transpile } from '../../src/basic/basictranspiler';
-import { setVM, vm } from '../../src/engine/ivm';
-import { GameLoader as CodeLoader } from '../../src/engine/vm';
+import { ICodeLoader, setVM, vm } from '../../src/engine/ivm';
+import { CodeLoader } from '../../src/basic/codeloader';
+import { CodeRunner } from '../../src/basic/coderunner';
+import { AstNodeKind, FuncDefNode, ModuleNode, TypeDefNode } from '../../src/basic/ast';
+import { addSystemFunc } from '../../src/basic/systemfunc';
 
 
-function runProg(text: string, moduleCache: ModuleCache | undefined = undefined): any {
+async function waitCollideMock(): Promise<number> {
+  return 42;
+}
+
+function sendMessageMock(address: string, msg: any) {
+  vm.sendMesssage(address, msg);
+}
+
+function minMock(v1: number, v2: number): number {
+  return (v1 > v2) ? v2 : v1;
+}
+
+function createSystemModule(): ModuleNode {
+  let funcs: FuncDefNode[] = [];
+  let types: TypeDefNode[] = [];
+
+  let module: ModuleNode = {
+    kind: AstNodeKind.module,
+    name: 'System',
+    types: types,
+    procs: funcs,
+    on: []
+  }
+
+  funcs.push(addSystemFunc(module, 'waitCollide', ['sprite: Sprite', 'timeout: number'], 'Sprite | Block | null', true, waitCollideMock));
+  funcs.push(addSystemFunc(module, 'sendMessage', ['address: string', 'text: string'], 'void', true, sendMessageMock));
+  funcs.push(addSystemFunc(module, 'min', ['v1: number', 'v2: number'], 'number', true, minMock));
+
+  return module;
+}
+
+function runProg(text: string, loader: ICodeLoader | undefined = undefined): any {
   try {
+    if (loader === undefined) {
+      loader = new CodeLoader();
+    }
+    loader.addSystemModule('System', createSystemModule());
+
+    let runner = new CodeRunner();
+
     let tokenize = BasicLexer.load(text);
     let parser = new BasicParser(tokenize);
     let ast = parseModule(parser);
-    validateModule(ast, moduleCache);
-    let js = transpile(ast, 'foo', moduleCache);
+    loader.addUserModule('default', ast);
+    validateModule(ast, loader);
+    let js = transpile('foo', loader);
 
-    let val = js(moduleCache);
+    let val = js(loader);
     return val;
   }
   catch (e) {
@@ -32,19 +72,27 @@ function runProg(text: string, moduleCache: ModuleCache | undefined = undefined)
   }
 }
 
-function runVm(text: string, moduleCache: ModuleCache | undefined = undefined) {
+async function runVm(text: string, address: string) {
   try {
+    let runner = new CodeRunner();
+    let loader = new CodeLoader();
+    loader.addSystemModule('System', createSystemModule());
+
     // game loader has similar API as VM; use them directly
-    setVM(new CodeLoader() as any);
+    setVM(runner as any);
 
-    let tokenize = BasicLexer.load(text);
-    let parser = new BasicParser(tokenize);
-    let ast = parseModule(parser);
-    validateModule(ast, moduleCache);
-    let js = transpile(ast, undefined, moduleCache);
+    let promise = new Promise((resolve) => {
+      vm.onMessage(address, async (msg: any) => {
+        resolve(msg);
+      });
+    });
 
-    js(moduleCache);
-    vm.lox``
+    loader.addUserModule('default', text);
+    await runner.load(loader);
+
+    await runner.start();
+
+    return await promise;
   }
   catch (e) {
     if (e instanceof ParseError) {
@@ -119,7 +167,6 @@ test('multipleparams', () => {
 });
 
 test('nestedcalls', () => {
-  let cache = createAllModules();
   let res = runProg(`
 
   proc bar(val: number, val2: number): number
@@ -129,9 +176,9 @@ test('nestedcalls', () => {
 
   proc foo(val: number): number
   begin
-    return bar Math.min(1, 2) 10
+    return bar System.min(1, 2) 10
   end
-`, cache)
+`)
   expect(res).toBe(11);
 });
 
@@ -152,41 +199,32 @@ test('namedargs', () => {
 });
 
 test('systemcalls', () => {
-  let cache = createAllModules();
   let res = runProg(`
 
   proc foo(): Sprite
   begin
-    Vm.createSprite 'test'
+    System.createSprite 'test'
     return 42;
   end
-`, cache);
+`);
   expect(res).toBe(42);
 });
 
 test('asynccall', async () => {
-  let cache = createAllModules();
   let res = runProg(`
 
   proc foo(): Sprite
   begin
-    Vm.waitCollide 'test'
+    System.waitCollide 'test'
     return 42;
   end
-`, cache);
+`);
   expect(res instanceof Promise).toBe(true);
   expect(await res).toBe(42);
 });
 
 test("events", async () => {
-  let cache = createAllModules();
-  let promise = new Promise((resolve) => {
-    vm.onMessage("hello", async (msg: any) => {
-      resolve(msg);
-    });
-  });
-
-  runVm(`
+  let res = runVm(`
 
   var x: number := 3;
   
@@ -195,12 +233,11 @@ test("events", async () => {
   end
 
   on start() begin
-    vm.send("hello", x);
+    System.sendMessage("hello", x);
   end
-);`, cache);
+);`, "hello");
 
-  let msg = await promise;
-  expect(msg).toBe(4);
+  expect(res).toBe(4);
 });
 
 test("bomb", () => {
@@ -259,3 +296,4 @@ test("bomb", () => {
 
   expect(res).toBe(11);
 })
+

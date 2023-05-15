@@ -81,32 +81,34 @@ export function createSystemModule(): ModuleNode {
   let funcs: FuncDefNode[] = [];
   let types: TypeDefNode[] = [];
 
-  funcs.push(addSystemFunc('waitCollide', ['sprite: Sprite', 'timeout: number'], 'Sprite | Block | null', true, waitCollide));
-  funcs.push(addSystemFunc('sendMessage', ['address: string', 'text: string'], 'void', true, sendMessage));
-
-  funcs.push(addSystemFunc('setMoveController2D', [
-    'keySpeedX:number',
-    'keySpeedZ:number',
-    'thumbSpeedX:number',
-    'thumbSpeedZ:number',
-    'timeoutSeconds:number'], 'void', false, setMoveController2D));
-  funcs.push(addSystemFunc('createCubeSprite', ['name:string', 'url:string'], 'Sprite', false, createCubeSprite));
-  funcs.push(addSystemFunc('removeSprite', ['sprite:Sprite'], 'void', false, removeSprite));
-  funcs.push(addSystemFunc('loadLevel', ['name:string'], 'void', false, loadLevel));
-  funcs.push(addSystemFunc('deleteBlock', ['block:block'], 'void', false, deleteBlock));
-  funcs.push(addSystemFunc('createExplosion', ['x: number', 'y: number', 'z: number'], 'void', false, createExplosion));
-
-  types.push(addSystemType('Sprite', 'Sprite3', ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
-  types.push(addSystemType('Block', 'MapBlockRigitBody', ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
-  types.push(addSystemType('Boundary', 'MapBoundaryRigitBody', ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
-
-  return {
+  let module: ModuleNode = {
     kind: AstNodeKind.module,
     name: 'System',
     types: types,
     procs: funcs,
     on: []
   }
+
+  funcs.push(addSystemFunc(module, 'waitCollide', ['sprite: Sprite', 'timeout: number'], 'Sprite | Block | null', true, waitCollide));
+  funcs.push(addSystemFunc(module, 'sendMessage', ['address: string', 'text: string'], 'void', true, sendMessage));
+
+  funcs.push(addSystemFunc(module, 'setMoveController2D', [
+    'keySpeedX:number',
+    'keySpeedZ:number',
+    'thumbSpeedX:number',
+    'thumbSpeedZ:number',
+    'timeoutSeconds:number'], 'void', false, setMoveController2D));
+  funcs.push(addSystemFunc(module, 'createCubeSprite', ['name:string', 'url:string'], 'Sprite', false, createCubeSprite));
+  funcs.push(addSystemFunc(module, 'removeSprite', ['sprite:Sprite'], 'void', false, removeSprite));
+  funcs.push(addSystemFunc(module, 'loadLevel', ['name:string'], 'void', false, loadLevel));
+  funcs.push(addSystemFunc(module, 'deleteBlock', ['block:block'], 'void', false, deleteBlock));
+  funcs.push(addSystemFunc(module, 'createExplosion', ['x: number', 'y: number', 'z: number'], 'void', false, createExplosion));
+
+  types.push(addSystemType('Sprite', 'Sprite3', ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
+  types.push(addSystemType('Block', 'MapBlockRigitBody', ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
+  types.push(addSystemType('Boundary', 'MapBoundaryRigitBody', ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
+
+  return module;
 }
 
 type DigAnimation = {
@@ -130,16 +132,18 @@ export function createSpriteModule(): ModuleNode {
   let funcs: FuncDefNode[] = [];
   let types: TypeDefNode[] = [];
 
-  funcs.push(addSystemFunc('addAnimation', ['sprite: Sprite', 'name: string'], 'Animation', false, addAnimation));
-  funcs.push(addSystemFunc('addFrame', ['animation: Animation', 'index: number', "duration: number"], 'void', false, addFrame));
-
-  types.push(addSystemType('Animation', 'DigAnimation', ['name: string']));
-
-  return {
+  let module: ModuleNode = {
     kind: AstNodeKind.module,
     name: 'Sprite',
     types: types,
     procs: funcs,
     on: []
-  }
+  };
+
+  funcs.push(addSystemFunc(module, 'addAnimation', ['sprite: Sprite', 'name: string'], 'Animation', false, addAnimation));
+  funcs.push(addSystemFunc(module, 'addFrame', ['animation: Animation', 'index: number', "duration: number"], 'void', false, addFrame));
+
+  types.push(addSystemType('Animation', 'DigAnimation', ['name: string']));
+
+  return module;
 }
