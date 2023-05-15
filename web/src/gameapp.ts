@@ -2,7 +2,6 @@ import { Shell } from "./ui/shell";
 import { setShell, shell } from "./ui/igameshell";
 import { createVM } from "./engine/vm";
 import { vm } from "./engine/ivm";
-import { BoxedGame } from "./python";
 import { setSessionId, wireGetUserString } from "./lib/fetchadapter";
 import { createDefaultProject } from "./actions/createprojectaction";
 

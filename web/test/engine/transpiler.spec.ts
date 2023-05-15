@@ -2,11 +2,13 @@ import { expect, test } from '@jest/globals';
 import { BasicLexer } from '../../src/basic/lexer';
 import { BasicParser, EolRule } from '../../src/basic/basicparser';
 import { parseModule } from '../../src/basic/basic';
-import { Transpiler } from '../../src/basic/basictranspiler';
 import { ParseError } from '../../src/basic/parseerror';
 import { ModuleCache } from '../../src/basic/modulecache';
-import { createSystemModules } from '../../src/basic/lib/systemdef';
+import { createAllModules } from '../../src/basic/lib/all';
 import { validateModule } from '../../src/basic/checker';
+import { transpile } from '../../src/basic/basictranspiler';
+import { setVM, vm } from '../../src/engine/ivm';
+import { GameLoader as CodeLoader } from '../../src/engine/vm';
 
 
 function runProg(text: string, moduleCache: ModuleCache | undefined = undefined): any {
@@ -14,12 +16,35 @@ function runProg(text: string, moduleCache: ModuleCache | undefined = undefined)
     let tokenize = BasicLexer.load(text);
     let parser = new BasicParser(tokenize);
     let ast = parseModule(parser);
-    let trans = new Transpiler();
     validateModule(ast, moduleCache);
-    let js = trans.load(ast, 'foo', moduleCache);
+    let js = transpile(ast, 'foo', moduleCache);
 
     let val = js(moduleCache);
     return val;
+  }
+  catch (e) {
+    if (e instanceof ParseError) {
+      console.log(e.msg);
+    } else {
+      console.log(e);
+    }
+    throw e;
+  }
+}
+
+function runVm(text: string, moduleCache: ModuleCache | undefined = undefined) {
+  try {
+    // game loader has similar API as VM; use them directly
+    setVM(new CodeLoader() as any);
+
+    let tokenize = BasicLexer.load(text);
+    let parser = new BasicParser(tokenize);
+    let ast = parseModule(parser);
+    validateModule(ast, moduleCache);
+    let js = transpile(ast, undefined, moduleCache);
+
+    js(moduleCache);
+    vm.lox``
   }
   catch (e) {
     if (e instanceof ParseError) {
@@ -94,7 +119,7 @@ test('multipleparams', () => {
 });
 
 test('nestedcalls', () => {
-  let cache = createSystemModules();
+  let cache = createAllModules();
   let res = runProg(`
 
   proc bar(val: number, val2: number): number
@@ -127,7 +152,7 @@ test('namedargs', () => {
 });
 
 test('systemcalls', () => {
-  let cache = createSystemModules();
+  let cache = createAllModules();
   let res = runProg(`
 
   proc foo(): Sprite
@@ -140,7 +165,7 @@ test('systemcalls', () => {
 });
 
 test('asynccall', async () => {
-  let cache = createSystemModules();
+  let cache = createAllModules();
   let res = runProg(`
 
   proc foo(): Sprite
@@ -153,8 +178,15 @@ test('asynccall', async () => {
   expect(await res).toBe(42);
 });
 
-test("events", () => {
-  let res = runProg(`
+test("events", async () => {
+  let cache = createAllModules();
+  let promise = new Promise((resolve) => {
+    vm.onMessage("hello", async (msg: any) => {
+      resolve(msg);
+    });
+  });
+
+  runVm(`
 
   var x: number := 3;
   
@@ -162,12 +194,14 @@ test("events", () => {
     x := 4;
   end
 
-  proc foo() begin
-    
+  on start() begin
+    vm.send("hello", x);
   end
-);`)
-  expect(res).toBe(11);
-})
+);`, cache);
+
+  let msg = await promise;
+  expect(msg).toBe(4);
+});
 
 test("bomb", () => {
   let res = runProg(`

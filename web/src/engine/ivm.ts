@@ -1,12 +1,13 @@
-import { Clock, Vector3 } from "three";
+import { Vector3 } from "three";
 import { ICamera } from "./icamera";
 import { IGamePhysics } from "./igamephysics";
 import { Sprite3 } from "./sprite3";
 import { IRigitBody, VoxelAnimationCollection } from "../voxel/voxelmeshmodel";
-import { IDigGame as IDigProject } from "./idiggame";
 import { FrameClock } from "./clock";
 import { IRigitModel } from "./irigitmodel";
 import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
+import { FuncDefNode, ModuleNode, OnNode } from "../basic/ast";
+import { JsWriter } from "../basic/jswriter";
 
 export interface IInputController {
   start();
@@ -16,7 +17,27 @@ export interface IInputController {
   readInput<T>(): Promise<T>;
 }
 
-export interface IVM {
+export interface ICodeLoader {
+  addUserModule(name: string, text: string);
+  addSystemModule(name: string, module: ModuleNode);
+
+  systemModules(): Iterable<ModuleNode>;
+  userFunctions(): Iterable<FuncDefNode>;
+  functions(): Iterable<FuncDefNode>;
+  userOns(): Iterable<OnNode>;
+  imports(): Iterable<ModuleNode>;
+
+  getFunction(): Function;
+}
+
+export interface IVMCodeRunner {
+  sendMesssage(address: string, msg: any): Promise<void>;
+  onLoad(func: () => Promise<void>);
+  onStart(func: () => Promise<void>);
+  onMessage(address: string, func: (msg: any) => Promise<void>);
+}
+
+export interface IVM extends IVMCodeRunner {
   get level(): IVoxelLevel;
   get physics(): IGamePhysics;
   get canvas(): HTMLElement;
@@ -33,7 +54,7 @@ export interface IVM {
    * returns pointer to game object which then performs final initialization
    * in IDigGame.init
    */
-  loadProject(id: string): Promise<IDigProject>;
+  loadProject(id: string): Promise<void>;
 
   /**
    * load default level of the game or specific level
@@ -76,9 +97,6 @@ export interface IVM {
   createExplosion(pos: Vector3): void;
 
   sleep(ms: number): Promise<void>;
-  send(msg: string): Promise<void>;
-  onStart(func: () => Promise<void>);
-  onMessage(func: () => Promise<void>);
 }
 
 export let vm!: IVM;

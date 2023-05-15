@@ -1,6 +1,6 @@
+import { ICodeLoader } from "../engine/ivm";
 import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ConstNode, ExpressionNode, ForEachNode, ForNode, FuncDefNode, IdNode, IfNode, ModuleNode, OnNode, OpNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast";
 import { JsWriter } from "./jswriter";
-import { ModuleCache } from "./modulecache";
 import { ParseError, ParseErrorCode } from "./parseerror";
 import { Token, TokenKind } from "./token";
 
@@ -8,17 +8,26 @@ import { Token, TokenKind } from "./token";
  * generates Js function from ast
  */
 
-export function transpile(ast: ModuleNode, mainFunction: string, moduleCache: ModuleCache | undefined = undefined): Function {
+export function transpile(mainFunction: string | undefined, loader: ICodeLoader): Function {
   let writer: JsWriter = new JsWriter();
 
   // wrap to unnamed function which calls main
-  if (moduleCache !== undefined) {
-    moduleCache.writeModuleVars('__loader', writer);
+  for (let module of loader.systemModules()) {
+    writer.append(`let ${module[0]} = __loader.getModule(\'${module[0]}\');`);
   }
 
-  processModule(ast as ModuleNode, writer);
+  for (let n of loader.userOns()) {
+    processOn(n, writer);
+  }
 
-  writer.append(`return ${mainFunction}();`)
+  // write function body
+  for (let n of loader.userFunctions()) {
+    processNode(n, writer);
+  }
+
+  if (mainFunction !== undefined) {
+    writer.append(`return ${mainFunction}();`)
+  }
 
   let jsText = writer.toString();
   return new Function('__loader', jsText);
@@ -59,17 +68,8 @@ function processNode(ast: AstNode, writer: JsWriter) {
     case AstNodeKind.call:
       processCall(ast as CallNode, writer);
       break;
-    case AstNodeKind.on:
-      processOn(ast as OnNode, writer);
-      break;
     default:
       throw new ParseError(ParseErrorCode.NotImpl, undefined, 'Not implemented');
-  }
-}
-
-function processModule(ast: ModuleNode, writer: JsWriter) {
-  for (let n of ast.children) {
-    processNode(n, writer);
   }
 }
 
@@ -187,13 +187,14 @@ function processCall(ast: CallNode, writer: JsWriter) {
   writer.append(tokens.join(''));
 }
 
-function processOn(ast: CallNode, writer: JsWriter) {
+function processOn(ast: OnNode, writer: JsWriter) {
 
+  writer.append('vm.onStart(() => {')
+
+  processBlock(ast.body, writer);
   //vm.onStart(moveMonkey.bind(this));
 
-  let tokens: string[] = [];
-  convertCall(ast, tokens, writer);
-  writer.append(tokens.join(''));
+  writer.append('});')
 }
 
 function convertCall(ast: CallNode, tokens: string[], writer: JsWriter): void {

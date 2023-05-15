@@ -1,5 +1,5 @@
+import { ICodeLoader } from "../engine/ivm";
 import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForEachNode, ForNode, FuncDefNode, IfNode, ModuleNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast"
-import { ModuleCache } from "./modulecache";
 import { ParseError, ParseErrorCode } from "./parseerror";
 
 class ValidationContext {
@@ -44,29 +44,24 @@ function getRootContext(ctx: ValidationContext): ValidationContext {
   throw 'Invalid chain';
 }
 
-export function validateModule(ast: ModuleNode, cache: ModuleCache | undefined) {
-  let ctx = new ValidationContext(ast, undefined);
+export function validateModule(module: ModuleNode, loader: ICodeLoader | undefined) {
+  let ctx = new ValidationContext(module, undefined);
 
-  if (cache) {
-    cache.forEachAstModule((module: ModuleNode) => {
-      for (let node of module.children) {
-        if (node.kind === AstNodeKind.funcDef) {
-          let fd = node as FuncDefNode;
-          ctx.funcDefs.set(module.name + '.' + fd.name.value, fd);
-        }
+  if (loader) {
+    for (let proc of loader.functions()) {
+      ctx.funcDefs.set(proc.module.name + '.' + proc.name.value, proc);
+    };
+  } else {
+    // first fill in method defs
+    for (let node of module.procs) {
+      if (node.kind === AstNodeKind.funcDef) {
+        let fd = node as FuncDefNode;
+        ctx.funcDefs.set(fd.name.value, fd);
       }
-    });
-  }
-
-  // first fill in method defs
-  for (let node of ast.children) {
-    if (node.kind === AstNodeKind.funcDef) {
-      let fd = node as FuncDefNode;
-      ctx.funcDefs.set(fd.name.value, fd);
     }
   }
 
-  for (let node of ast.children) {
+  for (let node of module.procs) {
     validateNode(ctx, node);
   }
 }

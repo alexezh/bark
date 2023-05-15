@@ -16,12 +16,10 @@ import { ParticlePool } from "../voxel/particles";
 import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
 import { VoxelLevelFile } from "./voxellevelfile";
 import { LevelEditor } from "../ui/leveleditor";
-import { BoxedGame } from "../python";
+import { boxedGame } from "../python";
 import { WireProjectConfig, wireGetObject } from "../lib/fetchadapter";
 import { modelCache } from "../voxel/voxelmodelcache";
-
-export type MessageHandler = (msg: string) => Promise<void>;
-export type StartHandler = () => Promise<void>;
+import { CodeLoader, MessageHandler } from "../basic/modulecache";
 
 type CollisionWaiter = {
   // if resolve is undefined, there is no waiter
@@ -31,6 +29,7 @@ type CollisionWaiter = {
   targets: IRigitBody[];
 }
 
+
 export class VM implements IVM {
   private _running: boolean = false;
   private _ticker!: Ticker;
@@ -39,9 +38,10 @@ export class VM implements IVM {
   private _level?: IVoxelLevel;
   private _levelFile?: IVoxelLevelFile;
   private _camera?: ICamera;
-  private _game?: IDigGame;
   private readonly _createDefaultProject: () => Promise<void>;
   private readonly _sprites: Map<number, Sprite3> = new Map<number, Sprite3>();
+  private readonly _loader: CodeLoader = new CodeLoader();
+
   /**
    * maps sprite waiting for collision to waiters
    */
@@ -51,12 +51,8 @@ export class VM implements IVM {
   private levelEditor: LevelEditor | undefined = undefined;
 
   private readonly onLevelLoaded: AsyncEventSource<boolean> = new AsyncEventSource();
-  private readonly _startHandlers: StartHandler[] = [];
   public particles!: ParticlePool;
 
-  // we are going to copy/write of handler array
-  // so it is safe to enumerate even if handler changes it
-  private _messageHandlers: Map<string, MessageHandler[]> = new Map<string, MessageHandler[]>;
   //private _sprites: Map
 
   public get physics(): IGamePhysics { return this._physics; }
@@ -94,7 +90,7 @@ export class VM implements IVM {
     return controller;
   }
 
-  public async loadProject(id: string): Promise<IDigGame> {
+  public async loadProject(id: string): Promise<void> {
 
     let projectConfig = await wireGetObject<WireProjectConfig>('config');
     if (projectConfig === undefined) {
@@ -102,12 +98,6 @@ export class VM implements IVM {
     }
 
     await modelCache.load();
-
-    // for now create BoxedGame (as code) but use different projectId
-    let game = new BoxedGame();
-    await game.init();
-    this._game = game;
-    return game;
   }
 
   public async loadLevel(id: string): Promise<void> {
@@ -125,41 +115,58 @@ export class VM implements IVM {
   }
 
   public async start(): Promise<void> {
-    if (this._game === undefined) {
-      throw new Error('game is not loaded');
-    }
-
     if (this._running) {
       console.log('VM: already running');
       return;
     }
 
     console.log('VM: start');
-    this.levelEditor?.dispose();
-    this.levelEditor = undefined;
-    this.camera.setEditor(undefined);
+    this.resetVm();
 
+    this._loader.load(boxedGame);
+
+    // now we are loaded; time to start
+    // once we start camera and input, we start game handlers
     this.inputController?.start();
     this.camera.canvas.focus();
     this.clock.start();
-    this._game.start();
 
     this._ticker = new Ticker();
     animator.start(this._ticker);
     this._running = true;
 
-    for (let h of this._startHandlers) {
-      await h();
-    }
+    this._loader.invokeOnStart();
+  }
+
+  private resetVm() {
+    this.levelEditor?.dispose();
+    this.levelEditor = undefined;
+    this.camera.setEditor(undefined);
+    this._loader.reset();
   }
 
   public stop() {
     console.log('VM: stop');
     animator.stop();
     this.inputController?.stop();
-    this._game!.stop();
     this.clock.stop();
     this._running = false;
+  }
+
+  public async sendMesssage(address: string, msg: any): Promise<void> {
+    this._loader.sendMesssage(address, msg);
+  }
+
+  public onMessage(address: string, func: MessageHandler) {
+    this._loader.onMessage(address, func);
+  }
+
+  public onLoad(func: () => Promise<void>) {
+    this._loader.onLoad(func);
+  }
+
+  public onStart(func: () => Promise<void>) {
+    this._loader.onStart(func);
   }
 
   public editLevel(): void {
@@ -197,8 +204,6 @@ export class VM implements IVM {
     this._sprites.set(s.id, s);
     this.physics.addRigitObject(s, undefined);
     s.addToScene(this._camera!.scene);
-    //gameState.scene 
-    // gameApp.scene.
     return s;
   }
 
@@ -259,27 +264,6 @@ export class VM implements IVM {
 
   public sleep(seconds: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, seconds * 1000));
-  }
-
-  public async send(msg: string): Promise<void> {
-    let handlers = this._messageHandlers.get(msg);
-    if (handlers === undefined) {
-      return;
-    }
-
-    setTimeout(async () => {
-      for (let h of handlers!) {
-        h(msg);
-      }
-    });
-  }
-
-  public onStart(func: () => Promise<void>) {
-    this._startHandlers.push(func);
-  }
-
-  public onMessage(func: () => Promise<void>) {
-
   }
 
   public onCollide(collections: { source: IRigitBody, target: IRigitBody }[]) {

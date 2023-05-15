@@ -5,7 +5,7 @@ import {
   ParamDefNode,
   IfNode,
   VarDefNode, StatementNode, AssingmentNode, CallNode,
-  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode, WhileNode, makeConstNode, makeIdNode, CallParamNode, ForEachNode
+  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode, WhileNode, makeConstNode, makeIdNode, CallParamNode, ForEachNode, OnNode
 } from "./ast";
 import { BasicParser } from "./basicparser";
 import { isConstTokenKind, isOpTokenKind } from "./lexer";
@@ -14,11 +14,20 @@ import { Token, TokenKind } from "./token";
 
 
 export function parseModule(parser: BasicParser): ModuleNode {
-  let children: AstNode[] = [];
+  let procs: AstNode[] = [];
+  let on: OnNode[] = [];
 
   // we always treat semi as a break for rule
   // it might not be valid in some cases, but it is error anyway
   parser.setEndRule([TokenKind.Semi]);
+
+  let module: ModuleNode = {
+    kind: AstNodeKind.module,
+    name: undefined,
+    types: [],
+    procs: procs,
+    on: on
+  }
 
   while (parser.tryRead()) {
     let token = parser.token;
@@ -28,25 +37,23 @@ export function parseModule(parser: BasicParser): ModuleNode {
 
     switch (token.kind) {
       case TokenKind.Proc:
-        children.push(parser.withContextGreedy(token, parseFuncDef));
+        procs.push(parser.withContextGreedy(token, parseFuncDef, module));
         break;
       case TokenKind.Var:
-        children.push(parser.withContextGreedy(token, parseVarDef));
+        procs.push(parser.withContextGreedy(token, parseVarDef));
+        break;
+      case TokenKind.On:
+        on.push(parser.withContextGreedy(token, parseOnDef));
         break;
     }
   }
 
-  return {
-    kind: AstNodeKind.module,
-    name: undefined,
-    types: [],
-    children: children
-  }
+  return module;
 }
 
 
 // proc foo(params):return begin ... end
-function parseFuncDef(parser: BasicParser): FuncDefNode {
+function parseFuncDef(parser: BasicParser, module: ModuleNode): FuncDefNode {
 
   parser.setEndRule([TokenKind.End]);
 
@@ -67,6 +74,7 @@ function parseFuncDef(parser: BasicParser): FuncDefNode {
 
   return {
     kind: AstNodeKind.funcDef,
+    module: module,
     name: name,
     params: params,
     returnType: returnVal,
@@ -313,6 +321,26 @@ function parseVarDef(parser: BasicParser): VarDefNode {
       kind: AstNodeKind.varDef,
       name: name, value: undefined
     }
+  }
+}
+
+function parseOnDef(parser: BasicParser): OnNode {
+  parser.ignoreEol(false);
+  parser.setEndRule([TokenKind.Eol]);
+
+  let v = parser.readKind(TokenKind.On);
+  let name = parser.readKind(TokenKind.Id);
+
+  let params = parser.withContextGreedy(parser.readKind(TokenKind.LeftParen), parseFuncParams, [TokenKind.RightParen]);
+
+  let body = parser.withContextGreedy(parser.readKind(TokenKind.Begin), parseBlock, TokenKind.Begin, [TokenKind.End]);
+
+  // we are keeping policy as is; so we can just pass parser
+  return {
+    kind: AstNodeKind.on,
+    name: name,
+    params: params,
+    body: body
   }
 }
 

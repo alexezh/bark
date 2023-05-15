@@ -1,3 +1,4 @@
+import { Block } from "typescript";
 import { Token } from "./token";
 
 export enum AstNodeKind {
@@ -29,7 +30,8 @@ export type AstNode = {
 export type ModuleNode = AstNode & {
   name: string | undefined,
   types: TypeDefNode[];
-  children: AstNode[];
+  procs: AstNode[];
+  on: OnNode[];
 }
 
 
@@ -43,6 +45,7 @@ export type ParamDefNode = AstNode & {
 }
 
 export type FuncDefNode = AstNode & {
+  module: ModuleNode;
   name: Token;
   returnType: Token | undefined;
   params: ParamDefNode[];
@@ -87,8 +90,8 @@ export type CallNode = StatementNode & {
 
 export type OnNode = StatementNode & {
   name: Token;
-  params: CallParamNode[];
-  funcDef?: FuncDefNode;
+  params: ParamDefNode[],
+  body: BlockNode
 }
 
 export type OpNode = AstNode & {
@@ -156,7 +159,7 @@ export type WhileNode = StatementNode & {
 export function forEachChild(ast: AstNode, func: (ast: AstNode) => void) {
   switch (ast.kind) {
     case AstNodeKind.module:
-      (ast as ModuleNode).children.forEach(func);
+      (ast as ModuleNode).procs.forEach(func);
       break;
     case AstNodeKind.funcDef:
       let body = (ast as FuncDefNode).body;

@@ -1,40 +1,74 @@
-import { AstNodeKind, FuncDefNode, ModuleNode } from "./ast";
-import { JsWriter } from "./jswriter";
+import { IVMCodeRunner } from "../engine/ivm";
+import { ModuleNode } from "./ast";
 
-export class ModuleCache {
-  private readonly astModules: Map<string, ModuleNode> = new Map<string, ModuleNode>();
-  private readonly modules: Map<string, { [key: string]: Function }> = new Map<string, { [key: string]: Function }>();
+export type MessageHandler = (msg: any) => Promise<void>;
+export type StartHandler = () => Promise<void>;
+export type LoadHandler = () => Promise<void>;
 
-  public registerSystemModule(name: string, ast: ModuleNode) {
-    let module: { [key: string]: Function } = {};
+export type RuntimeModule = { [key: string]: Function };
 
-    this.astModules.set(name, ast);
-    for (let item of ast.children) {
-      if (item.kind === AstNodeKind.funcDef) {
-        let funcDef = item as FuncDefNode;
-        module[funcDef.name.value] = funcDef.body as Function;
+export class CodeRunner implements IVMCodeRunner {
+  private readonly _startHandlers: StartHandler[] = [];
+  private readonly _loadHandlers: StartHandler[] = [];
+
+  private readonly _systemModules: Map<string, ModuleNode> = new Map<string, ModuleNode>();
+  private readonly _userModules: Map<string, ModuleNode> = new Map<string, ModuleNode>();
+
+  // we are going to copy/write of handler array
+  // so it is safe to enumerate even if handler changes it
+  private _messageHandlers: Map<string, MessageHandler[]> = new Map<string, MessageHandler[]>;
+
+  public async load(): Promise<void> {
+    // invoke game root function
+    // it will register handlers which we invoke next
+    //create();
+
+    // first tell game to load
+    for (let h of this._loadHandlers) {
+      await h();
+    }
+  }
+
+  public reset() {
+    this._startHandlers.length = 0;
+    this._loadHandlers.length = 0;
+  }
+
+  public async sendMesssage(address: string, msg: any): Promise<void> {
+    let handlers = this._messageHandlers.get(address);
+    if (handlers === undefined) {
+      return;
+    }
+
+    setTimeout(async () => {
+      for (let h of handlers!) {
+        h(msg);
       }
-    }
-    this.modules.set(name, module);
+    });
   }
 
-  public getModule(name: string): { [key: string]: Function } {
-    let value = this.modules.get(name);
-    if (value === undefined) {
-      throw 'Cannot find module:' + name;
+  public onMessage(address: string, func: MessageHandler) {
+    let handlers = this._messageHandlers.get(address);
+    if (handlers === undefined) {
+      handlers = [];
+      this._messageHandlers.set(address, handlers);
     }
-    return value;
+    handlers.push(func);
   }
 
-  public forEachAstModule(func: (node: ModuleNode) => void) {
-    for (let x of this.astModules) {
-      func(x[1]);
-    }
+  public onLoad(func: () => Promise<void>) {
+    this._loadHandlers.push(func);
   }
 
-  public writeModuleVars(loaderVar: string, writer: JsWriter) {
-    for (let module of this.modules) {
-      writer.append(`let ${module[0]} = ${loaderVar}.getModule(\'${module[0]}\');`);
+  public onStart(func: () => Promise<void>) {
+    this._startHandlers.push(func);
+  }
+
+  public async invokeOnStart(): Promise<void> {
+    // first tell game to load
+    for (let h of this._startHandlers) {
+      await h();
     }
   }
 }
+

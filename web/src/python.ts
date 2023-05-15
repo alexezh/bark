@@ -30,14 +30,16 @@ async function createMonky(): Promise<Sprite3> {
   return m;
 }
 
-let inputController: MoveController2D | undefined;
+export function boxedGame() {
+  let char!: Sprite3;
 
-export class BoxedGame implements IDigGame {
-  private char!: Sprite3;
+  vm.onLoad(onLoad);
+  vm.onStart(moveMonkey);
+  vm.onStart(dropObject);
 
-  public async init(): Promise<void> {
+  async function onLoad(): Promise<void> {
     // create controller and options such as repeat rate and so on
-    inputController = vm.setController(new MoveController2D({
+    vm.setController(new MoveController2D({
       keySpeedX: 10,
       keySpeedZ: 10,
       thumbSpeedX: 10,
@@ -46,36 +48,28 @@ export class BoxedGame implements IDigGame {
     }));
 
     await vm.loadLevel('default');
-    this.char = await createMonky();
-
-    vm.onStart(this.moveMonkey.bind(this));
-    vm.onStart(this.dropObject.bind(this));
-  }
-
-  start(): void {
-  }
-  stop(): void {
+    char = await createMonky();
   }
 
   // in digg
   // forever { key = waitKey()}
-  private async moveMonkey(): Promise<void> {
+  async function moveMonkey(): Promise<void> {
     console.log("start moveMonkey");
     vm.forever(async () => {
       let ev = await vm!.readInput();
 
       if (ev.speedX !== 0 || ev.speedZ !== 0) {
-        this.char.rigit.animate('move');
+        char.rigit.animate('move');
       } else {
-        this.char.rigit.animate('stand');
+        char.rigit.animate('stand');
       }
-      this.char.setSpeed(new Vector3(ev.speedX, 0, ev.speedZ));
+      char.setSpeed(new Vector3(ev.speedX, 0, ev.speedZ));
     });
   }
 
   // the problem with that loop is that collision detection happens outside
   // this makes it less visible
-  private async dropObject(): Promise<void> {
+  async function dropObject(): Promise<void> {
     console.log("start dropObject");
     vm.forever(async () => {
       let bomb = await createBomb(new Vector3(randInt(50, 150), 50, randInt(50, 150)));
@@ -90,7 +84,7 @@ export class BoxedGame implements IDigGame {
           bomb.speed.set(0, -speed, 0);
         } else {
           if (collision instanceof Sprite3) {
-            vm.send('KilledMonkey');
+            vm.sendMesssage('KilledMonkey', null);
           } else if (collision instanceof MapBlockRigitBody) {
             for (let b of (collision as MapBlockRigitBody).blocks) {
               vm.level.deleteBlock(b);
