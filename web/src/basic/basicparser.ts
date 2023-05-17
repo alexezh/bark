@@ -197,6 +197,9 @@ export class BasicParser {
     this.ctx.inheritEndTokens = inherit;
   }
 
+  /**
+   * treat EOL as WS
+   */
   public ignoreEol(val: boolean) {
     this.ctx.ignoreEol = val;
   }

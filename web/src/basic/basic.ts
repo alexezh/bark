@@ -17,10 +17,6 @@ export function parseModule(parser: BasicParser): ModuleNode {
   let procs: AstNode[] = [];
   let on: OnNode[] = [];
 
-  // we always treat semi as a break for rule
-  // it might not be valid in some cases, but it is error anyway
-  parser.setEndRule([TokenKind.Semi]);
-
   let module: ModuleNode = {
     kind: AstNodeKind.module,
     name: undefined,
@@ -35,16 +31,26 @@ export function parseModule(parser: BasicParser): ModuleNode {
       break;
     }
 
-    switch (token.kind) {
-      case TokenKind.Proc:
-        procs.push(parser.withContextGreedy(token, parseFuncDef, module));
-        break;
-      case TokenKind.Var:
-        procs.push(parser.withContextGreedy(token, parseVarDef));
-        break;
-      case TokenKind.On:
-        on.push(parser.withContextGreedy(token, parseOnDef));
-        break;
+    try {
+      parser.pushContext('modulest');
+      // we always treat semi as a break for rule
+      // it might not be valid in some cases, but it is error anyway
+      parser.setEndRule([TokenKind.Semi], false);
+
+      switch (token.kind) {
+        case TokenKind.Proc:
+          procs.push(parser.withContextGreedy(token, parseFuncDef, module));
+          break;
+        case TokenKind.Var:
+          procs.push(parser.withContextGreedy(token, parseVarDef));
+          break;
+        case TokenKind.On:
+          on.push(parser.withContextGreedy(token, parseOnDef));
+          break;
+      }
+    }
+    finally {
+      parser.popContext();
     }
   }
 
@@ -236,6 +242,10 @@ function parseBlock(parser: BasicParser, startTokenKind: TokenKind, endTokens: T
 
   // we are reading first token for the statement
   while (parser.tryRead()) {
+    if (parser.token.kind === TokenKind.Eol || parser.token.kind === TokenKind.Semi) {
+      continue;
+    }
+
     let statement = parseStatement(parser.token, parser);
     if (statement !== undefined) {
       body.push(statement);
@@ -314,7 +324,7 @@ function parseVarDef(parser: BasicParser): VarDefNode {
     // we are keeping policy as is; so we can just pass parser
     return {
       kind: AstNodeKind.varDef,
-      name: name, value: parseExpression(parser)
+      name: name, value: parseExpressionCore(parser)
     }
   } else {
     return {

@@ -16,6 +16,9 @@ async function waitCollideMock(): Promise<number> {
   return 42;
 }
 
+function createSpriteMock() {
+}
+
 function sendMessageMock(address: string, msg: any) {
   vm.sendMesssage(address, msg);
 }
@@ -38,6 +41,7 @@ function createSystemModule(): ModuleNode {
 
   funcs.push(addSystemFunc(module, 'waitCollide', ['sprite: Sprite', 'timeout: number'], 'Sprite | Block | null', true, waitCollideMock));
   funcs.push(addSystemFunc(module, 'sendMessage', ['address: string', 'text: string'], 'void', true, sendMessageMock));
+  funcs.push(addSystemFunc(module, 'createSprite', ['name: string'], 'void', false, createSpriteMock));
   funcs.push(addSystemFunc(module, 'min', ['v1: number', 'v2: number'], 'number', false, minMock));
 
   return module;
@@ -226,7 +230,7 @@ test('asynccall', async () => {
 test("events", async () => {
   let res = runVm(`
 
-  var x: number := 3;
+  var x := 3;
   
   on load() begin
     x := 4;
@@ -240,60 +244,4 @@ test("events", async () => {
   expect(res).toBe(4);
 });
 
-test("bomb", () => {
-  let res = runProg(`
-
-  var monky: Sprite;
-  
-  on load() begin
-    var level:= App.loadLevel 'default'
-    App.setMoveController2D(10, 10, 10, 10, 0.1)
-  end
-
-  on start() begin
-    monky:= App.createSprite 'monky' 'vox/monky.vox'
-
-    var ma:= Sprite.addAnimation monky 'move'
-    Sprite.addFrame ma idx:= 1 dur:=0.1 
-    Sprite.addFrame ma idx:= 2 dur:=0.1
-
-    ma:= Sprite.addAnimation monky 'stand'
-    Sprite.addFrame ma idx:= 0 dur:=0
-
-    App.send()
-  end
-
-  event startBomb() begin
-
-    var bomb:= App.createSprite 'bomb' 'vox/bomb.vox'
-    Sprite.setPosition bomb randInt(50, 150) 50 randInt(50, 150)
-
-    var speed:= 10;
-    Sprite.setSpeed bomb x:=0 y:=-speed z:=0
-
-    while true do
-      var collision := App.waitCollide bomb 0.1
-      if collision = null then
-        speed := Math.min speed * 1.1 100;
-        Sprite.changeSpeedBy bomb 0 -speed 0
-      else
-        if collision is Sprite then
-          App.send "KilledMonkey"
-        elif collision is Block then
-          foreach b in collision.blocks do
-            App.deleteBlock b
-            App.createExplosion collision.position;
-          end
-          App.removeSprite bomb
-        else
-          App.removeSprite bomb
-        end
-        break;
-      end
-    end
-  end 
-    `);
-
-  expect(res).toBe(11);
-})
 

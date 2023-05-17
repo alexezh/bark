@@ -1,5 +1,5 @@
 import { ICodeLoader } from "../engine/ivm";
-import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForEachNode, ForNode, FuncDefNode, IfNode, ModuleNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast"
+import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForEachNode, ForNode, FuncDefNode, IfNode, ModuleNode, OnNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast"
 import { ParseError, ParseErrorCode } from "./parseerror";
 
 class ValidationContext {
@@ -49,10 +49,12 @@ export function validateModule(module: ModuleNode, loader: ICodeLoader | undefin
 
   if (loader) {
     for (let proc of loader.functions()) {
-      if (proc.module.name === undefined) {
-        ctx.funcDefs.set(proc.name.value, proc);
-      } else {
-        ctx.funcDefs.set(proc.module.name + '.' + proc.name.value, proc);
+      if (proc.kind === AstNodeKind.funcDef) {
+        if (proc.module.name === undefined) {
+          ctx.funcDefs.set(proc.name.value, proc);
+        } else {
+          ctx.funcDefs.set(proc.module.name + '.' + proc.name.value, proc);
+        }
       }
     };
   } else {
@@ -68,6 +70,10 @@ export function validateModule(module: ModuleNode, loader: ICodeLoader | undefin
   for (let node of module.procs) {
     validateNode(ctx, node);
   }
+
+  for (let node of module.on) {
+    validateNode(ctx, node);
+  }
 }
 
 function validateNode(parentCtx: ValidationContext, ast: AstNode) {
@@ -79,6 +85,9 @@ function validateNode(parentCtx: ValidationContext, ast: AstNode) {
   switch (ast.kind) {
     case AstNodeKind.funcDef:
       validateFuncDef(parentCtx, ast as FuncDefNode);
+      break;
+    case AstNodeKind.on:
+      validateOn(parentCtx, ast as OnNode);
       break;
     case AstNodeKind.varDef:
       validateVarDef(parentCtx, ast as VarDefNode);
@@ -130,6 +139,16 @@ function validateFuncDef(parentCtx: ValidationContext, ast: FuncDefNode) {
     validateBlock(ctx, ast.body);
   }
 }
+
+function validateOn(parentCtx: ValidationContext, ast: OnNode) {
+  if (ast.body instanceof Function) {
+    ;
+  } else {
+    let ctx = new ValidationContext(ast, parentCtx);
+    validateBlock(ctx, ast.body);
+  }
+}
+
 function validateVarDef(parentCtx: ValidationContext, ast: VarDefNode) {
   if (ast.value) {
     validateExpression(parentCtx, ast.value);

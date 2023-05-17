@@ -86,7 +86,7 @@ export class CodeLoader implements ICodeLoader {
   }
 
   public getFunction(): Function {
-    for (let m of this._systemModules) {
+    for (let m of this._userModules) {
       validateModule(m[1], this);
     }
     let js = transpile(undefined, this);
