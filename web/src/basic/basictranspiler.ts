@@ -6,6 +6,8 @@ import { Token, TokenKind } from "./token";
 
 /**
  * generates Js function from ast
+ * ATT: if function is async, we have to wrap it as Function does not support
+ * async method. So we are going to always wrap it
  */
 
 export function transpile(mainFunction: string | undefined, loader: ICodeLoader): Function {
@@ -31,7 +33,7 @@ export function transpile(mainFunction: string | undefined, loader: ICodeLoader)
     }
 
     let jsText = writer.toString();
-    return new Function('__loader', jsText);
+    return new Function('__loader', '__runner', jsText);
   }
   catch (e) {
     throw e;
@@ -194,7 +196,22 @@ function processCall(ast: CallNode, writer: JsWriter) {
 
 function processOn(ast: OnNode, writer: JsWriter) {
 
-  writer.append('Vm.onStart(() => {')
+  let regName: string;
+  if (ast.name.value === 'start') {
+    regName = 'onStart';
+  } else if (ast.name.value === 'load') {
+    regName = 'onLoad';
+  } else if (ast.name.value === 'message') {
+    regName = 'onMessage';
+  } else {
+    throw new ParseError(ParseErrorCode.InvalidArg, undefined, 'Invalid on name');
+  }
+
+  if (ast.isAsync) {
+    writer.append(`__runner.${regName}(async () => {`)
+  } else {
+    writer.append(`__runner.${regName}(() => {`)
+  }
 
   processBlock(ast.body, writer);
   //vm.onStart(moveMonkey.bind(this));

@@ -228,7 +228,7 @@ test('asynccall', async () => {
 });
 
 test("events", async () => {
-  let res = runVm(`
+  let res = await runVm(`
 
   var x := 3;
   

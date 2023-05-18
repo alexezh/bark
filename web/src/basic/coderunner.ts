@@ -25,7 +25,7 @@ export class CodeRunner implements IVMCodeRunner {
       let js = loader.getFunction();
 
       // invoke game root function
-      js(this);
+      js(loader, this);
     }
 
     // first tell game to load

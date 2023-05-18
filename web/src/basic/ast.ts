@@ -91,6 +91,7 @@ export type CallNode = StatementNode & {
 export type OnNode = StatementNode & {
   name: Token;
   params: ParamDefNode[],
+  isAsync: boolean,
   body: BlockNode
 }
 

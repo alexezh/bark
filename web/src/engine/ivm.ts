@@ -27,6 +27,8 @@ export interface ICodeLoader {
   userOns(): Iterable<OnNode>;
   imports(): Iterable<ModuleNode>;
 
+  // returns function of two arguments: loader and runner
+  // we are using loader to get module; and runner to register events
   getFunction(): Function;
 }
 

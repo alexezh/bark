@@ -350,6 +350,7 @@ function parseOnDef(parser: BasicParser): OnNode {
     kind: AstNodeKind.on,
     name: name,
     params: params,
+    isAsync: false,
     body: body
   }
 }

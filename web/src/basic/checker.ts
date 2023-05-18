@@ -30,6 +30,13 @@ function updateAsyncFlag(ctx: ValidationContext | undefined) {
       }
       fd.isAsync = true;
     }
+    else if (ctx.node.kind === AstNodeKind.on) {
+      let on = ctx.node as OnNode;
+      if (on.isAsync) {
+        break;
+      }
+      on.isAsync = true;
+    }
     ctx = ctx.parent;
   }
 }
