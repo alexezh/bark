@@ -2,6 +2,7 @@ import { MeshPhongMaterial, Scene, Vector3 } from "three";
 import { BlockPos3, BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { VoxelModel } from "../voxel/voxelmodel";
 import { IRigitBody } from "../voxel/voxelmeshmodel";
+import { MapBlockRigitBody } from "../voxel/mapblockrigitbody";
 
 export type MapProps = {
   id: string;
@@ -97,7 +98,7 @@ export interface IVoxelLevel {
   /**
    * deletes block to runtime representation; not saved
    */
-  deleteBlock(block: MapBlockCoord);
+  deleteBlock(block: MapBlockCoord | MapBlockRigitBody);
 
   /**
    * adds block to runtime representation; not saved

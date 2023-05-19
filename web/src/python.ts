@@ -86,10 +86,8 @@ export function boxedGame() {
           if (collision instanceof Sprite3) {
             vm.sendMesssage('KilledMonkey', null);
           } else if (collision instanceof MapBlockRigitBody) {
-            for (let b of (collision as MapBlockRigitBody).blocks) {
-              vm.level.deleteBlock(b);
-              vm.createExplosion(collision.position);
-            }
+            vm.level.deleteBlock(collision);
+            vm.createExplosion(collision.position);
             vm.removeSprite(bomb);
           } else { // boundary
             vm.removeSprite(bomb);
@@ -134,6 +132,10 @@ export function boxedBasic(): string {
           else
             if collision is System.Sprite then
               System.sendMessage "KilledMonkey"
+            elif collision is System.Block then
+              System.deleteBlock collision
+              System.createExplosion collision.position;
+              System.removeSprite bomb
             else
               System.removeSprite bomb
             end
@@ -144,11 +146,3 @@ export function boxedBasic(): string {
     end 
       `;
 }
-
-/*
-            elif collision is System.Block then
-              // todo: change collision to return single block
-              System.deleteBlock level collision
-              System.createExplosion collision.position;
-              System.removeSprite bomb
- */

@@ -160,9 +160,11 @@ export class VoxelLevel implements IVoxelLevel {
         return layer;
     }
 
-    public deleteBlock(block: MapBlockCoord) {
-        let layer = this.layers[block.mapPos.y];
-        layer.deleteBlock(block);
+    public deleteBlock(block: MapBlockCoord | MapBlockRigitBody) {
+        let mb = (block instanceof MapBlockRigitBody) ? block.mapBlock : block;
+
+        let layer = this.layers[mb.mapPos.y];
+        layer.deleteBlock(mb);
         layer.updateScene(this.scene);
     }
 

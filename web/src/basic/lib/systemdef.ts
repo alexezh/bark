@@ -53,8 +53,8 @@ function sleep(delay: number): Promise<void> {
   return vm.sleep(delay);
 }
 
-function deleteBlock() {
-  //vm.level.deleteBlock();
+function deleteBlock(block: MapBlockRigitBody) {
+  vm.level.deleteBlock(block);
 }
 
 function createExplosion(x: number, y: number, z: number) {

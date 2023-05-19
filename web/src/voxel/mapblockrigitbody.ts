@@ -4,7 +4,7 @@ import { MapBlock, MapBlockCoord } from "../ui/ivoxelmap";
 import { WorldCoord3 } from "./pos3";
 
 export class MapBlockRigitBody implements IRigitBody, IDigBlock {
-  private mapBlock: MapBlockCoord;
+  public readonly mapBlock: MapBlockCoord;
   private _pos: Vector3;
 
   public constructor(mapBlock: MapBlockCoord, pos: WorldCoord3) {
@@ -23,8 +23,6 @@ export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   public get x(): number { return this._pos.x };
   public get y(): number { return this._pos.y };
   public get z(): number { return this._pos.z };
-
-  get blocks(): MapBlockCoord[] { return [this.mapBlock] }
 
   setSpeed(speed: Vector3): void {
   }
