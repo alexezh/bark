@@ -10,7 +10,7 @@ function typeNameToTokenKind(name: string): TokenKind {
   }
 }
 
-export function addSystemType(digName: string, systemName: string, fields: string[]): TypeDefNode {
+export function addSystemType(digName: string, systemType: Function, fields: string[]): TypeDefNode {
   let fieldDefs: FieldDef[] = [];
   for (let field of fields) {
     let parts = field.split(':');
@@ -26,7 +26,7 @@ export function addSystemType(digName: string, systemName: string, fields: strin
   return {
     kind: AstNodeKind.typeDef,
     digName: new Token(TokenKind.Id, digName, 0),
-    systemName: systemName,
+    systemType: systemType,
     fields: fieldDefs,
   }
 }

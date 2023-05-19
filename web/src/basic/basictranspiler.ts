@@ -162,7 +162,7 @@ function processForeach(ast: ForeachNode, writer: JsWriter) {
 
 function processForever(ast: ForeverNode, writer: JsWriter) {
   writer.append(`while(true) {`);
-  writer.append(`await System.sleep(100);`);
+  writer.append(`await System.sleep(0.1);`);
   processNode(ast.body, writer);
   writer.append(`}`);
 }

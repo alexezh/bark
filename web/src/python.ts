@@ -130,16 +130,10 @@ export function boxedBasic(): string {
           var collision := System.waitCollide bomb 0.1
           if collision = null then
             speed := Math.min speed * 1.1 100;
-            Sprite.changeSpeedBy bomb 0 -speed 0
+            Sprite.changeSpeedBy bomb x:=0 y:=-speed z:=0
           else
-            if collision is Sprite then
+            if collision is System.Sprite then
               System.sendMessage "KilledMonkey"
-            elif collision is Block then
-              foreach b in collision.blocks do
-                System.deleteBlock level b
-                System.createExplosion collision.position;
-              end
-              System.removeSprite bomb
             else
               System.removeSprite bomb
             end
@@ -150,3 +144,11 @@ export function boxedBasic(): string {
     end 
       `;
 }
+
+/*
+            elif collision is System.Block then
+              // todo: change collision to return single block
+              System.deleteBlock level collision
+              System.createExplosion collision.position;
+              System.removeSprite bomb
+ */

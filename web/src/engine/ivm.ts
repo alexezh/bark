@@ -98,7 +98,7 @@ export interface IVM extends IVMCodeRunner {
 
   createExplosion(pos: Vector3): void;
 
-  sleep(ms: number): Promise<void>;
+  sleep(seconds: number): Promise<void>;
 }
 
 export let vm!: IVM;

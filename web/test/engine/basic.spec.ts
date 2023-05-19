@@ -83,6 +83,31 @@ end`);
   }
 });
 
+test('if2', () => {
+  let ast = loadModule(`
+proc foo()
+begin
+  if collision = null then
+    speed := Math.min speed * 1.1 100;
+    Sprite.changeSpeedBy bomb x:=0 y:=-speed z:=0
+  else
+    if collision is System.Sprite then
+      System.sendMessage "KilledMonkey"
+    else
+      System.removeSprite bomb
+    end
+    break;
+  end
+end
+`);
+  let func = ast.procs[0] as FuncDefNode;
+  if (!(func.body instanceof Function)) {
+    let fr = func.body.statements[0] as ForNode;
+
+    expect(fr.kind).toBe(AstNodeKind.if);
+  }
+});
+
 test("foreach", () => {
   let ast = loadModule(`
 proc foo()

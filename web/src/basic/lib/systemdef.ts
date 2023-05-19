@@ -109,9 +109,9 @@ export function createSystemModule(): ModuleNode {
   funcs.push(addSystemFunc(module, 'deleteBlock', ['block:block'], 'void', false, deleteBlock));
   funcs.push(addSystemFunc(module, 'createExplosion', ['x: number', 'y: number', 'z: number'], 'void', false, createExplosion));
 
-  types.push(addSystemType('Sprite', 'Sprite3', ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
-  types.push(addSystemType('Block', 'MapBlockRigitBody', ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
-  types.push(addSystemType('Boundary', 'MapBoundaryRigitBody', ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
+  types.push(addSystemType('Sprite', Sprite3, ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
+  types.push(addSystemType('Block', MapBlockRigitBody, ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
+  types.push(addSystemType('Boundary', MapBoundaryRigitBody, ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
 
   return module;
 }
@@ -133,6 +133,19 @@ function addFrame(animation: DigAnimation, idx: number, duration: number) {
   animation.sprite.rigit.addFrame(animation.name, idx, duration);
 }
 
+function setPosition(sprite: Sprite3, x: number, y: number, z: number) {
+  sprite.setPosition(new Vector3(x, y, z));
+}
+
+function setSpeed(sprite: Sprite3, x: number, y: number, z: number) {
+  sprite.setSpeed(new Vector3(x, y, z));
+}
+
+function changeSpeedBy(sprite: Sprite3, x: number, y: number, z: number) {
+  let speed = sprite.speed.clone();
+  sprite.setSpeed(speed.add(new Vector3(x, y, z)));
+}
+
 export function createSpriteModule(): ModuleNode {
   let funcs: FuncDefNode[] = [];
   let types: TypeDefNode[] = [];
@@ -147,11 +160,11 @@ export function createSpriteModule(): ModuleNode {
 
   funcs.push(addSystemFunc(module, 'addAnimation', ['sprite: Sprite', 'name: string'], 'Animation', false, addAnimation));
   funcs.push(addSystemFunc(module, 'addFrame', ['sprite: Sprite', 'animation: Animation', 'index: number', "duration: number"], 'void', false, addFrame));
-  funcs.push(addSystemFunc(module, 'setPosition', ['sprite: Sprite', 'x: number', 'y: number', 'z: number'], 'void', false, addFrame));
-  funcs.push(addSystemFunc(module, 'setSpeed', ['sprite: Sprite', 'x: number', 'y: number', 'z: number'], 'void', false, addFrame));
-  funcs.push(addSystemFunc(module, 'changeSpeedBy', ['sprite: Sprite', 'x: number', 'y: number', 'z: number'], 'void', false, addFrame));
+  funcs.push(addSystemFunc(module, 'setPosition', ['sprite: Sprite', 'x: number', 'y: number', 'z: number'], 'void', false, setPosition));
+  funcs.push(addSystemFunc(module, 'setSpeed', ['sprite: Sprite', 'x: number', 'y: number', 'z: number'], 'void', false, setSpeed));
+  funcs.push(addSystemFunc(module, 'changeSpeedBy', ['sprite: Sprite', 'x: number', 'y: number', 'z: number'], 'void', false, changeSpeedBy));
 
-  types.push(addSystemType('Animation', 'DigAnimation', ['name: string']));
+  types.push(addSystemType('Animation', Sprite3, ['name: string']));
 
   return module;
 }

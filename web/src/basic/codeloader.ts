@@ -22,6 +22,9 @@ export class CodeLoader implements ICodeLoader {
         module[funcDef.name.value] = funcDef.body as Function;
       }
     }
+    for (let tp of ast.types) {
+      module[tp.digName.value] = tp.systemType!;//funcDef.body as Function;
+    }
     this.modules.set(name, module);
   }
 

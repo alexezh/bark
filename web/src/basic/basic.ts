@@ -448,7 +448,7 @@ function parseCallParam(parser: BasicParser, endTokens: TokenKind[] | undefined 
   let token = parser.read();
   if (parser.peekKind(TokenKind.Assign)) {
     parser.readKind(TokenKind.Assign);
-    let exp = parseExpression(parser);
+    let exp = parseExpressionCore(parser);
     let param = exp as CallParamNode;
     param.name = token;
     return param;
