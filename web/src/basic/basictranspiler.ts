@@ -1,5 +1,5 @@
 import { ICodeLoader } from "../engine/ivm";
-import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ConstNode, ExpressionNode, ForEachNode, ForNode, FuncDefNode, IdNode, IfNode, ModuleNode, OnNode, OpNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast";
+import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ConstNode, ExpressionNode, ForEachNode as ForeachNode, ForeverNode, ForNode, FuncDefNode, IdNode, IfNode, ModuleNode, OnNode, OpNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast";
 import { JsWriter } from "./jswriter";
 import { ParseError, ParseErrorCode } from "./parseerror";
 import { Token, TokenKind } from "./token";
@@ -58,7 +58,10 @@ function processNode(ast: AstNode, writer: JsWriter) {
       processFor(ast as ForNode, writer);
       break;
     case AstNodeKind.foreach:
-      processForEach(ast as ForEachNode, writer);
+      processForeach(ast as ForeachNode, writer);
+      break;
+    case AstNodeKind.forever:
+      processForever(ast as ForeverNode, writer);
       break;
     case AstNodeKind.while:
       processWhile(ast as WhileNode, writer);
@@ -149,10 +152,17 @@ function processFor(ast: ForNode, writer: JsWriter) {
   writer.append(`}`);
 }
 
-function processForEach(ast: ForEachNode, writer: JsWriter) {
+function processForeach(ast: ForeachNode, writer: JsWriter) {
   let expStr = convertExpression(ast.exp, writer);
 
   writer.append(`for( let ${ast.name.value} of ${expStr} ) {`);
+  processNode(ast.body, writer);
+  writer.append(`}`);
+}
+
+function processForever(ast: ForeverNode, writer: JsWriter) {
+  writer.append(`while(true) {`);
+  writer.append(`await System.sleep(100);`);
   processNode(ast.body, writer);
   writer.append(`}`);
 }
@@ -181,8 +191,8 @@ function processBreak(ast: StatementNode, writer: JsWriter) {
 function convertOp(token: Token): string {
   if (token.kind === TokenKind.Equal) {
     return '===';
-  } else if (token.kind === TokenKind.Typeof) {
-    return 'isinstanceof';
+  } else if (token.kind === TokenKind.Is) {
+    return 'instanceof';
   } else {
     return token.value;
   }

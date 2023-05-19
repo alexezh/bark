@@ -1,4 +1,4 @@
-//import { randInt } from "three/src/math/MathUtils";
+import { randInt } from "three/src/math/MathUtils";
 import { AstNodeKind, FuncDefNode, ModuleNode, ParamDefNode, StatementNode } from "../ast";
 import { addSystemFunc } from "../systemfunc";
 
@@ -16,7 +16,7 @@ export function createMath(): ModuleNode {
 
   funcs.push(addSystemFunc(module, 'min', ['v1:number', 'v2:number'], 'number', false, Math.min));
   funcs.push(addSystemFunc(module, 'max', ['v1:number', 'v2:number'], 'number', false, Math.max));
-  //funcs.push(addSystemFunc('randInt', ['a:number', 'b:number'], 'number', false, randInt));
+  funcs.push(addSystemFunc(module, 'randInt', ['a:number', 'b:number'], 'number', false, randInt));
 
   return module;
 }

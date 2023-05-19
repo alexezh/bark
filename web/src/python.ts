@@ -100,3 +100,53 @@ export function boxedGame() {
     });
   }
 }
+
+export function boxedBasic(): string {
+  return `
+    on load() begin
+      var level:= System.loadLevel 'default'
+    end
+
+    on start() begin
+      var monky:= System.createCubeSprite 'monky' 'vox/monky.vox'
+
+      var ma:= Sprite.addAnimation monky 'move'
+      Sprite.addFrame ma idx:= 1 dur:=0.1 
+      Sprite.addFrame ma idx:= 2 dur:=0.1
+  
+      ma:= Sprite.addAnimation monky 'stand'
+      Sprite.addFrame ma idx:= 0 dur:=0
+    end
+
+    on start() begin
+      forever do
+        var bomb:= System.createCubeSprite 'bomb' 'vox/bomb.vox'
+        Sprite.setPosition bomb Math.randInt(50, 150) 50 Math.randInt(50, 150)
+    
+        var speed:= 10;
+        Sprite.setSpeed bomb x:=0 y:=-speed z:=0
+    
+        while true do
+          var collision := System.waitCollide bomb 0.1
+          if collision = null then
+            speed := Math.min speed * 1.1 100;
+            Sprite.changeSpeedBy bomb 0 -speed 0
+          else
+            if collision is Sprite then
+              System.sendMessage "KilledMonkey"
+            elif collision is Block then
+              foreach b in collision.blocks do
+                System.deleteBlock level b
+                System.createExplosion collision.position;
+              end
+              System.removeSprite bomb
+            else
+              System.removeSprite bomb
+            end
+            break;
+          end
+        end
+      end
+    end 
+      `;
+}

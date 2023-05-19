@@ -16,12 +16,14 @@ import { ParticlePool } from "../voxel/particles";
 import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
 import { VoxelLevelFile } from "./voxellevelfile";
 import { LevelEditor } from "../ui/leveleditor";
-import { boxedGame } from "../python";
+import { boxedBasic, boxedGame } from "../python";
 import { WireProjectConfig, wireGetObject } from "../lib/fetchadapter";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { MessageHandler } from "../basic/coderunner";
 import { CodeLoader } from "../basic/codeloader";
 import { CodeRunner } from "../basic/coderunner";
+import { createSystemModule } from "../basic/lib/systemdef";
+import { registerSystemModules } from "../basic/lib/all";
 
 type CollisionWaiter = {
   // if resolve is undefined, there is no waiter
@@ -31,6 +33,9 @@ type CollisionWaiter = {
   targets: IRigitBody[];
 }
 
+export class NotRunningError {
+
+}
 
 export class VM implements IVM {
   private _running: boolean = false;
@@ -126,7 +131,10 @@ export class VM implements IVM {
     console.log('VM: start');
     this.resetVm();
 
-    this._runner.load(boxedGame);
+    let loader = new CodeLoader();
+    registerSystemModules(loader);
+    loader.addUserModule('default', boxedBasic())
+    await this._runner.load(loader);
 
     // now we are loaded; time to start
     // once we start camera and input, we start game handlers
@@ -201,6 +209,7 @@ export class VM implements IVM {
     uri: string,
     rm: IRigitModel | undefined = undefined): Promise<Sprite3> {
 
+    this.checkRunning();
     let s = new Sprite3(name, rm);
     await s.load(uri);
 
@@ -211,6 +220,7 @@ export class VM implements IVM {
   }
 
   public async removeSprite(sprite: Sprite3) {
+    this.checkRunning();
     this.physics.removeRigitObject(sprite);
     this._sprites.delete(sprite.id);
     sprite.removeFromScene(this._camera!.scene);
@@ -220,9 +230,11 @@ export class VM implements IVM {
     while (this._running) {
       await func();
     }
+    this.checkRunning();
   }
 
   public readInput(): Promise<any> {
+    this.checkRunning();
     if (this.inputController === undefined) {
       throw new Error('attach input');
     }
@@ -231,6 +243,7 @@ export class VM implements IVM {
   }
 
   public waitCollide(sprite: Sprite3, seconds: number): Promise<IRigitBody | null> {
+    this.checkRunning();
     let waiter = this._collisions.get(sprite);
     if (waiter !== undefined && waiter.targets.length > 0) {
       let target = waiter.targets.shift()!;
@@ -262,6 +275,7 @@ export class VM implements IVM {
   }
 
   public createExplosion(pos: Vector3) {
+    this.checkRunning();
     this.particles.explosion(pos.x, pos.y, pos.z, 1, null);
   }
 
@@ -289,6 +303,11 @@ export class VM implements IVM {
     }
   }
 
+  private checkRunning() {
+    if (!this._running) {
+      throw new NotRunningError();
+    }
+  }
   private loadScene() {
     if (this._camera === undefined) {
       return;

@@ -1,5 +1,5 @@
 import { ICodeLoader } from "../engine/ivm";
-import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForEachNode, ForNode, FuncDefNode, IfNode, ModuleNode, OnNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast"
+import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForEachNode, ForNode, ForeverNode, FuncDefNode, IfNode, ModuleNode, OnNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast"
 import { ParseError, ParseErrorCode } from "./parseerror";
 
 class ValidationContext {
@@ -109,7 +109,10 @@ function validateNode(parentCtx: ValidationContext, ast: AstNode) {
       validateFor(parentCtx, ast as ForNode);
       break;
     case AstNodeKind.foreach:
-      validateForEach(parentCtx, ast as ForEachNode);
+      validateForeach(parentCtx, ast as ForEachNode);
+      break;
+    case AstNodeKind.forever:
+      validateForever(parentCtx, ast as ForeverNode);
       break;
     case AstNodeKind.while:
       validateWhile(parentCtx, ast as WhileNode);
@@ -179,7 +182,7 @@ function validateIf(parentCtx: ValidationContext, ast: IfNode) {
   validateBlock(parentCtx, ast.th);
   if (ast.elif) {
     for (let node of ast.elif) {
-      validateBlock(parentCtx, ast.th);
+      validateBlock(parentCtx, node.block);
     }
   }
   if (ast.el) {
@@ -195,8 +198,13 @@ function validateWhile(parentCtx: ValidationContext, ast: WhileNode) {
   validateBlock(parentCtx, ast.body);
 }
 
-function validateForEach(parentCtx: ValidationContext, ast: ForEachNode) {
+function validateForeach(parentCtx: ValidationContext, ast: ForEachNode) {
   validateBlock(parentCtx, ast.body);
+}
+
+function validateForever(parentCtx: ValidationContext, ast: ForeverNode) {
+  validateBlock(parentCtx, ast.body);
+  updateAsyncFlag(parentCtx);
 }
 
 function validateReturn(parentCtx: ValidationContext, ast: ReturnNode) {

@@ -18,6 +18,7 @@ export enum AstNodeKind {
   block,
   if,
   for,
+  forever,
   foreach,
   while,
   on,
@@ -143,6 +144,10 @@ export type ForNode = StatementNode & {
   startExp: ExpressionNode;
   endExp: ExpressionNode;
   byExp: ExpressionNode | undefined;
+  body: BlockNode
+}
+
+export type ForeverNode = StatementNode & {
   body: BlockNode
 }
 

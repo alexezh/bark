@@ -29,8 +29,8 @@ function removeSprite(sprite: IDigSprite) {
   return vm.removeSprite(sprite as Sprite3);
 }
 
-function loadLevel(name: string) {
-  vm.loadLevel(name);
+function loadLevel(name: string): Promise<void> {
+  return vm.loadLevel(name);
 }
 
 async function waitCollide(sprite: IDigSprite, timeout: number): Promise<Sprite3 | MapBlockRigitBody | MapBoundaryRigitBody | null> {
@@ -47,6 +47,10 @@ async function waitCollide(sprite: IDigSprite, timeout: number): Promise<Sprite3
   } else {
     return null;
   }
+}
+
+function sleep(delay: number): Promise<void> {
+  return vm.sleep(delay);
 }
 
 function deleteBlock() {
@@ -91,6 +95,7 @@ export function createSystemModule(): ModuleNode {
 
   funcs.push(addSystemFunc(module, 'waitCollide', ['sprite: Sprite', 'timeout: number'], 'Sprite | Block | null', true, waitCollide));
   funcs.push(addSystemFunc(module, 'sendMessage', ['address: string', 'text: string'], 'void', true, sendMessage));
+  funcs.push(addSystemFunc(module, 'sleep', ['delay: number'], 'void', true, sleep));
 
   funcs.push(addSystemFunc(module, 'setMoveController2D', [
     'keySpeedX:number',
@@ -98,9 +103,9 @@ export function createSystemModule(): ModuleNode {
     'thumbSpeedX:number',
     'thumbSpeedZ:number',
     'timeoutSeconds:number'], 'void', false, setMoveController2D));
-  funcs.push(addSystemFunc(module, 'createCubeSprite', ['name:string', 'url:string'], 'Sprite', false, createCubeSprite));
+  funcs.push(addSystemFunc(module, 'createCubeSprite', ['name:string', 'url:string'], 'Sprite', true, createCubeSprite));
   funcs.push(addSystemFunc(module, 'removeSprite', ['sprite:Sprite'], 'void', false, removeSprite));
-  funcs.push(addSystemFunc(module, 'loadLevel', ['name:string'], 'void', false, loadLevel));
+  funcs.push(addSystemFunc(module, 'loadLevel', ['name:string'], 'void', true, loadLevel));
   funcs.push(addSystemFunc(module, 'deleteBlock', ['block:block'], 'void', false, deleteBlock));
   funcs.push(addSystemFunc(module, 'createExplosion', ['x: number', 'y: number', 'z: number'], 'void', false, createExplosion));
 
@@ -141,7 +146,10 @@ export function createSpriteModule(): ModuleNode {
   };
 
   funcs.push(addSystemFunc(module, 'addAnimation', ['sprite: Sprite', 'name: string'], 'Animation', false, addAnimation));
-  funcs.push(addSystemFunc(module, 'addFrame', ['animation: Animation', 'index: number', "duration: number"], 'void', false, addFrame));
+  funcs.push(addSystemFunc(module, 'addFrame', ['sprite: Sprite', 'animation: Animation', 'index: number', "duration: number"], 'void', false, addFrame));
+  funcs.push(addSystemFunc(module, 'setPosition', ['sprite: Sprite', 'x: number', 'y: number', 'z: number'], 'void', false, addFrame));
+  funcs.push(addSystemFunc(module, 'setSpeed', ['sprite: Sprite', 'x: number', 'y: number', 'z: number'], 'void', false, addFrame));
+  funcs.push(addSystemFunc(module, 'changeSpeedBy', ['sprite: Sprite', 'x: number', 'y: number', 'z: number'], 'void', false, addFrame));
 
   types.push(addSystemType('Animation', 'DigAnimation', ['name: string']));
 

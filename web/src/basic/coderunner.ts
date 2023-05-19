@@ -29,8 +29,13 @@ export class CodeRunner implements IVMCodeRunner {
     }
 
     // first tell game to load
-    for (let h of this._loadHandlers) {
-      await h();
+    try {
+      for (let h of this._loadHandlers) {
+        await h();
+      }
+    }
+    catch (e) {
+      console.log('Cannot load. Exception: ' + (e as any).toString())
     }
   }
 
@@ -46,8 +51,13 @@ export class CodeRunner implements IVMCodeRunner {
     }
 
     setTimeout(async () => {
-      for (let h of handlers!) {
-        h(msg);
+      try {
+        for (let h of handlers!) {
+          h(msg);
+        }
+      }
+      catch (e) {
+        console.log('Failed to send message')
       }
     });
   }
@@ -70,9 +80,17 @@ export class CodeRunner implements IVMCodeRunner {
   }
 
   public async start(): Promise<void> {
-    // first tell game to load
+    // now start the game
+    // allow any start method to run as much as it wants
     for (let h of this._startHandlers) {
-      await h();
+      setTimeout(async () => {
+        try {
+          await h();
+        }
+        catch (e) {
+          console.log('onStart exception:', (e as any).toString());
+        }
+      });
     }
   }
 }

@@ -49,76 +49,13 @@ export class RealtimeClient implements IRealtimeClient {
 
   public async load(): Promise<boolean> {
 
-    //this.map = new GameMap();
-    //await this.map.load('test');
-    /*
-        let wireAvatars = await fetchAvatars();
-        for (let avatarProps of wireAvatars) {
-          if (avatarProps.character !== undefined && avatarProps.character !== null) {
-            let character = new Character(avatarProps.character, this.onAvatarPosChanged);
-            try {
-              await character.load();
-              this.addAvatar(character);
-            }
-            catch (e) {
-              terminal?.printError(`Failed to load character ${character.id}`);
-            }
-          } else if (avatarProps.pokemon !== undefined && avatarProps.pokemon !== null) {
-            let pokemon = new Pokemon(avatarProps.pokemon, this.onAvatarPosChanged);
-            try {
-              await pokemon.load();
-              this.addAvatar(pokemon);
-            }
-            catch (e) {
-              terminal?.printError(`Failed to load pokemon ${pokemon.id}`);
-            }
-          }
-        }
-    */
-    //this.onLoaded = true;
-    //this.mapLoaded.invoke(true);
 
     return true;
   }
 
   public spawnCharacter(name: string, skinUrl: string) {
-    /*
-        setTimeout(async () => {
-          let existintAvatar = this.avatarCollection.getAvatar(name);
-          if (existintAvatar !== undefined) {
-            terminal?.printError(`Character ${name} already exists`);
-            return;
-          }
-    
-          let wireSpawnCharacter = {
-            name: name,
-            skinUrl: skinUrl,
-          }
-          let wireAvatar = await spawnCharacter(wireSpawnCharacter);
-          if (wireAvatar === undefined || wireAvatar.character === undefined) {
-            printNetworkError('spawnCharacter');
-            return;
-          }
-    
-          let character = new Character(wireAvatar.character, this.onAvatarPosChanged);
-          await character.load();
-    
-          this.addAvatar(character);
-        });
-        */
   }
-  /*
-    private onAvatarPosChanged(avatar: IAvatar, oldPos: GridPos | undefined, newPos: GridPos | undefined) {
-  
-      let msg: RtcUpdateAvatarPosition = {
-        worldId: currentWorldId(),
-        avatarId: avatar.id,
-        newPos: newPos,
-        oldPos: oldPos
-      }
-      this.connection?.invoke('UpdateAvatarPosition', this.sessionId, JSON.stringify(msg));
-    }
-  */
+
   private connectSignalR() {
     this.sessionId = uuidv4();
     this.connection = new HubConnectionBuilder()

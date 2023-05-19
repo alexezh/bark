@@ -49,6 +49,40 @@ end`);
   }
 });
 
+test("if", () => {
+  let ast = loadModule(`
+proc foo()
+begin
+  if x = 1 then
+    print \"hello world\" + x
+
+    print \"hello world\" + x
+  end
+end`);
+  let func = ast.procs[0] as FuncDefNode;
+  if (!(func.body instanceof Function)) {
+    let fr = func.body.statements[0] as ForNode;
+
+    expect(fr.kind).toBe(AstNodeKind.if);
+  }
+});
+
+test("if_is", () => {
+  let ast = loadModule(`
+proc foo()
+begin
+  if x is Foo then
+    print \"hello world\" + x
+  end
+end`);
+  let func = ast.procs[0] as FuncDefNode;
+  if (!(func.body instanceof Function)) {
+    let fr = func.body.statements[0] as ForNode;
+
+    expect(fr.kind).toBe(AstNodeKind.if);
+  }
+});
+
 test("foreach", () => {
   let ast = loadModule(`
 proc foo()

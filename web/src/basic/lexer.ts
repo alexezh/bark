@@ -214,6 +214,7 @@ export class BasicLexer {
       case 'if': return TokenKind.If;
       case 'for': return TokenKind.For;
       case 'foreach': return TokenKind.Foreach;
+      case 'forever': return TokenKind.Forever;
       case 'in': return TokenKind.In;
       case 'to': return TokenKind.To;
       case 'by': return TokenKind.By;
@@ -229,7 +230,7 @@ export class BasicLexer {
       case 'or': return TokenKind.Or;
       case 'and': return TokenKind.And;
       case 'not': return TokenKind.Not;
-      case 'typeof': return TokenKind.Typeof;
+      case 'is': return TokenKind.Is;
       case 'proc': return TokenKind.Proc;
       case 'true': return TokenKind.True;
       case 'false': return TokenKind.False;
