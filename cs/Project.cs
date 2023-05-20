@@ -145,7 +145,7 @@ public class Project
   public int Increment(string name, int count)
   {
     var res = _db.LoadEntity((int)ValueKind.String, name);
-    int idx = 0;
+    int idx = 1;
     if (res != null)
     {
       idx = int.Parse(res);
@@ -246,6 +246,11 @@ public class Project
         entry = (create) ? new DictEntry() : null;
         _dictCache[key] = entry;
       }
+    }
+    else if (entry == null && create)
+    {
+      entry = new DictEntry();
+      _dictCache[key] = entry;
     }
 
     return entry;
