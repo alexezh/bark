@@ -1,5 +1,5 @@
 import { ICodeLoader } from "../engine/ivm";
-import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForEachNode, ForNode, ForeverNode, FuncDefNode, IfNode, ModuleNode, OnNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast"
+import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForeachNode, ForNode, ForeverNode, FuncDefNode, IfNode, ModuleNode, OnNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast"
 import { ParseError, ParseErrorCode } from "./parseerror";
 
 class ValidationContext {
@@ -109,7 +109,7 @@ function validateNode(parentCtx: ValidationContext, ast: AstNode) {
       validateFor(parentCtx, ast as ForNode);
       break;
     case AstNodeKind.foreach:
-      validateForeach(parentCtx, ast as ForEachNode);
+      validateForeach(parentCtx, ast as ForeachNode);
       break;
     case AstNodeKind.forever:
       validateForever(parentCtx, ast as ForeverNode);
@@ -198,7 +198,7 @@ function validateWhile(parentCtx: ValidationContext, ast: WhileNode) {
   validateBlock(parentCtx, ast.body);
 }
 
-function validateForeach(parentCtx: ValidationContext, ast: ForEachNode) {
+function validateForeach(parentCtx: ValidationContext, ast: ForeachNode) {
   validateBlock(parentCtx, ast.body);
 }
 

@@ -7,7 +7,7 @@ import { VoxelLevel } from "./voxellevel";
 import { GamePhysics } from "./gamephysics";
 import { IDigGame } from "./idiggame";
 import { IGamePhysics } from "./igamephysics";
-import { IInputController, IVM, setVM } from "./ivm";
+import { ICodeLoader, IInputController, IVM, setVM } from "./ivm";
 import { Sprite3 } from "./sprite3";
 import { Ticker } from "./ticker";
 import { IRigitBody, VoxelAnimationCollection } from "../voxel/voxelmeshmodel";
@@ -84,6 +84,8 @@ export class VM implements IVM {
     return this._camera;
   }
 
+  public get loader(): ICodeLoader { return this._loader; }
+
   public attachCamera(camera: ICamera) {
     this._camera = camera;
     this._camera.registerXrSessionHandler(this, this.onXrSessionChanged.bind(this));
@@ -131,10 +133,9 @@ export class VM implements IVM {
     console.log('VM: start');
     this.resetVm();
 
-    let loader = new CodeLoader();
-    registerSystemModules(loader);
-    loader.addUserModule('default', boxedBasic())
-    await this._runner.load(loader);
+    registerSystemModules(this._loader);
+    this._loader.addUserModule('default', boxedBasic())
+    await this._runner.load(this._loader);
 
     // now we are loaded; time to start
     // once we start camera and input, we start game handlers

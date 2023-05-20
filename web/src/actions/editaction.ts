@@ -1,5 +1,6 @@
 import { vm } from "../engine/ivm";
 import { IAction, ICommandBar } from "../ui/iaction";
+import { shell } from "../ui/igameshell";
 import { CommandAction } from "./commandaction";
 
 // display list of blocks, selects block as current
@@ -33,7 +34,8 @@ export class EditCodeAction extends CommandAction {
   get tags(): string[] { return ['edit', 'code'] }
 
   protected override onClick(bar: ICommandBar) {
-
+    vm.stop();
+    shell.editCode();
   }
 }
 

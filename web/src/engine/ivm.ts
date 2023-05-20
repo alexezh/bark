@@ -46,6 +46,7 @@ export interface IVM extends IVMCodeRunner {
   get clock(): FrameClock;
   get levelFile(): IVoxelLevelFile;
   get camera(): ICamera;
+  get loader(): ICodeLoader;
 
   attachCamera(camera: ICamera): void;
   registerLevelLoaded(target: any, func: () => void): void;

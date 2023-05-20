@@ -151,7 +151,7 @@ export type ForeverNode = StatementNode & {
   body: BlockNode
 }
 
-export type ForEachNode = StatementNode & {
+export type ForeachNode = StatementNode & {
   name: Token;
   exp: ExpressionNode;
   body: BlockNode

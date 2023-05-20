@@ -5,7 +5,7 @@ import {
   ParamDefNode,
   IfNode,
   VarDefNode, StatementNode, AssingmentNode, CallNode,
-  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode, WhileNode, makeConstNode, makeIdNode, CallParamNode, ForEachNode, OnNode, ForeverNode
+  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode, WhileNode, makeConstNode, makeIdNode, CallParamNode, ForeachNode, OnNode, ForeverNode
 } from "./ast";
 import { BasicParser } from "./basicparser";
 import { isConstTokenKind, isOpTokenKind } from "./lexer";
@@ -221,7 +221,7 @@ function parseForever(parser: BasicParser): ForeverNode {
   }
 }
 
-function parseForeach(parser: BasicParser): ForEachNode {
+function parseForeach(parser: BasicParser): ForeachNode {
   parser.ignoreEol(true);
   // expression ends with then
   let ft = parser.readKind(TokenKind.Foreach);

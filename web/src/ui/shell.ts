@@ -84,70 +84,14 @@ export class Shell implements IGameShell {
   public printException(e: any): void {
   }
 
-  public editFile(text: string | null | undefined, onSave: ((text: string) => void) | undefined) {
+  public editCode() {
 
-    if (onSave !== undefined) {
-      this.openTextEditor(text, (text: string) => {
-        onSave(text);
-        this.closeTextEditor();
-      });
-    } else {
-      this.openTextEditor(text, undefined);
-    }
+    this.openTextEditor((text: string) => {
+      this.closeTextEditor();
+    });
   }
 
-
-  private loginCached() {
-    let user = window.localStorage.getItem('user');
-    if (user === undefined || user === null) {
-      this.print(`Run ${decorateCommand('login name')} to login. Type ${decorateCommand('help')} to see more commands`);
-      return;
-    }
-
-    this.login(user);
-  }
-
-  public login(name: string) {
-    /*
-        if (this.interactiveAvatar !== undefined) {
-          this.printError(`Already logged in.You have to logout to switch avatar`);
-          return;
-        }
-    
-        let avatar: IAvatar | undefined;
-        let id = parseInt(name);
-        if (isNaN(id)) {
-          avatar = gameState.avatarCollection.findCharacterByName(name);
-        } else {
-          avatar = gameState.avatarCollection.getAvatar(id.toString());
-        }
-    
-        if (avatar === undefined) {
-          this.printError(`Avatar ${name} not found`);
-          return;
-        }
-    
-        window.localStorage.setItem('user', avatar.id);
-    
-        this.setInteractiveAvatar(avatar);
-        this.print(`Welcome ${avatar.rt.name} to Nomekop`);
-        this.camera?.focus()
-        */
-  }
-
-  public logout() {
-    /*
-    if (this.interactiveAvatar === undefined) {
-      this.printError(`Not logged in `);
-      return;
-    }
-
-    this.print(`Goodbye ${this.interactiveAvatar.rt.name} `);
-    this.setInteractiveAvatar(undefined);
-    */
-  }
-
-  private openTextEditor(text: string | null | undefined, onSave: ((text: string) => void) | undefined) {
+  private openTextEditor(onSave: ((text: string) => void) | undefined) {
     if (this.codeEditor === undefined) {
       this.codeEditor = new CodeEditor({
         id: "codeeditor",
@@ -161,7 +105,7 @@ export class Shell implements IGameShell {
       this.compositor2.appendLayer(this.codeEditor);
     }
 
-    this.codeEditor.load(text, onSave, () => this.closeTextEditor());
+    this.codeEditor.load(onSave, () => this.closeTextEditor());
 
     this.codeEditor.visible = true;
     this.codeEditor.focus();
