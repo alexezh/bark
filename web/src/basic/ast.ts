@@ -1,27 +1,44 @@
 import { Block } from "typescript";
 import { Token } from "./token";
 
+export enum AstErrorCode {
+  generic,
+  invalidNode,
+}
+
+export class AstError {
+  public readonly msg: string;
+  public readonly code: AstErrorCode;
+  public readonly ast: AstNode | undefined;
+
+  public constructor(code: AstErrorCode, ast: AstNode | undefined, msg: string) {
+    this.msg = msg;
+    this.code = code;
+    this.ast = ast;
+  }
+}
+
 export enum AstNodeKind {
   module = 0,
-  paramDef,
-  funcDef,
-  typeDef,
-  varDef,
-  return,
-  break,
-  assingment,
-  call,
-  op,
-  const,
-  id,
-  expression,
-  block,
-  if,
-  for,
-  forever,
-  foreach,
-  while,
-  on,
+  paramDef = 1,
+  funcDef = 2,
+  typeDef = 3,
+  varDef = 4,
+  return = 5,
+  break = 6,
+  assingment = 7,
+  call = 8,
+  op = 9,
+  const = 10,
+  id = 11,
+  expression = 12,
+  block = 13,
+  if = 14,
+  for = 16,
+  forever = 17,
+  foreach = 18,
+  while = 19,
+  on = 20,
 }
 
 export type AstNode = {
@@ -124,7 +141,7 @@ export function makeIdNode(token: Token): IdNode {
 
 export type ExpressionNode = AstNode & {
   left: AstNode | undefined;
-  op: AstNode | undefined;
+  op: OpNode | undefined;
   right: AstNode | undefined;
 }
 

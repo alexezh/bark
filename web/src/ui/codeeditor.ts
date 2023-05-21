@@ -1,8 +1,9 @@
 import { UiLayer2, UiLayerProps } from "./uilayer";
 import { KeyBinder } from "./keybinder";
 import { createButton, setElementVisible } from "../lib/htmlutils";
-import { RenderBlock, renderModule } from "../basic/formatter";
+import { renderModule } from "../basic/formatter";
 import { vm } from "../engine/ivm";
+import { TextBlock } from "../basic/textblock";
 
 export type CodeEditorProps = UiLayerProps & {
 }
@@ -12,7 +13,7 @@ export class CodeEditor extends UiLayer2<CodeEditorProps> {
   private onSave: ((text: string) => void) | undefined;
   private onCancel: (() => void) | undefined;
   private saveButton: HTMLButtonElement;
-  private renderBlock: RenderBlock | undefined;
+  private renderBlock: TextBlock | undefined;
 
   public constructor(props: CodeEditorProps) {
 

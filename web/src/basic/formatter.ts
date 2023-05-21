@@ -1,118 +1,13 @@
-import { ModuleName } from "webpack-cli";
-import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForeachNode, ForNode, ForeverNode, FuncDefNode, IfNode, OnNode, ParamDefNode, ReturnNode, StatementNode, VarDefNode, WhileNode, ModuleNode, IdNode } from "./ast";
+import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForeachNode, ForNode, ForeverNode, FuncDefNode, IfNode, OnNode, ParamDefNode, ReturnNode, StatementNode, VarDefNode, WhileNode, ModuleNode, IdNode, AstErrorCode, AstError, ConstNode } from "./ast";
 import { ParseError, ParseErrorCode } from "./parseerror";
+import { ITextSegment, TextBlock, TextLine } from "./textblock";
 import { Token, TokenKind } from "./token";
-import { isConstTokenKind } from "./lexer";
 
-export class RenderSpan {
-  private data: Token | RenderSpan[];
-  private spaceLeft: boolean = false;
-
-  public static fromString(val: string, spaceLeft: boolean = false): RenderSpan {
-    return new RenderSpan(new Token(TokenKind.String, val, 0), spaceLeft);
-  }
-
-  public constructor(token: Token, spaceLeft: boolean = false) {
-    this.data = token;
-  }
-
-  public render(elem: HTMLSpanElement | HTMLDivElement) {
-    if (this.spaceLeft) {
-      let space = document.createElement('span');
-      space.textContent = ' ';
-      elem.appendChild(space);
-    }
-
-    let t = document.createElement('span');
-    if (this.data instanceof Token) {
-      t.textContent = this.data.value;
-    } else {
-      for (let child of this.data) {
-        child.render(t);
-      }
-    }
-    elem.appendChild(t);
-  }
-}
-
-// block is either line or collection of blocks and lines
-export class RenderBlock {
-  private parent: RenderBlock | undefined;
-  private ast: AstNode;
-  private children: (RenderLine | RenderBlock)[] = [];
-
-  public constructor(parent: RenderBlock | undefined, root: AstNode) {
-    this.parent = parent;
-    this.ast = root;
-  }
-
-  public appendBlock(ast: AstNode): RenderBlock {
-    let block = new RenderBlock(this, ast);
-    this.children.push(block);
-    return block;
-  }
-
-  public appendLine(line: RenderLine | string | Token | undefined): RenderLine {
-    if (line === undefined) {
-      let lc = new RenderLine();
-      this.children.push(lc);
-      return lc;
-    } else if (typeof (line) === 'string') {
-      let lc = new RenderLine();
-      lc.appendConst(line);
-      this.children.push(lc);
-      return lc;
-    } else if (line instanceof Token) {
-      let lc = new RenderLine();
-      lc.appendToken(line);
-      this.children.push(lc);
-      return lc;
-    } else {
-      this.children.push(line);
-      return line;
-    }
-  }
-
-  public render(parent: HTMLDivElement) {
-    let div = document.createElement('div');
-    for (let child of this.children) {
-      if (child instanceof RenderBlock) {
-        child.render(div);
-      } else if (child instanceof RenderLine) {
-        child.render(parent);
-      }
-    }
-
-    parent.appendChild(div);
-  }
-}
-
-export class RenderLine {
-  private tokens: RenderSpan[] = [];
-
-  public appendConst(val: string): void {
-    let spaceLeft = this.tokens.length > 0;
-    this.tokens.push(RenderSpan.fromString(val, spaceLeft));
-  }
-
-  public appendToken(token: Token) {
-    let spaceLeft = this.tokens.length > 0;
-    this.tokens.push(new RenderSpan(token, spaceLeft))
-  }
-
-  public render(elem: HTMLDivElement) {
-    let line = document.createElement('div');
-    for (let token of this.tokens) {
-      token.render(line);
-    }
-    elem.appendChild(line);
-  }
-}
 
 /**
  * convers tree to array of lines
  */
-export function renderNode(rb: RenderBlock, ast: AstNode) {
+export function renderNode(rb: TextBlock, ast: AstNode) {
 
   switch (ast.kind) {
     case AstNodeKind.funcDef:
@@ -167,7 +62,7 @@ export function renderNode(rb: RenderBlock, ast: AstNode) {
 }
 
 export function renderModule(ast: ModuleNode) {
-  let modelBlock = new RenderBlock(undefined, ast);
+  let modelBlock = new TextBlock(undefined, ast);
 
   for (let on of ast.on) {
     renderNode(modelBlock, on);
@@ -180,7 +75,7 @@ export function renderModule(ast: ModuleNode) {
   return modelBlock;
 }
 
-function renderFuncDef(parentBlock: RenderBlock, ast: FuncDefNode) {
+function renderFuncDef(parentBlock: TextBlock, ast: FuncDefNode) {
   let ctx = parentBlock.appendBlock(ast);
 
   let line = ctx.appendLine('proc');
@@ -197,7 +92,7 @@ function renderFuncDef(parentBlock: RenderBlock, ast: FuncDefNode) {
   ctx.appendLine('end');
 }
 
-function renderParams(line: RenderLine, params: ParamDefNode[]) {
+function renderParams(line: TextLine, params: ParamDefNode[]) {
   let addComma = false;
   for (let param of params) {
     if (addComma) {
@@ -207,10 +102,9 @@ function renderParams(line: RenderLine, params: ParamDefNode[]) {
     line.appendConst((':'));
     line.appendToken(param.paramType);
   }
-  line.appendConst((')'));
 }
 
-function renderBlock(parentBlock: RenderBlock, block: BlockNode | Function) {
+function renderBlock(parentBlock: TextBlock, block: BlockNode | Function) {
   if (block instanceof Function) {
     // ???
   } else {
@@ -221,14 +115,18 @@ function renderBlock(parentBlock: RenderBlock, block: BlockNode | Function) {
   }
 }
 
-function renderOn(parentBlock: RenderBlock, ast: OnNode) {
+function renderOn(parentBlock: TextBlock, ast: OnNode) {
   let ctx = parentBlock.appendBlock(ast);
 
   let line = ctx.appendLine('on');
   line.appendToken(ast.name);
-  line.appendConst('(');
-  renderParams(line, ast.params);
-  line.appendConst(')');
+  line.appendConst('(', false);
+  if (ast.params.length > 0) {
+    renderParams(line, ast.params);
+    line.appendConst(')');
+  } else {
+    line.appendConst(')', false);
+  }
 
   line.appendConst('begin');
   renderBlock(ctx, ast.body);
@@ -236,8 +134,8 @@ function renderOn(parentBlock: RenderBlock, ast: OnNode) {
   ctx.appendLine('end');
 }
 
-function renderVarDef(parentBlock: RenderBlock, ast: VarDefNode) {
-  let ctx = new RenderBlock(parentBlock, ast);
+function renderVarDef(parentBlock: TextBlock, ast: VarDefNode) {
+  let ctx = new TextBlock(parentBlock, ast);
   let line = ctx.appendLine('var');
   line.appendToken(ast.name);
   if (ast.value) {
@@ -247,16 +145,16 @@ function renderVarDef(parentBlock: RenderBlock, ast: VarDefNode) {
   return ctx;
 }
 
-function renderAssingment(parentBlock: RenderBlock, ast: AssingmentNode) {
+function renderAssingment(parentBlock: TextBlock, ast: AssingmentNode) {
   let line = parentBlock.appendLine(undefined);
   line.appendToken(ast.name);
   line.appendConst(':=');
   renderExpression(line, ast.value);
 }
 
-function renderIf(parentBlock: RenderBlock, ast: IfNode): RenderBlock {
-  let ctx = new RenderBlock(parentBlock, ast);
-  let ifline = new RenderLine();
+function renderIf(parentBlock: TextBlock, ast: IfNode): TextBlock {
+  let ctx = new TextBlock(parentBlock, ast);
+  let ifline = ctx.appendLine(undefined);
   ctx.appendLine(ifline);
   ifline.appendConst('if');
   renderExpression(ifline, ast.exp);
@@ -278,53 +176,113 @@ function renderIf(parentBlock: RenderBlock, ast: IfNode): RenderBlock {
   return ctx;
 }
 
-function renderFor(parentBlock: RenderBlock, ast: ForNode) {
-  parentBlock.appendLine('while');
+function renderFor(parentBlock: TextBlock, ast: ForNode) {
+  let ctx = parentBlock.appendBlock(ast);
+  let line = ctx.appendLine('for');
+  line.appendToken(ast.name)
+  line.appendConst(':=');
+  renderExpression(line, ast.startExp);
+  line.appendConst('to');
+  renderExpression(line, ast.endExp);
+  if (ast.byExp) {
+    line.appendConst('by');
+    renderExpression(line, ast.byExp);
+  }
+  line.appendConst('do');
+
+  renderBlock(ctx, ast.body);
+
+  ctx.appendLine('end');
 }
 
-function renderForeach(parentBlock: RenderBlock, ast: ForeachNode) {
-  parentBlock.appendLine('while');
+function renderForeach(parentBlock: TextBlock, ast: ForeachNode) {
+  let ctx = parentBlock.appendBlock(ast);
+  let line = ctx.appendLine('foreach');
+  line.appendToken(ast.name)
+  line.appendConst('in');
+  renderExpression(line, ast.exp);
+  line.appendConst('do');
+
+  renderBlock(ctx, ast.body);
+
+  ctx.appendLine('end');
 }
 
-function renderForever(parentBlock: RenderBlock, ast: ForeverNode) {
-  parentBlock.appendLine('while');
-}
+function renderForever(parentBlock: TextBlock, ast: ForeverNode) {
+  let ctx = parentBlock.appendBlock(ast);
+  let line = ctx.appendLine('forever');
+  line.appendConst('do');
 
-function renderExpressionPart(line: RenderLine, ast: AstNode) {
+  renderBlock(ctx, ast.body);
+
+  ctx.appendLine('end');
+}
+function renderExpressionPart(line: ITextSegment, ast: AstNode) {
   if (ast.kind === AstNodeKind.id) {
     line.appendToken((ast as IdNode).name);
+  } else if (ast.kind === AstNodeKind.const) {
+    line.appendToken((ast as ConstNode).value);
+  } else if (ast.kind === AstNodeKind.call) {
+    renderCall(line, ast as CallNode);
+  } else if (ast.kind === AstNodeKind.expression) {
+    renderExpression(line, ast as ExpressionNode);
+  } else {
+    throw new AstError(AstErrorCode.invalidNode, ast, 'Unsupported formatting code');
   }
 }
 
-function renderExpression(line: RenderLine, ast: ExpressionNode) {
+function renderExpression(line: ITextSegment, ast: ExpressionNode) {
   if (ast.left) {
     renderExpressionPart(line, ast.left);
+  }
+
+  if (ast.op) {
+    line.appendToken(ast.op.op);
   }
 
   if (ast.right) {
     renderExpressionPart(line, ast.right);
   }
 }
-function renderBreak(parentBlock: RenderBlock, arg1: AstNode) {
+function renderBreak(parentBlock: TextBlock, arg1: AstNode) {
   parentBlock.appendLine('break');
 }
 
-function renderReturn(parentBlock: RenderBlock, ast: ReturnNode) {
+function renderReturn(parentBlock: TextBlock, ast: ReturnNode) {
   let line = parentBlock.appendLine('return');
   if (ast.value) {
     renderExpression(line, ast.value);
   }
 }
 
-function renderWhile(parentBlock: RenderBlock, arg1: WhileNode) {
-  parentBlock.appendLine('while');
+function renderWhile(parentBlock: TextBlock, ast: WhileNode) {
+  let ctx = parentBlock.appendBlock(ast);
+  let line = ctx.appendLine('while');
+  renderExpression(line, ast.exp);
+  line.appendConst('do');
+
+  renderBlock(ctx, ast.body);
+
+  ctx.appendLine('end');
 }
 
-function renderCall(block: RenderLine | RenderBlock, ast: CallNode) {
-  if (block instanceof RenderLine) {
-    block.appendToken(ast.name);
+function renderCall(block: ITextSegment | TextBlock, ast: CallNode) {
+
+  let line: ITextSegment;
+  if (block instanceof TextBlock) {
+    line = block.appendLine(undefined);
   } else {
-    block.appendLine(ast.name);
+    line = block as TextLine;
+  }
+
+  line.appendToken(ast.name);
+
+  // wrap parameters to span
+  let seg = line.appendSegment(false);
+
+  // 
+  for (let param of ast.params) {
+    renderExpressionPart(seg, param);
   }
 }
 
