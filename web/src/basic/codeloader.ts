@@ -39,8 +39,18 @@ export class CodeLoader implements ICodeLoader {
     }
   }
 
+  public getUserModule(name: string): ModuleNode | undefined {
+    return this._userModules.get(name);
+  }
+
   public *systemModules(): Iterable<ModuleNode> {
     for (let m of this._systemModules) {
+      yield m[1];
+    }
+  }
+
+  public *userModules(): Iterable<ModuleNode> {
+    for (let m of this._userModules) {
       yield m[1];
     }
   }

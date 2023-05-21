@@ -1,49 +1,111 @@
-import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForeachNode, ForNode, ForeverNode, FuncDefNode, IfNode, OnNode, ParamDefNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast";
+import { ModuleName } from "webpack-cli";
+import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForeachNode, ForNode, ForeverNode, FuncDefNode, IfNode, OnNode, ParamDefNode, ReturnNode, StatementNode, VarDefNode, WhileNode, ModuleNode, IdNode } from "./ast";
 import { ParseError, ParseErrorCode } from "./parseerror";
 import { Token, TokenKind } from "./token";
+import { isConstTokenKind } from "./lexer";
 
-export class RenderToken {
-  private data: Token;
+export class RenderSpan {
+  private data: Token | RenderSpan[];
+  private spaceLeft: boolean = false;
 
-  public static fromString(val: string): RenderToken {
-    return new RenderToken(new Token(TokenKind.String, val, 0));
+  public static fromString(val: string, spaceLeft: boolean = false): RenderSpan {
+    return new RenderSpan(new Token(TokenKind.String, val, 0), spaceLeft);
   }
 
-  public constructor(token: Token) {
+  public constructor(token: Token, spaceLeft: boolean = false) {
     this.data = token;
+  }
+
+  public render(elem: HTMLSpanElement | HTMLDivElement) {
+    if (this.spaceLeft) {
+      let space = document.createElement('span');
+      space.textContent = ' ';
+      elem.appendChild(space);
+    }
+
+    let t = document.createElement('span');
+    if (this.data instanceof Token) {
+      t.textContent = this.data.value;
+    } else {
+      for (let child of this.data) {
+        child.render(t);
+      }
+    }
+    elem.appendChild(t);
   }
 }
 
+// block is either line or collection of blocks and lines
 export class RenderBlock {
   private parent: RenderBlock | undefined;
-  private root: AstNode;
-  private lines: RenderLine[] = [];
+  private ast: AstNode;
+  private children: (RenderLine | RenderBlock)[] = [];
 
   public constructor(parent: RenderBlock | undefined, root: AstNode) {
     this.parent = parent;
-    this.root = root;
+    this.ast = root;
   }
 
-  public addLine(line: RenderLine | string) {
-    if (typeof (line) === 'string') {
+  public appendBlock(ast: AstNode): RenderBlock {
+    let block = new RenderBlock(this, ast);
+    this.children.push(block);
+    return block;
+  }
+
+  public appendLine(line: RenderLine | string | Token | undefined): RenderLine {
+    if (line === undefined) {
+      let lc = new RenderLine();
+      this.children.push(lc);
+      return lc;
+    } else if (typeof (line) === 'string') {
       let lc = new RenderLine();
       lc.appendConst(line);
-      this.lines.push(lc);
+      this.children.push(lc);
+      return lc;
+    } else if (line instanceof Token) {
+      let lc = new RenderLine();
+      lc.appendToken(line);
+      this.children.push(lc);
+      return lc;
     } else {
-      this.lines.push(line);
+      this.children.push(line);
+      return line;
     }
+  }
+
+  public render(parent: HTMLDivElement) {
+    let div = document.createElement('div');
+    for (let child of this.children) {
+      if (child instanceof RenderBlock) {
+        child.render(div);
+      } else if (child instanceof RenderLine) {
+        child.render(parent);
+      }
+    }
+
+    parent.appendChild(div);
   }
 }
 
 export class RenderLine {
-  private tokens: RenderToken[] = [];
+  private tokens: RenderSpan[] = [];
 
   public appendConst(val: string): void {
-    this.tokens.push(RenderToken.fromString(val));
+    let spaceLeft = this.tokens.length > 0;
+    this.tokens.push(RenderSpan.fromString(val, spaceLeft));
   }
 
   public appendToken(token: Token) {
-    this.tokens.push(new RenderToken(token))
+    let spaceLeft = this.tokens.length > 0;
+    this.tokens.push(new RenderSpan(token, spaceLeft))
+  }
+
+  public render(elem: HTMLDivElement) {
+    let line = document.createElement('div');
+    for (let token of this.tokens) {
+      token.render(line);
+    }
+    elem.appendChild(line);
   }
 }
 
@@ -104,11 +166,24 @@ export function renderNode(rb: RenderBlock, ast: AstNode) {
   }
 }
 
-function renderFuncDef(rb: RenderBlock, ast: FuncDefNode) {
-  let ctx = new RenderBlock(rb, ast);
+export function renderModule(ast: ModuleNode) {
+  let modelBlock = new RenderBlock(undefined, ast);
 
-  let line = new RenderLine();
-  line.appendConst('proc');
+  for (let on of ast.on) {
+    renderNode(modelBlock, on);
+  }
+
+  for (let p of ast.procs) {
+    renderNode(modelBlock, p);
+  }
+
+  return modelBlock;
+}
+
+function renderFuncDef(parentBlock: RenderBlock, ast: FuncDefNode) {
+  let ctx = parentBlock.appendBlock(ast);
+
+  let line = ctx.appendLine('proc');
   line.appendToken(ast.name);
   line.appendConst('(');
 
@@ -118,9 +193,8 @@ function renderFuncDef(rb: RenderBlock, ast: FuncDefNode) {
     line.appendToken(ast.returnType);
   }
   line.appendConst('begin');
-  ctx.addLine(line);
   renderBlock(ctx, ast.body);
-  ctx.addLine('end');
+  ctx.appendLine('end');
 }
 
 function renderParams(line: RenderLine, params: ParamDefNode[]) {
@@ -136,47 +210,58 @@ function renderParams(line: RenderLine, params: ParamDefNode[]) {
   line.appendConst((')'));
 }
 
-function renderBlock(rb: RenderBlock, block: BlockNode | Function) {
+function renderBlock(parentBlock: RenderBlock, block: BlockNode | Function) {
   if (block instanceof Function) {
     // ???
   } else {
+    let ctx = parentBlock.appendBlock(block);
     for (let node of block.statements) {
-      renderNode(rb, node);
+      renderNode(ctx, node);
     }
   }
 }
 
-function renderOn(rb: RenderBlock, ast: OnNode) {
-  let ctx = new RenderBlock(rb, ast);
+function renderOn(parentBlock: RenderBlock, ast: OnNode) {
+  let ctx = parentBlock.appendBlock(ast);
 
-  let line = new RenderLine();
-  line.appendConst('on');
+  let line = ctx.appendLine('on');
   line.appendToken(ast.name);
   line.appendConst('(');
+  renderParams(line, ast.params);
+  line.appendConst(')');
 
   line.appendConst('begin');
-  ctx.addLine(line);
   renderBlock(ctx, ast.body);
 
-  ctx.addLine('end');
+  ctx.appendLine('end');
 }
 
-function renderVarDef(rb: RenderBlock, ast: VarDefNode) {
-  throw new Error("Function not implemented.");
+function renderVarDef(parentBlock: RenderBlock, ast: VarDefNode) {
+  let ctx = new RenderBlock(parentBlock, ast);
+  let line = ctx.appendLine('var');
+  line.appendToken(ast.name);
+  if (ast.value) {
+    line.appendConst(':=');
+    renderExpression(line, ast.value);
+  }
+  return ctx;
 }
 
-function renderAssingment(rb: RenderBlock, ast: AssingmentNode) {
-  throw new Error("Function not implemented.");
+function renderAssingment(parentBlock: RenderBlock, ast: AssingmentNode) {
+  let line = parentBlock.appendLine(undefined);
+  line.appendToken(ast.name);
+  line.appendConst(':=');
+  renderExpression(line, ast.value);
 }
 
-function renderIf(rb: RenderBlock, ast: IfNode) {
-  let ctx = new RenderBlock(rb, ast);
+function renderIf(parentBlock: RenderBlock, ast: IfNode): RenderBlock {
+  let ctx = new RenderBlock(parentBlock, ast);
   let ifline = new RenderLine();
-  ctx.addLine(ifline);
+  ctx.appendLine(ifline);
   ifline.appendConst('if');
   renderExpression(ifline, ast.exp);
   ifline.appendConst('then');
-  renderBlock(rb, ast.th);
+  renderBlock(parentBlock, ast.th);
   if (ast.elif.length > 0) {
     for (let block of ast.elif) {
       ifline.appendConst('elif');
@@ -189,37 +274,57 @@ function renderIf(rb: RenderBlock, ast: IfNode) {
     ifline.appendConst('else');
     renderBlock(ctx, ast.el);
   }
-  ctx.addLine('end');
+  ctx.appendLine('end');
+  return ctx;
 }
 
-function renderFor(rb: RenderBlock, ast: ForNode) {
-  throw new Error("Function not implemented.");
+function renderFor(parentBlock: RenderBlock, ast: ForNode) {
+  parentBlock.appendLine('while');
 }
 
-function renderForeach(rb: RenderBlock, ast: ForeachNode) {
-  throw new Error("Function not implemented.");
+function renderForeach(parentBlock: RenderBlock, ast: ForeachNode) {
+  parentBlock.appendLine('while');
 }
 
-function renderForever(rb: RenderBlock, ast: ForeverNode) {
-  throw new Error("Function not implemented.");
+function renderForever(parentBlock: RenderBlock, ast: ForeverNode) {
+  parentBlock.appendLine('while');
+}
+
+function renderExpressionPart(line: RenderLine, ast: AstNode) {
+  if (ast.kind === AstNodeKind.id) {
+    line.appendToken((ast as IdNode).name);
+  }
 }
 
 function renderExpression(line: RenderLine, ast: ExpressionNode) {
+  if (ast.left) {
+    renderExpressionPart(line, ast.left);
+  }
 
+  if (ast.right) {
+    renderExpressionPart(line, ast.right);
+  }
 }
-function renderBreak(rb: RenderBlock, arg1: AstNode) {
-  throw new Error("Function not implemented.");
-}
-
-function renderReturn(rb: RenderBlock, arg1: ReturnNode) {
-  throw new Error("Function not implemented.");
-}
-
-function renderWhile(rb: RenderBlock, arg1: WhileNode) {
-  throw new Error("Function not implemented.");
+function renderBreak(parentBlock: RenderBlock, arg1: AstNode) {
+  parentBlock.appendLine('break');
 }
 
-function renderCall(rb: RenderBlock, arg1: CallNode) {
-  throw new Error("Function not implemented.");
+function renderReturn(parentBlock: RenderBlock, ast: ReturnNode) {
+  let line = parentBlock.appendLine('return');
+  if (ast.value) {
+    renderExpression(line, ast.value);
+  }
+}
+
+function renderWhile(parentBlock: RenderBlock, arg1: WhileNode) {
+  parentBlock.appendLine('while');
+}
+
+function renderCall(block: RenderLine | RenderBlock, ast: CallNode) {
+  if (block instanceof RenderLine) {
+    block.appendToken(ast.name);
+  } else {
+    block.appendLine(ast.name);
+  }
 }
 

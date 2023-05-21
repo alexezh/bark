@@ -21,7 +21,10 @@ export interface ICodeLoader {
   addUserModule(name: string, text: string | ModuleNode);
   addSystemModule(name: string, module: ModuleNode);
 
+  getUserModule(name: string): ModuleNode | undefined;
+
   systemModules(): Iterable<ModuleNode>;
+  userModules(): Iterable<ModuleNode>;
   userFunctions(): Iterable<FuncDefNode>;
   functions(): Iterable<FuncDefNode>;
   userOns(): Iterable<OnNode>;
