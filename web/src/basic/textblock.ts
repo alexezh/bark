@@ -1,33 +1,40 @@
 import { AstNode } from "./ast";
 import { Token, TokenKind } from "./token";
 
+type clickHandler = (elem: TextBlock | ITextSegment | TextSpan, event: Event) => void;
+
+export type TextStyle = {
+  spaceLeft?: boolean;
+  selectable?: boolean;
+}
+
 export interface ITextSegment {
   readonly parent: ITextSegment | TextBlock;
   get ast(): AstNode | undefined;
 
-  render(elem: HTMLSpanElement | HTMLDivElement);
-  appendSegment(ast: AstNode | undefined, spaceLeft: boolean): ITextSegment;
+  render(elem: HTMLSpanElement | HTMLDivElement, onClick: (elem: TextBlock | ITextSegment | TextSpan) => void);
+  appendSegment(ast: AstNode | undefined, style: TextStyle): ITextSegment;
 
-  appendConst(val: string, spaceLeft: boolean | undefined): void;
-  appendToken(token: Token, spaceLeft: boolean | undefined);
+  appendConst(val: string, style: TextStyle): void;
+  appendToken(token: Token, style: TextStyle);
 }
 
 export class TextSpan {
   private data: Token;
-  private spaceLeft: boolean = false;
+  private style: TextStyle;
   public ast: AstNode | undefined = undefined;
 
-  public static fromString(val: string, spaceLeft: boolean = false): TextSpan {
-    return new TextSpan(new Token(TokenKind.String, val, 0), spaceLeft);
+  public static fromString(val: string, style: TextStyle): TextSpan {
+    return new TextSpan(new Token(TokenKind.String, val, 0), style);
   }
 
-  public constructor(token: Token, spaceLeft: boolean = false) {
+  public constructor(token: Token, style: TextStyle) {
     this.data = token;
-    this.spaceLeft = spaceLeft;
+    this.style = style;
   }
 
-  public render(elem: HTMLSpanElement | HTMLDivElement) {
-    if (this.spaceLeft) {
+  public render(elem: HTMLSpanElement | HTMLDivElement, onClick: clickHandler) {
+    if (this.style.spaceLeft) {
       let space = document.createElement('span');
       space.textContent = ' ';
       elem.appendChild(space);
@@ -35,55 +42,60 @@ export class TextSpan {
 
     let t = document.createElement('span');
     t.textContent = this.data.value;
+    if (this.style.selectable) {
+      t.addEventListener('click', (e) => onClick(this, e));
+    }
     elem.appendChild(t);
   }
 }
 
 export class TextSegment implements ITextSegment {
   private segments: (TextSpan | TextSegment)[] = [];
-  private spaceLeft: boolean;
+  private style: TextStyle;
   public readonly parent: ITextSegment | TextBlock;
   public readonly ast: AstNode | undefined;
 
-  public constructor(parent: ITextSegment | TextBlock, ast: AstNode | undefined, spaceLeft: boolean) {
-    this.spaceLeft = spaceLeft;
+  public constructor(parent: ITextSegment | TextBlock, ast: AstNode | undefined, style: TextStyle) {
+    this.style = style;
     this.ast = ast;
     this.parent = parent;
   }
 
-  public appendSegment(ast: AstNode | undefined, spaceLeft: boolean): ITextSegment {
-    let span = new TextSegment(this, ast, spaceLeft);
+  public appendSegment(ast: AstNode | undefined, style: TextStyle): ITextSegment {
+    let span = new TextSegment(this, ast, style);
     this.segments.push(span);
     return span;
   }
 
-  public appendConst(val: string, spaceLeft: boolean | undefined = undefined): void {
-    if (spaceLeft === undefined) {
-      spaceLeft = this.segments.length > 0;
+  public appendConst(val: string, style: TextStyle): void {
+    if (style.spaceLeft === undefined) {
+      style.spaceLeft = this.segments.length > 0;
     }
-    this.segments.push(TextSpan.fromString(val, spaceLeft));
+    this.segments.push(TextSpan.fromString(val, style));
   }
 
-  public appendToken(token: Token, spaceLeft: boolean | undefined) {
-    if (spaceLeft === undefined) {
-      spaceLeft = this.segments.length > 0;
+  public appendToken(token: Token, style: TextStyle) {
+    if (style.spaceLeft === undefined) {
+      style.spaceLeft = this.segments.length > 0;
     }
-    this.segments.push(new TextSpan(token, spaceLeft))
+    this.segments.push(new TextSpan(token, style))
   }
 
-  public render(elem: HTMLSpanElement | HTMLDivElement) {
-    if (this.spaceLeft) {
+  public render(elem: HTMLSpanElement | HTMLDivElement, onClick: clickHandler) {
+    if (this.style.spaceLeft) {
       let space = document.createElement('span');
       space.textContent = ' ';
       elem.appendChild(space);
     }
 
     let t = document.createElement('span');
+    t.addEventListener('click', (e) => onClick(this, e));
+
     for (let child of this.segments) {
       if (child instanceof TextSpan) {
-        child.render(t);
+        child.render(t, onClick);
       } else {
-        child.render(t);
+        child.render(t, onClick);
       }
       elem.appendChild(t);
     }
@@ -111,19 +123,19 @@ export class TextBlock {
     return block;
   }
 
-  public appendLine(line: TextLine | string | Token | undefined, ast: AstNode | undefined = undefined): TextLine {
+  public appendLine(line: TextLine | string | Token | undefined, ast: AstNode | undefined, style: TextStyle): TextLine {
     if (line === undefined) {
       let lc = new TextLine(this, ast);
       this.children.push(lc);
       return lc;
     } else if (typeof (line) === 'string') {
       let lc = new TextLine(this, ast);
-      lc.appendConst(line);
+      lc.appendConst(line, style);
       this.children.push(lc);
       return lc;
     } else if (line instanceof Token) {
       let lc = new TextLine(this, ast);
-      lc.appendToken(line);
+      lc.appendToken(line, style);
       this.children.push(lc);
       return lc;
     } else {
@@ -132,14 +144,15 @@ export class TextBlock {
     }
   }
 
-  public render(parent: HTMLDivElement) {
+  public render(parent: HTMLDivElement, onClick: clickHandler) {
     let div = document.createElement('div') as HTMLDivElement;
     div.style.marginLeft = (this.margin * 4).toString();
+    div.addEventListener('click', (e) => onClick(this, e));
     for (let child of this.children) {
       if (child instanceof TextBlock) {
-        child.render(div);
+        child.render(div, onClick);
       } else if (child instanceof TextLine) {
-        child.render(div);
+        child.render(div, onClick);
       }
     }
 
@@ -157,28 +170,31 @@ export class TextLine implements ITextSegment {
     this.ast = ast;
   }
 
-  public appendSegment(ast: AstNode | undefined, spaceLeft: boolean): ITextSegment {
-    let span = new TextSegment(this, ast, spaceLeft);
+  public appendSegment(ast: AstNode | undefined, style: TextStyle): ITextSegment {
+    let span = new TextSegment(this, ast, style);
     this.segments.push(span);
     return span;
   }
 
-  public appendConst(val: string, spaceLeft: boolean | undefined = undefined): void {
-    if (spaceLeft === undefined) {
-      spaceLeft = this.segments.length > 0;
+  public appendConst(val: string, style: TextStyle): void {
+    if (style.spaceLeft === undefined) {
+      style.spaceLeft = this.segments.length > 0;
     }
-    this.segments.push(TextSpan.fromString(val, spaceLeft));
+    this.segments.push(TextSpan.fromString(val, style));
   }
 
-  public appendToken(token: Token) {
-    let spaceLeft = this.segments.length > 0;
-    this.segments.push(new TextSpan(token, spaceLeft))
+  public appendToken(token: Token, style: TextStyle) {
+    if (!style.spaceLeft) {
+      style.spaceLeft = this.segments.length > 0;
+    }
+    this.segments.push(new TextSpan(token, style))
   }
 
-  public render(elem: HTMLDivElement) {
+  public render(elem: HTMLDivElement, onClick: clickHandler) {
     let line = document.createElement('div');
+    line.addEventListener('click', (e) => onClick(this, e));
     for (let token of this.segments) {
-      token.render(line);
+      token.render(line, onClick);
     }
     elem.appendChild(line);
   }

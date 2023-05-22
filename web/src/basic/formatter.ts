@@ -78,29 +78,29 @@ export function renderModule(ast: ModuleNode) {
 function renderFuncDef(parentBlock: TextBlock, ast: FuncDefNode) {
   let ctx = parentBlock.appendBlock(ast);
 
-  let line = ctx.appendLine('proc');
-  line.appendToken(ast.name);
-  line.appendConst('(');
+  let line = ctx.appendLine('proc', ast, {});
+  line.appendToken(ast.name, { selectable: true });
+  line.appendConst('(', { selectable: false });
 
   renderParams(line, ast.params);
   if (ast.returnType) {
-    line.appendConst((':'));
-    line.appendToken(ast.returnType);
+    line.appendConst(':', { selectable: false });
+    line.appendToken(ast.returnType, {});
   }
-  line.appendConst('begin');
+  line.appendConst('begin', { selectable: false });
   renderBlock(ctx, ast.body);
-  ctx.appendLine('end');
+  ctx.appendLine('end', undefined, { selectable: false });
 }
 
 function renderParams(line: TextLine, params: ParamDefNode[]) {
   let addComma = false;
   for (let param of params) {
     if (addComma) {
-      line.appendConst((','));
+      line.appendConst(',', { selectable: false });
     }
-    line.appendToken(param.name);
-    line.appendConst((':'));
-    line.appendToken(param.paramType);
+    line.appendToken(param.name, {});
+    line.appendConst(':', { selectable: false });
+    line.appendToken(param.paramType, {});
   }
 }
 
@@ -118,110 +118,108 @@ function renderBlock(parentBlock: TextBlock, block: BlockNode | Function) {
 function renderOn(parentBlock: TextBlock, ast: OnNode) {
   let ctx = parentBlock.appendBlock(ast);
 
-  let line = ctx.appendLine('on');
-  line.appendToken(ast.name);
-  line.appendConst('(', false);
+  let line = ctx.appendLine('on', undefined, {});
+  line.appendToken(ast.name, {});
+  line.appendConst('(', { spaceLeft: false, selectable: false });
   if (ast.params.length > 0) {
     renderParams(line, ast.params);
-    line.appendConst(')');
+    line.appendConst(')', { selectable: false });
   } else {
-    line.appendConst(')', false);
+    line.appendConst(')', { selectable: false });
   }
 
-  line.appendConst('begin');
+  line.appendConst('begin', {});
   renderBlock(ctx, ast.body);
 
-  ctx.appendLine('end');
+  ctx.appendLine('end', undefined, {});
 }
 
 function renderVarDef(parentBlock: TextBlock, ast: VarDefNode) {
-  let ctx = new TextBlock(parentBlock, ast);
-  let line = ctx.appendLine('var');
-  line.appendToken(ast.name);
+  let ctx = parentBlock.appendBlock(ast);
+  let line = ctx.appendLine('var', ast, {});
+  line.appendToken(ast.name, {});
   if (ast.value) {
-    line.appendConst(':=');
+    line.appendConst(':=', { selectable: false });
     renderExpression(line, ast.value);
   }
-  return ctx;
 }
 
 function renderAssingment(parentBlock: TextBlock, ast: AssingmentNode) {
-  let line = parentBlock.appendLine(undefined);
-  line.appendToken(ast.name);
-  line.appendConst(':=');
+  let line = parentBlock.appendLine(undefined, undefined, {});
+  line.appendToken(ast.name, {});
+  line.appendConst(':=', { selectable: false });
   renderExpression(line, ast.value);
 }
 
 function renderIf(parentBlock: TextBlock, ast: IfNode): TextBlock {
   let ctx = new TextBlock(parentBlock, ast);
-  let ifline = ctx.appendLine(undefined);
-  ctx.appendLine(ifline);
-  ifline.appendConst('if');
+  let ifline = ctx.appendLine(undefined, undefined, {});
+  ifline.appendConst('if', {});
   renderExpression(ifline, ast.exp);
-  ifline.appendConst('then');
+  ifline.appendConst('then', {});
   renderBlock(parentBlock, ast.th);
   if (ast.elif.length > 0) {
     for (let block of ast.elif) {
-      ifline.appendConst('elif');
+      ifline.appendConst('elif', {});
       renderExpression(ifline, ast.exp);
-      ifline.appendConst('then');
+      ifline.appendConst('then', {});
       renderBlock(ctx, block.block);
     }
   }
   if (ast.el) {
-    ifline.appendConst('else');
+    ifline.appendConst('else', {});
     renderBlock(ctx, ast.el);
   }
-  ctx.appendLine('end');
+  ctx.appendLine('end', undefined, {});
   return ctx;
 }
 
 function renderFor(parentBlock: TextBlock, ast: ForNode) {
   let ctx = parentBlock.appendBlock(ast);
-  let line = ctx.appendLine('for');
-  line.appendToken(ast.name)
-  line.appendConst(':=');
+  let line = ctx.appendLine('for', undefined, {});
+  line.appendToken(ast.name, {})
+  line.appendConst(':=', { selectable: false });
   renderExpression(line, ast.startExp);
-  line.appendConst('to');
+  line.appendConst('to', { selectable: false });
   renderExpression(line, ast.endExp);
   if (ast.byExp) {
-    line.appendConst('by');
+    line.appendConst('by', { selectable: false });
     renderExpression(line, ast.byExp);
   }
-  line.appendConst('do');
+  line.appendConst('do', { selectable: false });
 
   renderBlock(ctx, ast.body);
 
-  ctx.appendLine('end');
+  ctx.appendLine('end', undefined, { selectable: false });
 }
 
 function renderForeach(parentBlock: TextBlock, ast: ForeachNode) {
   let ctx = parentBlock.appendBlock(ast);
-  let line = ctx.appendLine('foreach');
-  line.appendToken(ast.name)
-  line.appendConst('in');
+  let line = ctx.appendLine('foreach', undefined, {});
+  line.appendToken(ast.name, {})
+  line.appendConst('in', { selectable: false });
   renderExpression(line, ast.exp);
-  line.appendConst('do');
+  line.appendConst('do', { selectable: false });
 
   renderBlock(ctx, ast.body);
 
-  ctx.appendLine('end');
+  ctx.appendLine('end', undefined, {});
 }
 
 function renderForever(parentBlock: TextBlock, ast: ForeverNode) {
   let ctx = parentBlock.appendBlock(ast);
-  let line = ctx.appendLine('forever');
-  line.appendConst('do');
+  let line = ctx.appendLine('forever', undefined, {});
+  line.appendConst('do', { selectable: false });
 
   renderBlock(ctx, ast.body);
 
-  ctx.appendLine('end');
+  ctx.appendLine('end', undefined, { selectable: false });
 }
 function renderExpressionPart(line: ITextSegment, ast: AstNode, spaceLeft: boolean | undefined = undefined) {
   if (ast.kind === AstNodeKind.id) {
-    line.appendToken((ast as IdNode).name, spaceLeft);
+    line.appendToken((ast as IdNode).name, { spaceLeft: spaceLeft });
   } else if (ast.kind === AstNodeKind.const) {
-    line.appendToken((ast as ConstNode).value, spaceLeft);
+    line.appendToken((ast as ConstNode).value, { spaceLeft: spaceLeft });
   } else if (ast.kind === AstNodeKind.call) {
     renderCall(line, ast as CallNode);
   } else if (ast.kind === AstNodeKind.expression) {
@@ -237,7 +235,7 @@ function renderExpression(line: ITextSegment, ast: ExpressionNode, spaceLeft: bo
   }
 
   if (ast.op) {
-    line.appendToken(ast.op.op, spaceLeft);
+    line.appendToken(ast.op.op, { spaceLeft: spaceLeft });
   }
 
   if (ast.right) {
@@ -245,11 +243,11 @@ function renderExpression(line: ITextSegment, ast: ExpressionNode, spaceLeft: bo
   }
 }
 function renderBreak(parentBlock: TextBlock, arg1: AstNode) {
-  parentBlock.appendLine('break');
+  parentBlock.appendLine('break', undefined, {});
 }
 
 function renderReturn(parentBlock: TextBlock, ast: ReturnNode) {
-  let line = parentBlock.appendLine('return');
+  let line = parentBlock.appendLine('return', undefined, {});
   if (ast.value) {
     renderExpression(line, ast.value);
   }
@@ -257,13 +255,13 @@ function renderReturn(parentBlock: TextBlock, ast: ReturnNode) {
 
 function renderWhile(parentBlock: TextBlock, ast: WhileNode) {
   let ctx = parentBlock.appendBlock(ast);
-  let line = ctx.appendLine('while');
+  let line = ctx.appendLine('while', undefined, {});
   renderExpression(line, ast.exp);
-  line.appendConst('do');
+  line.appendConst('do', {});
 
   renderBlock(ctx, ast.body);
 
-  ctx.appendLine('end');
+  ctx.appendLine('end', undefined, {});
 }
 
 /**
@@ -287,33 +285,33 @@ function renderCall(block: ITextSegment | TextBlock, ast: CallNode, spaceLeft: b
 
   let line: ITextSegment;
   if (block instanceof TextBlock) {
-    line = block.appendLine(undefined);
+    line = block.appendLine(undefined, undefined, {});
   } else {
     line = block as TextLine;
   }
 
-  line.appendToken(ast.name, spaceLeft);
-
   // wrap parameters to span
-  let seg = line.appendSegment(ast, true);
+  let seg = line.appendSegment(ast, { spaceLeft: true });
+
+  seg.appendToken(ast.name, { spaceLeft: spaceLeft });
 
   // check if it is safe to render without parentesys
   let parenthesis = requireParenthesis(block);
   if (parenthesis) {
-    seg.appendConst('(', false);
+    seg.appendConst('(', { spaceLeft: false, selectable: false });
   }
 
   let addComma = false;
   for (let param of ast.params) {
     if (parenthesis && addComma) {
-      seg.appendConst(',', false);
+      seg.appendConst(',', { spaceLeft: false, selectable: false });
     }
     addComma = true;
     renderExpressionPart(seg, param);
   }
 
   if (parenthesis) {
-    seg.appendConst(')', false);
+    seg.appendConst(')', { spaceLeft: false, selectable: false });
   }
 }
 

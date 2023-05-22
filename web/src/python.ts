@@ -102,7 +102,7 @@ export function boxedGame() {
 export function boxedBasic(): string {
   return `
     on load() begin
-      var level:= System.loadLevel 'default'
+      System.loadLevel 'default'
     end
 
     on start() begin

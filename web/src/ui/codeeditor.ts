@@ -3,7 +3,7 @@ import { KeyBinder } from "./keybinder";
 import { createButton, setElementVisible } from "../lib/htmlutils";
 import { renderModule } from "../basic/formatter";
 import { vm } from "../engine/ivm";
-import { TextBlock } from "../basic/textblock";
+import { ITextSegment, TextBlock, TextSpan } from "../basic/textblock";
 
 export type CodeEditorProps = UiLayerProps & {
 }
@@ -14,6 +14,8 @@ export class CodeEditor extends UiLayer2<CodeEditorProps> {
   private onCancel: (() => void) | undefined;
   private saveButton: HTMLButtonElement;
   private renderBlock: TextBlock | undefined;
+  private selectedText: TextBlock | ITextSegment | TextSpan | undefined = undefined;
+  private selectedElem: HTMLElement | undefined = undefined;
 
   public constructor(props: CodeEditorProps) {
 
@@ -43,8 +45,30 @@ export class CodeEditor extends UiLayer2<CodeEditorProps> {
     let module = vm.loader.getUserModule('default');
     if (module) {
       this.renderBlock = renderModule(module);
-      this.renderBlock.render(div);
+      this.renderBlock.render(div, this.onTextClick.bind(this));
     }
+  }
+
+  private onTextClick(elem: TextBlock | ITextSegment | TextSpan, event: Event) {
+    event.stopPropagation();
+
+    this.higlightElement(event.target as HTMLElement);
+  }
+
+  private higlightElement(htmlElem: HTMLElement) {
+    if (this.selectedElem) {
+      this.selectedElem.style.border = '';
+    }
+    this.selectedElem = htmlElem;
+    htmlElem.style.border = 'solid';
+  }
+
+  private static isParentText(v1: TextBlock | ITextSegment, v2: TextBlock | ITextSegment | TextSpan): boolean {
+    if (v1 === v2) {
+      return false;
+    }
+    //let cur = v2.parent;
+    return true;
   }
 
   public load(
