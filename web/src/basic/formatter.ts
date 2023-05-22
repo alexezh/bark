@@ -217,11 +217,11 @@ function renderForever(parentBlock: TextBlock, ast: ForeverNode) {
 
   ctx.appendLine('end');
 }
-function renderExpressionPart(line: ITextSegment, ast: AstNode) {
+function renderExpressionPart(line: ITextSegment, ast: AstNode, spaceLeft: boolean | undefined = undefined) {
   if (ast.kind === AstNodeKind.id) {
-    line.appendToken((ast as IdNode).name);
+    line.appendToken((ast as IdNode).name, spaceLeft);
   } else if (ast.kind === AstNodeKind.const) {
-    line.appendToken((ast as ConstNode).value);
+    line.appendToken((ast as ConstNode).value, spaceLeft);
   } else if (ast.kind === AstNodeKind.call) {
     renderCall(line, ast as CallNode);
   } else if (ast.kind === AstNodeKind.expression) {
@@ -231,13 +231,13 @@ function renderExpressionPart(line: ITextSegment, ast: AstNode) {
   }
 }
 
-function renderExpression(line: ITextSegment, ast: ExpressionNode) {
+function renderExpression(line: ITextSegment, ast: ExpressionNode, spaceLeft: boolean | undefined = undefined) {
   if (ast.left) {
     renderExpressionPart(line, ast.left);
   }
 
   if (ast.op) {
-    line.appendToken(ast.op.op);
+    line.appendToken(ast.op.op, spaceLeft);
   }
 
   if (ast.right) {
@@ -266,7 +266,24 @@ function renderWhile(parentBlock: TextBlock, ast: WhileNode) {
   ctx.appendLine('end');
 }
 
-function renderCall(block: ITextSegment | TextBlock, ast: CallNode) {
+/**
+ * return true if call requires parenthesis
+ * this happens if call is second in chain, or if call has parameter starting with operator
+ */
+function requireParenthesis(block: ITextSegment | TextBlock): boolean {
+  let node: ITextSegment | TextBlock | undefined = block;
+  while (node) {
+    if (node.ast !== undefined) {
+      if (node.ast.kind === AstNodeKind.call) {
+        return true;
+      }
+    }
+    node = node.parent;
+  }
+  return false;
+}
+
+function renderCall(block: ITextSegment | TextBlock, ast: CallNode, spaceLeft: boolean | undefined = undefined) {
 
   let line: ITextSegment;
   if (block instanceof TextBlock) {
@@ -275,14 +292,28 @@ function renderCall(block: ITextSegment | TextBlock, ast: CallNode) {
     line = block as TextLine;
   }
 
-  line.appendToken(ast.name);
+  line.appendToken(ast.name, spaceLeft);
 
   // wrap parameters to span
-  let seg = line.appendSegment(false);
+  let seg = line.appendSegment(ast, true);
 
-  // 
+  // check if it is safe to render without parentesys
+  let parenthesis = requireParenthesis(block);
+  if (parenthesis) {
+    seg.appendConst('(', false);
+  }
+
+  let addComma = false;
   for (let param of ast.params) {
+    if (parenthesis && addComma) {
+      seg.appendConst(',', false);
+    }
+    addComma = true;
     renderExpressionPart(seg, param);
+  }
+
+  if (parenthesis) {
+    seg.appendConst(')', false);
   }
 }
 

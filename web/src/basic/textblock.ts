@@ -2,56 +2,14 @@ import { AstNode } from "./ast";
 import { Token, TokenKind } from "./token";
 
 export interface ITextSegment {
+  readonly parent: ITextSegment | TextBlock;
+  get ast(): AstNode | undefined;
+
   render(elem: HTMLSpanElement | HTMLDivElement);
-  appendSegment(spaceLeft: boolean): ITextSegment;
+  appendSegment(ast: AstNode | undefined, spaceLeft: boolean): ITextSegment;
 
   appendConst(val: string, spaceLeft: boolean | undefined): void;
-  appendToken(token: Token);
-}
-
-export class TextSegment implements ITextSegment {
-  private segments: (TextSpan | TextSegment)[] = [];
-  private spaceLeft: boolean;
-
-  public constructor(spaceLeft: boolean) {
-    this.spaceLeft = spaceLeft;
-  }
-
-  public appendSegment(spaceLeft: boolean): ITextSegment {
-    let span = new TextSegment(spaceLeft);
-    this.segments.push(span);
-    return span;
-  }
-
-  public appendConst(val: string, spaceLeft: boolean | undefined = undefined): void {
-    if (spaceLeft === undefined) {
-      spaceLeft = this.segments.length > 0;
-    }
-    this.segments.push(TextSpan.fromString(val, spaceLeft));
-  }
-
-  public appendToken(token: Token) {
-    let spaceLeft = this.segments.length > 0;
-    this.segments.push(new TextSpan(token, spaceLeft))
-  }
-
-  public render(elem: HTMLSpanElement | HTMLDivElement) {
-    if (this.spaceLeft) {
-      let space = document.createElement('span');
-      space.textContent = ' ';
-      elem.appendChild(space);
-    }
-
-    let t = document.createElement('span');
-    for (let child of this.segments) {
-      if (child instanceof TextSpan) {
-        child.render(t);
-      } else {
-        child.render(t);
-      }
-      elem.appendChild(t);
-    }
-  }
+  appendToken(token: Token, spaceLeft: boolean | undefined);
 }
 
 export class TextSpan {
@@ -81,10 +39,61 @@ export class TextSpan {
   }
 }
 
+export class TextSegment implements ITextSegment {
+  private segments: (TextSpan | TextSegment)[] = [];
+  private spaceLeft: boolean;
+  public readonly parent: ITextSegment | TextBlock;
+  public readonly ast: AstNode | undefined;
+
+  public constructor(parent: ITextSegment | TextBlock, ast: AstNode | undefined, spaceLeft: boolean) {
+    this.spaceLeft = spaceLeft;
+    this.ast = ast;
+    this.parent = parent;
+  }
+
+  public appendSegment(ast: AstNode | undefined, spaceLeft: boolean): ITextSegment {
+    let span = new TextSegment(this, ast, spaceLeft);
+    this.segments.push(span);
+    return span;
+  }
+
+  public appendConst(val: string, spaceLeft: boolean | undefined = undefined): void {
+    if (spaceLeft === undefined) {
+      spaceLeft = this.segments.length > 0;
+    }
+    this.segments.push(TextSpan.fromString(val, spaceLeft));
+  }
+
+  public appendToken(token: Token, spaceLeft: boolean | undefined) {
+    if (spaceLeft === undefined) {
+      spaceLeft = this.segments.length > 0;
+    }
+    this.segments.push(new TextSpan(token, spaceLeft))
+  }
+
+  public render(elem: HTMLSpanElement | HTMLDivElement) {
+    if (this.spaceLeft) {
+      let space = document.createElement('span');
+      space.textContent = ' ';
+      elem.appendChild(space);
+    }
+
+    let t = document.createElement('span');
+    for (let child of this.segments) {
+      if (child instanceof TextSpan) {
+        child.render(t);
+      } else {
+        child.render(t);
+      }
+      elem.appendChild(t);
+    }
+  }
+}
+
 // block is either line or collection of blocks and lines
 export class TextBlock {
-  private parent: TextBlock | undefined;
-  private ast: AstNode;
+  public readonly parent: TextBlock | undefined;
+  public readonly ast: AstNode;
   private margin: number = 0;
   private children: (TextLine | TextBlock)[] = [];
 
@@ -102,18 +111,18 @@ export class TextBlock {
     return block;
   }
 
-  public appendLine(line: TextLine | string | Token | undefined): TextLine {
+  public appendLine(line: TextLine | string | Token | undefined, ast: AstNode | undefined = undefined): TextLine {
     if (line === undefined) {
-      let lc = new TextLine(this);
+      let lc = new TextLine(this, ast);
       this.children.push(lc);
       return lc;
     } else if (typeof (line) === 'string') {
-      let lc = new TextLine(this);
+      let lc = new TextLine(this, ast);
       lc.appendConst(line);
       this.children.push(lc);
       return lc;
     } else if (line instanceof Token) {
-      let lc = new TextLine(this);
+      let lc = new TextLine(this, ast);
       lc.appendToken(line);
       this.children.push(lc);
       return lc;
@@ -139,15 +148,17 @@ export class TextBlock {
 }
 
 export class TextLine implements ITextSegment {
-  private parent: TextBlock;
   private segments: (TextSpan | TextSegment)[] = [];
+  public readonly parent: TextBlock | ITextSegment;
+  public readonly ast: AstNode | undefined;
 
-  public constructor(parent: TextBlock) {
+  public constructor(parent: TextBlock, ast: AstNode | undefined) {
     this.parent = parent;
+    this.ast = ast;
   }
 
-  public appendSegment(spaceLeft: boolean): ITextSegment {
-    let span = new TextSegment(spaceLeft);
+  public appendSegment(ast: AstNode | undefined, spaceLeft: boolean): ITextSegment {
+    let span = new TextSegment(this, ast, spaceLeft);
     this.segments.push(span);
     return span;
   }
