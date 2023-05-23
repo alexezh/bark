@@ -1,8 +1,44 @@
 import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForeachNode, ForNode, ForeverNode, FuncDefNode, IfNode, OnNode, ParamDefNode, ReturnNode, StatementNode, VarDefNode, WhileNode, ModuleNode, IdNode, AstErrorCode, AstError, ConstNode } from "./ast";
 import { ParseError, ParseErrorCode } from "./parseerror";
-import { ITextSegment, TextBlock, TextLine } from "./textblock";
+import { ITextSegment, TextBlock, TextLine, TextSpan } from "./textblock";
 import { Token, TokenKind } from "./token";
 
+
+export function isParentNode(parent: TextBlock | ITextSegment | TextSpan, node: TextBlock | ITextSegment | TextSpan): boolean {
+  if (parent === node) {
+    return true;
+  }
+
+  if (parent instanceof TextSpan) {
+    return false;
+  }
+
+  let cur = node.parent;
+  while (cur) {
+    if (cur === parent) {
+      return true;
+    }
+    cur = cur.parent;
+  }
+
+  return false;
+}
+
+export function findParentNode(node: TextBlock | ITextSegment | TextSpan): TextBlock | ITextSegment | undefined {
+  if (!node) {
+    return undefined;
+  }
+
+  let cur: TextBlock | ITextSegment | undefined = node.parent;
+  while (cur) {
+    if (cur.ast !== undefined) {
+      return cur;
+    }
+    cur = cur.parent;
+  }
+
+  return undefined;
+}
 
 /**
  * convers tree to array of lines

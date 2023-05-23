@@ -1,7 +1,14 @@
 import { AstNode } from "./ast";
 import { Token, TokenKind } from "./token";
 
-type clickHandler = (elem: TextBlock | ITextSegment | TextSpan, event: Event) => void;
+type clickHandler = (node: TextBlock | ITextSegment | TextSpan, event: Event) => void;
+
+let nextId: number = 1;
+
+function makeId(): string {
+  let id = nextId++;
+  return 'tn_' + id.toString();
+}
 
 export type TextStyle = {
   spaceLeft?: boolean;
@@ -9,6 +16,7 @@ export type TextStyle = {
 }
 
 export interface ITextSegment {
+  readonly id: string;
   readonly parent: ITextSegment | TextBlock;
   get ast(): AstNode | undefined;
 
@@ -20,15 +28,19 @@ export interface ITextSegment {
 }
 
 export class TextSpan {
+  public readonly id: string;
+  public readonly parent: ITextSegment;
   private data: Token;
   private style: TextStyle;
   public ast: AstNode | undefined = undefined;
 
-  public static fromString(val: string, style: TextStyle): TextSpan {
-    return new TextSpan(new Token(TokenKind.String, val, 0), style);
+  public static fromString(parent: ITextSegment, val: string, style: TextStyle): TextSpan {
+    return new TextSpan(parent, new Token(TokenKind.String, val, 0), style);
   }
 
-  public constructor(token: Token, style: TextStyle) {
+  public constructor(parent: ITextSegment, token: Token, style: TextStyle) {
+    this.id = makeId();
+    this.parent = parent;
     this.data = token;
     this.style = style;
   }
@@ -41,8 +53,9 @@ export class TextSpan {
     }
 
     let t = document.createElement('span');
+    t.id = this.id;
     t.textContent = this.data.value;
-    if (this.style.selectable) {
+    if (this.style.selectable === undefined || this.style.selectable) {
       t.addEventListener('click', (e) => onClick(this, e));
     }
     elem.appendChild(t);
@@ -50,12 +63,14 @@ export class TextSpan {
 }
 
 export class TextSegment implements ITextSegment {
-  private segments: (TextSpan | TextSegment)[] = [];
-  private style: TextStyle;
+  public readonly id: string;
   public readonly parent: ITextSegment | TextBlock;
   public readonly ast: AstNode | undefined;
+  private segments: (TextSpan | TextSegment)[] = [];
+  private style: TextStyle;
 
   public constructor(parent: ITextSegment | TextBlock, ast: AstNode | undefined, style: TextStyle) {
+    this.id = makeId();
     this.style = style;
     this.ast = ast;
     this.parent = parent;
@@ -71,14 +86,14 @@ export class TextSegment implements ITextSegment {
     if (style.spaceLeft === undefined) {
       style.spaceLeft = this.segments.length > 0;
     }
-    this.segments.push(TextSpan.fromString(val, style));
+    this.segments.push(TextSpan.fromString(this, val, style));
   }
 
   public appendToken(token: Token, style: TextStyle) {
     if (style.spaceLeft === undefined) {
       style.spaceLeft = this.segments.length > 0;
     }
-    this.segments.push(new TextSpan(token, style))
+    this.segments.push(new TextSpan(this, token, style))
   }
 
   public render(elem: HTMLSpanElement | HTMLDivElement, onClick: clickHandler) {
@@ -89,6 +104,7 @@ export class TextSegment implements ITextSegment {
     }
 
     let t = document.createElement('span');
+    t.id = this.id;
     t.addEventListener('click', (e) => onClick(this, e));
 
     for (let child of this.segments) {
@@ -104,12 +120,14 @@ export class TextSegment implements ITextSegment {
 
 // block is either line or collection of blocks and lines
 export class TextBlock {
+  public readonly id: string;
   public readonly parent: TextBlock | undefined;
   public readonly ast: AstNode;
   private margin: number = 0;
   private children: (TextLine | TextBlock)[] = [];
 
   public constructor(parent: TextBlock | undefined, root: AstNode) {
+    this.id = makeId();
     this.parent = parent;
     this.ast = root;
     if (parent) {
@@ -147,6 +165,7 @@ export class TextBlock {
   public render(parent: HTMLDivElement, onClick: clickHandler) {
     let div = document.createElement('div') as HTMLDivElement;
     div.style.marginLeft = (this.margin * 4).toString();
+    div.id = this.id;
     div.addEventListener('click', (e) => onClick(this, e));
     for (let child of this.children) {
       if (child instanceof TextBlock) {
@@ -161,11 +180,13 @@ export class TextBlock {
 }
 
 export class TextLine implements ITextSegment {
-  private segments: (TextSpan | TextSegment)[] = [];
+  public readonly id: string;
   public readonly parent: TextBlock | ITextSegment;
   public readonly ast: AstNode | undefined;
+  private segments: (TextSpan | TextSegment)[] = [];
 
   public constructor(parent: TextBlock, ast: AstNode | undefined) {
+    this.id = makeId();
     this.parent = parent;
     this.ast = ast;
   }
@@ -180,18 +201,19 @@ export class TextLine implements ITextSegment {
     if (style.spaceLeft === undefined) {
       style.spaceLeft = this.segments.length > 0;
     }
-    this.segments.push(TextSpan.fromString(val, style));
+    this.segments.push(TextSpan.fromString(this, val, style));
   }
 
   public appendToken(token: Token, style: TextStyle) {
     if (!style.spaceLeft) {
       style.spaceLeft = this.segments.length > 0;
     }
-    this.segments.push(new TextSpan(token, style))
+    this.segments.push(new TextSpan(this, token, style))
   }
 
   public render(elem: HTMLDivElement, onClick: clickHandler) {
     let line = document.createElement('div');
+    line.id = this.id;
     line.addEventListener('click', (e) => onClick(this, e));
     for (let token of this.segments) {
       token.render(line, onClick);

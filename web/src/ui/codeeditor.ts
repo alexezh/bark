@@ -1,7 +1,7 @@
 import { UiLayer2, UiLayerProps } from "./uilayer";
 import { KeyBinder } from "./keybinder";
 import { createButton, setElementVisible } from "../lib/htmlutils";
-import { renderModule } from "../basic/formatter";
+import { renderModule, findParentNode, isParentNode } from "../basic/formatter";
 import { vm } from "../engine/ivm";
 import { ITextSegment, TextBlock, TextSpan } from "../basic/textblock";
 
@@ -14,7 +14,8 @@ export class CodeEditor extends UiLayer2<CodeEditorProps> {
   private onCancel: (() => void) | undefined;
   private saveButton: HTMLButtonElement;
   private renderBlock: TextBlock | undefined;
-  private selectedText: TextBlock | ITextSegment | TextSpan | undefined = undefined;
+  private selectedNode: TextBlock | ITextSegment | TextSpan | undefined = undefined;
+  private initialSelectedNode: TextBlock | ITextSegment | TextSpan | undefined = undefined;
   private selectedElem: HTMLElement | undefined = undefined;
 
   public constructor(props: CodeEditorProps) {
@@ -49,21 +50,38 @@ export class CodeEditor extends UiLayer2<CodeEditorProps> {
     }
   }
 
-  private onTextClick(elem: TextBlock | ITextSegment | TextSpan, event: Event) {
+  private onTextClick(node: TextBlock | ITextSegment | TextSpan, event: Event) {
     event.stopPropagation();
 
-    this.higlightElement(event.target as HTMLElement);
-  }
-
-  private higlightElement(htmlElem: HTMLElement) {
-    if (this.selectedElem) {
-      this.selectedElem.style.border = '';
+    if (this.selectedNode && isParentNode(this.selectedNode, node)) {
+      this.selectNode(findParentNode(this.selectedNode));
+    } else {
+      this.selectNode(node);
     }
-    this.selectedElem = htmlElem;
-    htmlElem.style.border = 'solid';
   }
 
-  private static isParentText(v1: TextBlock | ITextSegment, v2: TextBlock | ITextSegment | TextSpan): boolean {
+  private selectNode(node: TextBlock | ITextSegment | TextSpan | undefined) {
+    if (this.selectedNode) {
+      this.selectedElem!.style.border = '';
+      this.selectedNode = undefined;
+      this.selectedElem = undefined;
+    }
+
+    if (node === undefined) {
+      return;
+    }
+
+    let htmlElement = document.getElementById(node.id);
+    if (htmlElement === null) {
+      return;
+    }
+
+    this.selectedNode = node;
+    this.selectedElem = htmlElement;
+    this.selectedElem.style.border = 'solid';
+  }
+
+  private static isParentText(v1: TextBlock | ITextSegment | TextSpan, v2: TextBlock | ITextSegment | TextSpan): boolean {
     if (v1 === v2) {
       return false;
     }
