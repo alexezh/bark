@@ -171,8 +171,7 @@ function renderOn(parentBlock: TextBlock, ast: OnNode) {
 }
 
 function renderVarDef(parentBlock: TextBlock, ast: VarDefNode) {
-  let ctx = parentBlock.appendBlock(ast);
-  let line = ctx.appendLine('var', ast, {});
+  let line = parentBlock.appendLine('var', ast, {});
   line.appendToken(ast.name, {});
   if (ast.value) {
     line.appendConst(':=', { selectable: false });
@@ -187,27 +186,29 @@ function renderAssingment(parentBlock: TextBlock, ast: AssingmentNode) {
   renderExpression(line, ast.value);
 }
 
-function renderIf(parentBlock: TextBlock, ast: IfNode): TextBlock {
-  let ctx = new TextBlock(parentBlock, ast);
+function renderIf(parentBlock: TextBlock, ast: IfNode) {
+  let ctx = parentBlock.appendBlock(ast);
   let ifline = ctx.appendLine(undefined, undefined, {});
   ifline.appendConst('if', {});
   renderExpression(ifline, ast.exp);
   ifline.appendConst('then', {});
-  renderBlock(parentBlock, ast.th);
+
+  renderBlock(ctx, ast.th);
   if (ast.elif.length > 0) {
     for (let block of ast.elif) {
-      ifline.appendConst('elif', {});
-      renderExpression(ifline, ast.exp);
-      ifline.appendConst('then', {});
+      let eifline = ctx.appendLine(undefined, undefined, {});
+      eifline.appendConst('elif', {});
+      renderExpression(eifline, ast.exp);
+      eifline.appendConst('then', {});
       renderBlock(ctx, block.block);
     }
   }
   if (ast.el) {
-    ifline.appendConst('else', {});
+    let eline = ctx.appendLine(undefined, undefined, {});
+    eline.appendConst('else', {});
     renderBlock(ctx, ast.el);
   }
   ctx.appendLine('end', undefined, {});
-  return ctx;
 }
 
 function renderFor(parentBlock: TextBlock, ast: ForNode) {
