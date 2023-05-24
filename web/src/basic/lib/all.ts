@@ -1,6 +1,7 @@
 import { ICodeLoader } from "../../engine/ivm";
 import { createMath } from "./mathdef";
-import { createSpriteModule, createSystemModule } from "./systemdef";
+import { createSpriteModule } from "./spritedef";
+import { createSystemModule } from "./systemdef";
 
 export function registerSystemModules(loader: ICodeLoader) {
   loader.addSystemModule('System', createSystemModule());

@@ -12,6 +12,7 @@ export interface ICamera {
   get position(): Vector3;
   set position(pos: Vector3);
 
+  setThirdPersonCamera(): void;
   scrollBy(pxSize: WorldCoord3): void;
   registerXrSessionHandler(target: any, func: (session: XRSession | undefined) => void): void;
 

@@ -103,10 +103,13 @@ export function boxedBasic(): string {
   return `
     on load() begin
       System.loadLevel 'default'
+
+      System.setMoveController2D keySpeedX:=10 keySpeedZ:=10 thumbSpeedX:=10 thumbSpeedZ:=10 timeoutSeconds:=0.1
     end
 
     on start() begin
       var monky:= System.createCubeSprite 'monky' 'vox/monky.vox'
+      Sprite.setPosition monky 120 20 120
 
       var ma:= Sprite.addAnimation monky 'move'
       Sprite.addFrame ma idx:= 1 dur:=0.1 
@@ -114,6 +117,17 @@ export function boxedBasic(): string {
   
       ma:= Sprite.addAnimation monky 'stand'
       Sprite.addFrame ma idx:= 0 dur:=0
+
+      forever do
+        var ev := System.readInput();
+  
+        if ev.speedX != 0 or ev.speedZ != 0 then
+          Sprite.animate monky 'move'
+        else
+          Sprite.animate monky 'stand'
+        end
+        Sprite.setSpeed monky ev.speedX 0 ev.speedZ
+      end
     end
 
     on start() begin

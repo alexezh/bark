@@ -124,6 +124,12 @@ export class BasicLexer {
         return new Token(TokenKind.Less, c, pos);
       case '=':
         return new Token(TokenKind.Equal, c, pos);
+      case '!':
+        if (reader.compare('=')) {
+          reader.move(1);
+          return new Token(TokenKind.NotEqual, '!=', pos);
+        }
+        break;
       case '-':
         return new Token(TokenKind.Minus, c, pos);
       case '+':

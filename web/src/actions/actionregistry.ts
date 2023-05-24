@@ -2,7 +2,7 @@ import { IAction } from "../ui/iaction";
 import { CreateLevelAction, CreateProjectAction } from "./createprojectaction";
 import { registerEditActions } from "./editaction";
 import { ImportVoxAction } from "./importaction";
-import { MoveCameraAction } from "./movecameraaction";
+import { MoveCameraAction, ThirdPersonCameraAction } from "./movecameraaction";
 
 let actions: IAction[] = [];
 
@@ -15,6 +15,7 @@ export function registerActions() {
   actions.push(new MoveCameraAction());
   actions.push(new CreateProjectAction());
   actions.push(new CreateLevelAction());
+  actions.push(new ThirdPersonCameraAction());
 
   registerEditActions(actions);
 }

@@ -2,7 +2,16 @@ import { Vector3 } from "three";
 import { vm } from "../engine/ivm";
 import { createButton, createCommandButton, createNumberEntry, createTextEntry } from "../lib/htmlutils";
 import { IAction, ICommandBar } from "../ui/iaction"
-import { FormPane } from "./commandaction";
+import { CommandAction, FormPane } from "./commandaction";
+
+export class ThirdPersonCameraAction extends CommandAction {
+  get name(): string { return 'Third person camera' }
+  get tags(): string[] { return ['level', 'edit', 'level'] }
+
+  protected override onClick(bar: ICommandBar) {
+    vm.camera.setThirdPersonCamera();
+  }
+}
 
 export class MoveCameraAction implements IAction {
   private button: HTMLButtonElement | undefined;

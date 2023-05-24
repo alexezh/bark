@@ -16,11 +16,11 @@ export enum ParseErrorCode {
 export class ParseError {
   public readonly msg: string;
   public readonly code: ParseErrorCode;
-  public readonly token: Token | undefined;
+  public readonly token: string | undefined;
 
   public constructor(code: ParseErrorCode, token: Token | undefined, msg: string) {
     this.msg = msg;
     this.code = code;
-    this.token = token;
+    this.token = token?.value;
   }
 }

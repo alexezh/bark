@@ -97,6 +97,12 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     public set position(pos: Vector3) { this.cameraGroup.position.copy(pos); }
     public get viewSize(): PxSize { return { w: this.props.w, h: this.props.h } }
 
+    public setThirdPersonCamera(): void {
+        this.cameraGroup.position.set(100, 40, 100);
+        this.cameraGroup.rotation.x = 0;
+        (this.camera as PerspectiveCamera).updateProjectionMatrix();
+    }
+
     public scrollBy(delta: WorldCoord3) {
         this.camera.position.add(new Vector3(delta.x, delta.y, delta.z));
     }

@@ -4,6 +4,7 @@ export enum TokenKind {
   Ws,
   // first op
   Equal,
+  NotEqual,
   Less,
   Greater,
   LessOrEqual,

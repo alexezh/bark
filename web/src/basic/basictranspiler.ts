@@ -191,6 +191,12 @@ function processBreak(ast: StatementNode, writer: JsWriter) {
 function convertOp(token: Token): string {
   if (token.kind === TokenKind.Equal) {
     return '===';
+  } else if (token.kind === TokenKind.NotEqual) {
+    return '!==';
+  } else if (token.kind === TokenKind.Or) {
+    return '||';
+  } else if (token.kind === TokenKind.And) {
+    return '&&';
   } else if (token.kind === TokenKind.Is) {
     return 'instanceof';
   } else {

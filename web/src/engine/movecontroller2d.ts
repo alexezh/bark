@@ -9,7 +9,7 @@ export interface IMoveEvent2D {
   get speedZ(): number;
 }
 
-class MoveEvent2D implements IMoveEvent2D {
+export class MoveEvent2D implements IMoveEvent2D {
   public speedX: number = 0;
   public speedZ: number = 0;
 }
