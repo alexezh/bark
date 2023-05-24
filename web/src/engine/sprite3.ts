@@ -4,8 +4,16 @@ import { IRigitModel } from "./irigitmodel";
 import { IRigitBody, RigitBodyKind, VoxelAnimationCollection, VoxelMeshModel } from "../voxel/voxelmeshmodel";
 import { StaticCubeModel } from "./avatars/staticcubemodel";
 
+export enum TrackingCameraKind {
+  Direct,
+  FirstPerson,
+  ThirdPerson,
+}
+
 export interface ITrackingCamera {
+  get cemraKind(): TrackingCameraKind;
   onTargetMove(pos: Vector3): void;
+  onTargetSpeed(pos: Vector3): void;
   dispose(): void;
 }
 
@@ -68,8 +76,12 @@ export class Sprite3 implements IRigitBody, IDigSprite {
 
   public setSpeed(speed: Vector3) {
     this._speed = speed;
+    // TODO: need to separate speed from direction
     this.rigit.setDirection(speed);
     this._inactive = speed.x === 0 && speed.y === 0 && speed.z === 0;
+    if (this._trackingCamera) {
+      this._trackingCamera.onTargetSpeed(speed);
+    }
   }
 
   public setTrackingCamera(camera: ITrackingCamera | undefined) {

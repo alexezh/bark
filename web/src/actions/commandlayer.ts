@@ -1,6 +1,6 @@
 import { MapEditorState } from "../ui/mapeditorstate";
 import { createButton, setElementVisible } from "../lib/htmlutils";
-import { IAction, ICommandBar } from "../ui/iaction";
+import { IAction, ICommandLayer } from "./iaction";
 import { ShellProps } from "../ui/shell";
 import { UiLayer2, UiLayerProps } from "../ui/uilayer";
 import { getActions } from "./actionregistry";
@@ -21,7 +21,7 @@ export class CommandList {
     this.props = props;
   }
 
-  public updateList(bar: ICommandBar, parent: HTMLElement) {
+  public updateList(bar: ICommandLayer, parent: HTMLElement) {
     if (this.listDiv === undefined) {
       this.listDiv = document.createElement('div');
       this.listDiv.className = 'commandList';
@@ -55,7 +55,11 @@ export class CommandList {
   }
 }
 
-export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar {
+/**
+ * shows scrollable bar with searchable command list
+ * click on command extends the bar
+ */
+export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandLayer {
   //private editButton: HTMLButtonElement;
   //private tileButton: HTMLButtonElement;
   private actionButton: HTMLButtonElement;
@@ -66,7 +70,7 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
 
   public constructor(props: CommandBarProps) {
     let element = document.createElement('div');
-    element.className = 'barLayer';
+    element.className = 'commandLayer';
 
     // reset layer size to 0
     props.w = 0;
@@ -97,7 +101,7 @@ export class CommandBar extends UiLayer2<CommandBarProps> implements ICommandBar
     console.log(text);
   }
 
-  openDetailsPane(elem: HTMLElement): void {
+  public openDetailsPane(elem: HTMLElement): void {
     if (this._propPane !== undefined) {
       this.closeDetailsPane();
     }

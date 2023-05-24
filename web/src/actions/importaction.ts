@@ -1,7 +1,7 @@
 import { Mesh } from "three";
 import { wireSetStrings, WireString } from "../lib/fetchadapter";
 import { bytesToBase64 } from "../lib/base64";
-import { IAction, ICommandBar } from "../ui/iaction";
+import { IAction, ICommandLayer } from "./iaction";
 import { defaultMaterial } from "../ui/ivoxelmap";
 import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
 import { Vox } from "../voxel/vox";
@@ -30,7 +30,7 @@ export class ImportVoxAction implements IAction {
     this._id = ImportVoxAction._nextId++;
   }
 
-  public renderButton(parent: HTMLElement, bar: ICommandBar) {
+  public renderButton(parent: HTMLElement, bar: ICommandLayer) {
 
     let div = this.createImportButton(bar);
     this._element = div;
@@ -47,7 +47,7 @@ export class ImportVoxAction implements IAction {
     this._inputElem = undefined;
   }
 
-  private createImportButton(bar: ICommandBar): HTMLDivElement {
+  private createImportButton(bar: ICommandLayer): HTMLDivElement {
     let d = document.createElement('input');
     d.id = 'upload_' + this._id;
     d.name = d.id;
@@ -72,7 +72,7 @@ export class ImportVoxAction implements IAction {
     return div;
   }
 
-  private async processImport(bar: ICommandBar) {
+  private async processImport(bar: ICommandLayer) {
     if (this._inputElem!.files === null) {
       return;
     }
@@ -89,7 +89,7 @@ export class ImportVoxAction implements IAction {
     this.displayPane(bar, uploadFiles);
   }
 
-  private async loadVox(bar: ICommandBar, files: FileList): Promise<UploadFile[]> {
+  private async loadVox(bar: ICommandLayer, files: FileList): Promise<UploadFile[]> {
     let vox = new Vox();
     let tr = new ThumbnailRenderer(128, 128);
     let uploadFiles: UploadFile[] = [];
@@ -138,7 +138,7 @@ export class ImportVoxAction implements IAction {
     return imageData;
   }
 
-  private async displayPane(bar: ICommandBar, uploadFiles: UploadFile[]) {
+  private async displayPane(bar: ICommandLayer, uploadFiles: UploadFile[]) {
 
     let d = document.createElement('div');
     d.className = 'commandPane';

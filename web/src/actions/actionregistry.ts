@@ -1,4 +1,4 @@
-import { IAction } from "../ui/iaction";
+import { IAction } from "./iaction";
 import { CreateLevelAction, CreateProjectAction } from "./createprojectaction";
 import { registerEditActions } from "./editaction";
 import { ImportVoxAction } from "./importaction";

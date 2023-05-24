@@ -1,20 +1,21 @@
 import { WireLevelInfo, WireProjectConfig, fetchResource, getProjectId, setProjectId, wireCreateProject, wireSetObject, wireSetUserString } from "../lib/fetchadapter";
-import { CommandAction, FormPane } from "./commandaction";
+import { CommandAction } from "./commandaction";
 import { v4 as uuidv4 } from 'uuid';
 import { vm } from "../engine/ivm";
-import { ICommandBar } from "../ui/iaction";
+import { ICommandLayer } from "./iaction";
 import { VoxelModelCache, WireModelInfo, modelCache } from "../voxel/voxelmodelcache";
 import { ImportVoxAction, UploadFile } from "./importaction";
 import { Vox } from "../voxel/vox";
 import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
 import { VoxelLevelFile } from "../engine/voxellevelfile";
 import { FileMapBlock } from "../ui/ivoxelmap";
+import { FormPane } from "./formpane";
 
 export class CreateProjectAction extends CommandAction {
   get name(): string { return 'CreateProject' }
   get tags(): string[] { return ['project', 'create'] }
 
-  protected override onClick(bar: ICommandBar) {
+  protected override onClick(bar: ICommandLayer) {
     let pane = new FormPane();
     pane.addTextField('Name', 'MyProject');
     //pane.addIntField('Blocks X', 100);
@@ -108,7 +109,7 @@ export class CreateLevelAction extends CommandAction {
   get name(): string { return 'CreateLevel' }
   get tags(): string[] { return ['level', 'create', 'level'] }
 
-  protected override onClick(bar: ICommandBar) {
+  protected override onClick(bar: ICommandLayer) {
     let pane = new FormPane();
     pane.addTextField('Name', 'MyLevel');
     pane.addIntField('Blocks X', 100);

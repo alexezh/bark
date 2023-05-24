@@ -1,4 +1,4 @@
-import { CommandBar } from "../actions/commandBar";
+import { CommandLayer } from "../actions/commandlayer";
 import { UiCompositor2 } from "./uicompositor";
 import { createMapEditorState, mapEditorState } from "./mapeditorstate";
 import { CodeEditor } from "./codeeditor";
@@ -30,7 +30,7 @@ export class Shell implements IGameShell {
   public camera?: CameraLayer;
   private compositor2: UiCompositor2;
   private props: ShellProps;
-  private barLayer: CommandBar;
+  private barLayer: CommandLayer;
   private codeEditor?: CodeEditor;
 
   public constructor(gameContainer: HTMLDivElement) {
@@ -50,7 +50,7 @@ export class Shell implements IGameShell {
     this.refresh();
 
     // now add UI layers
-    this.barLayer = new CommandBar({
+    this.barLayer = new CommandLayer({
       id: "bar", x: 0, y: 0,
       w: this.props.width, h: this.props.height,
       termProps: this.props,

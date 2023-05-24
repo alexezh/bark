@@ -1,14 +1,15 @@
 import { Vector3 } from "three";
 import { vm } from "../engine/ivm";
 import { createButton, createCommandButton, createNumberEntry, createTextEntry } from "../lib/htmlutils";
-import { IAction, ICommandBar } from "../ui/iaction"
-import { CommandAction, FormPane } from "./commandaction";
+import { IAction, ICommandLayer } from "./iaction"
+import { CommandAction } from "./commandaction";
+import { FormPane } from "./formpane";
 
 export class ThirdPersonCameraAction extends CommandAction {
   get name(): string { return 'Third person camera' }
   get tags(): string[] { return ['level', 'edit', 'level'] }
 
-  protected override onClick(bar: ICommandBar) {
+  protected override onClick(bar: ICommandLayer) {
     //vm.camera.setThirdPersonCamera();
   }
 }
@@ -23,7 +24,7 @@ export class MoveCameraAction implements IAction {
   public constructor() {
   }
 
-  renderButton(parent: HTMLElement, bar: ICommandBar) {
+  renderButton(parent: HTMLElement, bar: ICommandLayer) {
     this.button = createCommandButton(parent, "MoveCamera", () => {
       this.onMoveCameraClick(bar)
     });
@@ -38,7 +39,7 @@ export class MoveCameraAction implements IAction {
     this.button = undefined;
   }
 
-  private onMoveCameraClick(bar: ICommandBar) {
+  private onMoveCameraClick(bar: ICommandLayer) {
     let form = new FormPane();
 
     let cp = vm.camera?.position;

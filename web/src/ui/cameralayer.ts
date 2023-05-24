@@ -11,7 +11,7 @@ import { IVoxelLevel } from "./ivoxelmap";
 import SyncEventSource from "../lib/synceventsource";
 import { ILevelEditor } from "./ileveleditor";
 import { PxSize } from "../lib/pos";
-import { ITrackingCamera, Sprite3 } from "../engine/sprite3";
+import { ITrackingCamera, Sprite3, TrackingCameraKind } from "../engine/sprite3";
 //import { VRButton } from 'three/addons/webxr/VRButton';
 
 export type CameraLayerProps = UiLayerProps & {
@@ -26,8 +26,8 @@ class DirectCamera implements ITrackingCamera {
         this.camera = camera;
         this.cameraGroup = cameraGroup;
 
-        var point = new Vector3(0, 0, 0);
-        this.camera.lookAt(point);
+        //var point = new Vector3(0, 0, 0);
+        //ßthis.camera.lookAt(point);
         let angleZ = Math.PI / 4;
 
         //this.cameraGroup.position.set(0, 0, 0);
@@ -36,10 +36,15 @@ class DirectCamera implements ITrackingCamera {
         (this.camera as PerspectiveCamera).updateProjectionMatrix();
     }
 
+    get cemraKind(): TrackingCameraKind { return TrackingCameraKind.Direct; }
+
     dispose() {
     }
 
     onTargetMove(pos: Vector3): void {
+    }
+    
+    onTargetSpeed(pos: Vector3): void {
     }
 }
 
@@ -60,11 +65,17 @@ class ThirtPersonCamera implements ITrackingCamera {
         this.sprite.setTrackingCamera(this);
     }
 
+    get cemraKind(): TrackingCameraKind { return TrackingCameraKind.ThirdPerson; }
+
     dispose() {
         this.sprite.setTrackingCamera(undefined);
     }
 
     onTargetMove(pos: Vector3): void {
+        this.updateCameraPos(pos);
+    }
+
+    onTargetSpeed(pos: Vector3): void {
         this.updateCameraPos(pos);
     }
 
