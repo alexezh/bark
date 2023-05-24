@@ -3,7 +3,7 @@ import { vm } from "../engine/ivm";
 import { createButton, createCommandButton, createNumberEntry, createTextEntry } from "../lib/htmlutils";
 import { IAction, ICommandLayer } from "./iaction"
 import { CommandAction } from "./commandaction";
-import { FormPane } from "./formpane";
+import { FormAction, FormPane } from "./formpane";
 
 export class ThirdPersonCameraAction extends CommandAction {
   get name(): string { return 'Third person camera' }
@@ -14,32 +14,12 @@ export class ThirdPersonCameraAction extends CommandAction {
   }
 }
 
-export class MoveCameraAction implements IAction {
-  private button: HTMLButtonElement | undefined;
-  private propPage: HTMLDivElement | undefined;
-
-  get name(): string { return 'MoveCamera' }
-  get tags(): string[] { return ['camera', 'edit', 'move'] }
-
+export class MoveCameraAction extends FormAction {
   public constructor() {
+    super('MoveCamera', ['camera', 'edit', 'move']);
   }
 
-  renderButton(parent: HTMLElement, bar: ICommandLayer) {
-    this.button = createCommandButton(parent, "MoveCamera", () => {
-      this.onMoveCameraClick(bar)
-    });
-  }
-
-  destroyButton(parent: HTMLElement) {
-    if (this.button === undefined) {
-      return;
-    }
-
-    parent.removeChild(this.button);
-    this.button = undefined;
-  }
-
-  private onMoveCameraClick(bar: ICommandLayer) {
+  protected createForm(bar: ICommandLayer): FormPane {
     let form = new FormPane();
 
     let cp = vm.camera?.position;
@@ -71,6 +51,6 @@ export class MoveCameraAction implements IAction {
       camera.position = newPos;
     });
 
-    bar.openDetailsPane(form.element);
+    return form;
   }
 }

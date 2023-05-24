@@ -1,4 +1,5 @@
-import { createButton, createNumberEntry, createTextEntry } from "../lib/htmlutils";
+import { createButton, createCommandButton, createNumberEntry, createTextEntry } from "../lib/htmlutils";
+import { IAction, ICommandLayer } from "./iaction";
 
 export class FormPane {
   public readonly element: HTMLDivElement;
@@ -34,4 +35,46 @@ export class FormPane {
   public addButtom(name: string, action: () => void) {
     createButton(this.element, name, action);
   }
+}
+
+export abstract class FormAction implements IAction {
+  private button: HTMLButtonElement | undefined;
+  private propPage: HTMLDivElement | undefined;
+  private _name: string;
+  private _tags: string[];
+
+  get name(): string { return this._name }
+  get tags(): string[] { return this._tags }
+
+  public constructor(name: string, tags: string[]) {
+    this._name = name;
+    this._tags = tags;
+  }
+
+  renderButton(parent: HTMLElement, bar: ICommandLayer) {
+    this.button = createCommandButton(parent, this.name, () => {
+      this.onClick(bar)
+    });
+  }
+
+  destroyButton(parent: HTMLElement) {
+    if (this.button === undefined) {
+      return;
+    }
+
+    parent.removeChild(this.button);
+    this.button = undefined;
+  }
+
+  public getChildActions(): Iterable<IAction> {
+    return [];
+  }
+
+  private onClick(cl: ICommandLayer) {
+    let form = this.createForm(cl);
+
+    cl.openDetailsPane(form.element);
+  }
+
+  protected abstract createForm(cl: ICommandLayer): FormPane;
 }

@@ -47,6 +47,10 @@ export class ImportVoxAction implements IAction {
     this._inputElem = undefined;
   }
 
+  public getChildActions(): Iterable<IAction> {
+    return [];
+  }
+
   private createImportButton(bar: ICommandLayer): HTMLDivElement {
     let d = document.createElement('input');
     d.id = 'upload_' + this._id;

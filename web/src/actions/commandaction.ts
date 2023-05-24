@@ -6,17 +6,21 @@ export abstract class CommandAction implements IAction {
   abstract get tags(): string[];
   private button: HTMLButtonElement | undefined;
 
-  renderButton(parent: HTMLElement, bar: ICommandLayer) {
+  public renderButton(parent: HTMLElement, bar: ICommandLayer) {
     this.button = createCommandButton(parent, this.name, () => this.onClick(bar));
   }
 
-  destroyButton(parent: HTMLElement) {
+  public destroyButton(parent: HTMLElement) {
     if (this.button === undefined) {
       return;
     }
 
     parent.removeChild(this.button);
     this.button = undefined;
+  }
+
+  public getChildActions(): Iterable<IAction> {
+    return [];
   }
 
   protected onClick(bar: ICommandLayer) {
