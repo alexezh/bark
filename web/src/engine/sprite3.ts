@@ -6,6 +6,7 @@ import { StaticCubeModel } from "./avatars/staticcubemodel";
 
 export interface ITrackingCamera {
   onTargetMove(pos: Vector3): void;
+  dispose(): void;
 }
 
 // main object for compositing content

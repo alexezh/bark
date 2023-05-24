@@ -4,7 +4,7 @@ import { LevelEditor } from "./leveleditor";
 import { KeyBinder, makeMEvent } from "./keybinder";
 import { UiLayer2, UiLayerProps } from "./uilayer";
 import { WorldCoord3 } from "../voxel/pos3";
-import { ICamera } from "../engine/icamera";
+import { ICameraLayer } from "../engine/icameralayer";
 import { vm } from "../engine/ivm";
 import { VRButton } from "./vrbutton";
 import { IVoxelLevel } from "./ivoxelmap";
@@ -18,6 +18,31 @@ export type CameraLayerProps = UiLayerProps & {
     scale: number;
 }
 
+class DirectCamera implements ITrackingCamera {
+    private camera!: PerspectiveCamera;
+    private cameraGroup!: Group;
+
+    public constructor(camera: PerspectiveCamera, cameraGroup: Group) {
+        this.camera = camera;
+        this.cameraGroup = cameraGroup;
+
+        var point = new Vector3(0, 0, 0);
+        this.camera.lookAt(point);
+        let angleZ = Math.PI / 4;
+
+        //this.cameraGroup.position.set(0, 0, 0);
+        this.cameraGroup.rotation.set(-angleZ, 0, 0);
+        this.cameraGroup.position.set(100, 200, 100 + 100 * Math.tan(angleZ));
+        (this.camera as PerspectiveCamera).updateProjectionMatrix();
+    }
+
+    dispose() {
+    }
+
+    onTargetMove(pos: Vector3): void {
+    }
+}
+
 class ThirtPersonCamera implements ITrackingCamera {
     private camera!: PerspectiveCamera;
     private cameraGroup!: Group;
@@ -29,7 +54,14 @@ class ThirtPersonCamera implements ITrackingCamera {
         this.cameraGroup = cameraGroup;
         this.sprite = sprite;
         this.cameraOffset = cameraOffset;
+        this.sprite = sprite;
+
         this.updateCameraPos(this.sprite.position);
+        this.sprite.setTrackingCamera(this);
+    }
+
+    dispose() {
+        this.sprite.setTrackingCamera(undefined);
     }
 
     onTargetMove(pos: Vector3): void {
@@ -46,7 +78,7 @@ class ThirtPersonCamera implements ITrackingCamera {
 
 }
 
-export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
+export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLayer {
     public renderer!: WebGLRenderer;
     public camera!: PerspectiveCamera;
     public cameraGroup!: Group;
@@ -128,12 +160,19 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     public get viewSize(): PxSize { return { w: this.props.w, h: this.props.h } }
 
     public setThirdPersonCamera(sprite: Sprite3, cameraOffset: Vector3): void {
+        this.trackingCamera?.dispose();
+        this.trackingCamera = undefined;
         this.trackingCamera = new ThirtPersonCamera(sprite, cameraOffset, this.camera, this.cameraGroup);
-        sprite.setTrackingCamera(this.trackingCamera);
     }
 
-    public scrollBy(delta: WorldCoord3) {
-        this.camera.position.add(new Vector3(delta.x, delta.y, delta.z));
+    public setDirectCamera(): void {
+        if (this.trackingCamera instanceof DirectCamera) {
+            return;
+        }
+
+        this.trackingCamera?.dispose();
+        this.trackingCamera = undefined;
+        this.trackingCamera = new DirectCamera(this.camera, this.cameraGroup);
     }
 
     public registerXrSessionHandler(target: any, func: (session: XRSession | undefined) => void): void {
@@ -152,18 +191,10 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
         //this.camera.up.set(0, 0, 1);
         this.camera.layers.enable(1);
 
-        var point = new Vector3(0, 0, 0);
-        this.camera.lookAt(point);
-        let angleZ = Math.PI / 4;
-
         this.cameraGroup = new Group();
         this.cameraGroup.add(this.camera);
 
-        //game.camera.rotation.x = -Math.PI / 1.4;
-        this.cameraGroup.rotation.x = -angleZ;
-        this.cameraGroup.position.set(100, 200, 100 + 100 * Math.tan(angleZ));
-        //game.camera.position.y = 120;
-        (this.camera as PerspectiveCamera).updateProjectionMatrix();
+        this.trackingCamera = new DirectCamera(this.camera, this.cameraGroup);
 
         this.scene.add(this.cameraGroup);
     }

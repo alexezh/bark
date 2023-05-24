@@ -7,7 +7,7 @@ import { KeyBinder, MEvent } from "./keybinder";
 import { IVoxelLevel, IVoxelLevelFile, MapBlockCoord } from "./ivoxelmap";
 import { BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { modelCache } from "../voxel/voxelmodelcache";
-import { ICamera } from "../engine/icamera";
+import { ICameraLayer } from "../engine/icameralayer";
 import { vm } from "../engine/ivm";
 
 export interface IMapEditorHost {
@@ -18,7 +18,7 @@ export interface IMapEditorHost {
 }
 
 export class LevelEditor implements ILevelEditor {
-  private camera: ICamera;
+  private camera: ICameraLayer;
   private isDown: boolean = false;
   private level: IVoxelLevel;
   private input: KeyBinder;
@@ -28,7 +28,7 @@ export class LevelEditor implements ILevelEditor {
   private selection: Line | undefined = undefined;
 
   public constructor(
-    camera: ICamera,
+    camera: ICameraLayer,
     level: IVoxelLevel) {
 
     this.camera = camera;

@@ -1,6 +1,6 @@
 import { Vector3 } from "three";
 import AsyncEventSource from "../lib/AsyncEventSource";
-import { ICamera } from "./icamera";
+import { ICameraLayer } from "./icameralayer";
 import { animator } from "./animator";
 import { FrameClock } from "./clock";
 import { VoxelLevel } from "./voxellevel";
@@ -44,7 +44,7 @@ export class VM implements IVM {
   private _canvas: HTMLElement;
   private _level?: IVoxelLevel;
   private _levelFile?: IVoxelLevelFile;
-  private _camera?: ICamera;
+  private _camera?: ICameraLayer;
   private readonly _createDefaultProject: () => Promise<void>;
   private readonly _sprites: Map<number, Sprite3> = new Map<number, Sprite3>();
   private readonly _runner: CodeRunner = new CodeRunner();
@@ -79,14 +79,14 @@ export class VM implements IVM {
   }
 
   public get canvas(): HTMLElement { return this._canvas; }
-  public get camera(): ICamera {
+  public get camera(): ICameraLayer {
     if (this._camera === undefined) throw new Error('not loaded');
     return this._camera;
   }
 
   public get loader(): ICodeLoader { return this._loader; }
 
-  public attachCamera(camera: ICamera) {
+  public attachCamera(camera: ICameraLayer) {
     this._camera = camera;
     this._camera.registerXrSessionHandler(this, this.onXrSessionChanged.bind(this));
   }
@@ -162,6 +162,7 @@ export class VM implements IVM {
     animator.stop();
     this.inputController?.stop();
     this.clock.stop();
+    this.camera.setDirectCamera();
     this._running = false;
   }
 

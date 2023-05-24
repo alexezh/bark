@@ -7,10 +7,15 @@ import { addSystemFunc, addSystemType } from "../systemfunc";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../../voxel/mapblockrigitbody";
 import { Vector3 } from "three";
 import { MoveController2D, IMoveEvent2D, MoveEvent2D } from "../../engine/movecontroller2d";
+import { Mammal4Model } from "../../engine/avatars/mammal4";
 
 
 function createCubeSprite(name: string, uri: string): Promise<IDigSprite> {
   return vm.createSprite(name, uri, new StaticCubeModel());
+}
+
+function createMammal4Sprite(name: string, uri: string): Promise<IDigSprite> {
+  return vm.createSprite(name, uri, new Mammal4Model());
 }
 
 function removeSprite(sprite: IDigSprite) {
@@ -100,6 +105,7 @@ export function createSystemModule(): ModuleNode {
     'thumbSpeedZ:number',
     'timeoutSeconds:number'], 'void', false, setMoveController2D));
   funcs.push(addSystemFunc(module, 'createCubeSprite', ['name:string', 'url:string'], 'Sprite', true, createCubeSprite));
+  funcs.push(addSystemFunc(module, 'createMammal4Sprite', ['name:string', 'url:string'], 'Sprite', true, createMammal4Sprite));
   funcs.push(addSystemFunc(module, 'removeSprite', ['sprite:Sprite'], 'void', false, removeSprite));
   funcs.push(addSystemFunc(module, 'loadLevel', ['name:string'], 'void', true, loadLevel));
   funcs.push(addSystemFunc(module, 'deleteBlock', ['block:Block'], 'void', false, deleteBlock));

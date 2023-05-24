@@ -1,5 +1,5 @@
 import { Vector3 } from "three";
-import { ICamera } from "./icamera";
+import { ICameraLayer } from "./icameralayer";
 import { IGamePhysics } from "./igamephysics";
 import { Sprite3 } from "./sprite3";
 import { IRigitBody, VoxelAnimationCollection } from "../voxel/voxelmeshmodel";
@@ -48,10 +48,10 @@ export interface IVM extends IVMCodeRunner {
   get canvas(): HTMLElement;
   get clock(): FrameClock;
   get levelFile(): IVoxelLevelFile;
-  get camera(): ICamera;
+  get camera(): ICameraLayer;
   get loader(): ICodeLoader;
 
-  attachCamera(camera: ICamera): void;
+  attachCamera(camera: ICameraLayer): void;
   registerLevelLoaded(target: any, func: () => void): void;
   setController(controller: IInputController);
 
