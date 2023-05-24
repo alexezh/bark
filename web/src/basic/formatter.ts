@@ -187,28 +187,27 @@ function renderAssingment(parentBlock: TextBlock, ast: AssingmentNode) {
 }
 
 function renderIf(parentBlock: TextBlock, ast: IfNode) {
-  let ctx = parentBlock.appendBlock(ast);
-  let ifline = ctx.appendLine(undefined, undefined, {});
+  let ifline = parentBlock.appendLine(undefined, undefined, {});
   ifline.appendConst('if', {});
   renderExpression(ifline, ast.exp);
   ifline.appendConst('then', {});
 
-  renderBlock(ctx, ast.th);
+  renderBlock(parentBlock, ast.th);
   if (ast.elif.length > 0) {
     for (let block of ast.elif) {
-      let eifline = ctx.appendLine(undefined, undefined, {});
+      let eifline = parentBlock.appendLine(undefined, undefined, {});
       eifline.appendConst('elif', {});
       renderExpression(eifline, ast.exp);
       eifline.appendConst('then', {});
-      renderBlock(ctx, block.block);
+      renderBlock(parentBlock, block.block);
     }
   }
   if (ast.el) {
-    let eline = ctx.appendLine(undefined, undefined, {});
+    let eline = parentBlock.appendLine(undefined, undefined, {});
     eline.appendConst('else', {});
-    renderBlock(ctx, ast.el);
+    renderBlock(parentBlock, ast.el);
   }
-  ctx.appendLine('end', undefined, {});
+  parentBlock.appendLine('end', undefined, {});
 }
 
 function renderFor(parentBlock: TextBlock, ast: ForNode) {

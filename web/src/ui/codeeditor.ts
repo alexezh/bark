@@ -17,13 +17,18 @@ export class CodeEditor extends UiLayer2<CodeEditorProps> {
   private selectedNode: TextBlock | ITextSegment | TextSpan | undefined = undefined;
   private initialSelectedNode: TextBlock | ITextSegment | TextSpan | undefined = undefined;
   private selectedElem: HTMLElement | undefined = undefined;
+  private editArea: HTMLDivElement;
 
   public constructor(props: CodeEditorProps) {
 
+    let wrapper = document.createElement('div');
+    wrapper.className = 'codeWrapper';
+
+    super(props, wrapper);
+
     let div = document.createElement('div');
     div.className = 'codeEditor';
-
-    super(props, div);
+    wrapper.appendChild(div);
 
     let bar = document.createElement('div');
     bar.className = 'codeEditorBar';
@@ -40,14 +45,23 @@ export class CodeEditor extends UiLayer2<CodeEditorProps> {
       }
     });
 
-    let text = document.createElement('div');
-    div.appendChild(text);
+    this.editArea = document.createElement('div');
+    this.editArea.className = 'codeArea';
+    div.appendChild(this.editArea);
+    this.editArea.addEventListener('scroll', this.onTextScroll.bind(this));
+    this.loadContent();
+  }
 
+  private loadContent() {
     let module = vm.loader.getUserModule('default');
     if (module) {
       this.renderBlock = renderModule(module);
-      this.renderBlock.render(div, this.onTextClick.bind(this));
+      this.renderBlock.render(this.editArea, this.onTextClick.bind(this));
     }
+  }
+
+  private onTextScroll(e: Event) {
+
   }
 
   private onTextClick(node: TextBlock | ITextSegment | TextSpan, event: Event) {
