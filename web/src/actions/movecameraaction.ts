@@ -9,7 +9,7 @@ export class ThirdPersonCameraAction extends CommandAction {
   get tags(): string[] { return ['level', 'edit', 'level'] }
 
   protected override onClick(bar: ICommandBar) {
-    vm.camera.setThirdPersonCamera();
+    //vm.camera.setThirdPersonCamera();
   }
 }
 

@@ -118,6 +118,8 @@ export function boxedBasic(): string {
       ma:= Sprite.addAnimation monky 'stand'
       Sprite.addFrame ma idx:= 0 dur:=0
 
+      System.setThirdPersonCamera monky x:=0 y:=40 z:=60
+
       forever do
         var ev := System.readInput();
   

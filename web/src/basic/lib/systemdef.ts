@@ -73,6 +73,10 @@ function readInput(): Promise<IMoveEvent2D> {
   return vm.readInput();
 }
 
+function setThirdPersonCamera(sprite: Sprite3, x: number, y: number, z: number): void {
+  vm.camera.setThirdPersonCamera(sprite, new Vector3(x, y, z));
+}
+
 export function createSystemModule(): ModuleNode {
   let funcs: FuncDefNode[] = [];
   let types: TypeDefNode[] = [];
@@ -98,9 +102,11 @@ export function createSystemModule(): ModuleNode {
   funcs.push(addSystemFunc(module, 'createCubeSprite', ['name:string', 'url:string'], 'Sprite', true, createCubeSprite));
   funcs.push(addSystemFunc(module, 'removeSprite', ['sprite:Sprite'], 'void', false, removeSprite));
   funcs.push(addSystemFunc(module, 'loadLevel', ['name:string'], 'void', true, loadLevel));
-  funcs.push(addSystemFunc(module, 'deleteBlock', ['block:block'], 'void', false, deleteBlock));
+  funcs.push(addSystemFunc(module, 'deleteBlock', ['block:Block'], 'void', false, deleteBlock));
   funcs.push(addSystemFunc(module, 'createExplosion', ['x: number', 'y: number', 'z: number'], 'void', false, createExplosion));
   funcs.push(addSystemFunc(module, 'readInput', [], 'MoveEvent2D', true, readInput));
+  funcs.push(addSystemFunc(module, 'setThirdPersonCamera', ['sprite: Sprite', 'x: number', 'y: number', 'z:number'], 'void', false, setThirdPersonCamera));
+
 
   types.push(addSystemType('MoveEvent2D', MoveEvent2D, ['speedX: number', 'speedZ: number']));
   types.push(addSystemType('Sprite', Sprite3, ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));

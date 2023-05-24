@@ -4,6 +4,10 @@ import { IRigitModel } from "./irigitmodel";
 import { IRigitBody, RigitBodyKind, VoxelAnimationCollection, VoxelMeshModel } from "../voxel/voxelmeshmodel";
 import { StaticCubeModel } from "./avatars/staticcubemodel";
 
+export interface ITrackingCamera {
+  onTargetMove(pos: Vector3): void;
+}
+
 // main object for compositing content
 export class Sprite3 implements IRigitBody, IDigSprite {
   private static _nextId: number = 1;
@@ -14,6 +18,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   private _inactive: boolean = false;
   private _speed: Vector3 = new Vector3();
   private _position: Vector3;
+  private _trackingCamera: ITrackingCamera | undefined;
 
   public get id(): number { return this._id; }
   public get name(): string { return this._name; }
@@ -66,11 +71,19 @@ export class Sprite3 implements IRigitBody, IDigSprite {
     this._inactive = speed.x === 0 && speed.y === 0 && speed.z === 0;
   }
 
+  public setTrackingCamera(camera: ITrackingCamera | undefined) {
+    this._trackingCamera = camera;
+  }
+
   public onMove(pos: Vector3): void {
     this._position = pos;
 
     // move meshes; we should run this through rigitmodel to update
     // position correctly
     this.rigit.setPosition(pos);
+
+    if (this._trackingCamera) {
+      this._trackingCamera.onTargetMove(pos);
+    }
   }
 }

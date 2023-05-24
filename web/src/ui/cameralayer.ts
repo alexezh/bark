@@ -11,10 +11,39 @@ import { IVoxelLevel } from "./ivoxelmap";
 import SyncEventSource from "../lib/synceventsource";
 import { ILevelEditor } from "./ileveleditor";
 import { PxSize } from "../lib/pos";
+import { ITrackingCamera, Sprite3 } from "../engine/sprite3";
 //import { VRButton } from 'three/addons/webxr/VRButton';
 
 export type CameraLayerProps = UiLayerProps & {
     scale: number;
+}
+
+class ThirtPersonCamera implements ITrackingCamera {
+    private camera!: PerspectiveCamera;
+    private cameraGroup!: Group;
+    private sprite: Sprite3;
+    private cameraOffset: Vector3;
+
+    public constructor(sprite: Sprite3, cameraOffset: Vector3, camera: PerspectiveCamera, cameraGroup: Group) {
+        this.camera = camera;
+        this.cameraGroup = cameraGroup;
+        this.sprite = sprite;
+        this.cameraOffset = cameraOffset;
+        this.updateCameraPos(this.sprite.position);
+    }
+
+    onTargetMove(pos: Vector3): void {
+        this.updateCameraPos(pos);
+    }
+
+    private updateCameraPos(pos: Vector3) {
+        let cpos = pos.clone();
+        cpos.add(this.cameraOffset);
+        this.cameraGroup.position.copy(cpos);
+        this.cameraGroup.rotation.x = 0;
+        (this.camera as PerspectiveCamera).updateProjectionMatrix();
+    }
+
 }
 
 export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
@@ -32,6 +61,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     private isDown: boolean = false;
     private vrButton!: VRButton;
     private xrSessionChangedSource = new SyncEventSource<XRSession | undefined>();
+    private trackingCamera: ITrackingCamera | undefined;
 
     // Particle stuff.
     public chunk_material = new MeshPhongMaterial({ vertexColors: true, wireframe: false });
@@ -97,10 +127,9 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICamera {
     public set position(pos: Vector3) { this.cameraGroup.position.copy(pos); }
     public get viewSize(): PxSize { return { w: this.props.w, h: this.props.h } }
 
-    public setThirdPersonCamera(): void {
-        this.cameraGroup.position.set(100, 40, 100);
-        this.cameraGroup.rotation.x = 0;
-        (this.camera as PerspectiveCamera).updateProjectionMatrix();
+    public setThirdPersonCamera(sprite: Sprite3, cameraOffset: Vector3): void {
+        this.trackingCamera = new ThirtPersonCamera(sprite, cameraOffset, this.camera, this.cameraGroup);
+        sprite.setTrackingCamera(this.trackingCamera);
     }
 
     public scrollBy(delta: WorldCoord3) {
