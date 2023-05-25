@@ -83,6 +83,22 @@ end`);
   }
 });
 
+test("if_or", () => {
+  let ast = loadModule(`
+proc foo()
+begin
+  if x != 1 or x != 2 then
+    print \"hello world\" + x
+  end
+end`);
+  let func = ast.procs[0] as FuncDefNode;
+  if (!(func.body instanceof Function)) {
+    let fr = func.body.statements[0] as ForNode;
+
+    expect(fr.kind).toBe(AstNodeKind.if);
+  }
+});
+
 test('if2', () => {
   let ast = loadModule(`
 proc foo()

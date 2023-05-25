@@ -57,3 +57,16 @@ travel
   ask road /// assume map
   knowledge? 
 sell
+
+
+.wrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-gap: 1rem;
+}
+
+@media (min-width: 400px) {
+    .wrapper {
+        grid-template-columns: 1fr 300px 1fr;
+    }
+}

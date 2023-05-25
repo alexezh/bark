@@ -56,30 +56,13 @@
   }
 
   .codeEditor {
-    position: absolute;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
     visibility: visible;
-    opacity: 0.9;
     background: rgb(237, 237, 237);
     font-family: Consolas, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
-    display: flex;
-    flex-direction: column;
-    top: 0;
-    left: 0;
-  }
-
-  .codeEditorBar {
-    display: flex;
-    flex-direction: row;
-    top: 0;
-    left: 0;
-  }
-
-  .barLayer {
-    position: absolute;
-    display: flex;
-    flex-direction: row;
-    top: 0;
-    left: 0;
   }
 
   .inputContainer {
@@ -106,26 +89,54 @@
     display: block
   }
 
-  .commandFloatie {
+  .commandLayer {
+    position: absolute;
     opacity: 1.0;
     background: rgb(219, 210, 210);
-    display: flex;
-    flex-direction: row;
     top: 0;
     left: 0;
+  }
+
+  .commandLayerGrid {
+    width: '100%';
+    height: '100%';
+    display: grid;
+    grid-template-rows: auto auto;
+    grid-template-columns: auto auto;
+  }
+
+  .commandOpenButton {
+    grid-column: 1;
+    grid-row: 1;
+    background: none;
+    border: none;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    font-size: medium;
+    text-align: left;
+    padding-left: 12;
+    padding-right: 12;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    color: rgb(26, 24, 24);
   }
 
   .commandList {
+    grid-column: 1;
+    grid-row: 2;
     opacity: 1.0;
     display: flex;
     flex-direction: column;
+    overflow: auto;
     top: 0;
     left: 0;
   }
 
-  .commandPane {
+  .commandPropertyPane {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    overflow: auto;
     top: 0;
     left: 0;
   }
@@ -137,6 +148,7 @@
     padding: 0;
     cursor: pointer;
     font-size: medium;
+    text-align: left;
     padding-left: 12;
     padding-right: 12;
     font-family: 'Courier New', Courier, monospace;
@@ -146,16 +158,6 @@
 
   .commandButton:hover {
     color: rgb(155, 54, 26);
-  }
-
-  .mapInfoLayer {
-    position: absolute;
-    opacity: 0.6;
-    background: rgb(13, 10, 10);
-    display: flex;
-    flex-direction: column;
-    top: 0;
-    left: 0;
   }
 
   textarea {

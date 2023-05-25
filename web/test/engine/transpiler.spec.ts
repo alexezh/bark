@@ -154,6 +154,20 @@ end`);
   expect(res).toBe(3);
 });
 
+test("if_or", () => {
+  let res = runProg(`
+proc foo()
+begin
+  var x := 0
+  if x = 0 or x = 1 then
+    x := 1
+  end
+  return x
+end`);
+
+  expect(res).toBe(1);
+});
+
 test('multipleparams', () => {
   let res = runProg(`
 
