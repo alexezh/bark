@@ -156,7 +156,7 @@ export class ImportVoxAction implements IAction {
       d.appendChild(canvas);
     }
 
-    let upload = createButton(d, 'Upload', () => {
+    let upload = createButton(d, 'nes-btn is-primary', 'Upload', () => {
       ImportVoxAction.upload(uploadFiles);
       bar.closeDetailsPane();
     });

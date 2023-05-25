@@ -21,10 +21,10 @@ export function createTextDiv(): [HTMLDivElement, HTMLSpanElement] {
   return [d, s];
 }
 
-export function createButton(parent: HTMLElement, text: string, handler: (evt: any) => any): HTMLButtonElement {
+export function createButton(parent: HTMLElement, className: string, text: string, handler: (evt: any) => any): HTMLButtonElement {
   let button = document.createElement('button');
   button.textContent = text;
-  button.className = "nes-btn is-primary";
+  button.className = className;
 
   parent.appendChild(button);
   button.addEventListener('click', handler);

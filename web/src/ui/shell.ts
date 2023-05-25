@@ -18,7 +18,7 @@ export class ShellProps {
   public scrollX: number = 0;
   public scrollY: number = 0;
   public commandPaneHeight: number = 48;
-  public terminalPaneHeightRatio: number = 0.25;
+  public commandListWidthRation: number = 0.20;
   public uiLayerHeight: number = 32;
   public mediumButtonWidth = 64;
   public mediumButtonHeight = 32;
@@ -51,9 +51,11 @@ export class Shell implements IGameShell {
 
     // now add UI layers
     this.barLayer = new CommandLayer({
-      id: "bar", x: 0, y: 0,
-      w: this.props.width, h: this.props.height,
-      termProps: this.props,
+      id: "bar",
+      x: 0, y: 0,
+      w: this.props.width,
+      h: this.props.height,
+      shellProps: this.props,
       visible: true,
       mapEditorState: mapEditorState
     });

@@ -33,7 +33,7 @@ export class FormPane {
   }
 
   public addButtom(name: string, action: () => void) {
-    createButton(this.element, name, action);
+    createButton(this.element, 'nes-btn is-primary', name, action);
   }
 }
 

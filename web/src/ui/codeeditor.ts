@@ -33,13 +33,13 @@ export class CodeEditor extends UiLayer2<CodeEditorProps> {
     let bar = document.createElement('div');
     bar.className = 'codeEditorBar';
     div.appendChild(bar);
-    this.saveButton = createButton(bar, 'SAVE', (evt: any): any => {
+    this.saveButton = createButton(bar, 'nes-btn is-primary', 'SAVE', (evt: any): any => {
       //const code = this.flask.getCode();
       // if (this.onSave !== undefined) {
       //   this.onSave(code);
       // }
     });
-    createButton(bar, 'CANCEL', (evt: any): any => {
+    createButton(bar, 'nes-btn is-primary', 'CANCEL', (evt: any): any => {
       if (this.onCancel !== undefined) {
         this.onCancel();
       }
