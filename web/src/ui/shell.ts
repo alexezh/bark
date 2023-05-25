@@ -1,7 +1,7 @@
 import { CommandLayer } from "../actions/commandlayer";
 import { UiCompositor2 } from "./uicompositor";
 import { createMapEditorState, mapEditorState } from "./mapeditorstate";
-import { CodeEditor } from "./codeeditor";
+import { CodeEditor } from "../actions/codeeditor";
 import { IGameShell as IGameShell } from "./igameshell";
 import { decorateCommand } from "../lib/termcolors";
 import { CameraLayer } from "./cameralayer";
@@ -19,6 +19,7 @@ export class ShellProps {
   public scrollY: number = 0;
   public commandPaneHeight: number = 48;
   public commandListWidthRation: number = 0.20;
+  public propertyPaneWidthRation: number = 0.40;
   public uiLayerHeight: number = 32;
   public mediumButtonWidth = 64;
   public mediumButtonHeight = 32;
@@ -31,7 +32,6 @@ export class Shell implements IGameShell {
   private compositor2: UiCompositor2;
   private props: ShellProps;
   private barLayer: CommandLayer;
-  private codeEditor?: CodeEditor;
 
   public constructor(gameContainer: HTMLDivElement) {
     this.container = gameContainer;
@@ -84,38 +84,6 @@ export class Shell implements IGameShell {
   }
 
   public printException(e: any): void {
-  }
-
-  public editCode() {
-
-    this.openTextEditor((text: string) => {
-      this.closeTextEditor();
-    });
-  }
-
-  private openTextEditor(onSave: ((text: string) => void) | undefined) {
-    if (this.codeEditor === undefined) {
-      this.codeEditor = new CodeEditor({
-        id: "codeeditor",
-        x: 40,
-        y: 40,
-        w: this.props.width - 80,
-        h: this.props.height - 80,
-        visible: false
-      });
-
-      this.compositor2.appendLayer(this.codeEditor);
-    }
-
-    this.codeEditor.load(onSave, () => this.closeTextEditor());
-
-    this.codeEditor.visible = true;
-    this.codeEditor.focus();
-  }
-
-  private closeTextEditor() {
-    this.codeEditor!.visible = false;
-    this.camera?.focus();
   }
 }
 

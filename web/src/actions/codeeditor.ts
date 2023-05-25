@@ -1,5 +1,5 @@
-import { UiLayer2, UiLayerProps } from "./uilayer";
-import { KeyBinder } from "./keybinder";
+import { UiLayer2, UiLayerProps } from "../ui/uilayer";
+import { KeyBinder } from "../ui/keybinder";
 import { createButton, setElementVisible } from "../lib/htmlutils";
 import { renderModule, findParentNode, isParentNode } from "../basic/formatter";
 import { vm } from "../engine/ivm";
@@ -9,55 +9,48 @@ export type CodeEditorProps = UiLayerProps & {
 }
 
 // editor is bar on the side and code area
-export class CodeEditor extends UiLayer2<CodeEditorProps> {
-  private onSave: ((text: string) => void) | undefined;
-  private onCancel: (() => void) | undefined;
-  private saveButton: HTMLButtonElement;
+export class CodeEditor {
   private renderBlock: TextBlock | undefined;
   private selectedNode: TextBlock | ITextSegment | TextSpan | undefined = undefined;
   private initialSelectedNode: TextBlock | ITextSegment | TextSpan | undefined = undefined;
   private selectedElem: HTMLElement | undefined = undefined;
-  private editArea: HTMLDivElement;
+  public readonly editArea: HTMLDivElement;
 
-  public constructor(props: CodeEditorProps) {
-
-    let wrapper = document.createElement('div');
-    wrapper.className = 'codeWrapper';
-
-    super(props, wrapper);
-
-    let div = document.createElement('div');
-    div.className = 'codeEditor';
-    wrapper.appendChild(div);
-
-    let bar = document.createElement('div');
-    bar.className = 'codeEditorBar';
-    div.appendChild(bar);
-    this.saveButton = createButton(bar, 'nes-btn is-primary', 'SAVE', (evt: any): any => {
-      //const code = this.flask.getCode();
-      // if (this.onSave !== undefined) {
-      //   this.onSave(code);
-      // }
-    });
-    createButton(bar, 'nes-btn is-primary', 'CANCEL', (evt: any): any => {
-      if (this.onCancel !== undefined) {
-        this.onCancel();
-      }
-    });
+  public constructor() {
 
     this.editArea = document.createElement('div');
-    this.editArea.className = 'codeArea';
-    div.appendChild(this.editArea);
+    this.editArea.className = 'codeEditor';
+
     this.editArea.addEventListener('scroll', this.onTextScroll.bind(this));
     this.loadContent();
   }
 
-  private loadContent() {
+  public loadContent() {
     let module = vm.loader.getUserModule('default');
     if (module) {
       this.renderBlock = renderModule(module);
       this.renderBlock.render(this.editArea, this.onTextClick.bind(this));
     }
+  }
+
+  public copyText() {
+
+  }
+
+  public cutText() {
+
+  }
+
+  public pasteText() {
+
+  }
+
+  public addAbove() {
+
+  }
+
+  public addBelow() {
+
   }
 
   private onTextScroll(e: Event) {
@@ -101,28 +94,6 @@ export class CodeEditor extends UiLayer2<CodeEditorProps> {
     }
     //let cur = v2.parent;
     return true;
-  }
-
-  public load(
-    onSave: ((text: string) => void) | undefined,
-    onCancel: () => void) {
-
-    this.onSave = onSave;
-    this.onCancel = onCancel;
-
-    // setElementVisible(this.saveButton, this.onSave !== undefined);
-
-    // if (text === undefined || text === null) {
-    //   this.flask.updateCode('');
-    // } else {
-    //   this.flask.updateCode(text);
-    // }
-  }
-
-  private onMacro() {
-    // let code = this.flask.getCode();
-    // code = JSON.parse(code);
-    // this.flask.updateCode(code);
   }
 }
 

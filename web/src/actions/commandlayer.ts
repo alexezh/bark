@@ -1,6 +1,6 @@
 import { MapEditorState } from "../ui/mapeditorstate";
 import { createButton, setElementVisible } from "../lib/htmlutils";
-import { IAction, ICommandLayer } from "./iaction";
+import { DetailsPaneKind, IAction, ICommandLayer } from "./iaction";
 import { ShellProps } from "../ui/shell";
 import { UiLayer2, UiLayerProps } from "../ui/uilayer";
 import { getActions } from "./actionregistry";
@@ -86,9 +86,10 @@ export class CommandList {
 export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandLayer {
   //private editButton: HTMLButtonElement;
   //private tileButton: HTMLButtonElement;
+  private grid: HTMLElement;
   private actionButton: HTMLButtonElement;
   private _commandList: CommandList;
-  private _propPane: HTMLElement | undefined;
+  private _detailsPane: HTMLElement | undefined;
   private _fullHeight: number;
   private _fullWidth: number;
 
@@ -103,12 +104,16 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
     props.h = 0;
     super(props, element, false);
 
+    this.grid = document.createElement('div');
+    this.grid.className = 'commandLayerGrid';
+    this.element.appendChild(this.grid);
+
     // save properties for later
     this._fullWidth = fullWidth;
     this._fullHeight = fullHeight;
 
     // add button to open pane
-    this.actionButton = createButton(element, 'commandOpenButton', 'A', this.onCommandList.bind(this));
+    this.actionButton = createButton(this.grid, 'commandOpenButton', 'A', this.onCommandList.bind(this));
 
     this._commandList = new CommandList(this.props);
 
@@ -127,34 +132,68 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
     console.log(text);
   }
 
-  public openDetailsPane(elem: HTMLElement): void {
-    if (this._propPane !== undefined) {
+  public openDetailsPane(elem: HTMLElement, kind: DetailsPaneKind): void {
+    if (this._detailsPane !== undefined) {
       this.closeDetailsPane();
     }
 
-    this.element.appendChild(elem);
-    this._propPane = elem;
+    elem.style.gridColumn = '2';
+    elem.style.gridRow = '2';
+
+    this.grid.appendChild(elem);
+    this._detailsPane = elem;
+    this.props.w = this.getCommandListWidth() + this.getPropertyPaneWidth(kind);
+    this.updateElementSize();
   }
 
   public closeDetailsPane(): void {
-    if (this._propPane === undefined) {
+    if (this._detailsPane === undefined) {
       return;
     }
 
-    this.element.removeChild(this._propPane);
-    this._propPane = undefined;
+    this.grid.removeChild(this._detailsPane);
+    this._detailsPane = undefined;
+    this.props.w = this.getCommandListWidth();
+    this.updateElementSize();
+  }
+
+  public pushActions() {
+
+  }
+  public popActions() {
+
+  }
+  public addActions(actions: IAction[]) {
+
   }
 
   private onCommandList() {
     if (this._commandList.isOpened) {
-      this._commandList.close(this.element);
+      this.closeDetailsPane();
+      this._commandList.close(this.grid);
+
+      this.props.w = 0;
+      this.props.h = 0;
+      this.updateElementSize();
     } else {
-      this.props.w = this._fullWidth * this.props.shellProps.commandListWidthRation;
+      this.props.w = this.getCommandListWidth();
       this.props.h = this._fullHeight;
       this.updateElementSize();
 
-      this._commandList.open(this.element, this);
+      this._commandList.open(this.grid, this);
     }
     //this._commandList.updateList(this, this._pane!);
+  }
+
+  private getCommandListWidth() {
+    return this._fullWidth * this.props.shellProps.commandListWidthRation;
+  }
+
+  private getPropertyPaneWidth(kind: DetailsPaneKind) {
+    if (kind === DetailsPaneKind.Partial) {
+      return this._fullWidth * this.props.shellProps.propertyPaneWidthRation;
+    } else {
+      return this._fullWidth * (1 - this.props.shellProps.commandListWidthRation);
+    }
   }
 }

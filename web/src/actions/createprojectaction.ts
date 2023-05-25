@@ -2,7 +2,7 @@ import { WireLevelInfo, WireProjectConfig, fetchResource, getProjectId, setProje
 import { CommandAction } from "./commandaction";
 import { v4 as uuidv4 } from 'uuid';
 import { vm } from "../engine/ivm";
-import { ICommandLayer } from "./iaction";
+import { DetailsPaneKind, ICommandLayer } from "./iaction";
 import { VoxelModelCache, WireModelInfo, modelCache } from "../voxel/voxelmodelcache";
 import { ImportVoxAction, UploadFile } from "./importaction";
 import { Vox } from "../voxel/vox";
@@ -21,7 +21,7 @@ export class CreateProjectAction extends CommandAction {
     //pane.addIntField('Blocks X', 100);
     //pane.addIntField('Blocks Z', 100);
     pane.addButtom('Create', () => this.createProject(pane));
-    bar.openDetailsPane(pane.element);
+    bar.openDetailsPane(pane.element, DetailsPaneKind.Partial);
   }
 
   private async createProject(pane: FormPane): Promise<void> {
@@ -115,7 +115,7 @@ export class CreateLevelAction extends CommandAction {
     pane.addIntField('Blocks X', 100);
     pane.addIntField('Blocks Z', 100);
     pane.addButtom('Create', () => this.createLevel(pane));
-    bar.openDetailsPane(pane.element);
+    bar.openDetailsPane(pane.element, DetailsPaneKind.Partial);
   }
 
   private createLevel(pane: FormPane): Promise<void> {

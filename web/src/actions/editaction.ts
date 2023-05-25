@@ -2,6 +2,7 @@ import { vm } from "../engine/ivm";
 import { IAction, ICommandLayer } from "./iaction";
 import { shell } from "../ui/igameshell";
 import { CommandAction } from "./commandaction";
+import { EditCodeAction, registerEditCodeActions } from "./editcodeaction";
 
 // display list of blocks, selects block as current
 export class SelectBlockAction extends CommandAction {
@@ -29,19 +30,11 @@ export class EditBlockAction extends CommandAction {
   }
 }
 
-export class EditCodeAction extends CommandAction {
-  get name(): string { return 'EditCode'; }
-  get tags(): string[] { return ['edit', 'code'] }
 
-  protected override onClick(bar: ICommandLayer) {
-    vm.stop();
-    shell.editCode();
-  }
-}
 
 export function registerEditActions(actions: IAction[]) {
   actions.push(new EditLevelAction());
   actions.push(new EditBlockAction());
-  actions.push(new EditCodeAction());
+  registerEditCodeActions(actions);
 }
 

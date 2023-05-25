@@ -5,7 +5,6 @@ export interface IGameShell {
   printError(s: string): void;
   print(s: string): void;
   printException(e: any): void;
-  editCode(): void;
 }
 
 export let shell!: IGameShell;

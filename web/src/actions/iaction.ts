@@ -19,17 +19,26 @@ export interface IAction {
   getChildActions(): Iterable<IAction>;
 }
 
+export enum DetailsPaneKind {
+  Partial,
+  Full,
+}
+
 export interface ICommandLayer {
   displayError(text: string);
   /**
    * called by an action to display html element in details pane
    * closes current details pane if needed
    */
-  openDetailsPane(elem: HTMLElement): void;
+  openDetailsPane(elem: HTMLElement, kind: DetailsPaneKind): void;
 
   /**
    * close the current details pane
    */
   closeDetailsPane(): void;
+
+  pushActions();
+  popActions();
+  addActions(actions: IAction[]);
 }
 

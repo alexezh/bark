@@ -1,5 +1,5 @@
 import { createButton, createCommandButton, createNumberEntry, createTextEntry } from "../lib/htmlutils";
-import { IAction, ICommandLayer } from "./iaction";
+import { DetailsPaneKind, IAction, ICommandLayer } from "./iaction";
 
 export class FormPane {
   public readonly element: HTMLDivElement;
@@ -71,9 +71,10 @@ export abstract class FormAction implements IAction {
   }
 
   private onClick(cl: ICommandLayer) {
+    cl.closeDetailsPane();
     let form = this.createForm(cl);
 
-    cl.openDetailsPane(form.element);
+    cl.openDetailsPane(form.element, DetailsPaneKind.Partial);
   }
 
   protected abstract createForm(cl: ICommandLayer): FormPane;

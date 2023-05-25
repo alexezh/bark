@@ -1,7 +1,7 @@
 import { Mesh } from "three";
 import { wireSetStrings, WireString } from "../lib/fetchadapter";
 import { bytesToBase64 } from "../lib/base64";
-import { IAction, ICommandLayer } from "./iaction";
+import { DetailsPaneKind, IAction, ICommandLayer } from "./iaction";
 import { defaultMaterial } from "../ui/ivoxelmap";
 import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
 import { Vox } from "../voxel/vox";
@@ -60,6 +60,7 @@ export class ImportVoxAction implements IAction {
     d.multiple = true;
     d.accept = ".vox";
     d.onchange = () => {
+      bar.closeDetailsPane();
       this.processImport(bar);
     }
     this._inputElem = d;
@@ -161,7 +162,7 @@ export class ImportVoxAction implements IAction {
       bar.closeDetailsPane();
     });
 
-    bar.openDetailsPane(d);
+    bar.openDetailsPane(d, DetailsPaneKind.Partial);
   }
 
   /**
