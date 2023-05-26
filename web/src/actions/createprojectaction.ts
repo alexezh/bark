@@ -15,6 +15,10 @@ export class CreateProjectAction extends CommandAction {
   get name(): string { return 'CreateProject' }
   get tags(): string[] { return ['project', 'create'] }
 
+  public constructor() {
+    super('CreateProject', ['project', 'create']);
+  }
+
   protected override onClick(bar: ICommandLayer) {
     let pane = new FormPane();
     pane.addTextField('Name', 'MyProject');
@@ -106,8 +110,9 @@ export async function createDefaultProject(): Promise<void> {
 }
 
 export class CreateLevelAction extends CommandAction {
-  get name(): string { return 'CreateLevel' }
-  get tags(): string[] { return ['level', 'create', 'level'] }
+  public constructor() {
+    super('CreateLevel', ['level', 'create', 'level']);
+  }
 
   protected override onClick(bar: ICommandLayer) {
     let pane = new FormPane();

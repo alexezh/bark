@@ -14,8 +14,9 @@ export class SelectBlockAction extends CommandAction {
 }
 
 export class EditLevelAction extends CommandAction {
-  get name(): string { return 'EditLevel' }
-  get tags(): string[] { return ['level', 'edit', 'level'] }
+  public constructor() {
+    super('EditLevel', ['level', 'edit', 'level']);
+  }
 
   protected override onClick(bar: ICommandLayer) {
     vm.editLevel();
@@ -23,8 +24,9 @@ export class EditLevelAction extends CommandAction {
 }
 
 export class EditBlockAction extends CommandAction {
-  get name(): string { return 'EditVox'; }
-  get tags(): string[] { return ['edit', 'block', 'vox'] }
+  public constructor() {
+    super('EditVox', ['edit', 'block', 'vox']);
+  }
 
   protected override onClick(bar: ICommandLayer) {
   }

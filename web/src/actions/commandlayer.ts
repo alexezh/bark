@@ -15,30 +15,31 @@ export type CommandBarProps = UiLayerProps & {
  * scrollable list of commands
  */
 export class CommandList {
-  private actions: IAction[] = [];
+  private actionStack: Array<IAction[]> = new Array<IAction[]>();
+  private renderedActions: IAction[] | undefined;
   private props: CommandBarProps;
   private listDiv: HTMLDivElement | undefined;
   private opened: boolean = false;
+  private readonly layer: ICommandLayer;
 
   public get isOpened(): boolean { return this.opened; };
 
-  public constructor(props: CommandBarProps) {
+  public constructor(props: CommandBarProps, layer: ICommandLayer) {
     this.props = props;
+    this.layer = layer;
 
     // make list of possible actions
-    for (let action of getTopLevelActions()) {
-      this.actions.push(action);
-    }
+    this.actionStack.push(getTopLevelActions());
   }
 
-  public open(parent: HTMLElement, bar: ICommandLayer) {
+  public open(parent: HTMLElement) {
     this.opened = true;
 
     this.listDiv = document.createElement('div');
     this.listDiv.className = 'commandList';
     parent.appendChild(this.listDiv);
     this.updateListSize();
-    this.updateList(bar);
+    this.renderList();
   }
 
   public close(parent: HTMLElement) {
@@ -50,24 +51,28 @@ export class CommandList {
     this.opened = false;
   }
 
-  public pushActions() {
-    this._commandList.pushActions();
+  public pushActions(actions: IAction[]) {
+    this.actionStack.push(actions);
+    this.renderList();
   }
+
   public popActions() {
-    this._commandList.popActions();
-  }
-  public addActions(actions: IAction[]) {
-    this._commandList.addActions(actions);
+    this.actionStack.pop();
+    this.renderList();
   }
 
-  public updateList(bar: ICommandLayer) {
-    for (let a of this.actions) {
-      a.destroyButton(this.listDiv!);
+  private renderList() {
+    if (this.renderedActions) {
+      for (let a of this.renderedActions) {
+        a.destroyButton(this.listDiv!);
+      }
     }
 
-    for (let a of this.actions) {
-      a.renderButton(this.listDiv!, bar);
+    let actions = this.actionStack[this.actionStack.length - 1];
+    for (let a of actions) {
+      a.renderButton(this.listDiv!, this.layer);
     }
+    this.renderedActions = actions;
   }
 
   private updateListSize() {
@@ -126,7 +131,7 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
     // add button to open pane
     this.actionButton = createButton(this.grid, 'commandOpenButton', 'A', this.onCommandList.bind(this));
 
-    this._commandList = new CommandList(this.props);
+    this._commandList = new CommandList(this.props, this);
 
     // <button type="button" class="nes-btn is-primary">Primary</button>
     //this.editButton = createButton(this._element, 'EDIT', (evt: any): any => props.onToggleEdit());
@@ -163,14 +168,19 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
     this.updateElementSize();
   }
 
-  public pushActions() {
-    this._commandList.pushActions();
+  public pushActions(actions: IAction[]) {
+    this._commandList.pushActions(actions);
   }
+
   public popActions() {
     this._commandList.popActions();
   }
-  public addActions(actions: IAction[]) {
-    this._commandList.addActions(actions);
+
+  public openActionGroup(group: IAction) {
+
+  }
+  public closeActionGroup(group: IAction) {
+
   }
 
   private onCommandList() {
@@ -186,7 +196,7 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
       this.props.h = this._fullHeight;
       this.updateElementSize();
 
-      this._commandList.open(this.grid, this);
+      this._commandList.open(this.grid);
     }
     //this._commandList.updateList(this, this._pane!);
   }

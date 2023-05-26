@@ -6,8 +6,9 @@ import { CommandAction } from "./commandaction";
 import { FormAction, FormPane } from "./formpane";
 
 export class ThirdPersonCameraAction extends CommandAction {
-  get name(): string { return 'Third person camera' }
-  get tags(): string[] { return ['level', 'edit', 'level'] }
+  public constructor() {
+    super('Third person camera', ['level', 'edit', 'level'])
+  }
 
   protected override onClick(bar: ICommandLayer) {
     //vm.camera.setThirdPersonCamera();

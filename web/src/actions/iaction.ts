@@ -37,8 +37,9 @@ export interface ICommandLayer {
    */
   closeDetailsPane(): void;
 
-  pushActions();
+  pushActions(actions: IAction[]);
   popActions();
-  addActions(actions: IAction[]);
+  openActionGroup(group: IAction);
+  closeActionGroup(group: IAction);
 }
 

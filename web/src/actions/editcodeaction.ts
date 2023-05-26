@@ -10,28 +10,33 @@ export function registerEditCodeActions(actions: IAction[]) {
 
 export class EditCodeAction extends CommandAction {
   private codeEditor?: CodeEditor;
+
   get name(): string { return 'EditCode'; }
   get tags(): string[] { return ['edit', 'code'] }
+
+  public constructor() {
+    super('EditCode', ['edit', 'code']);
+  }
 
   protected override onClick(bar: ICommandLayer) {
     vm.stop();
     this.codeEditor = new CodeEditor();
     this.codeEditor.loadContent();
 
-    //shell.editCode();
-    bar.pushActions();
-
-    bar.addActions(
+    bar.pushActions(
       [
+        new FuncAction('Back', [], () => this.onBack(bar)),
         new FuncAction('Copy', [], () => this.codeEditor!.copyText()),
         new FuncAction('Cut', [], () => this.codeEditor!.cutText()),
         new FuncAction('Paste', [], () => this.codeEditor!.pasteText()),
         new FuncAction('Add Line Above', [], () => this.codeEditor!.addAbove()),
         new FuncAction('Add Line Below', [], () => this.codeEditor!.addBelow())
-      ]
-    )
-
+      ]);
     bar.openDetailsPane(this.codeEditor.editEditor, DetailsPaneKind.Full);
+  }
+
+  public onBack(bar: ICommandLayer) {
+    bar.popActions();
   }
 
   public editCode() {
