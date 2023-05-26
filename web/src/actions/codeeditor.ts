@@ -14,12 +14,17 @@ export class CodeEditor {
   private selectedNode: TextBlock | ITextSegment | TextSpan | undefined = undefined;
   private initialSelectedNode: TextBlock | ITextSegment | TextSpan | undefined = undefined;
   private selectedElem: HTMLElement | undefined = undefined;
-  public readonly editArea: HTMLDivElement;
+  public readonly editEditor: HTMLDivElement;
+  private readonly editArea: HTMLDivElement;
 
   public constructor() {
 
+    this.editEditor = document.createElement('div');
+    this.editEditor.className = 'codeEditor';
+
     this.editArea = document.createElement('div');
-    this.editArea.className = 'codeEditor';
+    this.editArea.className = 'codeArea';
+    this.editEditor.appendChild(this.editArea);
 
     this.editArea.addEventListener('scroll', this.onTextScroll.bind(this));
     this.loadContent();

@@ -31,7 +31,7 @@ export class EditCodeAction extends CommandAction {
       ]
     )
 
-    bar.openDetailsPane(this.codeEditor.editArea, DetailsPaneKind.Full);
+    bar.openDetailsPane(this.codeEditor.editEditor, DetailsPaneKind.Full);
   }
 
   public editCode() {

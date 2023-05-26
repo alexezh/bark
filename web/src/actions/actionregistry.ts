@@ -6,7 +6,7 @@ import { MoveCameraAction, ThirdPersonCameraAction } from "./movecameraaction";
 
 let actions: IAction[] = [];
 
-export function getActions(): IAction[] {
+export function getTopLevelActions(): IAction[] {
   return actions;
 }
 

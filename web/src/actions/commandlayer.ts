@@ -3,7 +3,7 @@ import { createButton, setElementVisible } from "../lib/htmlutils";
 import { DetailsPaneKind, IAction, ICommandLayer } from "./iaction";
 import { ShellProps } from "../ui/shell";
 import { UiLayer2, UiLayerProps } from "../ui/uilayer";
-import { getActions } from "./actionregistry";
+import { getTopLevelActions } from "./actionregistry";
 
 export type CommandBarProps = UiLayerProps & {
   shellProps: ShellProps;
@@ -24,6 +24,11 @@ export class CommandList {
 
   public constructor(props: CommandBarProps) {
     this.props = props;
+
+    // make list of possible actions
+    for (let action of getTopLevelActions()) {
+      this.actions.push(action);
+    }
   }
 
   public open(parent: HTMLElement, bar: ICommandLayer) {
@@ -45,6 +50,16 @@ export class CommandList {
     this.opened = false;
   }
 
+  public pushActions() {
+    this._commandList.pushActions();
+  }
+  public popActions() {
+    this._commandList.popActions();
+  }
+  public addActions(actions: IAction[]) {
+    this._commandList.addActions(actions);
+  }
+
   public updateList(bar: ICommandLayer) {
     for (let a of this.actions) {
       a.destroyButton(this.listDiv!);
@@ -53,10 +68,6 @@ export class CommandList {
     for (let a of this.actions) {
       a.renderButton(this.listDiv!, bar);
     }
-  }
-
-  registerAction(action: IAction): void {
-    this.actions.push(action);
   }
 
   private updateListSize() {
@@ -117,11 +128,6 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
 
     this._commandList = new CommandList(this.props);
 
-    // make list of possible actions
-    for (let action of getActions()) {
-      this._commandList.registerAction(action);
-    }
-
     // <button type="button" class="nes-btn is-primary">Primary</button>
     //this.editButton = createButton(this._element, 'EDIT', (evt: any): any => props.onToggleEdit());
 
@@ -158,13 +164,13 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
   }
 
   public pushActions() {
-
+    this._commandList.pushActions();
   }
   public popActions() {
-
+    this._commandList.popActions();
   }
   public addActions(actions: IAction[]) {
-
+    this._commandList.addActions(actions);
   }
 
   private onCommandList() {
@@ -194,6 +200,14 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
       return this._fullWidth * this.props.shellProps.propertyPaneWidthRation;
     } else {
       return this._fullWidth * (1 - this.props.shellProps.commandListWidthRation);
+    }
+  }
+
+  protected updateElementSize() {
+    super.updateElementSize();
+    if (this.grid) {
+      this.grid.style.width = this.props.w.toString();
+      this.grid.style.height = this.props.h.toString();
     }
   }
 }
