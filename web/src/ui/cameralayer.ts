@@ -225,6 +225,9 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         // add geometry covering map on the bottom so we can handle all clicks within map
         const geometry = new PlaneGeometry(wsz.sx, wsz.sz);
 
+        // y is vertical, rotate around x to make it horizontal
+        geometry.rotateX(- Math.PI / 2);
+
         let plane = new Mesh(geometry, new MeshBasicMaterial({ visible: false }));
         this.scene.add(plane);
 

@@ -196,7 +196,7 @@ export class LevelEditor implements ILevelEditor {
     if (block.model !== undefined) {
       size = this.level.blockSizeToWorldSize(block.mapSize);
     } else {
-      size = this.level.blockSizeToWorldSize({ sx: 16, sy: 16, sz: 16 });
+      size = this.level.blockSizeToWorldSize({ sx: 1, sy: 1, sz: 1 });
     }
     this.buildSelectionBox(pos, size);
 
