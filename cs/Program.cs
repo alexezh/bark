@@ -48,6 +48,10 @@ app.MapControllerRoute(
     pattern: "/api/{controller=Project}/{action=SetStrings}/{id?}");
 
 app.MapControllerRoute(
+    name: "getResource",
+    pattern: "/api/{controller=Project}/{action=GetResource}/{id?}");
+
+app.MapControllerRoute(
     name: "getDict",
     pattern: "/api/{controller=Project}/{action=GetDict}/{id?}");
 

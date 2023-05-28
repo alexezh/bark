@@ -121,6 +121,19 @@ public class Project
     return values;
   }
 
+  // get string as resource
+  public byte[] GetResource(string key)
+  {
+    // for now we only accept * pattern
+    var res = _db.LoadEntity((int)ValueKind.String, key);
+    if (res == null)
+    {
+      return null;
+    }
+
+    return Convert.FromBase64String(res);
+  }
+
   public void SetString(string name, string data)
   {
     SetStringWorker(ValueKind.String, name, data);

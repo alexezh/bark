@@ -44,6 +44,27 @@ public class ProjectController : Controller
     return "OK";
   }
 
+  [HttpGet]
+  public FileContentResult GetResource(string id)
+  {
+    var url = Request.Query["url"];
+    if (url.Count == 0)
+    {
+      return null;
+    }
+
+    Project prj = ProjectCollection.Instance.GetProject(id);
+    if (prj == null)
+    {
+      throw new ArgumentException("Unknown world");
+    }
+
+    var data = prj.GetResource(url[0]);
+
+    return File(data, "image/png", "png");
+  }
+
+
   [HttpPost]
   public async Task<WireGetDictResponse> GetDict(string id)
   {
