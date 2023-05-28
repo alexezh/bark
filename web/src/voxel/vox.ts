@@ -43,17 +43,14 @@ export class Vox {
         return type;
     };
 
-    loadModel(data: ArrayBuffer): VoxelFile | undefined {
-        let colors = [];
+    public loadModel(buffer: Uint8Array, rotateYZ: boolean): VoxelFile | undefined {
         let colors2: any = undefined;
         let file: VoxelFile = { frames: [] };
 
         //var map = new Array();
         let sizex = 0, sizey = 0, sizez = 0;
 
-        if (data) {
-            var buffer = new Uint8Array(data);
-
+        if (buffer) {
             var i = 0;
             // @ts-ignore
             var type = this.readId(buffer, i);
@@ -83,16 +80,24 @@ export class Vox {
                     i += 4;
                     let voxelPoints = new Array(numVoxels);
                     for (var n = 0; n < voxelPoints.length; n++) {
-                        voxelPoints[n] = makeVoxelPoint(buffer, i);
+                        let p = makeVoxelPoint(buffer, i);
+                        if (rotateYZ) {
+                            let t = p.y;
+                            p.y = sizez - p.z;
+                            p.z = t;
+                        }
                         i += 4;
+                        voxelPoints[n] = p;
                     }
 
-                    file.frames.push({
+                    let frame = {
                         sx: sizex + 1,
-                        sy: sizey + 1,
-                        sz: sizez + 1,
+                        sy: (rotateYZ) ? sizez + 1 : sizey + 1,
+                        sz: (rotateYZ) ? sizey + 1 : sizez + 1,
                         data: voxelPoints
-                    })
+                    };
+
+                    file.frames.push(frame);
                 } else if (id == "MAIN") {
                 } else if (id == "PACK") {
                     var numModels = this.readInt(buffer, i);

@@ -9,13 +9,7 @@ import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
 import { VoxelModelFrame } from "../voxel/voxelmodel";
 import { createButton } from "../lib/htmlutils";
 import { encode as PngEncode } from 'fast-png';
-import { modelCache, VoxelModelCache, WireModelInfo } from "../voxel/voxelmodelcache";
-
-export type UploadFile = {
-  fn: string;
-  vox: Uint8Array;
-  png: ImageData;
-}
+import { ImportFile, modelCache, VoxelModelCache, WireModelInfo } from "../voxel/voxelmodelcache";
 
 export class ImportVoxAction implements IAction {
   private static _nextId: number = 1;
@@ -23,6 +17,8 @@ export class ImportVoxAction implements IAction {
   private _element: HTMLDivElement | undefined;
   private _inputElem: HTMLInputElement | undefined;
   private _labelElem: HTMLLabelElement | undefined;
+  private _paneElem: HTMLElement | undefined;
+  private _filesElem: HTMLElement | undefined;
 
   get tags(): string[] { return ['import', 'upload', 'vox', 'block'] }
   public get name(): string { return 'Import Vox' }
@@ -91,31 +87,31 @@ export class ImportVoxAction implements IAction {
       return;
     }
 
+    let importFiles: ImportFile[] = [];
     for (let f of this._inputElem!.files) {
       let fn = f.name;
       if (!fn.endsWith('.vox')) {
         bar.displayError('File extension is not .vox');
         return;
       }
+
+      let data = await f.arrayBuffer();
+      importFiles.push({
+        fn: fn,
+        vox: new Uint8Array(data),
+        rotateYZ: false,
+        png: undefined
+      });
     }
 
-    let uploadFiles = await this.loadVox(bar, this._inputElem!.files);
-    this.displayPane(bar, uploadFiles);
+    this.displayPane(bar, importFiles);
   }
 
-  private async loadVox(bar: ICommandLayer, files: FileList): Promise<UploadFile[]> {
+  private async loadVox(bar: ICommandLayer, importFiles: ImportFile[], rotateYZ: boolean = false): Promise<void> {
     let vox = new Vox();
     let tr = new ThumbnailRenderer(128, 128);
-    let uploadFiles: UploadFile[] = [];
-    for (let f of files) {
-      let data = await f.arrayBuffer();
-      let fn = f.name;
-      if (!fn.endsWith('.vox')) {
-        console.log('file is not vox');
-        continue;
-      }
-
-      let thumb = await ImportVoxAction.renderThumbnail(vox, tr, data, fn);
+    for (let f of importFiles) {
+      let thumb = await ImportVoxAction.renderThumbnail(vox, tr, f, rotateYZ);
       if (typeof thumb === 'string') {
         bar.displayError(thumb);
         continue;
@@ -123,20 +119,19 @@ export class ImportVoxAction implements IAction {
         continue;
       }
 
-      uploadFiles.push({ fn: fn, vox: new Uint8Array(data), png: thumb });
+      f.rotateYZ = rotateYZ;
+      f.png = thumb;
     }
-
-    return uploadFiles;
   }
 
   public static async renderThumbnail(
     vox: Vox,
     tr: ThumbnailRenderer,
-    data: ArrayBuffer,
-    fn: string): Promise<ImageData | string | undefined> {
-    let voxelFile = vox.loadModel(data);
+    file: ImportFile,
+    rotateYZ: boolean): Promise<ImageData | string | undefined> {
+    let voxelFile = vox.loadModel(file.vox, rotateYZ);
     if (voxelFile === undefined || voxelFile.frames.length === 0) {
-      return 'Cannot load model:' + fn;
+      return 'Cannot load model:' + file.fn;
     }
 
     let mf = new VoxelModelFrame(voxelFile.frames[0]);
@@ -152,59 +147,82 @@ export class ImportVoxAction implements IAction {
     return imageData;
   }
 
-  private async displayPane(bar: ICommandLayer, uploadFiles: UploadFile[]) {
+  private async displayPane(bar: ICommandLayer, importFiles: ImportFile[]) {
 
-    let d = document.createElement('div');
-    d.className = 'commandPane';
+    this._paneElem = document.createElement('div');
+    this._paneElem.className = 'commandPane';
+    this._filesElem = undefined;
 
-    for (let file of uploadFiles) {
-      let bitmap = await createImageBitmap(file.png);
+    let rotateYZ = false;
+    await this.loadVox(bar, importFiles, rotateYZ);
+    await this.renderFiles(importFiles);
+
+    createButton(this._paneElem, 'formButton', 'Y-Z', () => {
+      setTimeout(async () => {
+        rotateYZ = !rotateYZ;
+        await this.loadVox(bar, importFiles, rotateYZ);
+        await this.renderFiles(importFiles);
+      })
+    });
+
+    createButton(this._paneElem, 'formButton', 'Upload', () => {
+      ImportVoxAction.upload(importFiles);
+      bar.closeDetailsPane();
+    });
+
+    bar.openDetailsPane(this._paneElem, DetailsPaneKind.Partial);
+  }
+
+  private async renderFiles(importFiles: ImportFile[]): Promise<void> {
+    if (this._filesElem) {
+      this._paneElem!.removeChild(this._filesElem);
+      this._filesElem = undefined;
+    }
+
+    this._filesElem = document.createElement('div');
+    if (this._paneElem?.firstChild !== null) {
+      this._paneElem!.insertBefore(this._filesElem, this._paneElem?.firstChild!);
+    } else {
+      this._paneElem!.appendChild(this._filesElem);
+    }
+
+    for (let file of importFiles) {
+      let bitmap = await createImageBitmap(file.png!);
 
       let canvas: HTMLCanvasElement = document.createElement('canvas');
       let ctx = canvas.getContext("2d");
       ctx?.drawImage(bitmap, 0, 0);
-      d.appendChild(canvas);
+      this._filesElem.appendChild(canvas);
     }
-
-    let upload = createButton(d, 'nes-btn is-primary', 'Upload', () => {
-      ImportVoxAction.upload(uploadFiles);
-      bar.closeDetailsPane();
-    });
-
-    bar.openDetailsPane(d, DetailsPaneKind.Partial);
   }
 
   /**
    * return list of models (with IDs)
    */
-  public static async upload(uploadFiles: UploadFile[]): Promise<WireModelInfo[] | undefined> {
+  public static async upload(importFiles: ImportFile[]): Promise<WireModelInfo[] | undefined> {
 
     let wireFiles: WireString[] = [];
-    let modelRefs: { voxUrl: string, thumbnailUrl: string }[] = [];
-    for (let file of uploadFiles) {
+    for (let file of importFiles) {
       let dataStr = bytesToBase64(file.vox);
       let voxUrl = 'vox/' + file.fn;
       wireFiles.push({ key: voxUrl, data: dataStr });
 
       let thumbName = file.fn.replace('.vox', '.png');
+      let thumbUrl = 'thumbnail/' + thumbName;
+
+      file.voxUrl = voxUrl;
+      file.thumbnailUrl = thumbUrl;
 
       // const b = new PNG().pack().toBytes();
-      const png = PngEncode({ width: file.png.width, height: file.png.height, data: file.png.data })
+      const png = PngEncode({ width: file.png!.width, height: file.png!.height, data: file.png!.data })
       let pngStr = bytesToBase64(png);
 
-      let thumbUrl = 'thumbnail/' + thumbName;
       wireFiles.push({ key: thumbUrl, data: pngStr });
-
-      if (modelCache.getVoxelModel(voxUrl) === undefined) {
-        modelRefs.push({ voxUrl: voxUrl, thumbnailUrl: thumbUrl });
-      } else {
-        console.log('found existing model: ' + voxUrl)
-      }
     }
 
     await wireSetStrings(wireFiles);
 
-    return await modelCache.addModelReferences(modelRefs);
+    return await modelCache.importFiles(importFiles);
   }
 }
 

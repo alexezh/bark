@@ -3,10 +3,20 @@ import { WireDict, wireGetDict, wireGetStrings, wireIncrement, wireSetDict } fro
 import { Vox } from "./vox";
 import { VoxelModel, VoxelModelFrame } from "./voxelmodel";
 
+export type ImportFile = {
+  fn: string;
+  voxUrl?: string;
+  thumbnailUrl?: string;
+  vox: Uint8Array;
+  rotateYZ: boolean | undefined;
+  png: ImageData | undefined;
+}
+
 export type WireModelInfo = {
   id: number;
   voxUrl: string;
   thumbnailUrl: string;
+  rotateYZ: boolean;
 }
 
 export class VoxelModelCache {
@@ -65,25 +75,33 @@ export class VoxelModelCache {
   /**
    * add model references to cloud; models have to be loaded from cloud separately
    */
-  public async addModelReferences(models: { voxUrl: string, thumbnailUrl: string }[]): Promise<WireModelInfo[] | undefined> {
+  public async importFiles(importFiles: ImportFile[]): Promise<WireModelInfo[] | undefined> {
     let dict: WireDict[] = [];
     let infos: WireModelInfo[] = [];
 
-    let startIdx = await wireIncrement('modelcount', models.length);
+    let startIdx = await wireIncrement('modelcount', importFiles.length);
     if (startIdx === undefined) {
       return;
     }
 
-    for (let model of models) {
-      console.log(`addModel: ${model.voxUrl} ${startIdx}`)
+    for (let imp of importFiles) {
+      let model = this.modelsByUrl.get(imp.voxUrl!);
+
+      // reuse ID if existing item
       let entry: WireModelInfo = {
         id: startIdx,
-        voxUrl: model.voxUrl,
-        thumbnailUrl: model.thumbnailUrl
+        voxUrl: imp.voxUrl!,
+        thumbnailUrl: imp.thumbnailUrl!,
+        rotateYZ: imp.rotateYZ ?? false
       }
-      infos.push(entry);
+      if (model !== undefined) {
+        console.log(`updateModel: ${imp.voxUrl} ${model.id}`)
+        entry.id = model.id;
+      } else {
+        console.log(`addModel: ${imp.voxUrl} ${startIdx}`)
+        startIdx++;
+      }
       dict.push({ field: entry.id.toString(), value: JSON.stringify(entry) });
-      startIdx++;
     }
     await wireSetDict('models', dict);
 
@@ -94,13 +112,13 @@ export class VoxelModelCache {
   }
 
   private loadModelFromString(modelInfo: WireModelInfo, modelData64: string): VoxelModel {
-    let chunkBlob = base64ToBytes(modelData64);
-    return this.loadModelFromArray(modelInfo, chunkBlob);
+    let chunkBuffer = base64ToBytes(modelData64);
+    return this.loadModelFromArray(modelInfo, new Uint8Array(chunkBuffer));
   }
 
-  private loadModelFromArray(modelInfo: WireModelInfo, chunkBlob: Uint8ClampedArray): VoxelModel {
+  private loadModelFromArray(modelInfo: WireModelInfo, chunkBlob: Uint8Array): VoxelModel {
     let vox = new Vox();
-    let voxelFile = vox.loadModel(chunkBlob);
+    let voxelFile = vox.loadModel(chunkBlob, false);
     if (voxelFile === undefined) {
       throw Error('cannpt load model');
     }

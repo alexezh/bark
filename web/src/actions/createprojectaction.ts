@@ -3,8 +3,8 @@ import { BasicAction } from "./commandaction";
 import { v4 as uuidv4 } from 'uuid';
 import { vm } from "../engine/ivm";
 import { DetailsPaneKind, ICommandLayer } from "./iaction";
-import { VoxelModelCache, WireModelInfo, modelCache } from "../voxel/voxelmodelcache";
-import { ImportVoxAction, UploadFile } from "./importaction";
+import { ImportFile, VoxelModelCache, WireModelInfo, modelCache } from "../voxel/voxelmodelcache";
+import { ImportVoxAction } from "./importaction";
 import { Vox } from "../voxel/vox";
 import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
 import { VoxelLevelFile } from "../engine/voxellevelfile";
@@ -59,22 +59,21 @@ async function importDefaultModels(voxNames: string[]): Promise<WireModelInfo[] 
   let vox = new Vox;
   let tr = new ThumbnailRenderer(128, 128);
 
-  let uploadFiles: UploadFile[] = [];
+  let uploadFiles: ImportFile[] = [];
   for (let voxName of voxNames) {
 
     let chunkBuffer = await fetchResource('assets/vox/' + voxName);
     let chunkBlob = new Uint8Array(chunkBuffer);
 
-    let thumb = await ImportVoxAction.renderThumbnail(vox, tr, chunkBlob, voxName);
+    let file: ImportFile = { fn: voxName, vox: chunkBlob, rotateYZ: false, png: undefined };
+    let thumb = await ImportVoxAction.renderThumbnail(vox, tr, file, false);
     if (typeof thumb === 'string' || thumb === undefined) {
       continue;
     }
 
-    uploadFiles.push({
-      fn: voxName,
-      vox: chunkBlob,
-      png: thumb
-    });
+    file.png = thumb;
+
+    uploadFiles.push(file);
   }
 
   return ImportVoxAction.upload(uploadFiles);
