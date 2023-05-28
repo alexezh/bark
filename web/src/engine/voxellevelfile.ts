@@ -2,8 +2,6 @@ import { Vector3 } from "three";
 import { WireDict, wireGetDict, wireGetObject, wireSetDictBackground, wireSetObject, wireSetObjectBackground } from "../lib/fetchadapter";
 import { FileMapBlock, IVoxelLevelFile, MapBlockCoord, WireCamera, WireLevelInfo } from "../ui/ivoxelmap";
 import { BlockPos3, BlockSize3, WorldSize3 } from "../voxel/pos3";
-import { forEach } from "lodash";
-import { ContextExclusionPlugin } from "webpack";
 
 export class VoxelLevelFile implements IVoxelLevelFile {
   private _cameraPosition: Vector3 = new Vector3();
@@ -48,7 +46,7 @@ export class VoxelLevelFile implements IVoxelLevelFile {
         if (fb.blockId !== 0) {
           this._blocks.set(parseInt(field.field), fb);
         } else {
-          console.log(`skip ${fb.x}, ${fb.z}`);
+          console.log(`VoxelFile skip: ${fb.x}, ${fb.z}`);
         }
       }
     }
@@ -131,7 +129,7 @@ export class VoxelLevelFile implements IVoxelLevelFile {
       z: pos.z
     }
 
-    console.log(`deleteBlock ${pos.x}, ${pos.x}, ${pos.z}`)
+    console.log(`deleteBlock ${pos.x}, ${pos.y}, ${pos.z}`)
 
     if (this.onChangeBlock !== undefined) {
       this.onChangeBlock([fb]);
@@ -150,7 +148,7 @@ export class VoxelLevelFile implements IVoxelLevelFile {
       z: pos.z
     }
 
-    console.log(`addBlock ${pos.x}, ${pos.x}, ${pos.z}`)
+    console.log(`addBlock ${blockId} ${pos.x}, ${pos.x}, ${pos.z}`)
     let key = this.getBlockKey(pos.x, pos.y, pos.z);
     this._blocks.set(key, fb);
 

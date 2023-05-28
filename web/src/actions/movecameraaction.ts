@@ -2,12 +2,12 @@ import { Vector3 } from "three";
 import { vm } from "../engine/ivm";
 import { createButton, createCommandButton, createNumberEntry, createTextEntry } from "../lib/htmlutils";
 import { IAction, ICommandLayer } from "./iaction"
-import { CommandAction } from "./commandaction";
+import { BasicAction } from "./commandaction";
 import { FormAction, FormPane } from "./formpane";
 
-export class ThirdPersonCameraAction extends CommandAction {
+export class ThirdPersonCameraAction extends BasicAction {
   public constructor() {
-    super('Third person camera', ['level', 'edit', 'level'])
+    super('Third person camera', { tags: ['level', 'edit', 'level'] })
   }
 
   protected override onClick(bar: ICommandLayer) {

@@ -1,5 +1,5 @@
 import { WireLevelInfo, WireProjectConfig, fetchResource, getProjectId, setProjectId, wireCreateProject, wireSetObject, wireSetUserString } from "../lib/fetchadapter";
-import { CommandAction } from "./commandaction";
+import { BasicAction } from "./commandaction";
 import { v4 as uuidv4 } from 'uuid';
 import { vm } from "../engine/ivm";
 import { DetailsPaneKind, ICommandLayer } from "./iaction";
@@ -11,12 +11,12 @@ import { VoxelLevelFile } from "../engine/voxellevelfile";
 import { FileMapBlock } from "../ui/ivoxelmap";
 import { FormPane } from "./formpane";
 
-export class CreateProjectAction extends CommandAction {
+export class CreateProjectAction extends BasicAction {
   get name(): string { return 'CreateProject' }
   get tags(): string[] { return ['project', 'create'] }
 
   public constructor() {
-    super('CreateProject', ['project', 'create']);
+    super('CreateProject', { tags: ['project', 'create'] });
   }
 
   protected override onClick(bar: ICommandLayer) {
@@ -109,9 +109,9 @@ export async function createDefaultProject(): Promise<void> {
   file.addBlocks(blocks);
 }
 
-export class CreateLevelAction extends CommandAction {
+export class CreateLevelAction extends BasicAction {
   public constructor() {
-    super('CreateLevel', ['level', 'create', 'level']);
+    super('CreateLevel', { tags: ['level', 'create', 'level'] });
   }
 
   protected override onClick(bar: ICommandLayer) {

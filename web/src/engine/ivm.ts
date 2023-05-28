@@ -8,6 +8,7 @@ import { IRigitModel } from "./irigitmodel";
 import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
 import { FuncDefNode, ModuleNode, OnNode } from "../basic/ast";
 import { JsWriter } from "../basic/jswriter";
+import { ILevelEditor } from "../ui/ileveleditor";
 
 export interface IInputController {
   start();
@@ -50,6 +51,7 @@ export interface IVM extends IVMCodeRunner {
   get levelFile(): IVoxelLevelFile;
   get camera(): ICameraLayer;
   get loader(): ICodeLoader;
+  get levelEditor(): ILevelEditor | undefined;
 
   attachCamera(camera: ICameraLayer): void;
   registerLevelLoaded(target: any, func: () => void): void;

@@ -43,7 +43,7 @@ class DirectCamera implements ITrackingCamera {
 
     onTargetMove(pos: Vector3): void {
     }
-    
+
     onTargetSpeed(pos: Vector3): void {
     }
 }
@@ -75,13 +75,13 @@ class ThirtPersonCamera implements ITrackingCamera {
         this.updateCameraPos(pos);
     }
 
-    onTargetSpeed(pos: Vector3): void {
-        this.updateCameraPos(pos);
+    onTargetSpeed(speed: Vector3): void {
     }
 
     private updateCameraPos(pos: Vector3) {
         let cpos = pos.clone();
         cpos.add(this.cameraOffset);
+        console.log('move: ' + cpos.x + ':' + cpos.z);
         this.cameraGroup.position.copy(cpos);
         this.cameraGroup.rotation.x = 0;
         (this.camera as PerspectiveCamera).updateProjectionMatrix();

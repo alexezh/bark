@@ -118,7 +118,9 @@ export class VoxelLevel implements IVoxelLevel {
 
     public loadScene(scene: Scene) {
         this.scene = scene;
-        this.layers[0].addToScene(this.scene);
+        for (let layer of this.layers) {
+            layer.addToScene(this.scene);
+        }
 
         this.ambient_light = new AmbientLight(0xFFFFFF, 0.8);
         this.scene.add(this.ambient_light);
@@ -245,9 +247,7 @@ export class VoxelLevel implements IVoxelLevel {
         for (let i = 0; i < this.layers.length; i++) {
             let layer = this.layers[i];
             if (layer.dirty) {
-                layer.removeFromScene(this.scene);
-                layer.build();
-                layer.addToScene(this.scene);
+                layer.updateScene(this.scene);
             }
         }
     }

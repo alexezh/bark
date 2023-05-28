@@ -9,6 +9,7 @@ import { BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { ICameraLayer } from "../engine/icameralayer";
 import { vm } from "../engine/ivm";
+import { VoxelModel } from "../voxel/voxelmodel";
 
 export interface IMapEditorHost {
   //get 
@@ -26,6 +27,7 @@ export class LevelEditor implements ILevelEditor {
 
   private selectedBlock: MapBlockCoord | undefined = undefined;
   private selection: Line | undefined = undefined;
+  private currentModel: VoxelModel | undefined;
 
   public constructor(
     camera: ICameraLayer,
@@ -35,17 +37,10 @@ export class LevelEditor implements ILevelEditor {
 
     this.level = level;
 
-    _.bindAll(this, [
-      'onCopyBlock',
-      'onPasteBlock',
-      'pasteBlockWorker',
-      'onClearBlock',
-    ])
-
     this.input = new KeyBinder(this.camera.canvas, undefined, true);
-    this.input.registerKeyUp('KeyC', this.onCopyBlock, 'Copy block to buffer');
-    this.input.registerKeyUp('KeyV', this.onPasteBlock);
-    this.input.registerKeyUp('KeyX', this.onClearBlock);
+    this.input.registerKeyUp('KeyC', this.copyBlock.bind(this), 'Copy block to buffer');
+    this.input.registerKeyUp('KeyV', this.pasteBlock.bind(this));
+    this.input.registerKeyUp('KeyX', this.clearBlock.bind(this));
 
     this.input.registerKeyUp('KeyA', () => this.onScroll(0, -1, 0));
     this.input.registerKeyUp('KeyS', () => this.onScroll(1, 0, 0));
@@ -135,35 +130,37 @@ export class LevelEditor implements ILevelEditor {
            */
   };
 
-  private onCopyBlock() {
+  public selectBlock(model: VoxelModel): void {
+    this.currentModel = model;
+  }
+
+  public copyBlock(): void {
+
+  }
+  public cutBlock(): void {
 
   }
 
-  private onPasteBlock() {
-    setTimeout(this.pasteBlockWorker);
+  public pasteBlock(): void {
+    setTimeout(() => this.pasteBlockWorker());
   }
 
   private async pasteBlockWorker(): Promise<boolean> {
-    if (this.selectedBlock === undefined) {
-      return false;
-    }
-
-    let block = await modelCache.getVoxelModel('vox/dungeon_entrance.vox');
-    if (block === undefined) {
+    if (this.selectedBlock === undefined || this.currentModel === undefined) {
       return false;
     }
 
     let pos = this.selectedBlock.mapPos;
     if (this.selectedBlock.model !== undefined) {
-      this.level.file.addBlock({ x: pos.x, y: pos.y + 1, z: pos.z }, block.id);
+      this.level.file.addBlock({ x: pos.x, y: pos.y + 1, z: pos.z }, this.currentModel.id);
     } else {
-      this.level.file.addBlock({ x: pos.x, y: pos.y, z: pos.z }, block.id);
+      this.level.file.addBlock({ x: pos.x, y: pos.y, z: pos.z }, this.currentModel.id);
     }
 
     return true;
   }
 
-  private onClearBlock() {
+  public clearBlock() {
     if (this.selectedBlock === undefined || this.selectedBlock.model === undefined) {
       return;
     }
@@ -186,6 +183,7 @@ export class LevelEditor implements ILevelEditor {
       return;
     }
 
+    console.log(`selectBlockFace: ${block.mapPos.x} ${block.mapPos.y} ${block.mapPos.z}`)
     // for now select top face and draw rect
     if (this.selection !== undefined) {
       this.camera.scene.remove(this.selection);

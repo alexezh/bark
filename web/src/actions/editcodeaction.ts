@@ -1,6 +1,6 @@
 import { vm } from "../engine/ivm";
 import { CodeEditor } from "./codeeditor";
-import { CommandAction, FuncAction } from "./commandaction";
+import { BasicAction, FuncAction } from "./commandaction";
 import { DetailsPaneKind, IAction, ICommandLayer } from "./iaction";
 
 
@@ -8,14 +8,18 @@ export function registerEditCodeActions(actions: IAction[]) {
   actions.push(new EditCodeAction());
 }
 
-export class EditCodeAction extends CommandAction {
+function addOn(codeEditor: CodeEditor) {
+  codeEditor.addBlock('hello world');
+}
+
+export class EditCodeAction extends BasicAction {
   private codeEditor?: CodeEditor;
 
   get name(): string { return 'EditCode'; }
   get tags(): string[] { return ['edit', 'code'] }
 
   public constructor() {
-    super('EditCode', ['edit', 'code']);
+    super('EditCode', { tags: ['edit', 'code'] });
   }
 
   protected override onClick(bar: ICommandLayer) {
@@ -25,12 +29,15 @@ export class EditCodeAction extends CommandAction {
 
     bar.pushActions(
       [
-        new FuncAction('Back', [], () => this.onBack(bar)),
-        new FuncAction('Copy', [], () => this.codeEditor!.copyText()),
-        new FuncAction('Cut', [], () => this.codeEditor!.cutText()),
-        new FuncAction('Paste', [], () => this.codeEditor!.pasteText()),
-        new FuncAction('Add Line Above', [], () => this.codeEditor!.addAbove()),
-        new FuncAction('Add Line Below', [], () => this.codeEditor!.addBelow())
+        new FuncAction('Back', {}, () => this.onBack(bar)),
+        new FuncAction('Copy', { closePane: false }, () => this.codeEditor!.copyText()),
+        new FuncAction('Cut', { closePane: false }, () => this.codeEditor!.cutText()),
+        new FuncAction('Paste', { closePane: false }, () => this.codeEditor!.pasteText()),
+        new FuncAction('Add Line Above', { closePane: false }, () => this.codeEditor!.addAbove()),
+        new FuncAction('Add Line Below', { closePane: false }, () => this.codeEditor!.addBelow()),
+        new FuncAction('Edit Text', { closePane: false }, () => this.codeEditor!.editText()),
+        new FuncAction('Add prod', { closePane: false }, () => this.codeEditor!.addBelow()),
+        new FuncAction('Add on', { closePane: false }, () => addOn(this.codeEditor!)),
       ]);
     bar.openDetailsPane(this.codeEditor.editEditor, DetailsPaneKind.Full);
   }

@@ -9,7 +9,6 @@ export type VoxelPoint = {
 }
 
 export type VoxelFile = {
-  name: string;
   frames: VoxelFileFrame[];
 }
 
@@ -31,12 +30,14 @@ export function makeVoxelPoint(buffer: Uint8Array, i: number): VoxelPoint {
 }
 
 export class VoxelModel {
-  public readonly uri: string;
+  public readonly voxUri: string;
+  public readonly thumbnailUri: string;
   public readonly id: number;
   public readonly frames: VoxelModelFrame[] = [];
 
-  public constructor(uri: string, id: number) {
-    this.uri = uri;
+  public constructor(id: number, voxUri: string, thumbnailUri: string) {
+    this.voxUri = voxUri;
+    this.thumbnailUri = thumbnailUri;
     this.id = id;
   }
 

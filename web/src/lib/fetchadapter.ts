@@ -146,6 +146,10 @@ export async function wireSetStrings(keys: WireString[]): Promise<void> {
   let res = await (await fetchAdapter!.post(`/api/project/setstrings/${projectId}`, requestData)).json();
 }
 
+export function getWireResourceUri(relativeUrl: string): string {
+  return `/api/project/getresource/${projectId}?url=${relativeUrl}`;
+}
+
 export async function wireSetObject<T>(key: string, value: T): Promise<void> {
   let valueData = JSON.stringify(value);
   let request: WireString[] = [{ key: key, data: valueData }]
@@ -205,6 +209,10 @@ export async function wireGetDict(key: string, fields: string[] | null | undefin
   return (data.fields === null) ? undefined : data.fields;
 }
 
+/**
+ * set list of fields to specific values
+ * does not affect fields which are not listed
+ */
 export async function wireSetDict(key: string, fields: WireDict[]): Promise<void> {
   try {
     let valueData: string[] = [];

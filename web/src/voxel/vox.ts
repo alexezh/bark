@@ -43,10 +43,10 @@ export class Vox {
         return type;
     };
 
-    loadModel(data: ArrayBuffer, name: string): VoxelFile | undefined {
+    loadModel(data: ArrayBuffer): VoxelFile | undefined {
         let colors = [];
         let colors2: any = undefined;
-        let file: VoxelFile = { name: name, frames: [] };
+        let file: VoxelFile = { frames: [] };
 
         //var map = new Array();
         let sizex = 0, sizey = 0, sizez = 0;

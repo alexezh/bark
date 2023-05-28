@@ -1,3 +1,4 @@
+import { VoxelModel } from "../voxel/voxelmodel";
 import { KeyBinder, MEvent } from "./keybinder";
 
 export interface ILevelEditor {
@@ -6,5 +7,11 @@ export interface ILevelEditor {
   onMouseDown(evt: MEvent): boolean;
   onMouseUp(evt: MEvent): boolean;
   onMouseMove(evt: MEvent): boolean;
+
+  selectBlock(model: VoxelModel): void;
+  copyBlock(): void;
+  cutBlock(): void;
+  clearBlock(): void;
+  pasteBlock(): void;
 }
 

@@ -1,11 +1,12 @@
 import { vm } from "../engine/ivm";
 import { IAction, ICommandLayer } from "./iaction";
 import { shell } from "../ui/igameshell";
-import { CommandAction } from "./commandaction";
+import { BasicAction } from "./commandaction";
 import { EditCodeAction, registerEditCodeActions } from "./editcodeaction";
+import { EditLevelAction } from "./editlevelaction";
 
 // display list of blocks, selects block as current
-export class SelectBlockAction extends CommandAction {
+export class SelectBlockAction extends BasicAction {
   get name(): string {
     throw new Error("Method not implemented.");
   }
@@ -13,19 +14,9 @@ export class SelectBlockAction extends CommandAction {
 
 }
 
-export class EditLevelAction extends CommandAction {
+export class EditBlockAction extends BasicAction {
   public constructor() {
-    super('EditLevel', ['level', 'edit', 'level']);
-  }
-
-  protected override onClick(bar: ICommandLayer) {
-    vm.editLevel();
-  }
-}
-
-export class EditBlockAction extends CommandAction {
-  public constructor() {
-    super('EditVox', ['edit', 'block', 'vox']);
+    super('EditVox', { tags: ['edit', 'block', 'vox'] });
   }
 
   protected override onClick(bar: ICommandLayer) {

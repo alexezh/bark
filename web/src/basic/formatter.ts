@@ -114,7 +114,7 @@ export function renderModule(ast: ModuleNode) {
 function renderFuncDef(parentBlock: TextBlock, ast: FuncDefNode) {
   let ctx = parentBlock.appendBlock(ast);
 
-  let line = ctx.appendLine('proc', ast, {});
+  let line = ctx.appendLine('proc', ast, { selectable: false });
   line.appendToken(ast.name, { selectable: true });
   line.appendConst('(', { selectable: false });
 
@@ -154,7 +154,7 @@ function renderBlock(parentBlock: TextBlock, block: BlockNode | Function) {
 function renderOn(parentBlock: TextBlock, ast: OnNode) {
   let ctx = parentBlock.appendBlock(ast);
 
-  let line = ctx.appendLine('on', undefined, {});
+  let line = ctx.appendLine('on', undefined, { selectable: false });
   line.appendToken(ast.name, {});
   line.appendConst('(', { spaceLeft: false, selectable: false });
   if (ast.params.length > 0) {
@@ -164,10 +164,10 @@ function renderOn(parentBlock: TextBlock, ast: OnNode) {
     line.appendConst(')', { selectable: false });
   }
 
-  line.appendConst('begin', {});
+  line.appendConst('begin', { selectable: false });
   renderBlock(ctx, ast.body);
 
-  ctx.appendLine('end', undefined, {});
+  ctx.appendLine('end', undefined, { selectable: false });
 }
 
 function renderVarDef(parentBlock: TextBlock, ast: VarDefNode) {

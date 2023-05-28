@@ -24,6 +24,7 @@ import { CodeLoader } from "../basic/codeloader";
 import { CodeRunner } from "../basic/coderunner";
 import { createSystemModule } from "../basic/lib/systemdef";
 import { registerSystemModules } from "../basic/lib/all";
+import { ILevelEditor } from "../ui/ileveleditor";
 
 type CollisionWaiter = {
   // if resolve is undefined, there is no waiter
@@ -56,13 +57,14 @@ export class VM implements IVM {
   private readonly _collisions: WeakMap<IRigitBody, CollisionWaiter> = new WeakMap<IRigitBody, CollisionWaiter>;
   public readonly clock!: FrameClock;
   private inputController: IInputController | undefined;
-  private levelEditor: LevelEditor | undefined = undefined;
+  private _levelEditor: LevelEditor | undefined = undefined;
 
   private readonly onLevelLoaded: AsyncEventSource<boolean> = new AsyncEventSource();
   public particles!: ParticlePool;
 
   //private _sprites: Map
 
+  public get levelEditor(): ILevelEditor | undefined { return this._levelEditor }
   public get physics(): IGamePhysics { return this._physics; }
   public get level(): IVoxelLevel {
     if (this._level === undefined) throw new Error('not loaded'); return this._level;
@@ -151,8 +153,8 @@ export class VM implements IVM {
   }
 
   private resetVm() {
-    this.levelEditor?.dispose();
-    this.levelEditor = undefined;
+    this._levelEditor?.dispose();
+    this._levelEditor = undefined;
     this.camera.setEditor(undefined);
     this._runner.reset();
   }
@@ -187,8 +189,8 @@ export class VM implements IVM {
 
     this.stop();
 
-    this.levelEditor = new LevelEditor(this.camera, this.level);
-    this.camera.setEditor(this.levelEditor);
+    this._levelEditor = new LevelEditor(this.camera, this.level);
+    this.camera.setEditor(this._levelEditor);
   }
 
   public onRenderFrame() {

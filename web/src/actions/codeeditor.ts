@@ -16,6 +16,7 @@ export class CodeEditor {
   private selectedElem: HTMLElement | undefined = undefined;
   public readonly editEditor: HTMLDivElement;
   private readonly editArea: HTMLDivElement;
+  private textEditActive: boolean = false;
 
   public constructor() {
 
@@ -56,6 +57,25 @@ export class CodeEditor {
 
   public addBelow() {
 
+  }
+
+  public editText() {
+    if (!this.selectedElem) {
+      return;
+    }
+
+    this.textEditActive = true;
+    this.selectedElem.contentEditable = 'true';
+    this.selectedElem.addEventListener('input', this.onTextInput.bind(this));
+    this.selectedElem.focus();
+  }
+
+  public addBlock(text: string) {
+
+  }
+
+  private onTextInput(e: Event) {
+    console.log('edit');
   }
 
   private onTextScroll(e: Event) {

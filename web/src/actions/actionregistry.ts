@@ -11,7 +11,6 @@ export function getTopLevelActions(): IAction[] {
 }
 
 export function registerActions() {
-  actions.push(new ImportVoxAction());
   actions.push(new MoveCameraAction());
   actions.push(new CreateProjectAction());
   actions.push(new CreateLevelAction());

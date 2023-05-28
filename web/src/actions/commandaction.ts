@@ -1,21 +1,34 @@
 import { createButton, createCommandButton, createNumberEntry, createTextEntry } from "../lib/htmlutils";
 import { IAction, ICommandLayer } from "./iaction";
 
-export abstract class CommandAction implements IAction {
+export type BasicActionParams = {
+  tags?: string[],
+  closePane?: boolean,
+}
+
+/**
+ * need better names
+ * command auto-closes any existing pane
+ */
+export abstract class BasicAction implements IAction {
   private readonly _name: string;
   private readonly _tags: string[];
+  private readonly closePane: boolean;
   public get name(): string { return this._name; }
   public get tags(): string[] { return this._tags; };
   private button: HTMLButtonElement | undefined;
 
-  public constructor(name: string, tags: string[]) {
+  public constructor(name: string, params: BasicActionParams) {
     this._name = name;
-    this._tags = tags;
+    this._tags = params.tags ?? [];
+    this.closePane = params.closePane ?? true;
   }
 
   public renderButton(parent: HTMLElement, bar: ICommandLayer) {
     this.button = createCommandButton(parent, this.name, () => {
-      bar.closeDetailsPane();
+      if (this.closePane) {
+        bar.closeDetailsPane();
+      }
       this.onClick(bar)
     });
   }
@@ -37,12 +50,12 @@ export abstract class CommandAction implements IAction {
   }
 }
 
-export class ActionGroup extends CommandAction {
+export class ActionGroup extends BasicAction {
   private isExtended: boolean = false;
   private children: IAction[];
 
   public constructor(name: string, tags: string[], children: IAction[]) {
-    super(name, tags);
+    super(name, { tags: tags });
     this.children = children;
   }
 
@@ -61,11 +74,11 @@ export class ActionGroup extends CommandAction {
   }
 }
 
-export class FuncAction extends CommandAction {
+export class FuncAction extends BasicAction {
   private _func: (ICommandLayer) => void;
 
-  public constructor(name: string, tags: string[], func: (ICommandLayer) => void) {
-    super(name, tags);
+  public constructor(name: string, params: BasicActionParams, func: (ICommandLayer) => void) {
+    super(name, params);
     this._func = func;
   }
 

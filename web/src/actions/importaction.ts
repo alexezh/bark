@@ -68,7 +68,7 @@ export class ImportVoxAction implements IAction {
     let label = document.createElement('label') as HTMLLabelElement;
     label.htmlFor = d.id;
     label.className = "commandButton";
-    label.textContent = 'Upload';
+    label.textContent = this.name;
 
     let div = document.createElement('div') as HTMLDivElement;
     div.appendChild(label);
@@ -125,9 +125,9 @@ export class ImportVoxAction implements IAction {
     tr: ThumbnailRenderer,
     data: ArrayBuffer,
     fn: string): Promise<ImageData | string | undefined> {
-    let voxelFile = vox.loadModel(data, fn);
+    let voxelFile = vox.loadModel(data);
     if (voxelFile === undefined || voxelFile.frames.length === 0) {
-      return 'Cannot load model ' + fn;
+      return 'Cannot load model:' + fn;
     }
 
     let mf = new VoxelModelFrame(voxelFile.frames[0]);

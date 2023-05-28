@@ -1,5 +1,5 @@
 import { base64ToBytes } from "../lib/base64";
-import { WireDict, WireString, fetchResource, wireGetDict, wireGetStrings, wireIncrement, wireSetDict } from "../lib/fetchadapter";
+import { WireDict, wireGetDict, wireGetStrings, wireIncrement, wireSetDict } from "../lib/fetchadapter";
 import { Vox } from "./vox";
 import { VoxelModel, VoxelModelFrame } from "./voxelmodel";
 
@@ -22,6 +22,11 @@ export class VoxelModelCache {
     return model;
   }
 
+  public *getVoxelModels(): Iterable<VoxelModel> {
+    for (let model of this.modelsById) {
+      yield model[1];
+    }
+  }
 
   public async load(): Promise<boolean> {
     let modelEntries = await wireGetDict('models', undefined);
@@ -47,12 +52,13 @@ export class VoxelModelCache {
     let voxs = await wireGetStrings(voxUrls);
     for (let vox of voxs) {
       let modelInfo = modelInfos.get(vox.key);
+      console.log(`load: ${vox.key} ${modelInfo?.id}`);
       if (modelInfo === undefined) {
         console.log('Unknown model:' + vox.key);
         continue;
       }
 
-      this.loadModelFromString(modelInfo.id, vox.key, vox.data);
+      this.loadModelFromString(modelInfo, vox.data);
     }
   }
 
@@ -69,6 +75,7 @@ export class VoxelModelCache {
     }
 
     for (let model of models) {
+      console.log(`addModel: ${model.voxUrl} ${startIdx}`)
       let entry: WireModelInfo = {
         id: startIdx,
         voxUrl: model.voxUrl,
@@ -83,25 +90,25 @@ export class VoxelModelCache {
     return infos;
   }
 
-  private loadModelFromString(id: number, url: string, modelData64: string): VoxelModel {
+  private loadModelFromString(modelInfo: WireModelInfo, modelData64: string): VoxelModel {
     let chunkBlob = base64ToBytes(modelData64);
-    return this.loadModelFromArray(id, url, chunkBlob);
+    return this.loadModelFromArray(modelInfo, chunkBlob);
   }
 
-  private loadModelFromArray(id: number, url: string, chunkBlob: Uint8ClampedArray): VoxelModel {
+  private loadModelFromArray(modelInfo: WireModelInfo, chunkBlob: Uint8ClampedArray): VoxelModel {
     let vox = new Vox();
-    let voxelFile = vox.loadModel(chunkBlob, url);
+    let voxelFile = vox.loadModel(chunkBlob);
     if (voxelFile === undefined) {
       throw Error('cannpt load model');
     }
 
-    let model = new VoxelModel(url, id);
+    let model = new VoxelModel(modelInfo.id, modelInfo.voxUrl, modelInfo.thumbnailUrl);
     for (let f of voxelFile.frames) {
       let mf = new VoxelModelFrame(f);
       model.frames.push(mf);
     }
 
-    this.modelsByUrl.set(url, model);
+    this.modelsByUrl.set(modelInfo.voxUrl, model);
     this.modelsById.set(model.id, model);
 
     return model;
