@@ -108,7 +108,7 @@
     height: '100%';
     display: grid;
     grid-template-rows: 25px auto;
-    grid-template-columns: auto auto;
+    grid-template-columns: 200px auto;
   }
 
   .commandOpenButton {
@@ -129,9 +129,6 @@
   }
 
   .commandList {
-    grid-column: 1;
-    grid-row: 2;
-    opacity: 1.0;
     display: flex;
     flex-direction: column;
     overflow: auto;
@@ -180,8 +177,8 @@
   }
 
   .blockLibraryItem {
-    width: auto;
-    height: auto;
+    width: 96px;
+    height: 96px;
   }
 
   .blockLibraryItem:hover {
@@ -191,7 +188,7 @@
 
   .blockLibraryItem img {
     object-fit: cover;
-    width: 48px;
+    width: 96px;
     height: auto;
     border-radius: 5px;
   }

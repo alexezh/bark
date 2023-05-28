@@ -22,6 +22,7 @@ export class ImportVoxAction implements IAction {
   private _id: number;
   private _element: HTMLDivElement | undefined;
   private _inputElem: HTMLInputElement | undefined;
+  private _labelElem: HTMLLabelElement | undefined;
 
   get tags(): string[] { return ['import', 'upload', 'vox', 'block'] }
   public get name(): string { return 'Import Vox' }
@@ -32,10 +33,10 @@ export class ImportVoxAction implements IAction {
 
   public renderButton(parent: HTMLElement, bar: ICommandLayer) {
 
-    let div = this.createImportButton(bar);
-    this._element = div;
+    this._element = document.createElement('div') as HTMLDivElement;
+    this.createImportButton(bar);
 
-    parent.appendChild(div);
+    parent.appendChild(this._element);
   }
 
   public destroyButton(parent: HTMLElement) {
@@ -51,7 +52,16 @@ export class ImportVoxAction implements IAction {
     return [];
   }
 
-  private createImportButton(bar: ICommandLayer): HTMLDivElement {
+  private createImportButton(bar: ICommandLayer) {
+    if (this._inputElem) {
+      this._element?.removeChild(this._inputElem);
+      this._inputElem = undefined;
+    }
+    if (this._labelElem) {
+      this._element?.removeChild(this._labelElem);
+      this._labelElem = undefined;
+    }
+
     let d = document.createElement('input');
     d.id = 'upload_' + this._id;
     d.name = d.id;
@@ -62,19 +72,18 @@ export class ImportVoxAction implements IAction {
     d.onchange = () => {
       bar.closeDetailsPane();
       this.processImport(bar);
+      // update button for next time
+      this.createImportButton(bar);
     }
     this._inputElem = d;
 
-    let label = document.createElement('label') as HTMLLabelElement;
-    label.htmlFor = d.id;
-    label.className = "commandButton";
-    label.textContent = this.name;
+    this._labelElem = document.createElement('label') as HTMLLabelElement;
+    this._labelElem.htmlFor = d.id;
+    this._labelElem.className = "commandButton";
+    this._labelElem.textContent = this.name;
 
-    let div = document.createElement('div') as HTMLDivElement;
-    div.appendChild(label);
-    div.appendChild(d);
-
-    return div;
+    this._element!.appendChild(this._labelElem);
+    this._element!.appendChild(this._inputElem);
   }
 
   private async processImport(bar: ICommandLayer) {
@@ -186,12 +195,16 @@ export class ImportVoxAction implements IAction {
       let thumbUrl = 'thumbnail/' + thumbName;
       wireFiles.push({ key: thumbUrl, data: pngStr });
 
-      modelRefs.push({ voxUrl: voxUrl, thumbnailUrl: thumbUrl });
+      if (modelCache.getVoxelModel(voxUrl) === undefined) {
+        modelRefs.push({ voxUrl: voxUrl, thumbnailUrl: thumbUrl });
+      } else {
+        console.log('found existing model: ' + voxUrl)
+      }
     }
 
     await wireSetStrings(wireFiles);
 
-    return await VoxelModelCache.addModelReferences(modelRefs);
+    return await modelCache.addModelReferences(modelRefs);
   }
 }
 

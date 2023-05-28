@@ -65,7 +65,7 @@ export class VoxelModelCache {
   /**
    * add model references to cloud; models have to be loaded from cloud separately
    */
-  public static async addModelReferences(models: { voxUrl: string, thumbnailUrl: string }[]): Promise<WireModelInfo[] | undefined> {
+  public async addModelReferences(models: { voxUrl: string, thumbnailUrl: string }[]): Promise<WireModelInfo[] | undefined> {
     let dict: WireDict[] = [];
     let infos: WireModelInfo[] = [];
 
@@ -86,6 +86,9 @@ export class VoxelModelCache {
       startIdx++;
     }
     await wireSetDict('models', dict);
+
+    // reload from server
+    await this.loadModelEntries(dict);
 
     return infos;
   }

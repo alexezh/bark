@@ -183,7 +183,7 @@ export class LevelEditor implements ILevelEditor {
       return;
     }
 
-    console.log(`selectBlockFace: ${block.mapPos.x} ${block.mapPos.y} ${block.mapPos.z}`)
+    console.log(`selectBlockFace: ${block.mapPos.x} ${block.mapPos.y} ${block.mapPos.z} y:${point.y}`)
     // for now select top face and draw rect
     if (this.selection !== undefined) {
       this.camera.scene.remove(this.selection);

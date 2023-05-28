@@ -44,6 +44,7 @@ export class EditLevelAction extends BasicAction {
       this.wrapper.className = 'blockLibraryWrapper';
 
       this.library = document.createElement('div');
+      this.library.className = 'blockLibrary';
       this.wrapper.appendChild(this.library);
 
       this.renderLibrary();

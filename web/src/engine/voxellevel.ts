@@ -147,7 +147,7 @@ export class VoxelLevel implements IVoxelLevel {
     public findBlock(point: Vector3): MapBlockCoord | undefined {
         let layerIdx = (point.y / this._blockSize) | 0;
         if (layerIdx < 0 || layerIdx >= this.layers.length) {
-            console.log('unknown z layer');
+            console.log(`unknown y layer ${point.y}`);
             return undefined;
         }
         return this.layers[layerIdx].findBlock(point);

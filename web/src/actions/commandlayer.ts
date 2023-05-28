@@ -18,6 +18,7 @@ export class CommandList {
   private actionStack: Array<IAction[]> = new Array<IAction[]>();
   private renderedActions: IAction[] | undefined;
   private props: CommandBarProps;
+  private wrapperDiv: HTMLDivElement | undefined;
   private listDiv: HTMLDivElement | undefined;
   private opened: boolean = false;
   private readonly layer: ICommandLayer;
@@ -35,9 +36,14 @@ export class CommandList {
   public open(parent: HTMLElement) {
     this.opened = true;
 
+    this.wrapperDiv = document.createElement('div');
+    this.wrapperDiv.style.gridColumn = '1';
+    this.wrapperDiv.style.gridRow = '2';
+
     this.listDiv = document.createElement('div');
     this.listDiv.className = 'commandList';
-    parent.appendChild(this.listDiv);
+    this.wrapperDiv.appendChild(this.listDiv);
+    parent.appendChild(this.wrapperDiv);
     this.updateListSize();
     this.renderList();
   }
