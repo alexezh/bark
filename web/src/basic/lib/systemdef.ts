@@ -6,7 +6,7 @@ import { AstNodeKind, FuncDefNode, ModuleNode, TypeDefNode } from "../ast";
 import { addSystemFunc, addSystemType } from "../systemfunc";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../../voxel/mapblockrigitbody";
 import { Vector3 } from "three";
-import { MoveController2D, IMoveEvent2D, MoveEvent2D } from "../../engine/movecontroller2d";
+import { MoveController2D, IMoveEvent2D, MoveEvent2D, ThirdPersonController } from "../../engine/movecontroller2d";
 import { Mammal4Model } from "../../engine/avatars/mammal4";
 
 
@@ -65,9 +65,10 @@ function setMoveController2D(keySpeedX: number,
   timeoutSeconds: number) {
 
   // create controller and options such as repeat rate and so on
-  vm.setController(new MoveController2D({
+  vm.setController(new ThirdPersonController({
     keySpeedX: keySpeedX,
     keySpeedZ: keySpeedZ,
+    keySpeedXZ: 5,
     thumbSpeedX: thumbSpeedX,
     thumbSpeedZ: thumbSpeedZ,
     timeoutSeconds: timeoutSeconds

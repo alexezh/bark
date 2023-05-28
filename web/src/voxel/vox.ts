@@ -83,7 +83,7 @@ export class Vox {
                         let p = makeVoxelPoint(buffer, i);
                         if (rotateYZ) {
                             let t = p.y;
-                            p.y = sizez - p.z;
+                            p.y = p.z;
                             p.z = t;
                         }
                         i += 4;

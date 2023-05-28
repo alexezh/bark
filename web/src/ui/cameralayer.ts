@@ -1,5 +1,5 @@
 import { Textures } from "../voxel/textures";
-import { Camera, Clock, Fog, Group, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
+import { Camera, Clock, Fog, Group, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Quaternion, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
 import { LevelEditor } from "./leveleditor";
 import { KeyBinder, makeMEvent } from "./keybinder";
 import { UiLayer2, UiLayerProps } from "./uilayer";
@@ -46,6 +46,9 @@ class DirectCamera implements ITrackingCamera {
 
     onTargetSpeed(pos: Vector3): void {
     }
+
+    onTargetDirectionXZ(angle: number): void {
+    }
 }
 
 class ThirtPersonCamera implements ITrackingCamera {
@@ -53,6 +56,7 @@ class ThirtPersonCamera implements ITrackingCamera {
     private cameraGroup!: Group;
     private sprite: Sprite3;
     private cameraOffset: Vector3;
+    private angleXZ: number = 0;
 
     public constructor(sprite: Sprite3, cameraOffset: Vector3, camera: PerspectiveCamera, cameraGroup: Group) {
         this.camera = camera;
@@ -78,12 +82,18 @@ class ThirtPersonCamera implements ITrackingCamera {
     onTargetSpeed(speed: Vector3): void {
     }
 
+    onTargetDirectionXZ(angle: number): void {
+        this.angleXZ = angle;
+        console.log('Angle: ' + angle);
+        //let qt = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), angle);
+        this.cameraGroup.quaternion.setFromAxisAngle(new Vector3(0, 1, 0), angle);;
+    }
+
     private updateCameraPos(pos: Vector3) {
         let cpos = pos.clone();
         cpos.add(this.cameraOffset);
         console.log('move: ' + cpos.x + ':' + cpos.z);
         this.cameraGroup.position.copy(cpos);
-        this.cameraGroup.rotation.x = 0;
         (this.camera as PerspectiveCamera).updateProjectionMatrix();
     }
 

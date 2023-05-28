@@ -116,20 +116,20 @@ export class VoxelModelCache {
     return this.loadModelFromArray(modelInfo, new Uint8Array(chunkBuffer));
   }
 
-  private loadModelFromArray(modelInfo: WireModelInfo, chunkBlob: Uint8Array): VoxelModel {
+  private loadModelFromArray(wireModel: WireModelInfo, chunkBlob: Uint8Array): VoxelModel {
     let vox = new Vox();
-    let voxelFile = vox.loadModel(chunkBlob, false);
+    let voxelFile = vox.loadModel(chunkBlob, wireModel.rotateYZ ?? false);
     if (voxelFile === undefined) {
       throw Error('cannpt load model');
     }
 
-    let model = new VoxelModel(modelInfo.id, modelInfo.voxUrl, modelInfo.thumbnailUrl);
+    let model = new VoxelModel(wireModel.id, wireModel.voxUrl, wireModel.thumbnailUrl);
     for (let f of voxelFile.frames) {
       let mf = new VoxelModelFrame(f);
       model.frames.push(mf);
     }
 
-    this.modelsByUrl.set(modelInfo.voxUrl, model);
+    this.modelsByUrl.set(wireModel.voxUrl, model);
     this.modelsById.set(model.id, model);
 
     return model;

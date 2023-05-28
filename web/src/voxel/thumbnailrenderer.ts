@@ -30,7 +30,7 @@ export class ThumbnailRenderer {
   };
 
   public render(target: Mesh): ImageData {
-    this.camera.position.set(200, 0, 100);
+    this.camera.position.set(200, 40, 100);
     this.camera.lookAt(new Vector3(0, 0, 0));
 
     // (re)Position the camera See

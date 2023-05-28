@@ -42,6 +42,7 @@ export function boxedGame() {
     vm.setController(new MoveController2D({
       keySpeedX: 10,
       keySpeedZ: 10,
+      keySpeedXZ: 5,
       thumbSpeedX: 10,
       thumbSpeedZ: 10,
       timeoutSeconds: 0.1
@@ -129,6 +130,7 @@ export function boxedBasic(): string {
           Sprite.animate monky 'stand'
         end
         Sprite.setSpeed monky ev.speedX 0 ev.speedZ
+        Sprite.setAngleXZ monky ev.angleXZ
       end
     end
 

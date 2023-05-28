@@ -14,7 +14,8 @@ export interface IRigitModel {
   removeFromScene(scene: Scene);
 
   setPosition(pos: Vector3): void;
-  setDirection(pos: Vector3): void;
+  setSpeed(speed: Vector3): void;
+  setDirectionXZ(angle: number): void;
   update(): void;
 
   // call when we render the model for each frame

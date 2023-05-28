@@ -32,6 +32,15 @@ function setSpeed(sprite: Sprite3, x: number, y: number, z: number) {
   sprite.setSpeed(new Vector3(x, y, z));
 }
 
+function setAngleXZ(sprite: Sprite3, angleXZ: number) {
+  if (angleXZ === undefined) {
+    return;
+  }
+
+  angleXZ = Math.PI * angleXZ / 180;
+  sprite.setAngleXZ(angleXZ);
+}
+
 function changeSpeedBy(sprite: Sprite3, x: number, y: number, z: number) {
   let speed = sprite.speed.clone();
   sprite.setSpeed(speed.add(new Vector3(x, y, z)));
@@ -53,8 +62,10 @@ export function createSpriteModule(): ModuleNode {
   funcs.push(addSystemFunc(module, 'addFrame', ['sprite: Sprite', 'animation: Animation', 'index: number', "duration: number"], 'void', false, addFrame));
   funcs.push(addSystemFunc(module, 'setPosition', ['sprite: Sprite', 'x: number', 'y: number', 'z: number'], 'void', false, setPosition));
   funcs.push(addSystemFunc(module, 'setSpeed', ['sprite: Sprite', 'x: number', 'y: number', 'z: number'], 'void', false, setSpeed));
+  funcs.push(addSystemFunc(module, 'setAngleXZ', ['sprite: Sprite', 'xz: number'], 'void', false, setAngleXZ));
   funcs.push(addSystemFunc(module, 'changeSpeedBy', ['sprite: Sprite', 'x: number', 'y: number', 'z: number'], 'void', false, changeSpeedBy));
   funcs.push(addSystemFunc(module, 'animate', ['sprite: Sprite', 'name: string'], 'void', false, animate));
+
 
   types.push(addSystemType('Animation', Sprite3, ['name: string']));
 

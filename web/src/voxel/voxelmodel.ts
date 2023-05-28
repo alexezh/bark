@@ -12,6 +12,7 @@ export type VoxelFile = {
   frames: VoxelFileFrame[];
 }
 
+// collection of N^3 points; pretty expensive and needs to be optimized
 export type VoxelFileFrame = {
   data: VoxelPoint[];
   sx: number;
@@ -19,7 +20,6 @@ export type VoxelFileFrame = {
   sz: number;
 }
 
-// ATT: swapping y and z
 export function makeVoxelPoint(buffer: Uint8Array, i: number): VoxelPoint {
   return {
     x: buffer[i++] & 0xFF,

@@ -14,6 +14,7 @@ export interface ITrackingCamera {
   get cemraKind(): TrackingCameraKind;
   onTargetMove(pos: Vector3): void;
   onTargetSpeed(pos: Vector3): void;
+  onTargetDirectionXZ(angle: number): void;
   dispose(): void;
 }
 
@@ -25,8 +26,17 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   public owner: any;
   public rigit: IRigitModel;
   private _inactive: boolean = false;
+  /**
+   * speed of sprite; speed is different from direction when it comes to strafe
+   * we are moving sideways while looking in direction
+   */
   private _speed: Vector3 = new Vector3();
+
+  /**
+   * position of sprite
+   */
   private _position: Vector3;
+
   private _trackingCamera: ITrackingCamera | undefined;
 
   public get id(): number { return this._id; }
@@ -52,7 +62,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   public async load(uri: string): Promise<void> {
     await this.rigit!.load(uri);
     this.rigit.setPosition(this._position);
-    this.rigit.setDirection(this.speed);
+    this.rigit.setDirectionXZ(0);
   }
 
   public addToScene(scene: Scene) {
@@ -76,11 +86,23 @@ export class Sprite3 implements IRigitBody, IDigSprite {
 
   public setSpeed(speed: Vector3) {
     this._speed = speed;
-    // TODO: need to separate speed from direction
-    this.rigit.setDirection(speed);
     this._inactive = speed.x === 0 && speed.y === 0 && speed.z === 0;
     if (this._trackingCamera) {
       this._trackingCamera.onTargetSpeed(speed);
+    }
+  }
+
+  public setAngleXZ(angle: number) {
+    if (angle === undefined) {
+      return;
+    }
+
+    // TODO: need to separate speed from direction
+    this.rigit.setDirectionXZ(angle);
+
+    this._inactive = (angle === 0);
+    if (this._trackingCamera) {
+      this._trackingCamera.onTargetDirectionXZ(angle);
     }
   }
 

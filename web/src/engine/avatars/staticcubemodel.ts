@@ -41,7 +41,9 @@ export class StaticCubeModel implements IRigitModel {
   setPosition(pos: Vector3): void {
     this.meshModel.setPosition(pos);
   }
-  setDirection(pos: Vector3): void {
+  setSpeed(speed: Vector3): void {
+  }
+  setDirectionXZ(angle: number): void {
   }
   update(): void {
   }
