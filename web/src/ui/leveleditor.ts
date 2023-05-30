@@ -67,7 +67,7 @@ export class LevelEditor implements ILevelEditor {
     let raycaster = new Raycaster();
     raycaster.setFromCamera(coords, this.camera.camera);
 
-    var intersects = raycaster.intersectObjects(this.camera.scene.children, false);
+    var intersects = raycaster.intersectObjects(this.camera.scene!.children, false);
 
     if (intersects.length > 0) {
       this.selectBlockFace(intersects[0].point);
@@ -167,7 +167,7 @@ export class LevelEditor implements ILevelEditor {
 
     this.level.file.deleteBlock(this.selectedBlock);
     this.selectedBlock = undefined;
-    this.camera.scene.remove(this.selection!);
+    this.camera.scene!.remove(this.selection!);
     this.selection = undefined;
   }
 
@@ -186,7 +186,7 @@ export class LevelEditor implements ILevelEditor {
     console.log(`selectBlockFace: ${block.mapPos.x} ${block.mapPos.y} ${block.mapPos.z} y:${point.y}`)
     // for now select top face and draw rect
     if (this.selection !== undefined) {
-      this.camera.scene.remove(this.selection);
+      this.camera.scene!.remove(this.selection);
       this.selection = undefined;
       this.selectedBlock = undefined;
     }
@@ -223,6 +223,6 @@ export class LevelEditor implements ILevelEditor {
     const geometry = new BufferGeometry().setFromPoints(points);
 
     this.selection = new Line(geometry, LevelEditor.material);
-    this.camera.scene.add(this.selection);
+    this.camera.scene!.add(this.selection);
   }
 }

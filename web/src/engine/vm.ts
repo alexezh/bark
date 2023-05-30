@@ -113,6 +113,8 @@ export class VM implements IVM {
   }
 
   public async loadLevel(id: string): Promise<void> {
+    console.log('VM: load level:' + id);
+
     this._levelFile = new VoxelLevelFile('levels/' + id);
     await this._levelFile.load(false);
 
@@ -219,7 +221,7 @@ export class VM implements IVM {
 
     this._sprites.set(s.id, s);
     this.physics.addRigitObject(s, undefined);
-    s.addToScene(this._camera!.scene);
+    s.addToScene(this._camera!.scene!);
     return s;
   }
 
@@ -227,7 +229,7 @@ export class VM implements IVM {
     this.checkRunning();
     this.physics.removeRigitObject(sprite);
     this._sprites.delete(sprite.id);
-    sprite.removeFromScene(this._camera!.scene);
+    sprite.removeFromScene(this._camera!.scene!);
   }
 
   public async forever(func: () => Promise<void>): Promise<void> {
@@ -321,10 +323,12 @@ export class VM implements IVM {
       throw new Error('not loaded');
     }
 
-    // TODO: we should clear the previous scene
-    this._level.loadScene(this._camera.scene);
+    this._camera.createScene();
 
-    this.particles = new ParticlePool(this._camera.scene, 200, 1);
+    // TODO: we should clear the previous scene
+    this._level.loadScene(this._camera.scene!);
+
+    this.particles = new ParticlePool(this._camera.scene!, 200, 1);
   }
 
   private onXrSessionChanged(session: XRSession | undefined) {

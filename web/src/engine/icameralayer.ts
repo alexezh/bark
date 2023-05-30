@@ -4,7 +4,7 @@ import { PxSize } from "../lib/pos";
 import { Sprite3 } from "./sprite3";
 
 export interface ICameraLayer {
-  get scene(): Scene;
+  get scene(): Scene | undefined;
   get camera(): PerspectiveCamera;
   get canvas(): HTMLDivElement;
   get viewSize(): PxSize;
@@ -15,6 +15,11 @@ export interface ICameraLayer {
   setThirdPersonCamera(sprite: Sprite3, pos: Vector3): void;
   setDirectCamera(): void;
   registerXrSessionHandler(target: any, func: (session: XRSession | undefined) => void): void;
+
+  /**
+   * reinitializer scene
+   */
+  createScene();
 
   setEditor(editor: ILevelEditor | undefined);
 }

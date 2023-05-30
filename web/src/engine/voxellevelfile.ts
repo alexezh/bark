@@ -46,7 +46,7 @@ export class VoxelLevelFile implements IVoxelLevelFile {
         if (fb.blockId !== 0) {
           this._blocks.set(parseInt(field.field), fb);
         } else {
-          console.log(`VoxelFile skip: ${fb.x}, ${fb.z}`);
+          // console.log(`VoxelFile skip: ${fb.x}, ${fb.z}`);
         }
       }
     }

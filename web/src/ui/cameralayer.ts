@@ -1,13 +1,9 @@
-import { Textures } from "../voxel/textures";
-import { Camera, Clock, Fog, Group, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Quaternion, Raycaster, Scene, SpriteMaterial, Vector3, WebGLRenderer } from "three";
-import { LevelEditor } from "./leveleditor";
-import { KeyBinder, makeMEvent } from "./keybinder";
+import { Fog, Group, Mesh, MeshBasicMaterial, MeshPhongMaterial, Object3D, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, PointLight, Scene, Vector3, WebGLRenderer } from "three";
+import { makeMEvent } from "./keybinder";
 import { UiLayer2, UiLayerProps } from "./uilayer";
-import { WorldCoord3 } from "../voxel/pos3";
 import { ICameraLayer } from "../engine/icameralayer";
 import { vm } from "../engine/ivm";
 import { VRButton } from "./vrbutton";
-import { IVoxelLevel } from "./ivoxelmap";
 import SyncEventSource from "../lib/synceventsource";
 import { ILevelEditor } from "./ileveleditor";
 import { PxSize } from "../lib/pos";
@@ -112,7 +108,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     public renderer!: WebGLRenderer;
     public camera!: PerspectiveCamera;
     public cameraGroup!: Group;
-    public scene!: Scene;
+    public scene: Scene | undefined;
     //private input!: KeyBinder;
 
     public t_start = Date.now();
@@ -141,16 +137,11 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
             return dd;
         })());
 
-        this.scene = new Scene();
-
         //this.input = new KeyBinder(this.element, () => { });
 
         // Iosmetric view
         //Object3D.DefaultUp = new Vector3(0, 0, 1);
         this.createCamera(this.props.w / 10, this.props.h / 10);
-
-        //  this.scene.fog = new FogExp2( 0xFFA1C1, 0.0059 );
-        this.scene.fog = new Fog(0x000000, 240, this.visible_distance);
 
         this.renderer = new WebGLRenderer({ antialias: false });
         this.renderer.setPixelRatio(1);
@@ -163,20 +154,10 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         //this.renderer.xr.cameraAutoUpdate = false;
         //this.renderer.xr.updateCamera(this.camera as PerspectiveCamera);
 
-        this.element.appendChild(this.renderer.domElement);
-
         this.vrButton = new VRButton(this.renderer, (x) => {
             this.xrSessionChangedSource.invoke(x);
         });
         this.element.appendChild(this.vrButton.element);
-
-        let controller1 = this.renderer.xr.getController(0);
-        controller1.userData.id = 0;
-        this.scene.add(controller1);
-
-        let controller2 = this.renderer.xr.getController(1);
-        controller2.userData.id = 1;
-        this.scene.add(controller2);
 
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
 
@@ -188,6 +169,27 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     public get position(): Vector3 { return this.cameraGroup.position }
     public set position(pos: Vector3) { this.cameraGroup.position.copy(pos); }
     public get viewSize(): PxSize { return { w: this.props.w, h: this.props.h } }
+
+    public createScene() {
+        this.scene = new Scene();
+
+        //  this.scene.fog = new FogExp2( 0xFFA1C1, 0.0059 );
+        this.scene.fog = new Fog(0x000000, 240, this.visible_distance);
+
+        this.element.appendChild(this.renderer.domElement);
+
+        // create VR elements
+        let controller1 = this.renderer.xr.getController(0);
+        controller1.userData.id = 0;
+        this.scene.add(controller1);
+
+        let controller2 = this.renderer.xr.getController(1);
+        controller2.userData.id = 1;
+        this.scene.add(controller2);
+
+        // add camera to group for UI
+        this.scene.add(this.cameraGroup);
+    }
 
     public setThirdPersonCamera(sprite: Sprite3, cameraOffset: Vector3): void {
         this.trackingCamera?.dispose();
@@ -225,8 +227,6 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         this.cameraGroup.add(this.camera);
 
         this.trackingCamera = new DirectCamera(this.camera, this.cameraGroup);
-
-        this.scene.add(this.cameraGroup);
     }
 
     /**
@@ -248,7 +248,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         geometry.rotateX(- Math.PI / 2);
 
         let plane = new Mesh(geometry, new MeshBasicMaterial({ visible: false }));
-        this.scene.add(plane);
+        this.scene!.add(plane);
 
         this.renderer.setAnimationLoop(this.render.bind(this));
 
@@ -284,7 +284,9 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
 
 
     render() {
-        //requestAnimationFrame(this.render.bind(this));
+        if (!this.scene) {
+            return;
+        }
 
         vm.onRenderFrame();
         this.renderer.render(this.scene, this.camera);

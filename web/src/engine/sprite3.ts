@@ -77,12 +77,12 @@ export class Sprite3 implements IRigitBody, IDigSprite {
 
   public addToScene(scene: Scene) {
     this.rigit.addToScene(scene);
-    console.log('Loaded sprite: ' + this._id);
+    // console.log('Loaded sprite: ' + this._id);
   }
 
   public removeFromScene(scene: Scene) {
     this.rigit.removeFromScene(scene);
-    console.log('Remove sprite: ' + this._id);
+    // console.log('Remove sprite: ' + this._id);
   }
 
   public onRender(tick: number) {
