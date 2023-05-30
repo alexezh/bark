@@ -48,9 +48,24 @@ export class MeshLevelLayer {
   }
 
   private buildSlice(sliceIdx: number) {
-    let writer: VoxelGeometryWriter = new VoxelGeometryWriter();
-
     let maxZ = Math.min((sliceIdx + 1) * this.sliceZSize, this.size.h);
+
+    let vCount = 0;
+    let cCount = 0;
+    for (let z = sliceIdx * this.sliceZSize; z < maxZ; z++) {
+      for (let x = 0; x < this.size.w; x++) {
+        let pos = z * this.size.w + x;
+        let block = this.blocks[pos];
+        if (block !== undefined) {
+          let model = block.model.frames[block.frame];
+          vCount += model.verticeCount;
+          cCount += model.colorCount;
+        }
+      }
+    }
+
+    let writer: VoxelGeometryWriter = new VoxelGeometryWriter(vCount, cCount, 6);
+
     for (let z = sliceIdx * this.sliceZSize; z < maxZ; z++) {
       for (let x = 0; x < this.size.w; x++) {
         let pos = z * this.size.w + x;

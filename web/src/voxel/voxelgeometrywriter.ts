@@ -2,27 +2,61 @@ import { BufferAttribute, BufferGeometry } from "three";
 
 export class VoxelGeometryWriter {
   public dirty = true;
-  private v: number[] = [];
-  private c: number[] = [];
+  private v: Float32Array;
+  private c: Float32Array;
   private start_x: number = 0;
   private start_y: number = 0;
   private start_z: number = 0;
   private scale: number = 1;
+  private nextIdxV = 0;
+  private nextIdxC = 0;
+  private cMult = 0;
 
   public get count() { return this.v.length }
 
+  public constructor(vCount: number, cCount: number, cMult: number) {
+    this.cMult = cMult;
+    this.v = new Float32Array(vCount);
+    this.c = new Float32Array(cCount * this.cMult);
+  }
+
   public appendVertice(x: number, y: number, z: number) {
     let block_size = this.scale;
-    this.v.push(x * block_size + this.start_x);
-    this.v.push(y * block_size + this.start_y);
-    this.v.push(z * block_size + this.start_z);
+    this.v[this.nextIdxV++] = x * block_size + this.start_x;
+    this.v[this.nextIdxV++] = y * block_size + this.start_y;
+    this.v[this.nextIdxV++] = z * block_size + this.start_z;
+  }
+
+  public appendVertices(v: number[]) {
+    let block_size = this.scale;
+    let count = v.length;
+    for (let i = 0; i < count; i += 3) {
+      this.v[this.nextIdxV++] = v[i] * block_size + this.start_x;
+      this.v[this.nextIdxV++] = v[i + 1] * block_size + this.start_y;
+      this.v[this.nextIdxV++] = v[i + 2] * block_size + this.start_z;
+    }
   }
 
   public appendColor(n: number, r: number, g: number, b: number) {
     for (let i = 0; i < n; i++) {
-      this.c.push(r);
-      this.c.push(g);
-      this.c.push(b);
+      this.c[this.nextIdxC++] = r;
+      this.c[this.nextIdxC++] = g;
+      this.c[this.nextIdxC++] = b;
+    }
+  }
+
+  public appendColors(c: number[]) {
+    let count = c.length;
+    let n = this.cMult;
+    for (let i = 0; i < count; i += 3) {
+      let r = c[i];
+      let g = c[i + 1];
+      let b = c[i + 2];
+      for (let j = 0; j < n; j++) {
+        this.c[this.nextIdxC++] = r;
+        this.c[this.nextIdxC++] = g;
+        this.c[this.nextIdxC++] = b;
+      }
     }
   }
 
@@ -37,18 +71,22 @@ export class VoxelGeometryWriter {
   }
 
   public getGeometry(): BufferGeometry {
-    let vertices = this.v;
-    let colors = this.c;
+    //let vertices = this.v;
+    //let colors = this.c;
 
-    let v = new BufferAttribute(new Float32Array(vertices.length), 3);
-    let c = new BufferAttribute(new Float32Array(colors.length), 3);
+    let v = new BufferAttribute(this.v, 3);
+    let c = new BufferAttribute(this.c, 3);
 
-    let m = ((vertices.length / 3) | 0);
-    for (var i = 0; i < m; i++) {
-      let idx = i * 3;
-      v.setXYZ(i, vertices[idx], vertices[idx + 1], vertices[idx + 2]);
-      c.setXYZ(i, colors[idx], colors[idx + 1], colors[idx + 2]);
-    }
+    //let v = new BufferAttribute(new Float32Array(vertices.length), 3);
+    //let c = new BufferAttribute(new Float32Array(colors.length), 3);
+    /*
+        let m = ((vertices.length / 3) | 0);
+        for (var i = 0; i < m; i++) {
+          let idx = i * 3;
+          v.setXYZ(i, vertices[idx], vertices[idx + 1], vertices[idx + 2]);
+          c.setXYZ(i, colors[idx], colors[idx + 1], colors[idx + 2]);
+        }
+    */
 
     let geometry = new BufferGeometry();
     geometry.setAttribute('position', v);

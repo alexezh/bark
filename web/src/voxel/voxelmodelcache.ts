@@ -125,7 +125,7 @@ export class VoxelModelCache {
 
     let model = new VoxelModel(wireModel.id, wireModel.voxUrl, wireModel.thumbnailUrl);
     for (let f of voxelFile.frames) {
-      let mf = new VoxelModelFrame(f);
+      let mf = VoxelModelFrame.load(f);
       model.frames.push(mf);
     }
 

@@ -58,28 +58,40 @@ export class VoxelModelFrame {
   public stride_z: number;
 
   // blocks populated from model
-  public voxels: Uint32Array;
   public wireframe = false;
-  public geometry!: BufferGeometry;
-  public v!: BufferAttribute;
-  public c!: BufferAttribute;
-  public prev_len = 0;
-  public material!: MeshPhongMaterial;
 
-  public constructor(data: VoxelFileFrame) {
+  // we do not know how many elements we will have; so use array for now
+  private v: number[] = [];
+
+  /**
+   * one color per 6 points
+   */
+  private c: number[] = [];
+
+  public get verticeCount(): number { return this.v.length }
+  public get colorCount(): number { return this.c.length }
+
+  private constructor(data: VoxelFileFrame) {
     this.data = data;
 
     this.chunk_sx = data.sx;
     this.chunk_sy = data.sy;
     this.chunk_sz = data.sz;
     this.stride_z = this.chunk_sx * this.chunk_sy;
-    this.voxels = new Uint32Array(this.stride_z * this.chunk_sz);
+  }
 
-    for (let i = 0; i < this.data.data.length; i++) {
-      let d = this.data.data[i];
-      let blockIdx = (d.x | 0) + ((d.y | 0) * this.chunk_sx) + ((d.z | 0) * this.stride_z);
-      this.voxels[blockIdx] = d.color | 0x00000080;
+  public static load(data: VoxelFileFrame): VoxelModelFrame {
+    let model = new VoxelModelFrame(data);
+    let voxels = new Uint32Array(model.stride_z * model.chunk_sz);
+
+    for (let i = 0; i < model.data.data.length; i++) {
+      let d = model.data.data[i];
+      let blockIdx = (d.x | 0) + ((d.y | 0) * model.chunk_sx) + ((d.z | 0) * model.stride_z);
+      voxels[blockIdx] = d.color | 0x00000080;
     }
+
+    model.loadModel(voxels);
+    return model;
   }
 
   static sameColor(block1: number, block2: number): boolean {
@@ -93,12 +105,16 @@ export class VoxelModelFrame {
     return z * this.stride_z + y * this.chunk_sx + x;
   }
 
-  // build geometry for the model
   public build(writer: VoxelGeometryWriter) {
+    writer.appendVertices(this.v);
+    writer.appendColors(this.c);
+  }
+
+  // build geometry for the model
+  private loadModel(voxels: Uint32Array) {
     var r = 0;
     var g = 0;
     var b = 0;
-    var vCount = writer.count;
 
     // Reset faces
     for (var x = 0; x < this.chunk_sx; x++) {
@@ -106,7 +122,7 @@ export class VoxelModelFrame {
         for (var z = 0; z < this.chunk_sz; z++) {
           let blockIdx = this.getIdx(x, y, z);
           // use 8th bit to indicate that there is block
-          this.voxels[blockIdx] &= 0xFFFFFF80;
+          voxels[blockIdx] &= 0xFFFFFF80;
         }
       }
     }
@@ -115,50 +131,50 @@ export class VoxelModelFrame {
       for (var y = 0; y < this.chunk_sy; y++) {
         for (var z = 0; z < this.chunk_sz; z++) {
           let blockIdx = this.getIdx(x, y, z);
-          if (this.voxels[blockIdx] == 0) {
+          if (voxels[blockIdx] == 0) {
             continue; // Skip empty blocks
           }
 
           var left = 0, right = 0, above = 0, front = 0, back = 0, below = 0;
           if (z > 0) {
-            if (this.voxels[blockIdx - this.stride_z] != 0) {
+            if (voxels[blockIdx - this.stride_z] != 0) {
               below = 1;
-              this.voxels[blockIdx] = this.voxels[blockIdx] | 0x10;
+              voxels[blockIdx] = voxels[blockIdx] | 0x10;
             }
           }
 
           if (z < this.chunk_sz - 1) {
-            if (this.voxels[blockIdx + this.stride_z] != 0) {
+            if (voxels[blockIdx + this.stride_z] != 0) {
               above = 1;
-              this.voxels[blockIdx] = this.voxels[blockIdx] | 0x1;
+              voxels[blockIdx] = voxels[blockIdx] | 0x1;
             }
           }
 
           if (x > 0) {
-            if (this.voxels[blockIdx - 1] != 0) {
+            if (voxels[blockIdx - 1] != 0) {
               left = 1;
-              this.voxels[blockIdx] = this.voxels[blockIdx] | 0x8;
+              voxels[blockIdx] = voxels[blockIdx] | 0x8;
             }
           }
 
           if (x < this.chunk_sx - 1) {
-            if (this.voxels[blockIdx + 1] != 0) {
+            if (voxels[blockIdx + 1] != 0) {
               right = 1;
-              this.voxels[blockIdx] = this.voxels[blockIdx] | 0x4;
+              voxels[blockIdx] = voxels[blockIdx] | 0x4;
             }
           }
 
           if (y > 0) {
-            if (this.voxels[blockIdx - this.chunk_sx] != 0) {
+            if (voxels[blockIdx - this.chunk_sx] != 0) {
               back = 1;
-              this.voxels[blockIdx] = this.voxels[blockIdx] | 0x20; // bit 6 
+              voxels[blockIdx] = voxels[blockIdx] | 0x20; // bit 6 
             }
           }
 
           if (y < this.chunk_sy - 1) {
-            if (this.voxels[blockIdx + this.chunk_sx] != 0) {
+            if (voxels[blockIdx + this.chunk_sx] != 0) {
               front = 1;
-              this.voxels[blockIdx] = this.voxels[blockIdx] | 0x2;
+              voxels[blockIdx] = voxels[blockIdx] | 0x2;
             }
           }
 
@@ -171,14 +187,14 @@ export class VoxelModelFrame {
           // Only draw below if we are an object
           if (!back) {
             // Get below (bit 6)
-            if ((this.voxels[blockIdx] & 0x20) == 0) {
+            if ((voxels[blockIdx] & 0x20) == 0) {
               var maxX = 0;
               var maxZ = 0;
 
               for (var x_ = x; x_ < this.chunk_sx; x_++) {
                 let blockIdx_ = this.getIdx(x_, y, z);
                 // Check not drawn + same color
-                if ((this.voxels[blockIdx_] & 0x20) == 0 && VoxelModelFrame.sameColor(this.voxels[blockIdx_], this.voxels[blockIdx])) {
+                if ((voxels[blockIdx_] & 0x20) == 0 && VoxelModelFrame.sameColor(voxels[blockIdx_], voxels[blockIdx])) {
                   maxX++;
                 } else {
                   break;
@@ -186,7 +202,7 @@ export class VoxelModelFrame {
                 var tmpZ = 0;
                 for (var z_ = z; z_ < this.chunk_sz; z_++) {
                   let blockIdx_ = this.getIdx(x_, y, z_);
-                  if ((this.voxels[blockIdx_] & 0x20) == 0 && VoxelModelFrame.sameColor(this.voxels[blockIdx_], this.voxels[blockIdx])) {
+                  if ((voxels[blockIdx_] & 0x20) == 0 && VoxelModelFrame.sameColor(voxels[blockIdx_], voxels[blockIdx])) {
                     tmpZ++;
                   } else {
                     break;
@@ -199,28 +215,28 @@ export class VoxelModelFrame {
               for (var x_ = x; x_ < x + maxX; x_++) {
                 for (var z_ = z; z_ < z + maxZ; z_++) {
                   let blockIdx_ = this.getIdx(x_, y, z_);
-                  this.voxels[blockIdx_] = this.voxels[blockIdx_] | 0x20;
+                  voxels[blockIdx_] = voxels[blockIdx_] | 0x20;
                 }
               }
 
-              writer.appendVertice(x + maxX, y, z + maxZ);
-              writer.appendVertice(x, y, z + maxZ);
-              writer.appendVertice(x, y, z);
+              this.appendVertice(x + maxX, y, z + maxZ);
+              this.appendVertice(x, y, z + maxZ);
+              this.appendVertice(x, y, z);
 
-              writer.appendVertice(x + maxX, y, z + maxZ);
-              writer.appendVertice(x, y, z);
-              writer.appendVertice(x + maxX, y, z);
+              this.appendVertice(x + maxX, y, z + maxZ);
+              this.appendVertice(x, y, z);
+              this.appendVertice(x + maxX, y, z);
 
-              r = ((this.voxels[blockIdx] >> 24) & 0xFF) / 255;
-              g = ((this.voxels[blockIdx] >> 16) & 0xFF) / 255;
-              b = ((this.voxels[blockIdx] >> 8) & 0xFF) / 255;
-              writer.appendColor(6, r, g, b);
+              r = ((voxels[blockIdx] >> 24) & 0xFF) / 255;
+              g = ((voxels[blockIdx] >> 16) & 0xFF) / 255;
+              b = ((voxels[blockIdx] >> 8) & 0xFF) / 255;
+              this.appendColor(r, g, b);
             }
           }
 
           if (!front) {
             // Get above (0010)
-            if ((this.voxels[blockIdx] & 0x2) == 0) {
+            if ((voxels[blockIdx] & 0x2) == 0) {
               var maxX = 0;
               var maxZ = 0;
               var end = 0;
@@ -228,7 +244,7 @@ export class VoxelModelFrame {
               for (var x_ = x; x_ < this.chunk_sx; x_++) {
                 let blockIdx_ = this.getIdx(x_, y, z);
                 // Check not drawn + same color
-                if ((this.voxels[blockIdx_] & 0x2) == 0 && VoxelModelFrame.sameColor(this.voxels[blockIdx_], this.voxels[blockIdx])) {
+                if ((voxels[blockIdx_] & 0x2) == 0 && VoxelModelFrame.sameColor(voxels[blockIdx_], voxels[blockIdx])) {
                   maxX++;
                 } else {
                   break;
@@ -236,7 +252,7 @@ export class VoxelModelFrame {
                 var tmpZ = 0;
                 for (var z_ = z; z_ < this.chunk_sz; z_++) {
                   let blockIdx_ = this.getIdx(x_, y, z_);
-                  if ((this.voxels[blockIdx_] & 0x2) == 0 && VoxelModelFrame.sameColor(this.voxels[blockIdx_], this.voxels[blockIdx])) {
+                  if ((voxels[blockIdx_] & 0x2) == 0 && VoxelModelFrame.sameColor(voxels[blockIdx_], voxels[blockIdx])) {
                     tmpZ++;
                   } else {
                     break;
@@ -249,35 +265,35 @@ export class VoxelModelFrame {
               for (var x_ = x; x_ < x + maxX; x_++) {
                 for (var z_ = z; z_ < z + maxZ; z_++) {
                   let blockIdx_ = this.getIdx(x_, y, z_);
-                  this.voxels[blockIdx_] = this.voxels[blockIdx_] | 0x2;
+                  voxels[blockIdx_] = voxels[blockIdx_] | 0x2;
                 }
               }
 
-              writer.appendVertice(x + maxX, y + 1, z + maxZ);
-              writer.appendVertice(x, y + 1, z);
-              writer.appendVertice(x, y + 1, z + maxZ);
+              this.appendVertice(x + maxX, y + 1, z + maxZ);
+              this.appendVertice(x, y + 1, z);
+              this.appendVertice(x, y + 1, z + maxZ);
 
-              writer.appendVertice(x + maxX, y + 1, z + maxZ);
-              writer.appendVertice(x + maxX, y + 1, z);
-              writer.appendVertice(x, y + 1, z);
+              this.appendVertice(x + maxX, y + 1, z + maxZ);
+              this.appendVertice(x + maxX, y + 1, z);
+              this.appendVertice(x, y + 1, z);
 
-              r = ((this.voxels[blockIdx] >> 24) & 0xFF) / 255;
-              g = ((this.voxels[blockIdx] >> 16) & 0xFF) / 255;
-              b = ((this.voxels[blockIdx] >> 8) & 0xFF) / 255;
-              writer.appendColor(6, r, g, b);
+              r = ((voxels[blockIdx] >> 24) & 0xFF) / 255;
+              g = ((voxels[blockIdx] >> 16) & 0xFF) / 255;
+              b = ((voxels[blockIdx] >> 8) & 0xFF) / 255;
+              this.appendColor(r, g, b);
             }
           }
           if (!below) {
             // back  10000
             // this.shadow_blocks.push([x, y, z]);
-            if ((this.voxels[blockIdx] & 0x10) == 0) {
+            if ((voxels[blockIdx] & 0x10) == 0) {
               var maxX = 0;
               var maxY = 0;
 
               for (var x_ = x; x_ < this.chunk_sx; x_++) {
                 let blockIdx_ = this.getIdx(x_, y, z);
                 // Check not drawn + same color
-                if ((this.voxels[blockIdx_] & 0x10) == 0 && VoxelModelFrame.sameColor(this.voxels[blockIdx_], this.voxels[blockIdx])) {
+                if ((voxels[blockIdx_] & 0x10) == 0 && VoxelModelFrame.sameColor(voxels[blockIdx_], voxels[blockIdx])) {
                   maxX++;
                 } else {
                   break;
@@ -285,7 +301,7 @@ export class VoxelModelFrame {
                 var tmpY = 0;
                 for (var y_ = y; y_ < this.chunk_sy; y_++) {
                   let blockIdx_ = this.getIdx(x_, y_, z);
-                  if ((this.voxels[blockIdx_] & 0x10) == 0 && VoxelModelFrame.sameColor(this.voxels[blockIdx_], this.voxels[blockIdx])) {
+                  if ((voxels[blockIdx_] & 0x10) == 0 && VoxelModelFrame.sameColor(voxels[blockIdx_], voxels[blockIdx])) {
                     tmpY++;
                   } else {
                     break;
@@ -298,34 +314,34 @@ export class VoxelModelFrame {
               for (var x_ = x; x_ < x + maxX; x_++) {
                 for (var y_ = y; y_ < y + maxY; y_++) {
                   let blockIdx_ = this.getIdx(x_, y_, z);
-                  this.voxels[blockIdx_] = this.voxels[blockIdx_] | 0x10;
+                  voxels[blockIdx_] = voxels[blockIdx_] | 0x10;
                 }
               }
 
-              writer.appendVertice(x + maxX, y, z);
-              writer.appendVertice(x + maxX, y + maxY, z);
-              writer.appendVertice(x, y, z);
+              this.appendVertice(x + maxX, y, z);
+              this.appendVertice(x + maxX, y + maxY, z);
+              this.appendVertice(x, y, z);
 
-              writer.appendVertice(x, y, z);
-              writer.appendVertice(x + maxX, y + maxY, z);
-              writer.appendVertice(x, y + maxY, z);
+              this.appendVertice(x, y, z);
+              this.appendVertice(x + maxX, y + maxY, z);
+              this.appendVertice(x, y + maxY, z);
 
-              r = ((this.voxels[blockIdx] >> 24) & 0xFF) / 255;
-              g = ((this.voxels[blockIdx] >> 16) & 0xFF) / 255;
-              b = ((this.voxels[blockIdx] >> 8) & 0xFF) / 255;
-              writer.appendColor(6, r, g, b);
+              r = ((voxels[blockIdx] >> 24) & 0xFF) / 255;
+              g = ((voxels[blockIdx] >> 16) & 0xFF) / 255;
+              b = ((voxels[blockIdx] >> 8) & 0xFF) / 255;
+              this.appendColor(r, g, b);
             }
           }
           if (!above) {
             // front 0001
-            if ((this.voxels[blockIdx] & 0x1) == 0) {
+            if ((voxels[blockIdx] & 0x1) == 0) {
               let maxX = 0;
               let maxY = 0;
 
               for (let x_ = x; x_ < this.chunk_sx; x_++) {
                 let blockIdx_ = this.getIdx(x_, y, z);
                 // Check not drawn + same color
-                if ((this.voxels[blockIdx_] & 0x1) == 0 && VoxelModelFrame.sameColor(this.voxels[blockIdx_], this.voxels[blockIdx])) {
+                if ((voxels[blockIdx_] & 0x1) == 0 && VoxelModelFrame.sameColor(voxels[blockIdx_], voxels[blockIdx])) {
                   maxX++;
                 } else {
                   break;
@@ -333,7 +349,7 @@ export class VoxelModelFrame {
                 let tmpY = 0;
                 for (let y_ = y; y_ < this.chunk_sy; y_++) {
                   let blockIdx_ = this.getIdx(x_, y_, z);
-                  if ((this.voxels[blockIdx_] & 0x1) == 0 && VoxelModelFrame.sameColor(this.voxels[blockIdx_], this.voxels[blockIdx])) {
+                  if ((voxels[blockIdx_] & 0x1) == 0 && VoxelModelFrame.sameColor(voxels[blockIdx_], voxels[blockIdx])) {
                     tmpY++;
                   } else {
                     break;
@@ -346,33 +362,33 @@ export class VoxelModelFrame {
               for (var x_ = x; x_ < x + maxX; x_++) {
                 for (var y_ = y; y_ < y + maxY; y_++) {
                   let blockIdx_ = this.getIdx(x_, y_, z);
-                  this.voxels[blockIdx_] = this.voxels[blockIdx_] | 0x1;
+                  voxels[blockIdx_] = voxels[blockIdx_] | 0x1;
                 }
               }
 
-              writer.appendVertice(x + maxX, y + maxY, z + 1);
-              writer.appendVertice(x, y + maxY, z + 1);
-              writer.appendVertice(x, y, z + 1);
+              this.appendVertice(x + maxX, y + maxY, z + 1);
+              this.appendVertice(x, y + maxY, z + 1);
+              this.appendVertice(x, y, z + 1);
 
-              writer.appendVertice(x + maxX, y + maxY, z + 1);
-              writer.appendVertice(x, y, z + 1);
-              writer.appendVertice(x + maxX, y, z + 1);
+              this.appendVertice(x + maxX, y + maxY, z + 1);
+              this.appendVertice(x, y, z + 1);
+              this.appendVertice(x + maxX, y, z + 1);
 
-              r = ((this.voxels[blockIdx] >> 24) & 0xFF) / 255;
-              g = ((this.voxels[blockIdx] >> 16) & 0xFF) / 255;
-              b = ((this.voxels[blockIdx] >> 8) & 0xFF) / 255;
-              writer.appendColor(6, r, g, b);
+              r = ((voxels[blockIdx] >> 24) & 0xFF) / 255;
+              g = ((voxels[blockIdx] >> 16) & 0xFF) / 255;
+              b = ((voxels[blockIdx] >> 8) & 0xFF) / 255;
+              this.appendColor(r, g, b);
             }
           }
           if (!left) {
-            if ((this.voxels[blockIdx] & 0x8) == 0) {
+            if ((voxels[blockIdx] & 0x8) == 0) {
               var maxZ = 0;
               var maxY = 0;
 
               for (var z_ = z; z_ < this.chunk_sz; z_++) {
                 let blockIdx_ = this.getIdx(x, y, z_);
                 // Check not drawn + same color
-                if ((this.voxels[blockIdx_] & 0x8) == 0 && VoxelModelFrame.sameColor(this.voxels[blockIdx_], this.voxels[blockIdx])) {
+                if ((voxels[blockIdx_] & 0x8) == 0 && VoxelModelFrame.sameColor(voxels[blockIdx_], voxels[blockIdx])) {
                   maxZ++;
                 } else {
                   break;
@@ -380,7 +396,7 @@ export class VoxelModelFrame {
                 var tmpY = 0;
                 for (var y_ = y; y_ < this.chunk_sy; y_++) {
                   let blockIdx_ = this.getIdx(x, y_, z_);
-                  if ((this.voxels[blockIdx_] & 0x8) == 0 && VoxelModelFrame.sameColor(this.voxels[blockIdx_], this.voxels[blockIdx])) {
+                  if ((voxels[blockIdx_] & 0x8) == 0 && VoxelModelFrame.sameColor(voxels[blockIdx_], voxels[blockIdx])) {
                     tmpY++;
                   } else {
                     break;
@@ -393,33 +409,33 @@ export class VoxelModelFrame {
               for (var z_ = z; z_ < z + maxZ; z_++) {
                 for (var y_ = y; y_ < y + maxY; y_++) {
                   let blockIdx_ = this.getIdx(x, y_, z_);
-                  this.voxels[blockIdx_] = this.voxels[blockIdx_] | 0x8;
+                  voxels[blockIdx_] = voxels[blockIdx_] | 0x8;
                 }
               }
 
-              writer.appendVertice(x, y, z);
-              writer.appendVertice(x, y, z + maxZ);
-              writer.appendVertice(x, y + maxY, z + maxZ);
+              this.appendVertice(x, y, z);
+              this.appendVertice(x, y, z + maxZ);
+              this.appendVertice(x, y + maxY, z + maxZ);
 
-              writer.appendVertice(x, y, z);
-              writer.appendVertice(x, y + maxY, z + maxZ);
-              writer.appendVertice(x, y + maxY, z);
+              this.appendVertice(x, y, z);
+              this.appendVertice(x, y + maxY, z + maxZ);
+              this.appendVertice(x, y + maxY, z);
 
-              r = ((this.voxels[blockIdx] >> 24) & 0xFF) / 255;
-              g = ((this.voxels[blockIdx] >> 16) & 0xFF) / 255;
-              b = ((this.voxels[blockIdx] >> 8) & 0xFF) / 255;
-              writer.appendColor(6, r, g, b);
+              r = ((voxels[blockIdx] >> 24) & 0xFF) / 255;
+              g = ((voxels[blockIdx] >> 16) & 0xFF) / 255;
+              b = ((voxels[blockIdx] >> 8) & 0xFF) / 255;
+              this.appendColor(r, g, b);
             }
           }
           if (!right) {
-            if ((this.voxels[blockIdx] & 0x4) == 0) {
+            if ((voxels[blockIdx] & 0x4) == 0) {
               var maxZ = 0;
               var maxY = 0;
 
               for (var z_ = z; z_ < this.chunk_sz; z_++) {
                 let blockIdx_ = this.getIdx(x, y, z_);
                 // Check not drawn + same color
-                if ((this.voxels[blockIdx_] & 0x4) == 0 && VoxelModelFrame.sameColor(this.voxels[blockIdx_], this.voxels[blockIdx])) {
+                if ((voxels[blockIdx_] & 0x4) == 0 && VoxelModelFrame.sameColor(voxels[blockIdx_], voxels[blockIdx])) {
                   maxZ++;
                 } else {
                   break;
@@ -427,7 +443,7 @@ export class VoxelModelFrame {
                 var tmpY = 0;
                 for (var y_ = y; y_ < this.chunk_sy; y_++) {
                   let blockIdx_ = this.getIdx(x, y_, z_);
-                  if ((this.voxels[blockIdx_] & 0x4) == 0 && VoxelModelFrame.sameColor(this.voxels[blockIdx_], this.voxels[blockIdx])) {
+                  if ((voxels[blockIdx_] & 0x4) == 0 && VoxelModelFrame.sameColor(voxels[blockIdx_], voxels[blockIdx])) {
                     tmpY++;
                   } else {
                     break;
@@ -440,28 +456,40 @@ export class VoxelModelFrame {
               for (var z_ = z; z_ < z + maxZ; z_++) {
                 for (var y_ = y; y_ < y + maxY; y_++) {
                   let blockIdx_ = this.getIdx(x, y_, z_);
-                  this.voxels[blockIdx_] = this.voxels[blockIdx_] | 0x4;
+                  voxels[blockIdx_] = voxels[blockIdx_] | 0x4;
                 }
               }
 
-              writer.appendVertice(x + 1, y, z);
-              writer.appendVertice(x + 1, y + maxY, z + maxZ);
-              writer.appendVertice(x + 1, y, z + maxZ);
+              this.appendVertice(x + 1, y, z);
+              this.appendVertice(x + 1, y + maxY, z + maxZ);
+              this.appendVertice(x + 1, y, z + maxZ);
 
-              writer.appendVertice(x + 1, y + maxY, z + maxZ);
-              writer.appendVertice(x + 1, y, z);
-              writer.appendVertice(x + 1, y + maxY, z);
+              this.appendVertice(x + 1, y + maxY, z + maxZ);
+              this.appendVertice(x + 1, y, z);
+              this.appendVertice(x + 1, y + maxY, z);
 
-              r = ((this.voxels[blockIdx] >> 24) & 0xFF) / 255;
-              g = ((this.voxels[blockIdx] >> 16) & 0xFF) / 255;
-              b = ((this.voxels[blockIdx] >> 8) & 0xFF) / 255;
-              writer.appendColor(6, r, g, b);
+              r = ((voxels[blockIdx] >> 24) & 0xFF) / 255;
+              g = ((voxels[blockIdx] >> 16) & 0xFF) / 255;
+              b = ((voxels[blockIdx] >> 8) & 0xFF) / 255;
+              this.appendColor(r, g, b);
             }
           }
         }
       }
     }
 
-    console.log(`Build vox mode: ${this.data.data.length} ${writer.count - vCount}`);
+    console.log(`Build vox mode: ${this.data.data.length} ${this.v.length}`);
   };
+
+  private appendVertice(x: number, y: number, z: number) {
+    this.v.push(x);
+    this.v.push(y);
+    this.v.push(z);
+  }
+
+  private appendColor(r: number, g: number, b: number) {
+    this.c.push(r);
+    this.c.push(g);
+    this.c.push(b);
+  }
 }

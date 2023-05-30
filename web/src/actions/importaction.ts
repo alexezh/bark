@@ -134,8 +134,8 @@ export class ImportVoxAction implements IAction {
       return 'Cannot load model:' + file.fn;
     }
 
-    let mf = new VoxelModelFrame(voxelFile.frames[0]);
-    let writer = new VoxelGeometryWriter();
+    let mf = VoxelModelFrame.load(voxelFile.frames[0]);
+    let writer = new VoxelGeometryWriter(mf.verticeCount, mf.colorCount, 6);
     mf.build(writer);
 
     let geo = writer.getGeometry();

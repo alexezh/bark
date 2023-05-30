@@ -83,7 +83,7 @@ export class VoxelMeshModel {
         }
 
         for (let f of vmm.frames) {
-            let writer = new VoxelGeometryWriter();
+            let writer = new VoxelGeometryWriter(f.verticeCount, f.colorCount, 6);
 
             writer.setScale(this.scale);
 
