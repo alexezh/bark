@@ -26,7 +26,10 @@ export interface IRigitBody {
     // owner set by application
     get owner(): any;
 
-    // speed is pixel per second
+    /**
+     * speed is in pixels per second
+     * sprite compute speed based on direction
+     */
     get speed(): Vector3;
     get position(): Vector3;
     get size(): Vector3;

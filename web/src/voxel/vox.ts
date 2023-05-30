@@ -91,9 +91,9 @@ export class Vox {
                     }
 
                     let frame = {
-                        sx: sizex + 1,
-                        sy: (rotateYZ) ? sizez + 1 : sizey + 1,
-                        sz: (rotateYZ) ? sizey + 1 : sizez + 1,
+                        sx: sizex,
+                        sy: (rotateYZ) ? sizez : sizey,
+                        sz: (rotateYZ) ? sizey : sizez,
                         data: voxelPoints
                     };
 
@@ -123,7 +123,7 @@ export class Vox {
 
                 for (let n = 0; n < voxelPoints.length; n++) {
                     if (colors2 == undefined) {
-                        let c = this.voxColors[voxelPoints[n].color - 1];
+                        let c = this.voxColors[voxelPoints[n].color];
                         let r = (c & 0xff0000) >> 16;
                         let g = (c & 0x00ff00) >> 8;
                         let b = (c & 0x0000ff);

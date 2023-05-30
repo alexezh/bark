@@ -33,6 +33,16 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   private _speed: Vector3 = new Vector3();
 
   /**
+   * absolute (world) speed (computed from speed and direction)
+   */
+  private _worldSpeed: Vector3 = new Vector3();
+
+  /**
+   * direction of the move
+   */
+  private _angleXZ: number = 0;
+
+  /**
    * position of sprite
    */
   private _position: Vector3;
@@ -44,7 +54,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   public get inactive(): boolean { return this._inactive }
   public get kind(): RigitBodyKind { return RigitBodyKind.sprite; }
 
-  public get speed(): Vector3 { return this._speed };
+  public get speed(): Vector3 { return this._worldSpeed };
   public get position(): Vector3 { return this._position };
   public get size(): Vector3 { return this.rigit.size };
 
@@ -84,18 +94,25 @@ export class Sprite3 implements IRigitBody, IDigSprite {
     this.rigit.setPosition(pos);
   }
 
+  /**
+   * set speed of sprite relative to direction
+   */
   public setSpeed(speed: Vector3) {
     this._speed = speed;
+    this.computeWorldSpeed();
     this._inactive = speed.x === 0 && speed.y === 0 && speed.z === 0;
     if (this._trackingCamera) {
       this._trackingCamera.onTargetSpeed(speed);
     }
   }
 
-  public setAngleXZ(angle: number) {
+  public setDirectionXZ(angle: number) {
     if (angle === undefined) {
       return;
     }
+
+    this._angleXZ = angle;
+    this.computeWorldSpeed();
 
     // TODO: need to separate speed from direction
     this.rigit.setDirectionXZ(angle);
@@ -104,6 +121,10 @@ export class Sprite3 implements IRigitBody, IDigSprite {
     if (this._trackingCamera) {
       this._trackingCamera.onTargetDirectionXZ(angle);
     }
+  }
+
+  private computeWorldSpeed() {
+    this._worldSpeed = this._speed.clone().applyAxisAngle(new Vector3(0, 1, 0), this._angleXZ);
   }
 
   public setTrackingCamera(camera: ITrackingCamera | undefined) {

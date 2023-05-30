@@ -38,7 +38,7 @@ function setAngleXZ(sprite: Sprite3, angleXZ: number) {
   }
 
   angleXZ = Math.PI * angleXZ / 180;
-  sprite.setAngleXZ(angleXZ);
+  sprite.setDirectionXZ(angleXZ);
 }
 
 function changeSpeedBy(sprite: Sprite3, x: number, y: number, z: number) {

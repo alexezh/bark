@@ -191,8 +191,8 @@ export class ImportVoxAction implements IAction {
 
       let canvas: HTMLCanvasElement = document.createElement('canvas');
       let ctx = canvas.getContext("2d");
-      ctx?.scale(1, -1);
-      ctx?.drawImage(bitmap, 0, 0, bitmap.width, -bitmap.height);
+      //ctx?.scale(1, -1);
+      ctx?.drawImage(bitmap, 0, 0, bitmap.width, bitmap.height);
       this._filesElem.appendChild(canvas);
     }
   }

@@ -56,16 +56,19 @@ class ThirtPersonCamera implements ITrackingCamera {
     private cameraGroup!: Group;
     private sprite: Sprite3;
     private cameraOffset: Vector3;
+    private spritePosition: Vector3;
     private angleXZ: number = 0;
 
+    // offset related to sprite direction; such as x, y, 0 means camera behind by X units
     public constructor(sprite: Sprite3, cameraOffset: Vector3, camera: PerspectiveCamera, cameraGroup: Group) {
         this.camera = camera;
         this.cameraGroup = cameraGroup;
         this.sprite = sprite;
         this.cameraOffset = cameraOffset;
         this.sprite = sprite;
+        this.spritePosition = sprite.position.clone();
 
-        this.updateCameraPos(this.sprite.position);
+        this.updateCameraPos();
         this.sprite.setTrackingCamera(this);
     }
 
@@ -76,7 +79,8 @@ class ThirtPersonCamera implements ITrackingCamera {
     }
 
     onTargetMove(pos: Vector3): void {
-        this.updateCameraPos(pos);
+        this.spritePosition = pos;
+        this.updateCameraPos();
     }
 
     onTargetSpeed(speed: Vector3): void {
@@ -84,19 +88,24 @@ class ThirtPersonCamera implements ITrackingCamera {
 
     onTargetDirectionXZ(angle: number): void {
         this.angleXZ = angle;
-        console.log('Angle: ' + angle);
-        //let qt = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), angle);
-        this.cameraGroup.quaternion.setFromAxisAngle(new Vector3(0, 1, 0), angle);;
+        this.updateCameraPos();
     }
 
-    private updateCameraPos(pos: Vector3) {
-        let cpos = pos.clone();
-        cpos.add(this.cameraOffset);
-        console.log('move: ' + cpos.x + ':' + cpos.z);
+    private updateCameraPos() {
+        let cpos = this.spritePosition.clone();
+        let off = this.cameraOffset.clone();
+
+        off.applyAxisAngle(new Vector3(0, 1, 0), this.angleXZ);
+
+        // we need to translate offset vector in direction of 
+        cpos.add(off);
+
         this.cameraGroup.position.copy(cpos);
         (this.camera as PerspectiveCamera).updateProjectionMatrix();
-    }
 
+        //let qt = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), angle);
+        this.cameraGroup.quaternion.setFromAxisAngle(new Vector3(0, 1, 0), this.angleXZ);
+    }
 }
 
 export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLayer {

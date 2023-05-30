@@ -1,30 +1,10 @@
 import { KeyBinder } from "../ui/keybinder";
 import { IGamePhysicsInputController } from "./igamephysics";
-import { Sprite3 } from "./sprite3";
 import { IInputController, vm } from "./ivm";
-
-// abstracts actions between keyboard, controllers and mouse
-export interface IMoveEvent2D {
-  get speedX(): number;
-  get speedZ(): number;
-}
-
-export class MoveEvent2D implements IMoveEvent2D {
-  public speedX: number = 0;
-  public speedZ: number = 0;
-}
-
-export type MoveControllerConfig = {
-  keySpeedX: number;
-  keySpeedZ: number;
-  keySpeedXZ: number;
-  thumbSpeedX: number;
-  thumbSpeedZ: number;
-  timeoutSeconds: number;
-}
+import { MoveControllerConfig } from "./movecontroller2d";
 
 // handles ASDW and arrows
-export class MoveController2D implements IGamePhysicsInputController, IInputController {
+export class ThirdPersonController implements IGamePhysicsInputController, IInputController {
   private input: KeyBinder;
   private xrSession: XRSession | undefined;
   private gamePads: Gamepad[] = [];
@@ -32,6 +12,7 @@ export class MoveController2D implements IGamePhysicsInputController, IInputCont
   private lastTick: number = 0;
   private timeoutMilliseconds: number = 0;
   private started: boolean = false;
+  private angleXZ: number = 0;
 
   public constructor(config: MoveControllerConfig) {
     this.config = config;
@@ -111,29 +92,55 @@ export class MoveController2D implements IGamePhysicsInputController, IInputCont
     if (x !== 0 || z !== 0) {
       return {
         speedX: x,
-        speedZ: z
+        speedZ: z,
+        angleXZ: this.angleXZ
       }
     }
 
-    if (this.input.pressedKeys.ArrowLeft || this.input.pressedKeys.KeyA) {
+    if (this.input.pressedKeys.KeyA) {
       x -= this.config.keySpeedX;
     }
 
-    if (this.input.pressedKeys.ArrowRight || this.input.pressedKeys.KeyD) {
+    if (this.input.pressedKeys.KeyD) {
       x += this.config.keySpeedX;
     }
 
-    if (this.input.pressedKeys.ArrowDown || this.input.pressedKeys.KeyS) {
+    if (this.input.pressedKeys.KeyS) {
       z += this.config.keySpeedX;
     }
 
-    if (this.input.pressedKeys.ArrowUp || this.input.pressedKeys.KeyW) {
+    if (this.input.pressedKeys.KeyW) {
       z -= this.config.keySpeedX;
+    }
+
+    // coordinates are toward us, but third person view is from behind
+    // we have to inverse keys
+    if (this.input.pressedKeys.ArrowRight) {
+      this.angleXZ -= this.config.keySpeedXZ;
+      if (this.angleXZ < -180) {
+        this.angleXZ += 360;
+      }
+    }
+
+    if (this.input.pressedKeys.ArrowLeft) {
+      this.angleXZ += this.config.keySpeedXZ;
+      if (this.angleXZ > 180) {
+        this.angleXZ -= 360;
+      }
+    }
+
+    if (this.input.pressedKeys.ArrowDown) {
+      // z += this.config.keySpeedX;
+    }
+
+    if (this.input.pressedKeys.ArrowUp) {
+      // z -= this.config.keySpeedX;
     }
 
     return {
       speedX: x,
-      speedZ: z
+      speedZ: z,
+      angleXZ: this.angleXZ
     }
   }
 
@@ -150,4 +157,3 @@ export class MoveController2D implements IGamePhysicsInputController, IInputCont
     }
   }
 }
-

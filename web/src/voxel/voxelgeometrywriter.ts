@@ -9,6 +9,8 @@ export class VoxelGeometryWriter {
   private start_z: number = 0;
   private scale: number = 1;
 
+  public get count() { return this.v.length }
+
   public appendVertice(x: number, y: number, z: number) {
     let block_size = this.scale;
     this.v.push(x * block_size + this.start_x);

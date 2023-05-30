@@ -1,4 +1,4 @@
-import { AmbientLight, BufferGeometry, Mesh, MeshPhongMaterial, Scene, Vector3 } from "three";
+import { AmbientLight, BufferGeometry, DirectionalLight, Mesh, MeshPhongMaterial, Scene, Vector3 } from "three";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { MeshLevelLayer } from "./maplayer";
 import { VoxelModel } from "../voxel/voxelmodel";
@@ -30,7 +30,8 @@ export class VoxelLevel implements IVoxelLevel {
     private _file: IVoxelLevelFile;
     private layers: MeshLevelLayer[] = [];
 
-    public ambient_light!: AmbientLight;
+    private ambientLight!: AmbientLight;
+    private directionalLight!: DirectionalLight;
 
     get worldSize(): WorldSize3 {
         return this.blockSizeToWorldSize(this.blockSize);
@@ -122,8 +123,16 @@ export class VoxelLevel implements IVoxelLevel {
             layer.addToScene(this.scene);
         }
 
-        this.ambient_light = new AmbientLight(0xFFFFFF, 0.8);
-        this.scene.add(this.ambient_light);
+        this.ambientLight = new AmbientLight(0xFFFFFF, 0.8);
+        this.scene.add(this.ambientLight);
+
+        // add light from the top
+        // later we can make it movable
+        this.directionalLight = new DirectionalLight(0xffffff);
+
+        let wsz = this.worldSize;
+        this.directionalLight.position.set(wsz.sx / 2, wsz.sy * 5, wsz.sz / 2).normalize();
+        this.scene.add(this.directionalLight);
 
         return true;
     }

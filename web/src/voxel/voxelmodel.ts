@@ -98,6 +98,7 @@ export class VoxelModelFrame {
     var r = 0;
     var g = 0;
     var b = 0;
+    var vCount = writer.count;
 
     // Reset faces
     for (var x = 0; x < this.chunk_sx; x++) {
@@ -460,5 +461,7 @@ export class VoxelModelFrame {
         }
       }
     }
+
+    console.log(`Build vox mode: ${this.data.data.length} ${writer.count - vCount}`);
   };
 }
