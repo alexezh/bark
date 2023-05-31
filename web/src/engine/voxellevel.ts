@@ -4,8 +4,8 @@ import { MeshLevelLayer } from "./maplayer";
 import { VoxelModel } from "../voxel/voxelmodel";
 import { BlockPos3, BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { defaultMaterial, FileMapBlock, IVoxelLevel, IVoxelLevelFile, MapBlock, MapBlockCoord } from "../ui/ivoxelmap";
-import { IRigitBody } from "../voxel/voxelmeshmodel";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../voxel/mapblockrigitbody";
+import { IRigitBody } from "../voxel/irigitbody";
 
 
 export class MeshModel {
@@ -237,6 +237,10 @@ export class VoxelLevel implements IVoxelLevel {
         }
 
         return false;
+    }
+
+    public getDistanceY(ro: IRigitBody, pos: Vector3): number {
+        return 0;
     }
 
     private onFileChangeBlock(blocks: FileMapBlock[]) {

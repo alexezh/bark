@@ -1,8 +1,8 @@
 import { MeshPhongMaterial, Scene, Vector3 } from "three";
 import { BlockPos3, BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { VoxelModel } from "../voxel/voxelmodel";
-import { IRigitBody } from "../voxel/voxelmeshmodel";
 import { MapBlockRigitBody } from "../voxel/mapblockrigitbody";
+import { IRigitBody } from "../voxel/irigitbody";
 
 export type MapProps = {
   id: string;
@@ -116,6 +116,12 @@ export interface IVoxelLevel {
     ro: IRigitBody,
     pos: WorldCoord3,
     func: (target: IRigitBody) => boolean): boolean;
+
+
+  /**
+   * get distance from bottom of body to surface
+   */
+  getDistanceY(ro: IRigitBody, pos: Vector3): number;
 
   //  readonly physics: IGamePhysics;
   //  readonly mechanics: IGameMechanics;

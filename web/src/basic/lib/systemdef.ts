@@ -124,3 +124,24 @@ export function createSystemModule(): ModuleNode {
   return module;
 }
 
+function setGravity(val: number) {
+
+}
+
+export function createPhysicsModule(): ModuleNode {
+  let funcs: FuncDefNode[] = [];
+  let types: TypeDefNode[] = [];
+
+  let module: ModuleNode = {
+    kind: AstNodeKind.module,
+    name: 'Physics',
+    types: types,
+    procs: funcs,
+    on: []
+  }
+
+  funcs.push(addSystemFunc(module, 'setGravity', ['value: number'], 'void', true, setGravity));
+
+  return module;
+}
+

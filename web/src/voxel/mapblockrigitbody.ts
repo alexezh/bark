@@ -1,7 +1,7 @@
 import { Vector3 } from "three";
-import { IRigitBody, RigitBodyKind } from "./voxelmeshmodel";
 import { MapBlock, MapBlockCoord } from "../ui/ivoxelmap";
 import { WorldCoord3 } from "./pos3";
+import { IRigitBody, RigitBodyKind } from "./irigitbody";
 
 export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   public readonly mapBlock: MapBlockCoord;
@@ -16,13 +16,18 @@ export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   get inactive(): boolean { return false }
   get kind(): RigitBodyKind { return RigitBodyKind.block; }
   get owner(): any { return undefined }
-  get speed(): Vector3 { return new Vector3(0, 0, 0); }
+  get worldSpeed(): Vector3 { return new Vector3(0, 0, 0); }
   get position(): Vector3 { return this._pos; }
   get size(): Vector3 { return this.mapBlock!.model!.size; }
+  get gravityFactor(): number { return 0 }
+  get maxClimbSpeed(): number { return 0 }
 
   public get x(): number { return this._pos.x };
   public get y(): number { return this._pos.y };
   public get z(): number { return this._pos.z };
+
+  adjustWorldSpeed(speed: Vector3) {
+  }
 
   setSpeed(speed: Vector3): void {
   }
@@ -42,14 +47,18 @@ export class MapBoundaryRigitBody implements IRigitBody, IDigBoundary {
   get inactive(): boolean { return false }
   get kind(): RigitBodyKind { return RigitBodyKind.boundary; }
   get owner(): any { return undefined }
-  get speed(): Vector3 { return new Vector3(0, 0, 0); }
+  get worldSpeed(): Vector3 { return new Vector3(0, 0, 0); }
   get position(): Vector3 { return this._pos; }
   get size(): Vector3 { return this._size; }
+  get gravityFactor(): number { return 0 }
+  get maxClimbSpeed(): number { return 0 }
 
   public get x(): number { return this._pos.x };
   public get y(): number { return this._pos.y };
   public get z(): number { return this._pos.z };
 
+  adjustWorldSpeed(speed: Vector3) {
+  }
   setSpeed(speed: Vector3): void {
   }
   onMove(pos: Vector3): void {

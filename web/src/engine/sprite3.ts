@@ -1,8 +1,8 @@
 import { Scene, Vector3 } from "three";
 import { getSupportedCodeFixes } from "typescript";
 import { IRigitModel } from "./irigitmodel";
-import { IRigitBody, RigitBodyKind, VoxelAnimationCollection, VoxelMeshModel } from "../voxel/voxelmeshmodel";
 import { StaticCubeModel } from "./avatars/staticcubemodel";
+import { IRigitBody, RigitBodyKind } from "../voxel/irigitbody";
 
 export enum TrackingCameraKind {
   Direct,
@@ -54,9 +54,11 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   public get inactive(): boolean { return this._inactive }
   public get kind(): RigitBodyKind { return RigitBodyKind.sprite; }
 
-  public get speed(): Vector3 { return this._worldSpeed };
+  public get worldSpeed(): Vector3 { return this._worldSpeed };
   public get position(): Vector3 { return this._position };
   public get size(): Vector3 { return this.rigit.size };
+  public get gravityFactor(): number { return 1 };
+  public get maxClimbSpeed(): number { return 10 };
 
   public get x(): number { return this._position.x };
   public get y(): number { return this._position.y };
@@ -94,6 +96,9 @@ export class Sprite3 implements IRigitBody, IDigSprite {
     this.rigit.setPosition(pos);
   }
 
+  public adjustWorldSpeed() {
+
+  }
   /**
    * set speed of sprite relative to direction
    */

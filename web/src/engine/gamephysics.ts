@@ -1,11 +1,9 @@
-import { IGameCollisionHandler, IGamePhysics, IGamePhysicsInputController, RigitCollisionHandler } from "./igamephysics";
-import { IVoxelLevel, MapBlock } from "../ui/ivoxelmap";
-import { IRigitBody } from "../voxel/voxelmeshmodel";
 import _ from "lodash";
+import { IGameCollisionHandler, IGamePhysics, IGamePhysicsInputController, RigitCollisionHandler } from "./igamephysics";
+import { IVoxelLevel } from "../ui/ivoxelmap";
 import { BroadphaseCollision } from "./broadphasecollision";
-import { WorldCoord3 } from "../voxel/pos3";
 import { Vector3 } from "three";
-import { MapBlockRigitBody } from "../voxel/mapblockrigitbody";
+import { IRigitBody } from "../voxel/irigitbody";
 
 // manages movement and collisions between world objects
 export class GamePhysics implements IGamePhysics {
@@ -47,24 +45,45 @@ export class GamePhysics implements IGamePhysics {
       return;
     }
 
+    this.handleMapCollisions(dt);
+
+    // now check collisiopn of bodies
+    let pairs = this.broadphase.getPairs(this.bodies);
+    for (let pair in pairs) {
+
+    }
+    //this.input?.onAfterMove();
+  }
+
+  private handleMapCollisions(dt: number) {
     let collisions: { source: IRigitBody, target: IRigitBody }[] = [];
 
     for (let o of this.bodies) {
       if (o.inactive) {
         continue;
       }
-      let s = o.speed.clone();
+
+      let s = o.getWorldSpeed(dt);
       s.multiplyScalar(dt);
       let p = o.position.add(s);
 
+      if (o.gravityFactor > 0) {
+        p = this.detectSurface(o, p, dt);
+      }
+
       // check if intersecs with the map
       let intersectBody: IRigitBody | undefined;
-      if (this.map.intersectBlocks(o, p, (target: IRigitBody) => {
+      let collided = this.map.intersectBlocks(o, p, (target: IRigitBody) => {
         // just check if there is a block
         intersectBody = target;
         return true;
-      })) {
-        o.setSpeed(new Vector3(0, 0, 0));
+      });
+
+      // when we stand on surface, we constantly trying to move down
+      // and going back up. We do not want to notify about collision for such
+      // trivial cases. 
+      if (collided) {
+        o.adjustWorldSpeed(new Vector3(0, 0, 0));
         collisions.push({ source: o, target: intersectBody! });
       } else {
         o.onMove(p);
@@ -75,12 +94,20 @@ export class GamePhysics implements IGamePhysics {
       this._collideHandler?.call(this, collisions);
     }
 
-    // now check collisiopn of bodies
-    let pairs = this.broadphase.getPairs(this.bodies);
-    for (let pair in pairs) {
+  }
 
+  // 
+  private detectSurface(o: IRigitBody, pos: Vector3, dt: number): Vector3 {
+    let dist = this.map.getDistanceY(o, pos);
+    if (dist > 0) {
+      // we can fall
+    } else {
+      if (dist < o.maxClimbSpeed) {
+        pos.setY(pos.y - dist);
+        return pos;
+      }
     }
-    //this.input?.onAfterMove();
+    return pos;
   }
 }
 

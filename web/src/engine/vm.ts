@@ -5,26 +5,24 @@ import { animator } from "./animator";
 import { FrameClock } from "./clock";
 import { VoxelLevel } from "./voxellevel";
 import { GamePhysics } from "./gamephysics";
-import { IDigGame } from "./idiggame";
 import { IGamePhysics } from "./igamephysics";
 import { ICodeLoader, IInputController, IVM, setVM } from "./ivm";
 import { Sprite3 } from "./sprite3";
 import { Ticker } from "./ticker";
-import { IRigitBody, VoxelAnimationCollection } from "../voxel/voxelmeshmodel";
 import { IRigitModel } from "./irigitmodel";
 import { ParticlePool } from "../voxel/particles";
 import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
 import { VoxelLevelFile } from "./voxellevelfile";
 import { LevelEditor } from "../ui/leveleditor";
-import { boxedBasic, boxedGame } from "../python";
+import { boxedBasic } from "../python";
 import { WireProjectConfig, wireGetObject } from "../lib/fetchadapter";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { MessageHandler } from "../basic/coderunner";
 import { CodeLoader } from "../basic/codeloader";
 import { CodeRunner } from "../basic/coderunner";
-import { createSystemModule } from "../basic/lib/systemdef";
 import { registerSystemModules } from "../basic/lib/all";
 import { ILevelEditor } from "../ui/ileveleditor";
+import { IRigitBody } from "../voxel/irigitbody";
 
 type CollisionWaiter = {
   // if resolve is undefined, there is no waiter

@@ -2,13 +2,12 @@ import { Vector3 } from "three";
 import { ICameraLayer } from "./icameralayer";
 import { IGamePhysics } from "./igamephysics";
 import { Sprite3 } from "./sprite3";
-import { IRigitBody, VoxelAnimationCollection } from "../voxel/voxelmeshmodel";
 import { FrameClock } from "./clock";
 import { IRigitModel } from "./irigitmodel";
 import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
 import { FuncDefNode, ModuleNode, OnNode } from "../basic/ast";
-import { JsWriter } from "../basic/jswriter";
 import { ILevelEditor } from "../ui/ileveleditor";
+import { IRigitBody } from "../voxel/irigitbody";
 
 export interface IInputController {
   start();

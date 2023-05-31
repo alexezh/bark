@@ -8,36 +8,6 @@ import { modelCache } from "./voxelmodelcache";
 import { vm } from "../engine/ivm";
 import { Sprite3 } from "../engine/sprite3";
 
-export enum RigitBodyKind {
-    sprite,
-    block,
-    boundary
-}
-
-// interface for physics engine to work with sprites
-// from physics perspective, we deal with speed and impulses
-// interactivity (keyboard) is done at higher level
-// such as when we do wall jump, contact with the wall will 0 the speed
-// similarly, the sprite can zero out the speed when reaching position
-export interface IRigitBody {
-    get id(): number;
-    get kind(): RigitBodyKind;
-    get inactive(): boolean;
-    // owner set by application
-    get owner(): any;
-
-    /**
-     * speed is in pixels per second
-     * sprite compute speed based on direction
-     */
-    get speed(): Vector3;
-    get position(): Vector3;
-    get size(): Vector3;
-
-    setSpeed(speed: Vector3): void;
-    onMove(pos: Vector3): void;
-}
-
 export type VoxelAnimationFrame = {
     idx: number;
     dur: number;

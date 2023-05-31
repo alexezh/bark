@@ -3,6 +3,10 @@ export class FrameClock {
   private _delta: number = 0;
   private _running: boolean = false;
 
+  /**
+   * delta from the last tick
+   * vm calls tick before every update
+   */
   public get delta() { return this._delta; }
   public get lastTick() { return this._lastTick; }
 

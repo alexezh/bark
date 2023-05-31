@@ -66,7 +66,6 @@ export function createSpriteModule(): ModuleNode {
   funcs.push(addSystemFunc(module, 'changeSpeedBy', ['sprite: Sprite', 'x: number', 'y: number', 'z: number'], 'void', false, changeSpeedBy));
   funcs.push(addSystemFunc(module, 'animate', ['sprite: Sprite', 'name: string'], 'void', false, animate));
 
-
   types.push(addSystemType('Animation', Sprite3, ['name: string']));
 
   return module;

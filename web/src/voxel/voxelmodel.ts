@@ -68,11 +68,14 @@ export class VoxelModelFrame {
    */
   private c: number[] = [];
 
+  private heightMap: Int8Array;
+
   public get verticeCount(): number { return this.v.length }
   public get colorCount(): number { return this.c.length }
 
   private constructor(data: VoxelFileFrame) {
     this.data = data;
+    this.heightMap = new Int8Array(data.sx * data.sz);
 
     this.chunk_sx = data.sx;
     this.chunk_sy = data.sy;
@@ -82,6 +85,8 @@ export class VoxelModelFrame {
 
   public static load(data: VoxelFileFrame): VoxelModelFrame {
     let model = new VoxelModelFrame(data);
+
+    // 3d array takes too much space and we do not really need it
     let voxels = new Uint32Array(model.stride_z * model.chunk_sz);
 
     for (let i = 0; i < model.data.data.length; i++) {
@@ -91,6 +96,8 @@ export class VoxelModelFrame {
     }
 
     model.loadModel(voxels);
+    model.loadHeightMap(voxels);
+
     return model;
   }
 
@@ -108,6 +115,21 @@ export class VoxelModelFrame {
   public build(writer: VoxelGeometryWriter) {
     writer.appendVertices(this.v);
     writer.appendColors(this.c);
+  }
+
+  private loadHeightMap(voxels: Uint32Array) {
+    for (var x = 0; x < this.chunk_sx; x++) {
+      for (var z = 0; z < this.chunk_sz; z++) {
+        // do y coord last in reverse order
+        for (var y = this.chunk_sy - 1; y >= 0; y--) {
+          let blockIdx = this.getIdx(x, y, z);
+          if (voxels[blockIdx] !== 0) {
+            this.heightMap[blockIdx] = y;
+            break;
+          }
+        }
+      }
+    }
   }
 
   // build geometry for the model
