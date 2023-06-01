@@ -4,7 +4,7 @@ import { mapEditorState } from "./mapeditorstate";
 import { PxSize } from "../lib/pos";
 import { ILevelEditor as ILevelEditor } from "./ileveleditor";
 import { KeyBinder, MEvent } from "./keybinder";
-import { IVoxelLevel, IVoxelLevelFile, MapBlockCoord } from "./ivoxelmap";
+import { IVoxelLevel, IVoxelLevelFile, MapBlockCoord } from "./ivoxellevel";
 import { BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { ICameraLayer } from "../engine/icameralayer";

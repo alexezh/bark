@@ -5,7 +5,7 @@ import { CodeEditor } from "../actions/codeeditor";
 import { IGameShell as IGameShell } from "./igameshell";
 import { decorateCommand } from "../lib/termcolors";
 import { CameraLayer } from "./cameralayer";
-import { IVoxelLevel } from "./ivoxelmap";
+import { IVoxelLevel } from "./ivoxellevel";
 
 export class ShellProps {
   public width: number = 0;

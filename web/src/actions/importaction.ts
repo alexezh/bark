@@ -2,7 +2,7 @@ import { Mesh } from "three";
 import { wireSetStrings, WireString } from "../lib/fetchadapter";
 import { bytesToBase64 } from "../lib/base64";
 import { DetailsPaneKind, IAction, ICommandLayer } from "./iaction";
-import { defaultMaterial } from "../ui/ivoxelmap";
+import { defaultMaterial } from "../ui/ivoxellevel";
 import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
 import { Vox } from "../voxel/vox";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";

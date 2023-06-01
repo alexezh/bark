@@ -8,7 +8,7 @@ import { ImportVoxAction } from "./importaction";
 import { Vox } from "../voxel/vox";
 import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
 import { VoxelLevelFile } from "../engine/voxellevelfile";
-import { FileMapBlock } from "../ui/ivoxelmap";
+import { FileMapBlock } from "../ui/ivoxellevel";
 import { FormPane } from "./formpane";
 
 export class CreateProjectAction extends BasicAction {

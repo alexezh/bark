@@ -112,6 +112,10 @@ export class VoxelModelFrame {
     return z * this.stride_z + y * this.chunk_sx + x;
   }
 
+  public getHeight(x: number, z: number) {
+    return this.heightMap[x * this.chunk_sx + x];
+  }
+
   public build(writer: VoxelGeometryWriter) {
     writer.appendVertices(this.v);
     writer.appendColors(this.c);
@@ -124,7 +128,7 @@ export class VoxelModelFrame {
         for (var y = this.chunk_sy - 1; y >= 0; y--) {
           let blockIdx = this.getIdx(x, y, z);
           if (voxels[blockIdx] !== 0) {
-            this.heightMap[blockIdx] = y;
+            this.heightMap[z * this.chunk_sx + x] = y;
             break;
           }
         }

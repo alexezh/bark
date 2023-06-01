@@ -29,7 +29,12 @@ function setPosition(sprite: Sprite3, x: number, y: number, z: number) {
 }
 
 function setSpeed(sprite: Sprite3, x: number, y: number, z: number) {
-  sprite.setSpeed(new Vector3(x, y, z));
+  sprite.setRelativeSpeed(new Vector3(x, y, z));
+}
+
+function changeSpeedBy(sprite: Sprite3, x: number, y: number, z: number) {
+  let speed = sprite.relativeSpeed.clone();
+  sprite.setRelativeSpeed(speed.add(new Vector3(x, y, z)));
 }
 
 function setAngleXZ(sprite: Sprite3, angleXZ: number) {
@@ -39,11 +44,6 @@ function setAngleXZ(sprite: Sprite3, angleXZ: number) {
 
   angleXZ = Math.PI * angleXZ / 180;
   sprite.setDirectionXZ(angleXZ);
-}
-
-function changeSpeedBy(sprite: Sprite3, x: number, y: number, z: number) {
-  let speed = sprite.speed.clone();
-  sprite.setSpeed(speed.add(new Vector3(x, y, z)));
 }
 
 export function createSpriteModule(): ModuleNode {

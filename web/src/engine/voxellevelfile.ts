@@ -1,6 +1,6 @@
 import { Vector3 } from "three";
 import { WireDict, wireGetDict, wireGetObject, wireSetDictBackground, wireSetObject, wireSetObjectBackground } from "../lib/fetchadapter";
-import { FileMapBlock, IVoxelLevelFile, MapBlockCoord, WireCamera, WireLevelInfo } from "../ui/ivoxelmap";
+import { FileMapBlock, IVoxelLevelFile, MapBlockCoord, WireCamera, WireLevelInfo } from "../ui/ivoxellevel";
 import { BlockPos3, BlockSize3, WorldSize3 } from "../voxel/pos3";
 
 export class VoxelLevelFile implements IVoxelLevelFile {

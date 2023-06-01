@@ -51,14 +51,14 @@ export class Sprite3 implements IRigitBody, IDigSprite {
 
   public get id(): number { return this._id; }
   public get name(): string { return this._name; }
-  public get inactive(): boolean { return this._inactive }
   public get kind(): RigitBodyKind { return RigitBodyKind.sprite; }
 
+  get relativeSpeed(): Vector3 { return this._speed; }
   public get worldSpeed(): Vector3 { return this._worldSpeed };
   public get position(): Vector3 { return this._position };
   public get size(): Vector3 { return this.rigit.size };
   public get gravityFactor(): number { return 1 };
-  public get maxClimbSpeed(): number { return 10 };
+  public get maxClimbSpeed(): number { return 20 };
 
   public get x(): number { return this._position.x };
   public get y(): number { return this._position.y };
@@ -96,16 +96,16 @@ export class Sprite3 implements IRigitBody, IDigSprite {
     this.rigit.setPosition(pos);
   }
 
-  public adjustWorldSpeed() {
+  public adjustWorldSpeed(speed: Vector3) {
 
   }
+
   /**
    * set speed of sprite relative to direction
    */
-  public setSpeed(speed: Vector3) {
+  public setRelativeSpeed(speed: Vector3) {
     this._speed = speed;
     this.computeWorldSpeed();
-    this._inactive = speed.x === 0 && speed.y === 0 && speed.z === 0;
     if (this._trackingCamera) {
       this._trackingCamera.onTargetSpeed(speed);
     }

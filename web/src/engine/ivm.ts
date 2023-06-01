@@ -4,7 +4,7 @@ import { IGamePhysics } from "./igamephysics";
 import { Sprite3 } from "./sprite3";
 import { FrameClock } from "./clock";
 import { IRigitModel } from "./irigitmodel";
-import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
+import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxellevel";
 import { FuncDefNode, ModuleNode, OnNode } from "../basic/ast";
 import { ILevelEditor } from "../ui/ileveleditor";
 import { IRigitBody } from "../voxel/irigitbody";

@@ -1,5 +1,5 @@
 import { Vector3 } from "three";
-import { MapBlock, MapBlockCoord } from "../ui/ivoxelmap";
+import { MapBlock, MapBlockCoord } from "../ui/ivoxellevel";
 import { WorldCoord3 } from "./pos3";
 import { IRigitBody, RigitBodyKind } from "./irigitbody";
 
@@ -13,9 +13,11 @@ export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   }
 
   get id(): number { return 0; }
+  get name(): string { return '' }
   get inactive(): boolean { return false }
   get kind(): RigitBodyKind { return RigitBodyKind.block; }
   get owner(): any { return undefined }
+  get relativeSpeed(): Vector3 { return new Vector3(0, 0, 0); }
   get worldSpeed(): Vector3 { return new Vector3(0, 0, 0); }
   get position(): Vector3 { return this._pos; }
   get size(): Vector3 { return this.mapBlock!.model!.size; }
@@ -44,9 +46,11 @@ export class MapBoundaryRigitBody implements IRigitBody, IDigBoundary {
     this._size = size;
   }
   get id(): number { return 0; }
+  get name(): string { return '' }
   get inactive(): boolean { return false }
   get kind(): RigitBodyKind { return RigitBodyKind.boundary; }
   get owner(): any { return undefined }
+  get relativeSpeed(): Vector3 { return new Vector3(0, 0, 0); }
   get worldSpeed(): Vector3 { return new Vector3(0, 0, 0); }
   get position(): Vector3 { return this._pos; }
   get size(): Vector3 { return this._size; }

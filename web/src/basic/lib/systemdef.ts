@@ -1,7 +1,6 @@
 import { StaticCubeModel } from "../../engine/avatars/staticcubemodel";
 import { vm } from "../../engine/ivm";
 import { Sprite3 } from "../../engine/sprite3";
-import { RigitBodyKind } from "../../voxel/voxelmeshmodel";
 import { AstNodeKind, FuncDefNode, ModuleNode, TypeDefNode } from "../ast";
 import { addSystemFunc, addSystemType } from "../systemfunc";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../../voxel/mapblockrigitbody";
@@ -9,6 +8,7 @@ import { Vector3 } from "three";
 import { MoveController2D, IMoveEvent2D, MoveEvent2D } from "../../engine/movecontroller2d";
 import { Mammal4Model } from "../../engine/avatars/mammal4";
 import { ThirdPersonController } from "../../engine/thirdpersoncontroller";
+import { RigitBodyKind } from "../../voxel/irigitbody";
 
 
 function createCubeSprite(name: string, uri: string): Promise<IDigSprite> {

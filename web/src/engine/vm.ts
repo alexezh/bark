@@ -11,10 +11,10 @@ import { Sprite3 } from "./sprite3";
 import { Ticker } from "./ticker";
 import { IRigitModel } from "./irigitmodel";
 import { ParticlePool } from "../voxel/particles";
-import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxelmap";
+import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxellevel";
 import { VoxelLevelFile } from "./voxellevelfile";
 import { LevelEditor } from "../ui/leveleditor";
-import { boxedBasic } from "../python";
+import { boxedBasic, boxedBasic2 } from "../python";
 import { WireProjectConfig, wireGetObject } from "../lib/fetchadapter";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { MessageHandler } from "../basic/coderunner";
@@ -136,7 +136,7 @@ export class VM implements IVM {
     this.resetVm();
 
     registerSystemModules(this._loader);
-    this._loader.addUserModule('default', boxedBasic())
+    this._loader.addUserModule('default', boxedBasic2())
     await this._runner.load(this._loader);
 
     // now we are loaded; time to start

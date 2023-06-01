@@ -3,7 +3,7 @@ import { modelCache } from "../voxel/voxelmodelcache";
 import { MeshLevelLayer } from "./maplayer";
 import { VoxelModel } from "../voxel/voxelmodel";
 import { BlockPos3, BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
-import { defaultMaterial, FileMapBlock, IVoxelLevel, IVoxelLevelFile, MapBlock, MapBlockCoord } from "../ui/ivoxelmap";
+import { defaultMaterial, FileMapBlock, IVoxelLevel, IVoxelLevelFile, MapBlock, MapBlockCoord } from "../ui/ivoxellevel";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../voxel/mapblockrigitbody";
 import { IRigitBody } from "../voxel/irigitbody";
 
@@ -240,6 +240,18 @@ export class VoxelLevel implements IVoxelLevel {
     }
 
     public getDistanceY(ro: IRigitBody, pos: Vector3): number {
+        let layerIdx = (pos.y / this._blockSize) | 0;
+        if (layerIdx < 0 || layerIdx >= this.layers.length) {
+            return 0;
+        }
+        for (let i = layerIdx; i >= 0; i--) {
+            let layer = this.layers[layerIdx];
+            let distance = layer.getDistanceY(pos);
+            if (distance !== 0) {
+                return pos.y - layer.layerY + distance;
+            }
+        }
+
         return 0;
     }
 

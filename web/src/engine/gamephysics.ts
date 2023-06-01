@@ -1,6 +1,6 @@
 import _ from "lodash";
 import { IGameCollisionHandler, IGamePhysics, IGamePhysicsInputController, RigitCollisionHandler } from "./igamephysics";
-import { IVoxelLevel } from "../ui/ivoxelmap";
+import { IVoxelLevel } from "../ui/ivoxellevel";
 import { BroadphaseCollision } from "./broadphasecollision";
 import { Vector3 } from "three";
 import { IRigitBody } from "../voxel/irigitbody";
@@ -10,6 +10,7 @@ export class GamePhysics implements IGamePhysics {
   private map: IVoxelLevel;
   private bodies: IRigitBody[] = [];
   private broadphase: BroadphaseCollision = new BroadphaseCollision();
+  private gravity: number = 10;
   private collisionHandler?: IGameCollisionHandler;
   private input?: IGamePhysicsInputController;
   private _collideHandler: RigitCollisionHandler | undefined;
@@ -59,11 +60,12 @@ export class GamePhysics implements IGamePhysics {
     let collisions: { source: IRigitBody, target: IRigitBody }[] = [];
 
     for (let o of this.bodies) {
-      if (o.inactive) {
+      let s = o.worldSpeed;
+
+      if (o.gravityFactor === 0 && s.x === 0 && s.y === 0 && s.z === 0) {
         continue;
       }
 
-      let s = o.getWorldSpeed(dt);
       s.multiplyScalar(dt);
       let p = o.position.add(s);
 
@@ -96,14 +98,19 @@ export class GamePhysics implements IGamePhysics {
 
   }
 
-  // 
+  /**
+   * adjusts position to surface
+   */
   private detectSurface(o: IRigitBody, pos: Vector3, dt: number): Vector3 {
     let dist = this.map.getDistanceY(o, pos);
-    if (dist > 0) {
-      // we can fall
-    } else {
+    if (dist < 0) {
+      pos.setY(pos.y - dt * this.gravity);
+    } else if (dist > 0) {
+      if (o.name === 'monky') {
+        console.log('climb:' + dist);
+      }
       if (dist < o.maxClimbSpeed) {
-        pos.setY(pos.y - dist);
+        pos.setY(pos.y + dist);
         return pos;
       }
     }

@@ -1,9 +1,9 @@
 import { BufferGeometry, Group, Mesh, MeshPhongMaterial, Scene, Vector3 } from "three";
 import { GridSize } from "../lib/pos";
-import { MapBlock, MapBlockCoord } from "../ui/ivoxelmap";
+import { MapBlock, MapBlockCoord } from "../ui/ivoxellevel";
 import { BlockPos3 } from "../voxel/pos3";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
-import { VoxelModel } from "../voxel/voxelmodel";
+import { VoxelModel, VoxelModelFrame } from "../voxel/voxelmodel";
 import { slice } from "lodash";
 
 /**
@@ -132,6 +132,26 @@ export class MeshLevelLayer {
         sz: 1
       }
     };
+  }
+
+  public getDistanceY(point: Vector3): number {
+    let x = (point.x / this.blockSize) | 0;
+    let z = (point.z / this.blockSize) | 0;
+
+    let pos = z * this.size.w + x;
+    let block = this.blocks[pos];
+    if (block === undefined) {
+      return 0;
+    }
+
+    let frame: VoxelModelFrame = block.model.frames[block.frame];
+    if (!frame) {
+      return 0;
+    }
+
+    let height = frame.getHeight(point.x - x * this.blockSize, point.z - z * this.blockSize);
+
+    return height;
   }
 
   public getBlock(xMap: number, zMap: number): MapBlockCoord | undefined {

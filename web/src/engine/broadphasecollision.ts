@@ -1,4 +1,4 @@
-import { IRigitBody } from "../voxel/voxelmeshmodel";
+import { IRigitBody } from "../voxel/irigitbody";
 
 export type BroadphasePair = {
   first: IRigitBody;

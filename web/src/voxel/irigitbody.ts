@@ -6,6 +6,11 @@ export enum RigitBodyKind {
   boundary
 }
 
+export enum MassKind {
+  stationary,
+  mavable,
+}
+
 // interface for physics engine to work with sprites
 // from physics perspective, we deal with speed and impulses
 // interactivity (keyboard) is done at higher level
@@ -13,8 +18,8 @@ export enum RigitBodyKind {
 // similarly, the sprite can zero out the speed when reaching position
 export interface IRigitBody {
   get id(): number;
+  get name(): string;
   get kind(): RigitBodyKind;
-  get inactive(): boolean;
   // owner set by application
   get owner(): any;
 
@@ -38,6 +43,11 @@ export interface IRigitBody {
   get worldSpeed(): Vector3;
 
   /**
+   * speed relative to current direction
+   */
+  get relativeSpeed(): Vector3;
+
+  /**
    * set an updated speed (adjusted to possible collision and gravity)
    */
   adjustWorldSpeed(speed: Vector3): void;
@@ -48,5 +58,8 @@ export interface IRigitBody {
   get position(): Vector3;
   get size(): Vector3;
 
+  /**
+   * update position from physics engine based on slope, gravity and collision
+   */
   onMove(pos: Vector3): void;
 }

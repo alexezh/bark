@@ -64,7 +64,7 @@ export function boxedGame() {
       } else {
         char.rigit.animate('stand');
       }
-      char.setSpeed(new Vector3(ev.speedX, 0, ev.speedZ));
+      char.setRelativeSpeed(new Vector3(ev.speedX, 0, ev.speedZ));
     });
   }
 
@@ -76,13 +76,13 @@ export function boxedGame() {
       let bomb = await createBomb(new Vector3(randInt(50, 150), 50, randInt(50, 150)));
       let speed = 10;
 
-      bomb.speed.add(new Vector3(0, -speed, 0));
+      bomb.setRelativeSpeed(bomb.relativeSpeed.clone().add(new Vector3(0, -speed, 0)));
 
       while (true) {
         let collision = await vm.waitCollide(bomb, 0.1);
         if (collision === undefined) {
           speed = Math.min(speed * 1.1, 100);
-          bomb.speed.set(0, -speed, 0);
+          bomb.setRelativeSpeed(new Vector3(0, -speed, 0));
         } else {
           if (collision instanceof Sprite3) {
             vm.sendMesssage('KilledMonkey', null);
@@ -162,5 +162,41 @@ export function boxedBasic(): string {
         end
       end
     end 
+      `;
+}
+
+export function boxedBasic2(): string {
+  return `
+    on load() begin
+      System.loadLevel 'default'
+
+      System.setMoveController2D keySpeedX:=10 keySpeedZ:=10 thumbSpeedX:=10 thumbSpeedZ:=10 timeoutSeconds:=0.1
+    end
+
+    on start() begin
+      var monky:= System.createMammal4Sprite 'monky' 'vox/monky.vox'
+      Sprite.setPosition monky 120 20 120
+
+      var ma:= Sprite.addAnimation monky 'move'
+      Sprite.addFrame ma idx:= 1 dur:=0.1 
+      Sprite.addFrame ma idx:= 2 dur:=0.1
+  
+      ma:= Sprite.addAnimation monky 'stand'
+      Sprite.addFrame ma idx:= 0 dur:=0
+
+      System.setThirdPersonCamera monky x:=0 y:=40 z:=60
+
+      forever do
+        var ev := System.readInput();
+  
+        if ev.speedX != 0 or ev.speedZ != 0 then
+          Sprite.animate monky 'move'
+        else
+          Sprite.animate monky 'stand'
+        end
+        Sprite.setSpeed monky ev.speedX 0 ev.speedZ
+        Sprite.setAngleXZ monky ev.angleXZ
+      end
+    end
       `;
 }

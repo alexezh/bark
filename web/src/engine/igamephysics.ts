@@ -1,7 +1,7 @@
+import { IRigitBody } from "../voxel/irigitbody";
 import { IAnimatable } from "./animator";
 import { Sprite3 } from "./sprite3";
 import { Vector3 } from "three";
-import { IRigitBody } from "../voxel/voxelmeshmodel";
 
 export type CreateMoveAnimation = (sprite: Sprite3, pos: Vector3) => IAnimatable;
 
