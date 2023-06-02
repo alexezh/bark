@@ -159,7 +159,7 @@ export class VoxelLevel implements IVoxelLevel {
             console.log(`unknown y layer ${point.y}`);
             return undefined;
         }
-        return this.layers[layerIdx].findBlock(point);
+        return this.layers[layerIdx].getBlockByCoord(point);
     }
 
     /**
@@ -227,9 +227,14 @@ export class VoxelLevel implements IVoxelLevel {
                 for (let x = xStart; x < xEnd; x++) {
                     let block = layer.getBlock(x, z);
                     if (block !== undefined) {
-                        let b = new MapBlockRigitBody(block, { x: x * this._blockSize, y: y * this._blockSize, z: z * this._blockSize });
-                        if (func(b)) {
-                            return true;
+                        let height = block.model.frames[block.frame].getHeight(pos.x, pos.z);
+
+                        // if we are below height
+                        if (height > 0 && pos.y < y * this._blockSize + height) {
+                            let b = new MapBlockRigitBody(block, { x: x * this._blockSize, y: y * this._blockSize, z: z * this._blockSize });
+                            if (func(b)) {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -245,14 +250,15 @@ export class VoxelLevel implements IVoxelLevel {
             return 0;
         }
         for (let i = layerIdx; i >= 0; i--) {
-            let layer = this.layers[layerIdx];
-            let distance = layer.getDistanceY(pos);
-            if (distance !== 0) {
-                return pos.y - layer.layerY + distance;
+            let layer = this.layers[i];
+            let height = layer.getHeight(pos);
+            if (height !== 0) {
+                console.log(`height: ${height} ${pos.y}`)
+                return height - (pos.y - (layer.layerY * this._blockSize));
             }
         }
 
-        return 0;
+        return -100000000;
     }
 
     private onFileChangeBlock(blocks: FileMapBlock[]) {

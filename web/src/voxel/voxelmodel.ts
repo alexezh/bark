@@ -33,17 +33,20 @@ export class VoxelModel {
   public readonly voxUri: string;
   public readonly thumbnailUri: string;
   public readonly id: number;
+  public readonly scale: number;
   public readonly frames: VoxelModelFrame[] = [];
 
-  public constructor(id: number, voxUri: string, thumbnailUri: string) {
+  public constructor(id: number, voxUri: string, thumbnailUri: string, scale: number) {
     this.voxUri = voxUri;
     this.thumbnailUri = thumbnailUri;
     this.id = id;
+    this.scale = scale;
   }
 
+  // return model size in pixels (scaled)
   public get size(): Vector3 {
     let frame = this.frames[0];
-    return new Vector3(frame.chunk_sx, frame.chunk_sy, frame.chunk_sz);
+    return new Vector3(frame.chunk_sx * this.scale | 0, frame.chunk_sy, frame.chunk_sz);
   }
 }
 
@@ -86,6 +89,8 @@ export class VoxelModelFrame {
   public static load(data: VoxelFileFrame): VoxelModelFrame {
     let model = new VoxelModelFrame(data);
 
+    console.log(`loaded frame: ${model.chunk_sx} ${model.chunk_sy} ${model.chunk_sz}`);
+
     // 3d array takes too much space and we do not really need it
     let voxels = new Uint32Array(model.stride_z * model.chunk_sz);
 
@@ -113,7 +118,7 @@ export class VoxelModelFrame {
   }
 
   public getHeight(x: number, z: number) {
-    return this.heightMap[x * this.chunk_sx + x];
+    return this.heightMap[z * this.chunk_sx + x];
   }
 
   public build(writer: VoxelGeometryWriter) {
@@ -164,14 +169,14 @@ export class VoxelModelFrame {
           var left = 0, right = 0, above = 0, front = 0, back = 0, below = 0;
           if (z > 0) {
             if (voxels[blockIdx - this.stride_z] != 0) {
-              below = 1;
+              back = 1;
               voxels[blockIdx] = voxels[blockIdx] | 0x10;
             }
           }
 
           if (z < this.chunk_sz - 1) {
             if (voxels[blockIdx + this.stride_z] != 0) {
-              above = 1;
+              front = 1;
               voxels[blockIdx] = voxels[blockIdx] | 0x1;
             }
           }
@@ -192,14 +197,14 @@ export class VoxelModelFrame {
 
           if (y > 0) {
             if (voxels[blockIdx - this.chunk_sx] != 0) {
-              back = 1;
+              below = 1;
               voxels[blockIdx] = voxels[blockIdx] | 0x20; // bit 6 
             }
           }
 
           if (y < this.chunk_sy - 1) {
             if (voxels[blockIdx + this.chunk_sx] != 0) {
-              front = 1;
+              above = 1;
               voxels[blockIdx] = voxels[blockIdx] | 0x2;
             }
           }
@@ -211,7 +216,7 @@ export class VoxelModelFrame {
           // Draw blocks
 
           // Only draw below if we are an object
-          if (!back) {
+          if (!below) {
             // Get below (bit 6)
             if ((voxels[blockIdx] & 0x20) == 0) {
               var maxX = 0;
@@ -245,12 +250,12 @@ export class VoxelModelFrame {
                 }
               }
 
-              this.appendVertice(x + maxX, y, z + maxZ);
               this.appendVertice(x, y, z + maxZ);
+              this.appendVertice(x + maxX, y, z + maxZ);
               this.appendVertice(x, y, z);
 
-              this.appendVertice(x + maxX, y, z + maxZ);
               this.appendVertice(x, y, z);
+              this.appendVertice(x + maxX, y, z + maxZ);
               this.appendVertice(x + maxX, y, z);
 
               r = ((voxels[blockIdx] >> 24) & 0xFF) / 255;
@@ -260,7 +265,7 @@ export class VoxelModelFrame {
             }
           }
 
-          if (!front) {
+          if (!above) {
             // Get above (0010)
             if ((voxels[blockIdx] & 0x2) == 0) {
               var maxX = 0;
@@ -309,7 +314,7 @@ export class VoxelModelFrame {
               this.appendColor(r, g, b);
             }
           }
-          if (!below) {
+          if (!back) {
             // back  10000
             // this.shadow_blocks.push([x, y, z]);
             if ((voxels[blockIdx] & 0x10) == 0) {
@@ -344,12 +349,12 @@ export class VoxelModelFrame {
                 }
               }
 
-              this.appendVertice(x + maxX, y, z);
               this.appendVertice(x + maxX, y + maxY, z);
+              this.appendVertice(x + maxX, y, z);
               this.appendVertice(x, y, z);
 
-              this.appendVertice(x, y, z);
               this.appendVertice(x + maxX, y + maxY, z);
+              this.appendVertice(x, y, z);
               this.appendVertice(x, y + maxY, z);
 
               r = ((voxels[blockIdx] >> 24) & 0xFF) / 255;
@@ -358,7 +363,7 @@ export class VoxelModelFrame {
               this.appendColor(r, g, b);
             }
           }
-          if (!above) {
+          if (!front) {
             // front 0001
             if ((voxels[blockIdx] & 0x1) == 0) {
               let maxX = 0;
@@ -503,8 +508,6 @@ export class VoxelModelFrame {
         }
       }
     }
-
-    console.log(`Build vox mode: ${this.data.data.length} ${this.v.length}`);
   };
 
   private appendVertice(x: number, y: number, z: number) {

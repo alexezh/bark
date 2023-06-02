@@ -11,12 +11,12 @@ import { ThirdPersonController } from "../../engine/thirdpersoncontroller";
 import { RigitBodyKind } from "../../voxel/irigitbody";
 
 
-function createCubeSprite(name: string, uri: string): Promise<IDigSprite> {
-  return vm.createSprite(name, uri, new StaticCubeModel());
+function createCubeSprite(name: string, uri: string, scale?: number): Promise<IDigSprite> {
+  return vm.createSprite(name, uri, new StaticCubeModel(scale ?? 1.0));
 }
 
-function createMammal4Sprite(name: string, uri: string): Promise<IDigSprite> {
-  return vm.createSprite(name, uri, new Mammal4Model());
+function createMammal4Sprite(name: string, uri: string, scale?: number): Promise<IDigSprite> {
+  return vm.createSprite(name, uri, new Mammal4Model(scale ?? 1.0));
 }
 
 function removeSprite(sprite: IDigSprite) {
@@ -76,8 +76,12 @@ function setMoveController2D(keySpeedX: number,
   }));
 }
 
-function readInput(): Promise<IMoveEvent2D> {
-  return vm.readInput();
+async function readInput(): Promise<IMoveEvent2D> {
+  let v = await vm.readInput();
+  if (v.speedZ !== 0) {
+    console.log(`speed ${v.speedZ}`);
+  }
+  return v;
 }
 
 function setThirdPersonCamera(sprite: Sprite3, x: number, y: number, z: number): void {
@@ -106,8 +110,8 @@ export function createSystemModule(): ModuleNode {
     'thumbSpeedX:number',
     'thumbSpeedZ:number',
     'timeoutSeconds:number'], 'void', false, setMoveController2D));
-  funcs.push(addSystemFunc(module, 'createCubeSprite', ['name:string', 'url:string'], 'Sprite', true, createCubeSprite));
-  funcs.push(addSystemFunc(module, 'createMammal4Sprite', ['name:string', 'url:string'], 'Sprite', true, createMammal4Sprite));
+  funcs.push(addSystemFunc(module, 'createCubeSprite', ['name:string', 'url:string', 'scale:number'], 'Sprite', true, createCubeSprite));
+  funcs.push(addSystemFunc(module, 'createMammal4Sprite', ['name:string', 'url:string', 'scale:number'], 'Sprite', true, createMammal4Sprite));
   funcs.push(addSystemFunc(module, 'removeSprite', ['sprite:Sprite'], 'void', false, removeSprite));
   funcs.push(addSystemFunc(module, 'loadLevel', ['name:string'], 'void', true, loadLevel));
   funcs.push(addSystemFunc(module, 'deleteBlock', ['block:Block'], 'void', false, deleteBlock));
@@ -145,3 +149,19 @@ export function createPhysicsModule(): ModuleNode {
   return module;
 }
 
+export function createThirdPersonControllerModule(): ModuleNode {
+  let funcs: FuncDefNode[] = [];
+  let types: TypeDefNode[] = [];
+
+  let module: ModuleNode = {
+    kind: AstNodeKind.module,
+    name: 'ThirdPersonController',
+    types: types,
+    procs: funcs,
+    on: []
+  }
+
+  funcs.push(addSystemFunc(module, 'readInput', [], 'void', true, setGravity));
+
+  return module;
+}

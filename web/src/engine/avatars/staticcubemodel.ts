@@ -1,16 +1,33 @@
 import { Scene, Vector, Vector3 } from "three";
 import { VoxelAnimationCollection, VoxelMeshModel } from "../../voxel/voxelmeshmodel";
 import { IRigitModel } from "../irigitmodel";
+import { RigitAABB } from "../../voxel/irigitbody";
+import { VoxelModel } from "../../voxel/voxelmodel";
+import { modelCache } from "../../voxel/voxelmodelcache";
 
 export class StaticCubeModel implements IRigitModel {
   //private meshModels: { [key: string]: VoxelMeshModel } = {};
+  private voxelModel!: VoxelModel;
   private meshModel!: VoxelMeshModel;
   private _size!: Vector3;
   private _position!: Vector3;
+  private _scale: number;
 
   get size(): Vector3 { return this._size; }
-  async load(uri: string): Promise<void> {
-    let m = await VoxelMeshModel.create(uri);
+
+  public constructor(scale: number) {
+    this._scale = scale;
+  }
+
+  public async load(uri: string): Promise<void> {
+    let vmm = modelCache.getVoxelModel(uri);
+    if (vmm === undefined) {
+      return;
+    }
+
+    this.voxelModel = vmm;
+
+    let m = VoxelMeshModel.create(this.voxelModel);
     this.meshModel = m;
     this._size = m.size;
     // animations: VoxelAnimationCollection | undefined
@@ -36,6 +53,16 @@ export class StaticCubeModel implements IRigitModel {
 
   public onRenderFrame(tick: number) {
     this.meshModel.onRender(tick);
+  }
+
+  public aabb(pos: Vector3 | undefined): RigitAABB {
+    pos = pos ?? this._position;
+
+    return {
+      xStart: pos.x, xEnd: pos.x + this._size.x,
+      yStart: pos.y, yEnd: pos.y + this._size.y,
+      zStart: pos.z, zEnd: pos.z + this._size.z
+    }
   }
 
   setPosition(pos: Vector3): void {

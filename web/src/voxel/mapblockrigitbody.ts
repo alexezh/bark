@@ -1,7 +1,7 @@
 import { Vector3 } from "three";
 import { MapBlock, MapBlockCoord } from "../ui/ivoxellevel";
 import { WorldCoord3 } from "./pos3";
-import { IRigitBody, RigitBodyKind } from "./irigitbody";
+import { IRigitBody, RigitAABB, RigitBodyKind } from "./irigitbody";
 
 export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   public readonly mapBlock: MapBlockCoord;
@@ -28,9 +28,11 @@ export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   public get y(): number { return this._pos.y };
   public get z(): number { return this._pos.z };
 
+  aabb(pos: Vector3 | undefined): RigitAABB {
+    return { xStart: 0, xEnd: 0, yStart: 0, yEnd: 0, zStart: 0, zEnd: 0 }
+  }
   adjustWorldSpeed(speed: Vector3) {
   }
-
   setSpeed(speed: Vector3): void {
   }
   onMove(pos: Vector3): void {
@@ -61,6 +63,9 @@ export class MapBoundaryRigitBody implements IRigitBody, IDigBoundary {
   public get y(): number { return this._pos.y };
   public get z(): number { return this._pos.z };
 
+  aabb(pos: Vector3 | undefined): RigitAABB {
+    return { xStart: 0, xEnd: 0, yStart: 0, yEnd: 0, zStart: 0, zEnd: 0 }
+  }
   adjustWorldSpeed(speed: Vector3) {
   }
   setSpeed(speed: Vector3): void {

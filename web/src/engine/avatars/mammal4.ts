@@ -2,27 +2,70 @@ import { Group, Matrix4, Quaternion, Scene, Vector3 } from "three";
 import { IRigitModel } from "../irigitmodel";
 import { Sprite3 } from "../sprite3";
 import { VoxelAnimationCollection, VoxelMeshModel } from "../../voxel/voxelmeshmodel";
+import { RigitAABB } from "../../voxel/irigitbody";
+import { VoxelModel } from "../../voxel/voxelmodel";
+import { modelCache } from "../../voxel/voxelmodelcache";
 
 // handles animal with 4 legs, tail and head
 export class Mammal4Model implements IRigitModel {
+  private voxelModel!: VoxelModel;
   private meshModels: { [key: string]: VoxelMeshModel } = {};
   private _size!: Vector3;
   private _angleXZ: number = 0;
 
-  get size(): Vector3 { return this._size; }
-  async load(uri: string): Promise<void> {
-    let main = await VoxelMeshModel.create(uri);
-    this.meshModels.main = main;
-    this._size = main.size;
-    this.meshModels.main.setPosition(new Vector3(-this._size.x / 2, -this._size.y / 2, 0));
+  // position is offset by the base
+  private _position!: Vector3;
+  private _baseX: number = 0;
+  private _baseZ: number = 0;
+  private _scale: number = 1;
+
+  public get size(): Vector3 { return this._size; }
+
+  public constructor(scale: number) {
+    this._scale = scale;
   }
 
-  addAnimation(name: string) {
+  public async load(uri: string): Promise<void> {
+    let vmm = await modelCache.getVoxelModel(uri);
+    if (vmm === undefined) {
+      console.log('cannot file model ' + uri);
+      return;
+    }
+    this.voxelModel = vmm;
+
+    this._size = this.voxelModel.size;
+    this._baseZ = this._size.z / 2;
+    this._baseX = this._size.x / 2;
+    this._position = new Vector3(-this._baseX, 0, -this._baseZ);
+
+    this.meshModels.main = VoxelMeshModel.create(this.voxelModel, this._scale);
+    this.meshModels.main.setBasePoint(new Vector3(-this._baseX, 0, -this._baseZ));
+    this.meshModels.main.setPosition(this._position);
+  }
+
+  public addAnimation(name: string) {
     this.meshModels.main.animations[name] = [];
   }
 
-  addFrame(name: string, idx: number, duration: number) {
+  public addFrame(name: string, idx: number, duration: number) {
     this.meshModels.main.animations[name].push({ idx: idx, dur: duration });
+  }
+
+  public aabb(pos: Vector3 | undefined): RigitAABB {
+    if (pos) {
+      return {
+        xStart: pos.x - this._baseX, xEnd: pos.x + this._size.x - this._baseX,
+        yStart: pos.y, yEnd: pos.y + this._size.y,
+        zStart: pos.z - this._baseZ, zEnd: pos.z + this._size.z - this._baseZ
+      }
+    } else {
+      pos = this._position;
+      return {
+        xStart: pos.x, xEnd: pos.x + this._size.x,
+        yStart: pos.y, yEnd: pos.y + this._size.y,
+        zStart: pos.z, zEnd: pos.z + this._size.z
+      }
+    }
   }
 
   public animate(id: string) {
@@ -55,11 +98,12 @@ export class Mammal4Model implements IRigitModel {
   }
 
   public setPosition(pos: Vector3): void {
+    // shift by base position
+    this._position.set(pos.x - this._baseX, pos.y, pos.z - this._baseZ);
     for (let key of Object.keys(this.meshModels)) {
       let model = this.meshModels[key];
-      model.setPosition(pos);
+      model.setPosition(this._position);
     }
-    //this._group.position.copy(pos);
   }
 
   public setSpeed(speed: Vector3): void {

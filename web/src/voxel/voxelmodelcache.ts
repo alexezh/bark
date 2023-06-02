@@ -123,7 +123,7 @@ export class VoxelModelCache {
       throw Error('cannpt load model');
     }
 
-    let model = new VoxelModel(wireModel.id, wireModel.voxUrl, wireModel.thumbnailUrl);
+    let model = new VoxelModel(wireModel.id, wireModel.voxUrl, wireModel.thumbnailUrl, 1.0);
     for (let f of voxelFile.frames) {
       let mf = VoxelModelFrame.load(f);
       model.frames.push(mf);

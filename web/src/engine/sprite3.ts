@@ -2,7 +2,7 @@ import { Scene, Vector3 } from "three";
 import { getSupportedCodeFixes } from "typescript";
 import { IRigitModel } from "./irigitmodel";
 import { StaticCubeModel } from "./avatars/staticcubemodel";
-import { IRigitBody, RigitBodyKind } from "../voxel/irigitbody";
+import { IRigitBody, RigitAABB, RigitBodyKind } from "../voxel/irigitbody";
 
 export enum TrackingCameraKind {
   Direct,
@@ -55,7 +55,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
 
   get relativeSpeed(): Vector3 { return this._speed; }
   public get worldSpeed(): Vector3 { return this._worldSpeed };
-  public get position(): Vector3 { return this._position };
+  public get position(): Vector3 { return this._position.clone() };
   public get size(): Vector3 { return this.rigit.size };
   public get gravityFactor(): number { return 1 };
   public get maxClimbSpeed(): number { return 20 };
@@ -67,7 +67,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   public constructor(name: string, rigit?: IRigitModel) {
     this._id = Sprite3._nextId++;
     this._name = name;
-    this.rigit = rigit ?? new StaticCubeModel();
+    this.rigit = rigit ?? new StaticCubeModel(1.0);
     this._position = new Vector3();
   }
 
@@ -104,6 +104,12 @@ export class Sprite3 implements IRigitBody, IDigSprite {
    * set speed of sprite relative to direction
    */
   public setRelativeSpeed(speed: Vector3) {
+    if (!this._speed.equals(speed)) {
+      if (this.name === 'monky') {
+        console.log(`setSpeed: ${speed.x} ${speed.z}`);
+      }
+    }
+
     this._speed = speed;
     this.computeWorldSpeed();
     if (this._trackingCamera) {
@@ -130,6 +136,10 @@ export class Sprite3 implements IRigitBody, IDigSprite {
 
   private computeWorldSpeed() {
     this._worldSpeed = this._speed.clone().applyAxisAngle(new Vector3(0, 1, 0), this._angleXZ);
+  }
+
+  public aabb(pos: Vector3 | undefined): RigitAABB {
+    return this.rigit.aabb(pos);
   }
 
   public setTrackingCamera(camera: ITrackingCamera | undefined) {

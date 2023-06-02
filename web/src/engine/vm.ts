@@ -312,6 +312,7 @@ export class VM implements IVM {
       throw new NotRunningError();
     }
   }
+
   private loadScene() {
     if (this._camera === undefined) {
       return;

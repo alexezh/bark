@@ -11,6 +11,15 @@ export enum MassKind {
   mavable,
 }
 
+export type RigitAABB = {
+  xStart: number;
+  xEnd: number;
+  yStart: number;
+  yEnd: number;
+  zStart: number;
+  zEnd: number;
+}
+
 // interface for physics engine to work with sprites
 // from physics perspective, we deal with speed and impulses
 // interactivity (keyboard) is done at higher level
@@ -46,6 +55,11 @@ export interface IRigitBody {
    * speed relative to current direction
    */
   get relativeSpeed(): Vector3;
+
+  /**
+   * get aabb of the body
+   */
+  aabb(pos: Vector3 | undefined): RigitAABB;
 
   /**
    * set an updated speed (adjusted to possible collision and gravity)

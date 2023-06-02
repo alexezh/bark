@@ -10,13 +10,13 @@ import { StaticCubeModel } from "./engine/avatars/staticcubemodel";
 
 
 async function createBomb(pos: Vector3): Promise<Sprite3> {
-  let sprite = await vm.createSprite('bomb', 'vox/bomb.vox', new StaticCubeModel());
+  let sprite = await vm.createSprite('bomb', 'vox/bomb.vox', new StaticCubeModel(1.0));
   sprite.setPosition(pos);
   return sprite;
 }
 
 async function createMonky(): Promise<Sprite3> {
-  let m = await vm.createSprite('monky', 'vox/monky.vox', new Mammal4Model());
+  let m = await vm.createSprite('monky', 'vox/monky.vox', new Mammal4Model(1.0));
   m.setPosition(new Vector3(120, 20, 120));
 
   m.rigit.addAnimation('move');
@@ -109,7 +109,7 @@ export function boxedBasic(): string {
     end
 
     on start() begin
-      var monky:= System.createMammal4Sprite 'monky' 'vox/monky.vox'
+      var monky:= System.createMammal4Sprite 'monky' 'vox/monky.vox' scale:=0.6
       Sprite.setPosition monky 120 20 120
 
       var ma:= Sprite.addAnimation monky 'move'
@@ -174,7 +174,7 @@ export function boxedBasic2(): string {
     end
 
     on start() begin
-      var monky:= System.createMammal4Sprite 'monky' 'vox/monky.vox'
+      var monky:= System.createMammal4Sprite 'monky' 'vox/monky.vox' scale:=0.5
       Sprite.setPosition monky 120 20 120
 
       var ma:= Sprite.addAnimation monky 'move'
@@ -184,7 +184,7 @@ export function boxedBasic2(): string {
       ma:= Sprite.addAnimation monky 'stand'
       Sprite.addFrame ma idx:= 0 dur:=0
 
-      System.setThirdPersonCamera monky x:=0 y:=40 z:=60
+      System.setThirdPersonCamera monky x:=0 y:=50 z:=100
 
       forever do
         var ev := System.readInput();

@@ -1,7 +1,7 @@
 import { BufferGeometry, Group, Mesh, MeshPhongMaterial, Scene, Vector3 } from "three";
 import { GridSize } from "../lib/pos";
 import { MapBlock, MapBlockCoord } from "../ui/ivoxellevel";
-import { BlockPos3 } from "../voxel/pos3";
+import { BlockPos3, WorldCoord3 } from "../voxel/pos3";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
 import { VoxelModel, VoxelModelFrame } from "../voxel/voxelmodel";
 import { slice } from "lodash";
@@ -110,16 +110,42 @@ export class MeshLevelLayer {
     this.dirty = false;
   }
 
-  // the tricky part is boundaries
-  public findBlock(point: Vector3): MapBlockCoord | undefined {
+  public getHeight(point: WorldCoord3): number {
+    let x = (point.x / this.blockSize) | 0;
+    let z = (point.z / this.blockSize) | 0;
+
+    let idx = z * this.size.w + x;
+    let block = this.blocks[idx];
+    if (block === undefined) {
+      return 0;
+    }
+
+    let frame: VoxelModelFrame = block.model.frames[block.frame];
+    if (!frame) {
+      return 0;
+    }
+
+    let height = frame.getHeight((point.x | 0) - x * this.blockSize, (point.z | 0) - z * this.blockSize);
+
+    return height;
+  }
+
+  /**
+   * return block by point coord
+   */
+  public getBlockByCoord(point: WorldCoord3): MapBlockCoord | undefined {
     let x = (point.x / this.blockSize) | 0;
     let z = (point.z / this.blockSize) | 0;
 
     let pos = z * this.size.w + x;
     let block = this.blocks[pos];
+    if (block === undefined) {
+      return undefined;
+    }
 
     return {
       model: block?.model,
+      frame: (block) ? block.frame : 0,
       idx: pos,
       mapPos: {
         x: x,
@@ -134,26 +160,6 @@ export class MeshLevelLayer {
     };
   }
 
-  public getDistanceY(point: Vector3): number {
-    let x = (point.x / this.blockSize) | 0;
-    let z = (point.z / this.blockSize) | 0;
-
-    let pos = z * this.size.w + x;
-    let block = this.blocks[pos];
-    if (block === undefined) {
-      return 0;
-    }
-
-    let frame: VoxelModelFrame = block.model.frames[block.frame];
-    if (!frame) {
-      return 0;
-    }
-
-    let height = frame.getHeight(point.x - x * this.blockSize, point.z - z * this.blockSize);
-
-    return height;
-  }
-
   public getBlock(xMap: number, zMap: number): MapBlockCoord | undefined {
     let idx = zMap * this.size.w + xMap;
     let b = this.blocks[idx];
@@ -161,7 +167,8 @@ export class MeshLevelLayer {
       return undefined;
     }
     return {
-      model: b?.model,
+      model: b!.model,
+      frame: b!.frame,
       idx: idx,
       mapPos: {
         x: xMap,

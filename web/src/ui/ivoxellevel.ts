@@ -21,7 +21,11 @@ export type MapBlock = {
 }
 
 export type MapBlockCoord = {
-  model: VoxelModel | undefined;
+  model: VoxelModel;
+  frame: number;
+  /**
+   * block index in the array (as z * width + x)
+   */
   idx: number;
   mapPos: BlockPos3;
   mapSize: BlockSize3;

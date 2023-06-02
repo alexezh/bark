@@ -7,6 +7,7 @@ import { VoxelGeometryWriter } from "./voxelgeometrywriter";
 import { modelCache } from "./voxelmodelcache";
 import { vm } from "../engine/ivm";
 import { Sprite3 } from "../engine/sprite3";
+import { VoxelModel } from "./voxelmodel";
 
 export type VoxelAnimationFrame = {
     idx: number;
@@ -18,7 +19,6 @@ export type VoxelAnimationCollection = { [name: string]: VoxelAnimationFrame[] }
 // when adding / updating mesh on scene
 export class VoxelMeshModel {
     private frames: Mesh[] = [];
-    private scale: number = 0.6;
     private readonly _size: Vector3 = new Vector3();
     private readonly _pos: Vector3 = new Vector3();
     private _qt!: Quaternion;
@@ -35,9 +35,9 @@ export class VoxelMeshModel {
     // computed as voxels multiplied by scale factor
     public get size(): Vector3 { return this._size; };
 
-    public static async create(uri: string): Promise<VoxelMeshModel> {
+    public static create(vmm: VoxelModel, scale: number = 1): VoxelMeshModel {
         let o = new VoxelMeshModel();
-        await o.load(uri);
+        o.load(vmm, scale);
         return o;
     }
 
@@ -45,17 +45,11 @@ export class VoxelMeshModel {
         this.material = GameColors.material;
     }
 
-    private async load(uri: string): Promise<void> {
-        let vmm = await modelCache.getVoxelModel(uri);
-        if (vmm === undefined) {
-            console.log('cannot file model ' + uri);
-            return;
-        }
-
+    private async load(vmm: VoxelModel, scale: number) {
         for (let f of vmm.frames) {
             let writer = new VoxelGeometryWriter(f.verticeCount, f.colorCount, 6);
 
-            writer.setScale(this.scale);
+            writer.setScale(scale);
 
             f.build(writer);
 
@@ -65,7 +59,7 @@ export class VoxelMeshModel {
         }
 
         let sz = vmm.size;
-        this._size.set(sz.x * this.scale, sz.y * this.scale, sz.z * this.scale);
+        this._size.set(sz.x, sz.y, sz.z);
         this._pos.set(0, 0, 0);
     }
 
@@ -115,7 +109,6 @@ export class VoxelMeshModel {
     public addToScene(parent: Scene) {
         for (let m of this.frames) {
             m.visible = false;
-            m.geometry.center();
             parent.add(m);
         }
 
@@ -136,6 +129,12 @@ export class VoxelMeshModel {
     public setRotation(qt: Quaternion) {
         this._qt = qt;
         this.frames[this.currentFrame].rotation.setFromQuaternion(this._qt);
+    }
+
+    public setBasePoint(pos: Vector3) {
+        for (let frame of this.frames) {
+            frame.geometry.translate(pos.x, pos.y, pos.z);
+        }
     }
 }
 

@@ -60,14 +60,14 @@ export class GamePhysics implements IGamePhysics {
     let collisions: { source: IRigitBody, target: IRigitBody }[] = [];
 
     for (let o of this.bodies) {
-      let s = o.worldSpeed;
+      let s = o.worldSpeed.clone();
 
-      if (o.gravityFactor === 0 && s.x === 0 && s.y === 0 && s.z === 0) {
+      if (o.gravityFactor === 0 || (s.x === 0 && s.y === 0 && s.z === 0)) {
         continue;
       }
 
       s.multiplyScalar(dt);
-      let p = o.position.add(s);
+      let p = o.position.clone().add(s);
 
       if (o.gravityFactor > 0) {
         p = this.detectSurface(o, p, dt);
@@ -85,9 +85,15 @@ export class GamePhysics implements IGamePhysics {
       // and going back up. We do not want to notify about collision for such
       // trivial cases. 
       if (collided) {
+        if (o.name === 'monky') {
+          console.log('collided');
+        }
         o.adjustWorldSpeed(new Vector3(0, 0, 0));
         collisions.push({ source: o, target: intersectBody! });
       } else {
+        if (p.y === 0) {
+          console.log('zero');
+        }
         o.onMove(p);
       }
     }
@@ -95,7 +101,6 @@ export class GamePhysics implements IGamePhysics {
     if (collisions.length > 0) {
       this._collideHandler?.call(this, collisions);
     }
-
   }
 
   /**
@@ -103,12 +108,14 @@ export class GamePhysics implements IGamePhysics {
    */
   private detectSurface(o: IRigitBody, pos: Vector3, dt: number): Vector3 {
     let dist = this.map.getDistanceY(o, pos);
+    if (dist === -100000000) {
+      dist = this.map.getDistanceY(o, pos);
+    }
     if (dist < 0) {
+      console.log(`fall: ${pos.y} ${dist} ${dt * this.gravity}`);
       pos.setY(pos.y - dt * this.gravity);
     } else if (dist > 0) {
-      if (o.name === 'monky') {
-        console.log('climb:' + dist);
-      }
+      console.log('climb:' + dist);
       if (dist < o.maxClimbSpeed) {
         pos.setY(pos.y + dist);
         return pos;
