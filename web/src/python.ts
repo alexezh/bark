@@ -56,6 +56,7 @@ export function boxedGame() {
   // forever { key = waitKey()}
   async function moveMonkey(): Promise<void> {
     console.log("start moveMonkey");
+    /*
     vm.forever(async () => {
       let ev = await vm!.readInput();
 
@@ -66,6 +67,7 @@ export function boxedGame() {
       }
       char.setRelativeSpeed(new Vector3(ev.speedX, 0, ev.speedZ));
     });
+    */
   }
 
   // the problem with that loop is that collision detection happens outside
@@ -105,7 +107,7 @@ export function boxedBasic(): string {
     on load() begin
       System.loadLevel 'default'
 
-      System.setMoveController2D keySpeedX:=10 keySpeedZ:=10 thumbSpeedX:=10 thumbSpeedZ:=10 timeoutSeconds:=0.1
+      ThirdPersonController.activate maxSpeed:=40 keySpeedX:=10 keySpeedZ:=10 thumbSpeedX:=10 thumbSpeedZ:=10 timeoutSeconds:=0.1
     end
 
     on start() begin
@@ -122,7 +124,7 @@ export function boxedBasic(): string {
       System.setThirdPersonCamera monky x:=0 y:=40 z:=60
 
       forever do
-        var ev := System.readInput();
+        var ev := ThirdPersonController.readInput();
   
         if ev.speedX != 0 or ev.speedZ != 0 then
           Sprite.animate monky 'move'
@@ -170,11 +172,11 @@ export function boxedBasic2(): string {
     on load() begin
       System.loadLevel 'default'
 
-      System.setMoveController2D keySpeedX:=10 keySpeedZ:=10 thumbSpeedX:=10 thumbSpeedZ:=10 timeoutSeconds:=0.1
+      ThirdPersonController.activate maxSpeed:=40 keySpeed:=10 thumbSpeed:=10 timeoutSeconds:=0.1
     end
 
     on start() begin
-      var monky:= System.createMammal4Sprite 'monky' 'vox/monky.vox' scale:=0.5
+      var monky:= System.createMammal4Sprite 'monky' 'vox/monky.vox' scale:=1
       Sprite.setPosition monky 120 20 120
 
       var ma:= Sprite.addAnimation monky 'move'
@@ -187,7 +189,7 @@ export function boxedBasic2(): string {
       System.setThirdPersonCamera monky x:=0 y:=50 z:=100
 
       forever do
-        var ev := System.readInput();
+        var ev := ThirdPersonController.readInput();
   
         if ev.speedX != 0 or ev.speedZ != 0 then
           Sprite.animate monky 'move'

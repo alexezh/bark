@@ -253,7 +253,7 @@ export class VoxelLevel implements IVoxelLevel {
             let layer = this.layers[i];
             let height = layer.getHeight(pos);
             if (height !== 0) {
-                console.log(`height: ${height} ${pos.y}`)
+                //console.log(`height: ${height} ${pos.y}`)
                 return height - (pos.y - (layer.layerY * this._blockSize));
             }
         }

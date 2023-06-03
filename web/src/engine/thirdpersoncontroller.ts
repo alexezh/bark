@@ -1,20 +1,39 @@
+import { ModuleNode } from "../basic/ast";
+import { addSystemFunc, createModuleNode } from "../basic/systemfunc";
 import { KeyBinder } from "../ui/keybinder";
 import { IGamePhysicsInputController } from "./igamephysics";
 import { IInputController, vm } from "./ivm";
-import { MoveControllerConfig } from "./movecontroller2d";
+import { IMoveEvent2D, MoveControllerConfig } from "./movecontroller2d";
+
+interface IThirdPersonControllerMoveEvent {
+  speedX: number,
+  speedZ: number,
+  angleXZ: number
+}
+
+export type ThirdPersonControllerConfig = {
+  maxSpeed: number;
+  keySpeed: number;
+  keySpeedXZ: number;
+  thumbSpeed: number;
+  timeoutSeconds: number;
+}
 
 // handles ASDW and arrows
 export class ThirdPersonController implements IGamePhysicsInputController, IInputController {
   private input: KeyBinder;
   private xrSession: XRSession | undefined;
   private gamePads: Gamepad[] = [];
-  private config: MoveControllerConfig;
+  private config: ThirdPersonControllerConfig;
   private lastTick: number = 0;
   private timeoutMilliseconds: number = 0;
   private started: boolean = false;
   private angleXZ: number = 0;
+  private speedX: number = 0;
+  private speedZ: number = 0;
 
-  public constructor(config: MoveControllerConfig) {
+
+  public constructor(config: ThirdPersonControllerConfig) {
     this.config = config;
     this.timeoutMilliseconds = config.timeoutSeconds * 1000;
     // create detached key binder
@@ -53,7 +72,7 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
     this.attachGamepad();
   }
 
-  public async readInput(): Promise<any> {
+  public async readInput(): Promise<IThirdPersonControllerMoveEvent | undefined> {
     if (!this.started) {
       return undefined;
     }
@@ -68,24 +87,25 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
     let x: number = 0;
     let z: number = 0;
 
+    // first check VR controller
     for (let pad of this.gamePads) {
       let axes = pad.axes;
 
       // not sure why we have 4 axis
       if (axes[0] !== 0) {
-        x += axes[0] * this.config.thumbSpeedX;
+        x += axes[0] * this.config.thumbSpeed;
       }
 
       if (axes[1] !== 0) {
-        z += axes[1] * this.config.thumbSpeedZ;
+        z += axes[1] * this.config.thumbSpeed;
       }
 
       if (axes[2] !== 0) {
-        x += axes[2] * this.config.thumbSpeedX;
+        x += axes[2] * this.config.thumbSpeed;
       }
 
       if (axes[3] !== 0) {
-        z += axes[3] * this.config.thumbSpeedZ;
+        z += axes[3] * this.config.thumbSpeed;
       }
     }
 
@@ -97,21 +117,37 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
       }
     }
 
+    // now keyboard
+    x = this.speedX;
+    z = this.speedZ;
+
     if (this.input.pressedKeys.KeyA) {
-      x -= this.config.keySpeedX;
+      x -= this.config.keySpeed;
+    }
+    if (this.input.pressedKeys.KeyD) {
+      x += this.config.keySpeed;
     }
 
-    if (this.input.pressedKeys.KeyD) {
-      x += this.config.keySpeedX;
+    if (x !== 0 && x === this.speedX) {
+      x -= Math.sign(x) * this.config.keySpeed;
     }
 
     if (this.input.pressedKeys.KeyS) {
-      z += this.config.keySpeedX;
+      z += this.config.keySpeed;
     }
 
     if (this.input.pressedKeys.KeyW) {
-      z -= this.config.keySpeedX;
+      z -= this.config.keySpeed;
     }
+
+    if (z !== 0 && z === this.speedZ) {
+      z -= Math.sign(z) * this.config.keySpeed;
+    }
+
+    x = Math.max(-this.config.maxSpeed, Math.min(x, this.config.maxSpeed));
+    z = Math.max(-this.config.maxSpeed, Math.min(z, this.config.maxSpeed));
+    this.speedX = x;
+    this.speedZ = z;
 
     // coordinates are toward us, but third person view is from behind
     // we have to inverse keys
@@ -156,4 +192,48 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
       }
     }
   }
+}
+
+let controller: ThirdPersonController | undefined;
+
+function activate(
+  maxSpeed: number,
+  keySpeed: number,
+  thumbSpeed: number,
+  timeoutSeconds: number) {
+
+  // create controller and options such as repeat rate and so on
+  let config: ThirdPersonControllerConfig = {
+    maxSpeed: maxSpeed,
+    keySpeed: keySpeed,
+    keySpeedXZ: 5,
+    thumbSpeed: thumbSpeed,
+    timeoutSeconds: timeoutSeconds
+  };
+
+  controller = new ThirdPersonController(config);
+  vm.setController(controller);
+}
+
+
+function readInput(): Promise<IThirdPersonControllerMoveEvent | undefined> {
+  if (controller === undefined) {
+    return Promise.resolve(undefined);
+  }
+
+  return controller.readInput();
+}
+
+export function createThirdPersonControllerModule(): ModuleNode {
+
+  let module = createModuleNode('ThirdPersonController');
+
+  module.procs.push(addSystemFunc(module, 'readInput', [], 'void', true, readInput));
+  module.procs.push(addSystemFunc(module, 'activate', [
+    'maxSpeed:number',
+    'keySpeed:number',
+    'thumbSpeed:number',
+    'timeoutSeconds:number'], 'void', false, activate));
+
+  return module;
 }

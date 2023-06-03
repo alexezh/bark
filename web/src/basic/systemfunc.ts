@@ -10,6 +10,18 @@ function typeNameToTokenKind(name: string): TokenKind {
   }
 }
 
+export function createModuleNode(name: string): ModuleNode {
+  let module: ModuleNode = {
+    kind: AstNodeKind.module,
+    name: name,
+    types: [],
+    procs: [],
+    on: []
+  }
+
+  return module;
+}
+
 export function addSystemType(digName: string, systemType: Function, fields: string[]): TypeDefNode {
   let fieldDefs: FieldDef[] = [];
   for (let field of fields) {

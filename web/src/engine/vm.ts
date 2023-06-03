@@ -237,15 +237,6 @@ export class VM implements IVM {
     this.checkRunning();
   }
 
-  public readInput(): Promise<any> {
-    this.checkRunning();
-    if (this.inputController === undefined) {
-      throw new Error('attach input');
-    }
-
-    return this.inputController!.readInput();
-  }
-
   public waitCollide(sprite: Sprite3, seconds: number): Promise<IRigitBody | null> {
     this.checkRunning();
     let waiter = this._collisions.get(sprite);

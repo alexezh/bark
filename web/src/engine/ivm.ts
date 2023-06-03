@@ -14,12 +14,11 @@ export interface IInputController {
   stop();
   onXrSessionChanged(session: XRSession | undefined);
   update(tick: number);
-  readInput<T>(): Promise<T>;
 }
 
 export interface ICodeLoader {
   addUserModule(name: string, text: string | ModuleNode);
-  addSystemModule(name: string, module: ModuleNode);
+  addSystemModule(module: ModuleNode);
 
   getUserModule(name: string): ModuleNode | undefined;
 
@@ -91,9 +90,6 @@ export interface IVM extends IVMCodeRunner {
     rm: IRigitModel | undefined): Promise<Sprite3>;
   removeSprite(sprite: Sprite3);
   forever(func: () => Promise<void>): Promise<void>;
-
-  // read input; the actual implementation depends on input controller
-  readInput(): Promise<any>;
 
   // wait for any sprites in the list to collide
   // multiple threads can call wait on different groups of sprites

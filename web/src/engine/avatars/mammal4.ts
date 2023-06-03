@@ -98,8 +98,8 @@ export class Mammal4Model implements IRigitModel {
   }
 
   public setPosition(pos: Vector3): void {
-    // shift by base position
-    this._position.set(pos.x - this._baseX, pos.y, pos.z - this._baseZ);
+    // we adjusted mesh to base point; this way we do not have to adjust this pos
+    this._position.set(pos.x, pos.y, pos.z);
     for (let key of Object.keys(this.meshModels)) {
       let model = this.meshModels[key];
       model.setPosition(this._position);

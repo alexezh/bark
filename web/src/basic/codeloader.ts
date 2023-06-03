@@ -12,10 +12,14 @@ export class CodeLoader implements ICodeLoader {
   private readonly _userModules: Map<string, ModuleNode> = new Map<string, ModuleNode>();
   private readonly modules: Map<string, { [key: string]: Function }> = new Map<string, { [key: string]: Function }>();
 
-  public addSystemModule(name: string, ast: ModuleNode) {
+  public addSystemModule(ast: ModuleNode) {
     let module: { [key: string]: Function } = {};
 
-    this._systemModules.set(name, ast);
+    if (!ast.name) {
+      throw 'incorrect parameter';
+    }
+
+    this._systemModules.set(ast.name, ast);
     for (let item of ast.procs) {
       if (item.kind === AstNodeKind.funcDef) {
         let funcDef = item as FuncDefNode;
@@ -25,7 +29,7 @@ export class CodeLoader implements ICodeLoader {
     for (let tp of ast.types) {
       module[tp.digName.value] = tp.systemType!;//funcDef.body as Function;
     }
-    this.modules.set(name, module);
+    this.modules.set(ast.name, module);
   }
 
   public addUserModule(name: string, text: string | ModuleNode) {
