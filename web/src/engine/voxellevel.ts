@@ -244,6 +244,7 @@ export class VoxelLevel implements IVoxelLevel {
         return false;
     }
 
+    // positive distance is we are above the surface
     public getDistanceY(ro: IRigitBody, pos: Vector3): number {
         let layerIdx = (pos.y / this._blockSize) | 0;
         if (layerIdx < 0 || layerIdx >= this.layers.length) {

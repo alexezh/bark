@@ -176,7 +176,7 @@ export function boxedBasic2(): string {
     end
 
     on start() begin
-      var monky:= System.createMammal4Sprite 'monky' 'vox/monky.vox' scale:=1
+      var monky:= System.createMammal4Sprite 'monky' 'vox/monky.vox' scale:=0.5
       Sprite.setPosition monky 120 20 120
 
       var ma:= Sprite.addAnimation monky 'move'

@@ -34,6 +34,7 @@ export class Mammal4Model implements IRigitModel {
     this.voxelModel = vmm;
 
     this._size = this.voxelModel.size;
+    this._size.multiplyScalar(this._scale);
     this._baseZ = this._size.z / 2;
     this._baseX = this._size.x / 2;
     this._position = new Vector3(-this._baseX, 0, -this._baseZ);

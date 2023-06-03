@@ -112,10 +112,10 @@ export class GamePhysics implements IGamePhysics {
       dist = this.map.getDistanceY(o, pos);
     }
     if (dist < 0) {
-      //console.log(`fall: ${pos.y} ${dist} ${dt * this.gravity}`);
+      console.log(`fall: ${pos.y} ${dist} ${dt * this.gravity}`);
       pos.setY(pos.y - dt * this.gravity);
     } else if (dist > 0) {
-      //console.log('climb:' + dist);
+      console.log('climb:' + dist);
       if (dist < o.maxClimbSpeed) {
         pos.setY(pos.y + dist);
         return pos;

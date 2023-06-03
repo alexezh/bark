@@ -59,7 +59,7 @@ export class VoxelMeshModel {
         }
 
         let sz = vmm.size;
-        this._size.set(sz.x, sz.y, sz.z);
+        this._size.set(sz.x * scale, sz.y * scale, sz.z * scale);
         this._pos.set(0, 0, 0);
     }
 
