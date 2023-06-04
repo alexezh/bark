@@ -4,6 +4,7 @@ import { IVoxelLevel } from "../ui/ivoxellevel";
 import { BroadphaseCollision } from "./broadphasecollision";
 import { Vector3 } from "three";
 import { IRigitBody } from "../voxel/irigitbody";
+import { infiniteDown } from "./voxellevel";
 
 // manages movement and collisions between world objects
 export class GamePhysics implements IGamePhysics {
@@ -60,6 +61,7 @@ export class GamePhysics implements IGamePhysics {
     let collisions: { source: IRigitBody, target: IRigitBody }[] = [];
 
     for (let o of this.bodies) {
+      // clone speed so we can apply dt to it
       let s = o.worldSpeed.clone();
 
       if (o.gravityFactor === 0 || (s.x === 0 && s.y === 0 && s.z === 0)) {
@@ -69,8 +71,16 @@ export class GamePhysics implements IGamePhysics {
       s.multiplyScalar(dt);
       let p = o.position.clone().add(s);
 
+      let newSpeed: Vector3 | undefined = undefined;
       if (o.gravityFactor > 0) {
-        p = this.detectSurface(o, p, dt);
+        let delta = this.detectSurface(o, p, dt);
+        if (delta.deltaPosY != 0) {
+          p.setY(p.y + delta.deltaPosY);
+        }
+        if (delta.deltaSpeedY != 0) {
+          newSpeed = o.worldSpeed.clone();
+          newSpeed.setY(newSpeed.y + delta.deltaSpeedY);
+        }
       }
 
       // check if intersecs with the map
@@ -85,16 +95,13 @@ export class GamePhysics implements IGamePhysics {
       // and going back up. We do not want to notify about collision for such
       // trivial cases. 
       if (collided) {
-        if (o.name === 'monky') {
-          console.log('collided');
-        }
-        o.adjustWorldSpeed(new Vector3(0, 0, 0));
+        o.setPhysicsSpeed(new Vector3(0, 0, 0));
         collisions.push({ source: o, target: intersectBody! });
       } else {
-        if (p.y === 0) {
-          console.log('zero');
-        }
         o.onMove(p);
+        if (newSpeed) {
+          o.setPhysicsSpeed(newSpeed);
+        }
       }
     }
 
@@ -105,23 +112,28 @@ export class GamePhysics implements IGamePhysics {
 
   /**
    * adjusts position to surface
+   * updates pos and speed if needed
    */
-  private detectSurface(o: IRigitBody, pos: Vector3, dt: number): Vector3 {
+  private detectSurface(o: IRigitBody, pos: Vector3, dt: number): { deltaPosY: number, deltaSpeedY: number } {
     let dist = this.map.getDistanceY(o, pos);
-    if (dist === -100000000) {
-      dist = this.map.getDistanceY(o, pos);
-    }
     if (dist < 0) {
-      console.log(`fall: ${pos.y} ${dist} ${dt * this.gravity}`);
-      pos.setY(pos.y - dt * this.gravity);
+      if (dist === infiniteDown) {
+        console.log(`fall: ${pos.y} ${dist} ${dt * this.gravity}`);
+      }
+      return {
+        deltaPosY: -dt * this.gravity,
+        deltaSpeedY: -dt * this.gravity
+      }
     } else if (dist > 0) {
-      console.log('climb:' + dist);
+      //console.log('climb:' + dist);
       if (dist < o.maxClimbSpeed) {
-        pos.setY(pos.y + dist);
-        return pos;
+        return {
+          deltaPosY: dist,
+          deltaSpeedY: 0
+        }
       }
     }
-    return pos;
+    return { deltaPosY: 0, deltaSpeedY: 0 };
   }
 }
 

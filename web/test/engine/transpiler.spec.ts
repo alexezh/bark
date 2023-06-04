@@ -4,12 +4,12 @@ import { BasicParser, EolRule } from '../../src/basic/basicparser';
 import { parseModule } from '../../src/basic/basic';
 import { ParseError } from '../../src/basic/parseerror';
 import { validateModule } from '../../src/basic/checker';
-import { transpile } from '../../src/basic/basictranspiler';
+import { transpile } from '../../src/basic/transpiler';
 import { ICodeLoader, setVM, vm } from '../../src/engine/ivm';
 import { CodeLoader } from '../../src/basic/codeloader';
 import { CodeRunner } from '../../src/basic/coderunner';
 import { AstNodeKind, FuncDefNode, ModuleNode, TypeDefNode } from '../../src/basic/ast';
-import { addSystemFunc } from '../../src/basic/systemfunc';
+import { createModuleNode, addSystemFunc } from '../../src/basic/lib/systemfunc';
 
 
 async function waitCollideMock(): Promise<number> {
@@ -28,21 +28,13 @@ function minMock(v1: number, v2: number): number {
 }
 
 function createSystemModule(): ModuleNode {
-  let funcs: FuncDefNode[] = [];
-  let types: TypeDefNode[] = [];
 
-  let module: ModuleNode = {
-    kind: AstNodeKind.module,
-    name: 'System',
-    types: types,
-    procs: funcs,
-    on: []
-  }
+  let module = createModuleNode('System');
 
-  funcs.push(addSystemFunc(module, 'waitCollide', ['sprite: Sprite', 'timeout: number'], 'Sprite | Block | null', true, waitCollideMock));
-  funcs.push(addSystemFunc(module, 'sendMessage', ['address: string', 'text: string'], 'void', true, sendMessageMock));
-  funcs.push(addSystemFunc(module, 'createSprite', ['name: string'], 'void', false, createSpriteMock));
-  funcs.push(addSystemFunc(module, 'min', ['v1: number', 'v2: number'], 'number', false, minMock));
+  module.funcs.push(addSystemFunc(module, 'waitCollide', ['sprite: Sprite', 'timeout: number'], 'Sprite | Block | null', true, waitCollideMock));
+  module.funcs.push(addSystemFunc(module, 'sendMessage', ['address: string', 'text: string'], 'void', true, sendMessageMock));
+  module.funcs.push(addSystemFunc(module, 'createSprite', ['name: string'], 'void', false, createSpriteMock));
+  module.funcs.push(addSystemFunc(module, 'min', ['v1: number', 'v2: number'], 'number', false, minMock));
 
   return module;
 }
@@ -52,7 +44,7 @@ function runProg(text: string, loader: ICodeLoader | undefined = undefined): any
     if (loader === undefined) {
       loader = new CodeLoader();
     }
-    loader.addSystemModule('System', createSystemModule());
+    loader.addSystemModule(createSystemModule());
 
     let runner = new CodeRunner();
 
@@ -80,13 +72,13 @@ async function runVm(text: string, address: string) {
   try {
     let runner = new CodeRunner();
     let loader = new CodeLoader();
-    loader.addSystemModule('System', createSystemModule());
+    loader.addSystemModule(createSystemModule());
 
     // game loader has similar API as VM; use them directly
     setVM(runner as any);
 
     let promise = new Promise((resolve) => {
-      vm.onMessage(address, async (msg: any) => {
+      runner.onMessage(address, async (msg: any) => {
         resolve(msg);
       });
     });

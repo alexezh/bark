@@ -31,7 +31,7 @@ export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   aabb(pos: Vector3 | undefined): RigitAABB {
     return { xStart: 0, xEnd: 0, yStart: 0, yEnd: 0, zStart: 0, zEnd: 0 }
   }
-  adjustWorldSpeed(speed: Vector3) {
+  setPhysicsSpeed(speed: Vector3) {
   }
   setSpeed(speed: Vector3): void {
   }
@@ -66,7 +66,7 @@ export class MapBoundaryRigitBody implements IRigitBody, IDigBoundary {
   aabb(pos: Vector3 | undefined): RigitAABB {
     return { xStart: 0, xEnd: 0, yStart: 0, yEnd: 0, zStart: 0, zEnd: 0 }
   }
-  adjustWorldSpeed(speed: Vector3) {
+  setPhysicsSpeed(speed: Vector3) {
   }
   setSpeed(speed: Vector3): void {
   }

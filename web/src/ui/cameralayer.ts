@@ -8,100 +8,12 @@ import SyncEventSource from "../lib/synceventsource";
 import { ILevelEditor } from "./ileveleditor";
 import { PxSize } from "../lib/pos";
 import { ITrackingCamera, Sprite3, TrackingCameraKind } from "../engine/sprite3";
+import { ThirtPersonCamera } from "../engine/thirdpersoncamera";
+import { DirectCamera } from "../engine/directcamera";
 //import { VRButton } from 'three/addons/webxr/VRButton';
 
 export type CameraLayerProps = UiLayerProps & {
     scale: number;
-}
-
-class DirectCamera implements ITrackingCamera {
-    private camera!: PerspectiveCamera;
-    private cameraGroup!: Group;
-
-    public constructor(camera: PerspectiveCamera, cameraGroup: Group) {
-        this.camera = camera;
-        this.cameraGroup = cameraGroup;
-
-        //var point = new Vector3(0, 0, 0);
-        //ßthis.camera.lookAt(point);
-        let angleZ = Math.PI / 4;
-
-        //this.cameraGroup.position.set(0, 0, 0);
-        this.cameraGroup.rotation.set(-angleZ, 0, 0);
-        this.cameraGroup.position.set(100, 200, 100 + 100 * Math.tan(angleZ));
-        (this.camera as PerspectiveCamera).updateProjectionMatrix();
-    }
-
-    get cemraKind(): TrackingCameraKind { return TrackingCameraKind.Direct; }
-
-    dispose() {
-    }
-
-    onTargetMove(pos: Vector3): void {
-    }
-
-    onTargetSpeed(pos: Vector3): void {
-    }
-
-    onTargetDirectionXZ(angle: number): void {
-    }
-}
-
-class ThirtPersonCamera implements ITrackingCamera {
-    private camera!: PerspectiveCamera;
-    private cameraGroup!: Group;
-    private sprite: Sprite3;
-    private cameraOffset: Vector3;
-    private spritePosition: Vector3;
-    private angleXZ: number = 0;
-
-    // offset related to sprite direction; such as x, y, 0 means camera behind by X units
-    public constructor(sprite: Sprite3, cameraOffset: Vector3, camera: PerspectiveCamera, cameraGroup: Group) {
-        this.camera = camera;
-        this.cameraGroup = cameraGroup;
-        this.sprite = sprite;
-        this.cameraOffset = cameraOffset;
-        this.sprite = sprite;
-        this.spritePosition = sprite.position.clone();
-
-        this.updateCameraPos();
-        this.sprite.setTrackingCamera(this);
-    }
-
-    get cemraKind(): TrackingCameraKind { return TrackingCameraKind.ThirdPerson; }
-
-    dispose() {
-        this.sprite.setTrackingCamera(undefined);
-    }
-
-    onTargetMove(pos: Vector3): void {
-        this.spritePosition = pos;
-        this.updateCameraPos();
-    }
-
-    onTargetSpeed(speed: Vector3): void {
-    }
-
-    onTargetDirectionXZ(angle: number): void {
-        this.angleXZ = angle;
-        this.updateCameraPos();
-    }
-
-    private updateCameraPos() {
-        let cpos = this.spritePosition.clone();
-        let off = this.cameraOffset.clone();
-
-        off.applyAxisAngle(new Vector3(0, 1, 0), this.angleXZ);
-
-        // we need to translate offset vector in direction of 
-        cpos.add(off);
-
-        this.cameraGroup.position.copy(cpos);
-        (this.camera as PerspectiveCamera).updateProjectionMatrix();
-
-        //let qt = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), angle);
-        this.cameraGroup.quaternion.setFromAxisAngle(new Vector3(0, 1, 0), this.angleXZ);
-    }
 }
 
 export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLayer {
@@ -233,22 +145,9 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
      * called by VM when new level loaded
      */
     private onLevelLoaded() {
-
         if (vm.level === undefined) {
             return;
         }
-
-        let wsz = vm.level.worldSize;
-        console.log(`onLevelLoaded: world size ${wsz.sx} ${wsz.sy} ${wsz.sz}`);
-
-        // add geometry covering map on the bottom so we can handle all clicks within map
-        const geometry = new PlaneGeometry(wsz.sx, wsz.sz);
-
-        // y is vertical, rotate around x to make it horizontal
-        geometry.rotateX(- Math.PI / 2);
-
-        let plane = new Mesh(geometry, new MeshBasicMaterial({ visible: false }));
-        this.scene!.add(plane);
 
         this.renderer.setAnimationLoop(this.render.bind(this));
 

@@ -237,7 +237,7 @@ export class BasicLexer {
       case 'and': return TokenKind.And;
       case 'not': return TokenKind.Not;
       case 'is': return TokenKind.Is;
-      case 'proc': return TokenKind.Proc;
+      case 'function': return TokenKind.Function;
       case 'true': return TokenKind.True;
       case 'false': return TokenKind.False;
       case 'break': return TokenKind.Break;

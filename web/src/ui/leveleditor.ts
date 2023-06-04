@@ -134,6 +134,18 @@ export class LevelEditor implements ILevelEditor {
     this.currentModel = model;
   }
 
+  rotateXZ(): void {
+
+  }
+
+  flipX(): void {
+
+  }
+
+  flipZ(): void {
+
+  }
+
   public copyBlock(): void {
 
   }

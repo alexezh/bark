@@ -51,7 +51,7 @@ export enum TokenKind {
   ElIf,
   End,
   Begin,
-  Proc,
+  Function,
   Var,
   Return,
   On,

@@ -64,7 +64,7 @@ export interface IRigitBody {
   /**
    * set an updated speed (adjusted to possible collision and gravity)
    */
-  adjustWorldSpeed(speed: Vector3): void;
+  setPhysicsSpeed(speed: Vector3): void;
 
   /**
    * returns current position

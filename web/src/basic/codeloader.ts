@@ -1,11 +1,11 @@
 import { ICodeLoader, IVMCodeRunner } from "../engine/ivm";
-import { AstNodeKind, FuncDefNode, ModuleNode, OnNode } from "./ast";
+import { AstNodeKind, FuncDefNode, ModuleNode, OnNode, VarDefNode } from "./ast";
 import { parseModule } from "./basic";
 import { BasicParser } from "./basicparser";
 import { JsWriter } from "./jswriter";
 import { BasicLexer } from "./lexer";
 import { validateModule } from "./checker";
-import { transpile } from "./basictranspiler";
+import { transpile } from "./transpiler";
 
 export class CodeLoader implements ICodeLoader {
   private readonly _systemModules: Map<string, ModuleNode> = new Map<string, ModuleNode>();
@@ -20,9 +20,9 @@ export class CodeLoader implements ICodeLoader {
     }
 
     this._systemModules.set(ast.name, ast);
-    for (let item of ast.procs) {
-      if (item.kind === AstNodeKind.funcDef) {
-        let funcDef = item as FuncDefNode;
+    for (let item of ast.funcs) {
+      let funcDef = item as FuncDefNode;
+      if (funcDef.name) {
         module[funcDef.name.value] = funcDef.body as Function;
       }
     }
@@ -61,7 +61,7 @@ export class CodeLoader implements ICodeLoader {
 
   public *userFunctions(): Iterable<FuncDefNode> {
     for (let m of this._userModules) {
-      for (let node of m[1].procs) {
+      for (let node of m[1].funcs) {
         yield node as FuncDefNode;
       }
     }
@@ -69,13 +69,21 @@ export class CodeLoader implements ICodeLoader {
 
   public *functions(): Iterable<FuncDefNode> {
     for (let m of this._systemModules) {
-      for (let node of m[1].procs) {
+      for (let node of m[1].funcs) {
         yield node as FuncDefNode;
       }
     }
     for (let m of this._userModules) {
-      for (let node of m[1].procs) {
+      for (let node of m[1].funcs) {
         yield node as FuncDefNode;
+      }
+    }
+  }
+
+  public *vars(): Iterable<VarDefNode> {
+    for (let m of this._userModules) {
+      for (let node of m[1].vars) {
+        yield node;
       }
     }
   }

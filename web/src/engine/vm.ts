@@ -6,7 +6,7 @@ import { FrameClock } from "./clock";
 import { VoxelLevel } from "./voxellevel";
 import { GamePhysics } from "./gamephysics";
 import { IGamePhysics } from "./igamephysics";
-import { ICodeLoader, IInputController, IVM, setVM } from "./ivm";
+import { ICodeLoader, IInputController, IVM, IVMCodeRunner, setVM } from "./ivm";
 import { Sprite3 } from "./sprite3";
 import { Ticker } from "./ticker";
 import { IRigitModel } from "./irigitmodel";
@@ -85,6 +85,7 @@ export class VM implements IVM {
   }
 
   public get loader(): ICodeLoader { return this._loader; }
+  public get runner(): IVMCodeRunner { return this._runner; }
 
   public attachCamera(camera: ICameraLayer) {
     this._camera = camera;
@@ -172,18 +173,6 @@ export class VM implements IVM {
     this._runner.sendMesssage(address, msg);
   }
 
-  public onMessage(address: string, func: MessageHandler) {
-    this._runner.onMessage(address, func);
-  }
-
-  public onLoad(func: () => Promise<void>) {
-    this._runner.onLoad(func);
-  }
-
-  public onStart(func: () => Promise<void>) {
-    this._runner.onStart(func);
-  }
-
   public editLevel(): void {
     console.log('editLevel');
 
@@ -237,7 +226,7 @@ export class VM implements IVM {
     this.checkRunning();
   }
 
-  public waitCollide(sprite: Sprite3, seconds: number): Promise<IRigitBody | null> {
+  public waitCollide(sprite: Sprite3, seconds: number | undefined): Promise<IRigitBody | null> {
     this.checkRunning();
     let waiter = this._collisions.get(sprite);
     if (waiter !== undefined && waiter.targets.length > 0) {
@@ -259,13 +248,15 @@ export class VM implements IVM {
       }
     });
 
-    setTimeout(() => {
-      // if we have not resolved waiter yet, resolve it
-      if (waiter!.resolve !== undefined) {
-        waiter!.resolve(null);
-        waiter!.resolve = undefined;
-      }
-    }, seconds * 1000);
+    if (seconds) {
+      setTimeout(() => {
+        // if we have not resolved waiter yet, resolve it
+        if (waiter!.resolve !== undefined) {
+          waiter!.resolve(null);
+          waiter!.resolve = undefined;
+        }
+      }, seconds * 1000);
+    }
     return p;
   }
 

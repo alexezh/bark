@@ -14,15 +14,13 @@ import { Token, TokenKind } from "./token";
 
 
 export function parseModule(parser: BasicParser): ModuleNode {
-  let procs: AstNode[] = [];
-  let on: OnNode[] = [];
-
   let module: ModuleNode = {
     kind: AstNodeKind.module,
     name: undefined,
     types: [],
-    procs: procs,
-    on: on
+    funcs: [],
+    vars: [],
+    on: []
   }
 
   while (parser.tryRead()) {
@@ -38,14 +36,14 @@ export function parseModule(parser: BasicParser): ModuleNode {
       parser.setEndRule([TokenKind.Semi], false);
 
       switch (token.kind) {
-        case TokenKind.Proc:
-          procs.push(parser.withContextGreedy(token, parseFuncDef, module));
+        case TokenKind.Function:
+          module.funcs.push(parser.withContextGreedy(token, parseFuncDef, module));
           break;
         case TokenKind.Var:
-          procs.push(parser.withContextGreedy(token, parseVarDef));
+          module.vars.push(parser.withContextGreedy(token, parseVarDef));
           break;
         case TokenKind.On:
-          on.push(parser.withContextGreedy(token, parseOnDef));
+          module.on.push(parser.withContextGreedy(token, parseOnDef));
           break;
       }
     }
@@ -63,7 +61,7 @@ function parseFuncDef(parser: BasicParser, module: ModuleNode): FuncDefNode {
 
   parser.setEndRule([TokenKind.End]);
 
-  let v = parser.readKind(TokenKind.Proc);
+  let v = parser.readKind(TokenKind.Function);
   let name = parser.readKind(TokenKind.Id);
 
   let params = parser.withContextGreedy(parser.readKind(TokenKind.LeftParen), parseFuncParams, [TokenKind.RightParen]);
@@ -84,6 +82,63 @@ function parseFuncDef(parser: BasicParser, module: ModuleNode): FuncDefNode {
     name: name,
     params: params,
     returnType: returnVal,
+    isAsync: false,
+    body: body
+  }
+}
+
+function parseVarDef(parser: BasicParser): VarDefNode {
+  parser.ignoreEol(false);
+  parser.setEndRule([TokenKind.Eol]);
+
+  let v = parser.readKind(TokenKind.Var);
+  let name = parser.readKind(TokenKind.Id);
+  if (parser.peekKind(TokenKind.Assign)) {
+    // read assingment
+    parser.readKind(TokenKind.Assign);
+
+    // we are keeping policy as is; so we can just pass parser
+    return {
+      kind: AstNodeKind.varDef,
+      name: name, value: parseExpressionCore(parser)
+    }
+  } else {
+    return {
+      kind: AstNodeKind.varDef,
+      name: name, value: undefined
+    }
+  }
+}
+
+function parseOnDef(parser: BasicParser, module: ModuleNode): OnNode {
+  parser.ignoreEol(true);
+  parser.setEndRule([TokenKind.Eol]);
+
+  let v = parser.readKind(TokenKind.On);
+  let event = parser.readKind(TokenKind.Id);
+
+  // handle expression such as message='bar'
+  let filter: Token | undefined = undefined;
+  if (parser.peekKind(TokenKind.Equal)) {
+    parser.readKind(TokenKind.Equal);
+    filter = parser.readKind(TokenKind.String);
+  }
+
+  parser.readKind(TokenKind.Function);
+
+  let params = parser.withContextGreedy(parser.readKind(TokenKind.LeftParen), parseFuncParams, [TokenKind.RightParen]);
+
+  let body = parser.withContextGreedy(parser.readKind(TokenKind.Begin), parseBlock, TokenKind.Begin, [TokenKind.End]);
+
+  // we are keeping policy as is; so we can just pass parser
+  return {
+    module: module,
+    name: undefined,
+    kind: AstNodeKind.on,
+    event: event,
+    returnType: undefined,
+    params: params,
+    filter: filter,
     isAsync: false,
     body: body
   }
@@ -334,50 +389,6 @@ function parseStatement(token: Token, parser: BasicParser): StatementNode | unde
   }
   finally {
     parser.popContext();
-  }
-}
-
-function parseVarDef(parser: BasicParser): VarDefNode {
-  parser.ignoreEol(false);
-  parser.setEndRule([TokenKind.Eol]);
-
-  let v = parser.readKind(TokenKind.Var);
-  let name = parser.readKind(TokenKind.Id);
-  if (parser.peekKind(TokenKind.Assign)) {
-    // read assingment
-    parser.readKind(TokenKind.Assign);
-
-    // we are keeping policy as is; so we can just pass parser
-    return {
-      kind: AstNodeKind.varDef,
-      name: name, value: parseExpressionCore(parser)
-    }
-  } else {
-    return {
-      kind: AstNodeKind.varDef,
-      name: name, value: undefined
-    }
-  }
-}
-
-function parseOnDef(parser: BasicParser): OnNode {
-  parser.ignoreEol(true);
-  parser.setEndRule([TokenKind.Eol]);
-
-  let v = parser.readKind(TokenKind.On);
-  let name = parser.readKind(TokenKind.Id);
-
-  let params = parser.withContextGreedy(parser.readKind(TokenKind.LeftParen), parseFuncParams, [TokenKind.RightParen]);
-
-  let body = parser.withContextGreedy(parser.readKind(TokenKind.Begin), parseBlock, TokenKind.Begin, [TokenKind.End]);
-
-  // we are keeping policy as is; so we can just pass parser
-  return {
-    kind: AstNodeKind.on,
-    name: name,
-    params: params,
-    isAsync: false,
-    body: body
   }
 }
 

@@ -25,6 +25,9 @@ export class EditLevelAction extends BasicAction {
         new FuncAction('Cut', { closePane: false }, () => vm.levelEditor?.cutBlock()),
         new FuncAction('Paste', { closePane: false }, () => vm.levelEditor?.pasteBlock()),
         new FuncAction('Clear', { closePane: false }, () => vm.levelEditor?.clearBlock()),
+        new FuncAction('RotateXZ', { closePane: false }, () => vm.levelEditor?.rotateXZ()),
+        new FuncAction('FlipX', { closePane: false }, () => vm.levelEditor?.flipX()),
+        new FuncAction('FlipZ', { closePane: false }, () => vm.levelEditor?.flipZ()),
         new FuncAction('Block Library', { closePane: false }, () => this.showLibrary(bar)),
         new ImportVoxAction()
       ]);

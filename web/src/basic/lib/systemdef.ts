@@ -1,27 +1,12 @@
-import { StaticCubeModel } from "../../engine/avatars/staticcubemodel";
 import { vm } from "../../engine/ivm";
 import { Sprite3 } from "../../engine/sprite3";
 import { AstNodeKind, FuncDefNode, ModuleNode, TypeDefNode } from "../ast";
-import { addSystemFunc, addSystemType, createModuleNode } from "../systemfunc";
+import { addSystemFunc, addSystemType, createModuleNode } from "./systemfunc";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../../voxel/mapblockrigitbody";
 import { Vector3 } from "three";
-import { MoveController2D, IMoveEvent2D, MoveEvent2D } from "../../engine/movecontroller2d";
-import { Mammal4Model } from "../../engine/avatars/mammal4";
-import { ThirdPersonController } from "../../engine/thirdpersoncontroller";
+import { MoveEvent2D } from "../../engine/movecontroller2d";
 import { RigitBodyKind } from "../../voxel/irigitbody";
 
-
-function createCubeSprite(name: string, uri: string, scale?: number): Promise<IDigSprite> {
-  return vm.createSprite(name, uri, new StaticCubeModel(scale ?? 1.0));
-}
-
-function createMammal4Sprite(name: string, uri: string, scale?: number): Promise<IDigSprite> {
-  return vm.createSprite(name, uri, new Mammal4Model(scale ?? 1.0));
-}
-
-function removeSprite(sprite: IDigSprite) {
-  return vm.removeSprite(sprite as Sprite3);
-}
 
 function loadLevel(name: string): Promise<void> {
   return vm.loadLevel(name);
@@ -70,28 +55,22 @@ export function createSystemModule(): ModuleNode {
   let module: ModuleNode = {
     kind: AstNodeKind.module,
     name: 'System',
+    vars: [],
     types: types,
-    procs: funcs,
+    funcs: funcs,
     on: []
   }
 
   funcs.push(addSystemFunc(module, 'waitCollide', ['sprite: Sprite', 'timeout: number'], 'Sprite | Block | null', true, waitCollide));
   funcs.push(addSystemFunc(module, 'sendMessage', ['address: string', 'text: string'], 'void', true, sendMessage));
   funcs.push(addSystemFunc(module, 'sleep', ['delay: number'], 'void', true, sleep));
+  funcs.push(addSystemFunc(module, 'spawn', ['func: function(Sprite):void', '...any[]'], 'void', true, sleep));
+  funcs.push(addSystemFunc(module, 'log', ['text: string'], 'void', false, console.log));
 
-  funcs.push(addSystemFunc(module, 'createCubeSprite', ['name:string', 'url:string', 'scale:number'], 'Sprite', true, createCubeSprite));
-  funcs.push(addSystemFunc(module, 'createMammal4Sprite', ['name:string', 'url:string', 'scale:number'], 'Sprite', true, createMammal4Sprite));
-  funcs.push(addSystemFunc(module, 'removeSprite', ['sprite:Sprite'], 'void', false, removeSprite));
   funcs.push(addSystemFunc(module, 'loadLevel', ['name:string'], 'void', true, loadLevel));
   funcs.push(addSystemFunc(module, 'deleteBlock', ['block:Block'], 'void', false, deleteBlock));
   funcs.push(addSystemFunc(module, 'createExplosion', ['x: number', 'y: number', 'z: number'], 'void', false, createExplosion));
   funcs.push(addSystemFunc(module, 'setThirdPersonCamera', ['sprite: Sprite', 'x: number', 'y: number', 'z:number'], 'void', false, setThirdPersonCamera));
-
-
-  types.push(addSystemType('MoveEvent2D', MoveEvent2D, ['speedX: number', 'speedZ: number']));
-  types.push(addSystemType('Sprite', Sprite3, ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
-  types.push(addSystemType('Block', MapBlockRigitBody, ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
-  types.push(addSystemType('Boundary', MapBoundaryRigitBody, ['x: number', 'y: number', 'z: number', 'name: string', 'id: number']));
 
   return module;
 }
@@ -103,7 +82,7 @@ function setGravity(val: number) {
 export function createPhysicsModule(): ModuleNode {
   let module = createModuleNode('Physics')
 
-  module.procs.push(addSystemFunc(module, 'setGravity', ['value: number'], 'void', true, setGravity));
+  module.funcs.push(addSystemFunc(module, 'setGravity', ['value: number'], 'void', true, setGravity));
 
   return module;
 }

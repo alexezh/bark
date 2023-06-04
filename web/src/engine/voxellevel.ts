@@ -1,4 +1,4 @@
-import { AmbientLight, BufferGeometry, DirectionalLight, Mesh, MeshPhongMaterial, Scene, Vector3 } from "three";
+import { AmbientLight, BufferGeometry, DirectionalLight, Mesh, MeshBasicMaterial, MeshPhongMaterial, PlaneGeometry, Scene, Vector3 } from "three";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { MeshLevelLayer } from "./maplayer";
 import { VoxelModel } from "../voxel/voxelmodel";
@@ -18,6 +18,8 @@ export class MeshModel {
         this.mesh = new Mesh(geo, this.material);
     }
 }
+
+export const infiniteDown = -1000000;
 
 //////////////////////////////////////////////////////////////////////
 // Maps class - Loading of maps from images
@@ -133,6 +135,24 @@ export class VoxelLevel implements IVoxelLevel {
         let wsz = this.worldSize;
         this.directionalLight.position.set(wsz.sx / 2, wsz.sy * 5, wsz.sz / 2).normalize();
         this.scene.add(this.directionalLight);
+
+
+        console.log(`onLevelLoaded: world size ${wsz.sx} ${wsz.sy} ${wsz.sz}`);
+
+        // add geometry covering map on the bottom so we can handle all clicks within map
+        // y is vertical, rotate around x to make it horizontal
+        const floorGeometry = new PlaneGeometry(wsz.sx, wsz.sz);
+        floorGeometry.rotateX(- Math.PI / 2);
+        let floor = new Mesh(floorGeometry, new MeshBasicMaterial({ visible: false }));
+        floor.position.set(0, -100, 0);
+        this.scene!.add(floor);
+
+        /*
+        const ceilingGeometry = new PlaneGeometry(wsz.sx, wsz.sz);
+        ceilingGeometry.rotateX(- Math.PI / 2);
+        let ceiling = new Mesh(ceilingGeometry, new MeshBasicMaterial({ visible: false }));
+        this.scene!.add(floor);
+        */
 
         return true;
     }
@@ -259,7 +279,7 @@ export class VoxelLevel implements IVoxelLevel {
             }
         }
 
-        return -100000000;
+        return infiniteDown;
     }
 
     private onFileChangeBlock(blocks: FileMapBlock[]) {

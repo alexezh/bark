@@ -48,7 +48,8 @@ export type AstNode = {
 export type ModuleNode = AstNode & {
   name: string | undefined,
   types: TypeDefNode[];
-  procs: AstNode[];
+  funcs: FuncDefNode[];
+  vars: VarDefNode[];
   on: OnNode[];
 }
 
@@ -64,11 +65,16 @@ export type ParamDefNode = AstNode & {
 
 export type FuncDefNode = AstNode & {
   module: ModuleNode;
-  name: Token;
+  name: Token | undefined;
   returnType: Token | undefined;
   params: ParamDefNode[];
   isAsync: boolean;
   body: BlockNode | Function;
+}
+
+export type OnNode = FuncDefNode & {
+  event: Token;
+  filter: Token | undefined;
 }
 
 export type FieldDef = {
@@ -104,13 +110,6 @@ export type CallNode = StatementNode & {
   name: Token;
   params: CallParamNode[];
   funcDef?: FuncDefNode;
-}
-
-export type OnNode = StatementNode & {
-  name: Token;
-  params: ParamDefNode[],
-  isAsync: boolean,
-  body: BlockNode
 }
 
 export type OpNode = AstNode & {
@@ -182,7 +181,7 @@ export type WhileNode = StatementNode & {
 export function forEachChild(ast: AstNode, func: (ast: AstNode) => void) {
   switch (ast.kind) {
     case AstNodeKind.module:
-      (ast as ModuleNode).procs.forEach(func);
+      (ast as ModuleNode).funcs.forEach(func);
       break;
     case AstNodeKind.funcDef:
       let body = (ast as FuncDefNode).body;

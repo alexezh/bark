@@ -24,3 +24,7 @@ export class ParseError {
     this.token = token?.value;
   }
 }
+
+export function throwUnexpectedError(token: Token, exp: string) {
+  throw new ParseError(ParseErrorCode.InvalidArg, token, `Expecting ${exp}, got ${token.value}`);
+}

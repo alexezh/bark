@@ -1,6 +1,6 @@
 import { ICodeLoader } from "../engine/ivm";
-import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForeachNode, ForNode, ForeverNode, FuncDefNode, IfNode, ModuleNode, OnNode, ReturnNode, StatementNode, VarDefNode, WhileNode } from "./ast"
-import { ParseError, ParseErrorCode } from "./parseerror";
+import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForeachNode, ForNode, ForeverNode, FuncDefNode, IfNode, ModuleNode, OnNode, ReturnNode, StatementNode, VarDefNode, WhileNode, AstError } from "./ast"
+import { ParseError, ParseErrorCode, throwUnexpectedError } from "./parseerror";
 
 class ValidationContext {
   parent: ValidationContext | undefined;
@@ -55,26 +55,25 @@ export function validateModule(module: ModuleNode, loader: ICodeLoader | undefin
   let ctx = new ValidationContext(module, undefined);
 
   if (loader) {
-    for (let proc of loader.functions()) {
-      if (proc.kind === AstNodeKind.funcDef) {
-        if (proc.module.name === undefined) {
-          ctx.funcDefs.set(proc.name.value, proc);
+    for (let func of loader.functions()) {
+      if (func.name) {
+        if (func.module.name === undefined) {
+          ctx.funcDefs.set(func.name.value, func);
         } else {
-          ctx.funcDefs.set(proc.module.name + '.' + proc.name.value, proc);
+          ctx.funcDefs.set(func.module.name + '.' + func.name.value, func);
         }
       }
     };
   } else {
     // first fill in method defs
-    for (let node of module.procs) {
-      if (node.kind === AstNodeKind.funcDef) {
-        let fd = node as FuncDefNode;
-        ctx.funcDefs.set(fd.name.value, fd);
+    for (let func of module.funcs) {
+      if (func.name) {
+        ctx.funcDefs.set(func.name.value, func);
       }
     }
   }
 
-  for (let node of module.procs) {
+  for (let node of module.funcs) {
     validateNode(ctx, node);
   }
 
@@ -151,6 +150,10 @@ function validateFuncDef(parentCtx: ValidationContext, ast: FuncDefNode) {
 }
 
 function validateOn(parentCtx: ValidationContext, ast: OnNode) {
+  if (!(ast.event.value === 'start' || ast.event.value === 'load' || ast.event.value === 'message')) {
+    throwUnexpectedError(ast.event, 'start|load|message');
+  }
+
   if (ast.body instanceof Function) {
     ;
   } else {

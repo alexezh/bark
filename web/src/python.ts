@@ -33,9 +33,9 @@ async function createMonky(): Promise<Sprite3> {
 export function boxedGame() {
   let char!: Sprite3;
 
-  vm.onLoad(onLoad);
-  vm.onStart(moveMonkey);
-  vm.onStart(dropObject);
+  vm.runner.onLoad(onLoad);
+  vm.runner.onStart(moveMonkey);
+  vm.runner.onStart(dropObject);
 
   async function onLoad(): Promise<void> {
     // create controller and options such as repeat rate and so on
@@ -169,14 +169,16 @@ export function boxedBasic(): string {
 
 export function boxedBasic2(): string {
   return `
-    on load() begin
+    on load function() begin
       System.loadLevel 'default'
 
       ThirdPersonController.activate maxSpeed:=40 keySpeed:=10 thumbSpeed:=10 timeoutSeconds:=0.1
     end
 
-    on start() begin
-      var monky:= System.createMammal4Sprite 'monky' 'vox/monky.vox' scale:=0.5
+    var monky;
+
+    on start function() begin
+      monky:= Sprite.createMammal4Sprite 'monky' 'vox/monky.vox' scale:=0.5
       Sprite.setPosition monky 120 20 120
 
       var ma:= Sprite.addAnimation monky 'move'
@@ -188,6 +190,9 @@ export function boxedBasic2(): string {
 
       System.setThirdPersonCamera monky x:=0 y:=50 z:=100
 
+      System.log 'send start message'
+      System.sendMessage 'startMonky' monky
+
       forever do
         var ev := ThirdPersonController.readInput();
   
@@ -196,9 +201,44 @@ export function boxedBasic2(): string {
         else
           Sprite.animate monky 'stand'
         end
-        Sprite.setSpeed monky ev.speedX 0 ev.speedZ
+        Sprite.setSpeed monky x:=ev.speedX y:=0 z:=ev.speedZ
         Sprite.setAngleXZ monky ev.angleXZ
+
+        if ev.fire then
+          System.sendMessage 'shootBread' monky
+        end
       end
     end
-      `;
+
+    on message='startMonky' function(monky: Sprite) begin
+      System.log 'start monky'
+      forever do
+        var collision := System.waitCollide monky
+        if collision is Sprite.Boundary then
+          System.log('Boundary')
+          System.sendMessage 'killedMonkey'
+          break;
+        end
+      end
+    end
+
+    on message='shootBread' function(monky: Sprite) begin
+      var bullet := Sprite.createProjectile 'vox/bread.vox'
+      Sprite.setSpeed bullet 100 20
+      forever do
+        var collision := System.waitCollide bullet
+        if collision = Sprite.Sprite then
+          Sprite.removeSprite(bullet);
+          break;
+        elif collision != null then
+          Sprite.removeSprite(bullet);
+          break;
+        end
+      end
+    end
+
+    on message='killedMonkey' function(monky: Sprite) begin
+
+    end
+    `;
 }

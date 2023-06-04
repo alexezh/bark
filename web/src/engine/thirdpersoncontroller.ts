@@ -1,14 +1,20 @@
 import { ModuleNode } from "../basic/ast";
-import { addSystemFunc, createModuleNode } from "../basic/systemfunc";
+import { addSystemFunc, addSystemType, createModuleNode } from "../basic/lib/systemfunc";
 import { KeyBinder } from "../ui/keybinder";
 import { IGamePhysicsInputController } from "./igamephysics";
 import { IInputController, vm } from "./ivm";
-import { IMoveEvent2D, MoveControllerConfig } from "./movecontroller2d";
+import { IMoveEvent2D, MoveControllerConfig, MoveEvent2D } from "./movecontroller2d";
 
-interface IThirdPersonControllerMoveEvent {
-  speedX: number,
-  speedZ: number,
-  angleXZ: number
+export class ThirdPersonControllerMoveEvent {
+  public readonly speedX: number;
+  public readonly speedZ: number;
+  public readonly angleXZ: number;
+
+  public constructor(speedX: number, speedZ: number, angleXZ: number) {
+    this.speedX = speedX;
+    this.speedZ = speedZ;
+    this.angleXZ = angleXZ;
+  }
 }
 
 export type ThirdPersonControllerConfig = {
@@ -72,7 +78,7 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
     this.attachGamepad();
   }
 
-  public async readInput(): Promise<IThirdPersonControllerMoveEvent | undefined> {
+  public async readInput(): Promise<ThirdPersonControllerMoveEvent | undefined> {
     if (!this.started) {
       return undefined;
     }
@@ -216,7 +222,7 @@ function activate(
 }
 
 
-function readInput(): Promise<IThirdPersonControllerMoveEvent | undefined> {
+function readInput(): Promise<ThirdPersonControllerMoveEvent | undefined> {
   if (controller === undefined) {
     return Promise.resolve(undefined);
   }
@@ -228,12 +234,14 @@ export function createThirdPersonControllerModule(): ModuleNode {
 
   let module = createModuleNode('ThirdPersonController');
 
-  module.procs.push(addSystemFunc(module, 'readInput', [], 'void', true, readInput));
-  module.procs.push(addSystemFunc(module, 'activate', [
+  module.funcs.push(addSystemFunc(module, 'readInput', [], 'void', true, readInput));
+  module.funcs.push(addSystemFunc(module, 'activate', [
     'maxSpeed:number',
     'keySpeed:number',
     'thumbSpeed:number',
     'timeoutSeconds:number'], 'void', false, activate));
+
+  module.types.push(addSystemType('MoveEvent2D', ThirdPersonControllerMoveEvent, ['speedX: number', 'speedZ: number']));
 
   return module;
 }

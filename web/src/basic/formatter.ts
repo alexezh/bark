@@ -104,7 +104,7 @@ export function renderModule(ast: ModuleNode) {
     renderNode(modelBlock, on);
   }
 
-  for (let p of ast.procs) {
+  for (let p of ast.funcs) {
     renderNode(modelBlock, p);
   }
 
@@ -114,8 +114,8 @@ export function renderModule(ast: ModuleNode) {
 function renderFuncDef(parentBlock: TextBlock, ast: FuncDefNode) {
   let ctx = parentBlock.appendBlock(ast);
 
-  let line = ctx.appendLine('proc', ast, { selectable: false });
-  line.appendToken(ast.name, { selectable: true });
+  let line = ctx.appendLine('function', ast, { selectable: false });
+  line.appendToken(ast.name!, { selectable: true });
   line.appendConst('(', { selectable: false });
 
   renderParams(line, ast.params);
@@ -155,7 +155,7 @@ function renderOn(parentBlock: TextBlock, ast: OnNode) {
   let ctx = parentBlock.appendBlock(ast);
 
   let line = ctx.appendLine('on', undefined, { selectable: false });
-  line.appendToken(ast.name, {});
+  line.appendToken(ast.event, {});
   line.appendConst('(', { spaceLeft: false, selectable: false });
   if (ast.params.length > 0) {
     renderParams(line, ast.params);

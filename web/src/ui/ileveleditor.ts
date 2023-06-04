@@ -13,5 +13,8 @@ export interface ILevelEditor {
   cutBlock(): void;
   clearBlock(): void;
   pasteBlock(): void;
+  rotateXZ(): void;
+  flipX(): void;
+  flipZ(): void;
 }
 

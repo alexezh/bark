@@ -5,7 +5,7 @@ import { Sprite3 } from "./sprite3";
 import { FrameClock } from "./clock";
 import { IRigitModel } from "./irigitmodel";
 import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxellevel";
-import { FuncDefNode, ModuleNode, OnNode } from "../basic/ast";
+import { FuncDefNode, ModuleNode, OnNode, VarDefNode } from "../basic/ast";
 import { ILevelEditor } from "../ui/ileveleditor";
 import { IRigitBody } from "../voxel/irigitbody";
 
@@ -26,6 +26,7 @@ export interface ICodeLoader {
   userModules(): Iterable<ModuleNode>;
   userFunctions(): Iterable<FuncDefNode>;
   functions(): Iterable<FuncDefNode>;
+  vars(): Iterable<VarDefNode>;
   userOns(): Iterable<OnNode>;
   imports(): Iterable<ModuleNode>;
 
@@ -41,7 +42,7 @@ export interface IVMCodeRunner {
   onMessage(address: string, func: (msg: any) => Promise<void>);
 }
 
-export interface IVM extends IVMCodeRunner {
+export interface IVM {
   get level(): IVoxelLevel;
   get physics(): IGamePhysics;
   get canvas(): HTMLElement;
@@ -49,6 +50,7 @@ export interface IVM extends IVMCodeRunner {
   get levelFile(): IVoxelLevelFile;
   get camera(): ICameraLayer;
   get loader(): ICodeLoader;
+  get runner(): IVMCodeRunner;
   get levelEditor(): ILevelEditor | undefined;
 
   attachCamera(camera: ICameraLayer): void;
@@ -91,11 +93,13 @@ export interface IVM extends IVMCodeRunner {
   removeSprite(sprite: Sprite3);
   forever(func: () => Promise<void>): Promise<void>;
 
+  sendMesssage(address: string, msg: any): Promise<void>;
+
   // wait for any sprites in the list to collide
   // multiple threads can call wait on different groups of sprites
   // as an alternative, app code can register handler on sprite level and
   // get all information there
-  waitCollide(sprite: Sprite3, timeout: number): Promise<IRigitBody | null>;
+  waitCollide(sprite: Sprite3, timeout: number | undefined): Promise<IRigitBody | null>;
 
   createExplosion(pos: Vector3): void;
 

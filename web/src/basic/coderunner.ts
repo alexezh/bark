@@ -1,7 +1,7 @@
 import { ICodeLoader, IVMCodeRunner } from "../engine/ivm";
 import { ModuleNode } from "./ast";
 
-export type MessageHandler = (msg: any) => Promise<void>;
+export type MessageHandler = (...args: any[]) => Promise<void>;
 export type StartHandler = () => Promise<void>;
 export type LoadHandler = () => Promise<void>;
 
@@ -44,7 +44,7 @@ export class CodeRunner implements IVMCodeRunner {
     this._loadHandlers.length = 0;
   }
 
-  public async sendMesssage(address: string, msg: any): Promise<void> {
+  public async sendMesssage(address: string, ...args: any[]): Promise<void> {
     let handlers = this._messageHandlers.get(address);
     if (handlers === undefined) {
       return;
@@ -53,7 +53,7 @@ export class CodeRunner implements IVMCodeRunner {
     setTimeout(async () => {
       try {
         for (let h of handlers!) {
-          h(msg);
+          h(args);
         }
       }
       catch (e) {

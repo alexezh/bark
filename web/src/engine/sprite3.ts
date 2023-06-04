@@ -31,11 +31,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
    * we are moving sideways while looking in direction
    */
   private _speed: Vector3 = new Vector3();
-
-  /**
-   * absolute (world) speed (computed from speed and direction)
-   */
-  private _worldSpeed: Vector3 = new Vector3();
+  private _physicsSpeed: Vector3 | undefined;
 
   /**
    * direction of the move
@@ -53,8 +49,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   public get name(): string { return this._name; }
   public get kind(): RigitBodyKind { return RigitBodyKind.sprite; }
 
-  get relativeSpeed(): Vector3 { return this._speed; }
-  public get worldSpeed(): Vector3 { return this._worldSpeed };
+  public get relativeSpeed(): Vector3 { return this._speed; }
   public get position(): Vector3 { return this._position.clone() };
   public get size(): Vector3 { return this.rigit.size };
   public get gravityFactor(): number { return 1 };
@@ -63,6 +58,10 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   public get x(): number { return this._position.x };
   public get y(): number { return this._position.y };
   public get z(): number { return this._position.z };
+
+  public get worldSpeed(): Vector3 {
+    return this._worldSpeed
+  };
 
   public constructor(name: string, rigit?: IRigitModel) {
     this._id = Sprite3._nextId++;
@@ -96,8 +95,8 @@ export class Sprite3 implements IRigitBody, IDigSprite {
     this.rigit.setPosition(pos);
   }
 
-  public adjustWorldSpeed(speed: Vector3) {
-
+  public setPhysicsSpeed(speed: Vector3 | undefined) {
+    this._physicsSpeed = speed;
   }
 
   /**
@@ -111,7 +110,6 @@ export class Sprite3 implements IRigitBody, IDigSprite {
     }
 
     this._speed = speed;
-    this.computeWorldSpeed();
     if (this._trackingCamera) {
       this._trackingCamera.onTargetSpeed(speed);
     }
@@ -123,7 +121,6 @@ export class Sprite3 implements IRigitBody, IDigSprite {
     }
 
     this._angleXZ = angle;
-    this.computeWorldSpeed();
 
     // TODO: need to separate speed from direction
     this.rigit.setDirectionXZ(angle);
@@ -132,10 +129,6 @@ export class Sprite3 implements IRigitBody, IDigSprite {
     if (this._trackingCamera) {
       this._trackingCamera.onTargetDirectionXZ(angle);
     }
-  }
-
-  private computeWorldSpeed() {
-    this._worldSpeed = this._speed.clone().applyAxisAngle(new Vector3(0, 1, 0), this._angleXZ);
   }
 
   public aabb(pos: Vector3 | undefined): RigitAABB {
