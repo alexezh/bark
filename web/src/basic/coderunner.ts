@@ -53,7 +53,7 @@ export class CodeRunner implements IVMCodeRunner {
     setTimeout(async () => {
       try {
         for (let h of handlers!) {
-          h(args);
+          h(...args);
         }
       }
       catch (e) {

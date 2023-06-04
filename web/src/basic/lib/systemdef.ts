@@ -12,6 +12,16 @@ function loadLevel(name: string): Promise<void> {
   return vm.loadLevel(name);
 }
 
+/**
+ * restarts app by running stop/start
+ */
+function restart() {
+  setTimeout(async () => {
+    vm.stop();
+    await vm.start();
+  });
+}
+
 async function waitCollide(sprite: IDigSprite, timeout: number): Promise<Sprite3 | MapBlockRigitBody | MapBoundaryRigitBody | null> {
   //vm.createSprite()
   let collide = await vm.waitCollide(sprite as Sprite3, timeout);
@@ -67,6 +77,7 @@ export function createSystemModule(): ModuleNode {
   funcs.push(addSystemFunc(module, 'spawn', ['func: function(Sprite):void', '...any[]'], 'void', true, sleep));
   funcs.push(addSystemFunc(module, 'log', ['text: string'], 'void', false, console.log));
 
+  funcs.push(addSystemFunc(module, 'restart', [], 'void', true, restart));
   funcs.push(addSystemFunc(module, 'loadLevel', ['name:string'], 'void', true, loadLevel));
   funcs.push(addSystemFunc(module, 'deleteBlock', ['block:Block'], 'void', false, deleteBlock));
   funcs.push(addSystemFunc(module, 'createExplosion', ['x: number', 'y: number', 'z: number'], 'void', false, createExplosion));

@@ -32,6 +32,7 @@ export class VoxelLevel implements IVoxelLevel {
     private _file: IVoxelLevelFile;
     private layers: MeshLevelLayer[] = [];
 
+    private floorLevel = -30;
     private ambientLight!: AmbientLight;
     private directionalLight!: DirectionalLight;
 
@@ -144,7 +145,7 @@ export class VoxelLevel implements IVoxelLevel {
         const floorGeometry = new PlaneGeometry(wsz.sx, wsz.sz);
         floorGeometry.rotateX(- Math.PI / 2);
         let floor = new Mesh(floorGeometry, new MeshBasicMaterial({ visible: false }));
-        floor.position.set(0, -100, 0);
+        floor.position.set(0, this.floorLevel, 0);
         this.scene!.add(floor);
 
         /*
@@ -224,7 +225,7 @@ export class VoxelLevel implements IVoxelLevel {
 
         let sz = ro.size;
 
-        if (pos.y < 0) {
+        if (pos.y < this.floorLevel) {
             func(new MapBoundaryRigitBody(new Vector3(pos.x, 0, pos.z), new Vector3(0, 0, 0)));
             return true;
         }
@@ -266,6 +267,10 @@ export class VoxelLevel implements IVoxelLevel {
 
     // positive distance is we are above the surface
     public getDistanceY(ro: IRigitBody, pos: Vector3): number {
+        if (pos.y < 0) {
+            return infiniteDown;
+        }
+
         let layerIdx = (pos.y / this._blockSize) | 0;
         if (layerIdx < 0 || layerIdx >= this.layers.length) {
             return 0;

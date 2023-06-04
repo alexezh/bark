@@ -1,12 +1,10 @@
 import { Vector3 } from "three";
 import { Sprite3 } from "../../engine/sprite3";
-import { AstNodeKind, FuncDefNode, ModuleNode, TypeDefNode } from "../ast";
+import { ModuleNode } from "../ast";
 import { addSystemFunc, addSystemType, createModuleNode } from "./systemfunc";
 import { StaticCubeModel } from "../../engine/avatars/staticcubemodel";
 import { Mammal4Model } from "../../engine/avatars/mammal4";
 import { vm } from "../../engine/ivm";
-import { createSystemModule } from "./systemdef";
-import { MoveEvent2D } from "../../engine/movecontroller2d";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../../voxel/mapblockrigitbody";
 
 type DigAnimation = {
@@ -14,16 +12,26 @@ type DigAnimation = {
   name: string;
 }
 
-function createProjectile(uri: string, scale?: number): Promise<IDigSprite> {
-  return vm.createSprite('', uri, new StaticCubeModel(scale ?? 1.0));
+/**
+ * projectile is special sprites which collide with other sprites but 
+ * not other projectiles
+ */
+async function createProjectile(baseSprite: Sprite3, uri: string, scale?: number): Promise<IDigSprite> {
+  let sprite = await vm.createSprite('', uri, new StaticCubeModel(scale ?? 1.0));
+  vm.physics.addProjectile(sprite);
+  return sprite;
 }
 
-function createCubeSprite(name: string, uri: string, scale?: number): Promise<IDigSprite> {
-  return vm.createSprite(name, uri, new StaticCubeModel(scale ?? 1.0));
+async function createCubeSprite(name: string, uri: string, scale?: number): Promise<IDigSprite> {
+  let sprite = await vm.createSprite(name, uri, new StaticCubeModel(scale ?? 1.0));
+  vm.physics.addRigitObject(sprite);
+  return sprite;
 }
 
-function createMammal4Sprite(name: string, uri: string, scale?: number): Promise<IDigSprite> {
-  return vm.createSprite(name, uri, new Mammal4Model(scale ?? 1.0));
+async function createMammal4Sprite(name: string, uri: string, scale?: number): Promise<IDigSprite> {
+  let sprite = await vm.createSprite(name, uri, new Mammal4Model(scale ?? 1.0));
+  vm.physics.addRigitObject(sprite);
+  return sprite;
 }
 
 function removeSprite(sprite: IDigSprite) {

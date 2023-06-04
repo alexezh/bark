@@ -10,10 +10,9 @@ import { infiniteDown } from "./voxellevel";
 export class GamePhysics implements IGamePhysics {
   private map: IVoxelLevel;
   private bodies: IRigitBody[] = [];
+  private projectiles: IRigitBody[] = [];
   private broadphase: BroadphaseCollision = new BroadphaseCollision();
   private gravity: number = 10;
-  private collisionHandler?: IGameCollisionHandler;
-  private input?: IGamePhysicsInputController;
   private _collideHandler: RigitCollisionHandler | undefined;
   private static collideHandlerSymbol = Symbol('CollideHandler');
 
@@ -21,25 +20,26 @@ export class GamePhysics implements IGamePhysics {
     this.map = map;
   }
 
-  public attachInputController(handler?: IGamePhysicsInputController) {
-    this.input = handler;
-  }
-
-  public attachCollisionHandler(handler?: IGameCollisionHandler) {
-    this.collisionHandler = handler;
-  }
-
   public addRigitObject(ro: IRigitBody): void {
     this.bodies.push(ro);
-  }
-
-  public setCollideHandler(func: RigitCollisionHandler | undefined) {
-    this._collideHandler = func;
   }
 
   public removeRigitObject(ro: IRigitBody): void {
     // ATT: we do not expect this happen often
     _.remove(this.bodies, (x: IRigitBody) => { return x === ro });
+  }
+
+  public addProjectile(ro: IRigitBody): void {
+
+  }
+
+  public removeProjectile(ro: IRigitBody): void {
+    // ATT: we do not expect this happen often
+    _.remove(this.projectiles, (x: IRigitBody) => { return x === ro });
+  }
+
+  public setCollideHandler(func: RigitCollisionHandler | undefined) {
+    this._collideHandler = func;
   }
 
   public update(dt: number): void {
@@ -62,7 +62,7 @@ export class GamePhysics implements IGamePhysics {
 
     for (let o of this.bodies) {
       // clone speed so we can apply dt to it
-      let s = o.worldSpeed.clone();
+      let s = o.getWorldSpeed();
 
       if (o.gravityFactor === 0 || (s.x === 0 && s.y === 0 && s.z === 0)) {
         continue;
@@ -71,16 +71,13 @@ export class GamePhysics implements IGamePhysics {
       s.multiplyScalar(dt);
       let p = o.position.clone().add(s);
 
-      let newSpeed: Vector3 | undefined = undefined;
+      let deltaSpeedY: number | undefined;
       if (o.gravityFactor > 0) {
         let delta = this.detectSurface(o, p, dt);
         if (delta.deltaPosY != 0) {
-          p.setY(p.y + delta.deltaPosY);
+          p.y += delta.deltaPosY;
         }
-        if (delta.deltaSpeedY != 0) {
-          newSpeed = o.worldSpeed.clone();
-          newSpeed.setY(newSpeed.y + delta.deltaSpeedY);
-        }
+        deltaSpeedY = delta.deltaSpeedY;
       }
 
       // check if intersecs with the map
@@ -95,12 +92,15 @@ export class GamePhysics implements IGamePhysics {
       // and going back up. We do not want to notify about collision for such
       // trivial cases. 
       if (collided) {
-        o.setPhysicsSpeed(new Vector3(0, 0, 0));
+        // if we collide, we do not move; but we keep user speed untouched??
+        o.setPhysicsSpeed(undefined);
         collisions.push({ source: o, target: intersectBody! });
       } else {
         o.onMove(p);
-        if (newSpeed) {
-          o.setPhysicsSpeed(newSpeed);
+        if (deltaSpeedY !== undefined) {
+          o.setPhysicsSpeed(new Vector3(0, o.physicsSpeed.y + deltaSpeedY, 0));
+        } else {
+          o.setPhysicsSpeed(undefined);
         }
       }
     }
@@ -118,7 +118,7 @@ export class GamePhysics implements IGamePhysics {
     let dist = this.map.getDistanceY(o, pos);
     if (dist < 0) {
       if (dist === infiniteDown) {
-        console.log(`fall: ${pos.y} ${dist} ${dt * this.gravity}`);
+        //console.log(`fall: ${pos.y} ${dist} ${dt * this.gravity}`);
       }
       return {
         deltaPosY: -dt * this.gravity,

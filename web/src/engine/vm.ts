@@ -207,8 +207,8 @@ export class VM implements IVM {
     await s.load(uri);
 
     this._sprites.set(s.id, s);
-    this.physics.addRigitObject(s, undefined);
     s.addToScene(this._camera!.scene!);
+
     return s;
   }
 

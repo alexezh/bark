@@ -54,13 +54,21 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   public get size(): Vector3 { return this.rigit.size };
   public get gravityFactor(): number { return 1 };
   public get maxClimbSpeed(): number { return 20 };
+  public get physicsSpeed(): Vector3 { return this._physicsSpeed ?? new Vector3(0, 0, 0); }
 
   public get x(): number { return this._position.x };
   public get y(): number { return this._position.y };
   public get z(): number { return this._position.z };
 
-  public get worldSpeed(): Vector3 {
-    return this._worldSpeed
+  /**
+   * world speed is combination of physics speed, user speed and direction
+   */
+  public getWorldSpeed(): Vector3 {
+    let speed = this._speed.clone().applyAxisAngle(new Vector3(0, 1, 0), this._angleXZ);
+    if (this._physicsSpeed) {
+      speed.add(this._physicsSpeed);
+    }
+    return speed;
   };
 
   public constructor(name: string, rigit?: IRigitModel) {

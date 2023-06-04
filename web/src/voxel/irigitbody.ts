@@ -49,7 +49,7 @@ export interface IRigitBody {
    * sprite compute speed based on direction
    * physics engine will call adjustWorldSpeed once final compute is done
    */
-  get worldSpeed(): Vector3;
+  getWorldSpeed(): Vector3;
 
   /**
    * speed relative to current direction
@@ -64,13 +64,14 @@ export interface IRigitBody {
   /**
    * set an updated speed (adjusted to possible collision and gravity)
    */
-  setPhysicsSpeed(speed: Vector3): void;
+  setPhysicsSpeed(speed: Vector3 | undefined): void;
 
   /**
    * returns current position
    */
   get position(): Vector3;
   get size(): Vector3;
+  get physicsSpeed(): Vector3;
 
   /**
    * update position from physics engine based on slope, gravity and collision

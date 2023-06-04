@@ -18,7 +18,8 @@ export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   get kind(): RigitBodyKind { return RigitBodyKind.block; }
   get owner(): any { return undefined }
   get relativeSpeed(): Vector3 { return new Vector3(0, 0, 0); }
-  get worldSpeed(): Vector3 { return new Vector3(0, 0, 0); }
+  get physicsSpeed(): Vector3 { return new Vector3(0, 0, 0); }
+
   get position(): Vector3 { return this._pos; }
   get size(): Vector3 { return this.mapBlock!.model!.size; }
   get gravityFactor(): number { return 0 }
@@ -28,10 +29,12 @@ export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   public get y(): number { return this._pos.y };
   public get z(): number { return this._pos.z };
 
+  getWorldSpeed(): Vector3 { return new Vector3(0, 0, 0); }
+
   aabb(pos: Vector3 | undefined): RigitAABB {
     return { xStart: 0, xEnd: 0, yStart: 0, yEnd: 0, zStart: 0, zEnd: 0 }
   }
-  setPhysicsSpeed(speed: Vector3) {
+  setPhysicsSpeed(speed: Vector3 | undefined) {
   }
   setSpeed(speed: Vector3): void {
   }
@@ -53,7 +56,7 @@ export class MapBoundaryRigitBody implements IRigitBody, IDigBoundary {
   get kind(): RigitBodyKind { return RigitBodyKind.boundary; }
   get owner(): any { return undefined }
   get relativeSpeed(): Vector3 { return new Vector3(0, 0, 0); }
-  get worldSpeed(): Vector3 { return new Vector3(0, 0, 0); }
+  get physicsSpeed(): Vector3 { return new Vector3(0, 0, 0); }
   get position(): Vector3 { return this._pos; }
   get size(): Vector3 { return this._size; }
   get gravityFactor(): number { return 0 }
@@ -63,10 +66,11 @@ export class MapBoundaryRigitBody implements IRigitBody, IDigBoundary {
   public get y(): number { return this._pos.y };
   public get z(): number { return this._pos.z };
 
+  getWorldSpeed(): Vector3 { return new Vector3(0, 0, 0); }
   aabb(pos: Vector3 | undefined): RigitAABB {
     return { xStart: 0, xEnd: 0, yStart: 0, yEnd: 0, zStart: 0, zEnd: 0 }
   }
-  setPhysicsSpeed(speed: Vector3) {
+  setPhysicsSpeed(speed: Vector3 | undefined) {
   }
   setSpeed(speed: Vector3): void {
   }

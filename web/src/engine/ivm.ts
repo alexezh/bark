@@ -74,6 +74,7 @@ export interface IVM {
    * run the game
    */
   start(): Promise<void>;
+
   /**
    * stop the game
    * disconnect input handlers
@@ -86,10 +87,18 @@ export interface IVM {
    */
   onRenderFrame(): void;
 
+  /**
+   * create sprite and adds it to scene
+   * does not add it to physics; caller should do this
+   */
   createSprite(
     name: string,
     uri: string,
     rm: IRigitModel | undefined): Promise<Sprite3>;
+
+  /**
+   * removes sprite from the scene
+   */
   removeSprite(sprite: Sprite3);
   forever(func: () => Promise<void>): Promise<void>;
 
