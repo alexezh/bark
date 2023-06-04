@@ -7,6 +7,10 @@ export class ThirtPersonCamera implements ITrackingCamera {
   private sprite: Sprite3;
   private cameraOffset: Vector3;
   private spritePosition: Vector3;
+
+  /**
+   * direction in which sprite is looking
+   */
   private angleXZ: number = 0;
 
   // offset related to sprite direction; such as x, y, 0 means camera behind by X units
@@ -29,7 +33,7 @@ export class ThirtPersonCamera implements ITrackingCamera {
   }
 
   onTargetMove(pos: Vector3): void {
-    this.spritePosition = pos;
+    this.spritePosition = pos.clone();
     this.updateCameraPos();
   }
 
@@ -45,7 +49,10 @@ export class ThirtPersonCamera implements ITrackingCamera {
     let cpos = this.spritePosition.clone();
     let off = this.cameraOffset.clone();
 
-    off.applyAxisAngle(new Vector3(0, 1, 0), this.angleXZ);
+    // we are behind model in x direction; left/right is z direction
+    // 0 degree angle is in z direction. We want to rotate offset by 90 degree more
+    // to get behind the model
+    off.applyAxisAngle(new Vector3(0, 1, 0), this.angleXZ - Math.PI / 2);
 
     // we need to translate offset vector in direction of 
     cpos.add(off);
@@ -53,7 +60,7 @@ export class ThirtPersonCamera implements ITrackingCamera {
     this.cameraGroup.position.copy(cpos);
     (this.camera as PerspectiveCamera).updateProjectionMatrix();
 
-    //let qt = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), angle);
+    // camera is looking in direction of the model
     this.cameraGroup.quaternion.setFromAxisAngle(new Vector3(0, 1, 0), this.angleXZ);
   }
 }

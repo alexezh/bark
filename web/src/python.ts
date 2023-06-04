@@ -188,7 +188,7 @@ export function boxedBasic2(): string {
       ma:= Sprite.addAnimation monky 'stand'
       Sprite.addFrame ma idx:= 0 dur:=0
 
-      System.setThirdPersonCamera monky x:=0 y:=50 z:=100
+      System.setThirdPersonCamera monky x:=100 y:=50 z:=0
 
       System.log 'send start message'
       System.sendMessage 'startMonky' monky
@@ -225,7 +225,7 @@ export function boxedBasic2(): string {
     on message='shootBread' function(monky: Sprite) begin
       System.log 'shoot bread'
       var bullet := Sprite.createProjectile monky 'vox/bread.vox'
-      Sprite.setSpeed bullet 100 20
+      Sprite.setSpeed bullet 100 20 0
       forever do
         var collision := System.waitCollide bullet
         if collision = Sprite.Sprite then

@@ -19,6 +19,7 @@ export interface IRigitModel {
   setPosition(pos: Vector3): void;
   setSpeed(speed: Vector3): void;
   setDirectionXZ(angle: number): void;
+  setRotationXZ(angle: number): void;
   update(): void;
 
   // call when we render the model for each frame

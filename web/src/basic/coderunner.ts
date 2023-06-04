@@ -42,6 +42,7 @@ export class CodeRunner implements IVMCodeRunner {
   public reset() {
     this._startHandlers.length = 0;
     this._loadHandlers.length = 0;
+    this._messageHandlers.clear();
   }
 
   public async sendMesssage(address: string, ...args: any[]): Promise<void> {

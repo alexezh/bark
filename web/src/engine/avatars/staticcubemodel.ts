@@ -72,6 +72,9 @@ export class StaticCubeModel implements IRigitModel {
   }
   setDirectionXZ(angle: number): void {
   }
+  setRotationXZ(angle: number): void {
+
+  }
   update(): void {
   }
 }

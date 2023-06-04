@@ -30,7 +30,7 @@ export class GamePhysics implements IGamePhysics {
   }
 
   public addProjectile(ro: IRigitBody): void {
-
+    this.projectiles.push(ro);
   }
 
   public removeProjectile(ro: IRigitBody): void {
@@ -60,53 +60,61 @@ export class GamePhysics implements IGamePhysics {
   private handleMapCollisions(dt: number) {
     let collisions: { source: IRigitBody, target: IRigitBody }[] = [];
 
+    for (let o of this.projectiles) {
+      this.handleMapCollision(o, dt, collisions)
+    }
+
     for (let o of this.bodies) {
-      // clone speed so we can apply dt to it
-      let s = o.getWorldSpeed();
-
-      if (o.gravityFactor === 0 || (s.x === 0 && s.y === 0 && s.z === 0)) {
-        continue;
-      }
-
-      s.multiplyScalar(dt);
-      let p = o.position.clone().add(s);
-
-      let deltaSpeedY: number | undefined;
-      if (o.gravityFactor > 0) {
-        let delta = this.detectSurface(o, p, dt);
-        if (delta.deltaPosY != 0) {
-          p.y += delta.deltaPosY;
-        }
-        deltaSpeedY = delta.deltaSpeedY;
-      }
-
-      // check if intersecs with the map
-      let intersectBody: IRigitBody | undefined;
-      let collided = this.map.intersectBlocks(o, p, (target: IRigitBody) => {
-        // just check if there is a block
-        intersectBody = target;
-        return true;
-      });
-
-      // when we stand on surface, we constantly trying to move down
-      // and going back up. We do not want to notify about collision for such
-      // trivial cases. 
-      if (collided) {
-        // if we collide, we do not move; but we keep user speed untouched??
-        o.setPhysicsSpeed(undefined);
-        collisions.push({ source: o, target: intersectBody! });
-      } else {
-        o.onMove(p);
-        if (deltaSpeedY !== undefined) {
-          o.setPhysicsSpeed(new Vector3(0, o.physicsSpeed.y + deltaSpeedY, 0));
-        } else {
-          o.setPhysicsSpeed(undefined);
-        }
-      }
+      this.handleMapCollision(o, dt, collisions)
     }
 
     if (collisions.length > 0) {
       this._collideHandler?.call(this, collisions);
+    }
+  }
+
+  private handleMapCollision(o: IRigitBody, dt: number, collisions: { source: IRigitBody, target: IRigitBody }[]) {
+    // clone speed so we can apply dt to it
+    let s = o.getWorldSpeed();
+
+    if (o.gravityFactor === 0 || (s.x === 0 && s.y === 0 && s.z === 0)) {
+      return;
+    }
+
+    s.multiplyScalar(dt);
+    let p = o.position.clone().add(s);
+
+    let deltaSpeedY: number | undefined;
+    if (o.gravityFactor > 0) {
+      let delta = this.detectSurface(o, p, dt);
+      if (delta.deltaPosY != 0) {
+        p.y += delta.deltaPosY;
+      }
+      deltaSpeedY = delta.deltaSpeedY;
+    }
+
+    // check if intersecs with the map
+    let intersectBody: IRigitBody | undefined;
+    let collided = this.map.intersectBlocks(o, p, (target: IRigitBody) => {
+      // just check if there is a block
+      intersectBody = target;
+      return true;
+    });
+
+    // when we stand on surface, we constantly trying to move down
+    // and going back up. We do not want to notify about collision for such
+    // trivial cases. 
+    if (collided) {
+      // if we collide, we do not move; but we keep user speed untouched??
+      o.setPhysicsSpeed(undefined);
+      collisions.push({ source: o, target: intersectBody! });
+    } else {
+      o.onMove(p);
+      if (deltaSpeedY !== undefined) {
+        o.setPhysicsSpeed(new Vector3(0, o.physicsSpeed.y + deltaSpeedY, 0));
+      } else {
+        o.setPhysicsSpeed(undefined);
+      }
     }
   }
 

@@ -11,7 +11,8 @@ export class Mammal4Model implements IRigitModel {
   private voxelModel!: VoxelModel;
   private meshModels: { [key: string]: VoxelMeshModel } = {};
   private _size!: Vector3;
-  private _angleXZ: number = 0;
+  private _directionAngleXZ: number = 0;
+  private _rotationAngleXZ: number = 0;
 
   // position is offset by the base
   private _position!: Vector3;
@@ -112,7 +113,7 @@ export class Mammal4Model implements IRigitModel {
   }
 
   public setDirectionXZ(angle: number): void {
-    if (this._angleXZ == angle) {
+    if (this._directionAngleXZ == angle) {
       return;
     }
 
@@ -120,14 +121,18 @@ export class Mammal4Model implements IRigitModel {
       return;
     }
 
-    this._angleXZ = angle;
-    // let angle = Math.atan2(-dir.x, -dir.z);
-
-    let qt = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), angle);
-    this.setRotation(qt);
+    this._directionAngleXZ = angle;
+    this.updateRotation();
   }
 
-  private setRotation(qt: Quaternion) {
+  public setRotationXZ(angle: number): void {
+    this._rotationAngleXZ = angle;
+    this.updateRotation();
+  }
+
+  private updateRotation() {
+    let qt = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), this._directionAngleXZ + this._rotationAngleXZ);
+
     for (let key of Object.keys(this.meshModels)) {
       let model = this.meshModels[key];
       model.setRotation(qt);

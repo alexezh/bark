@@ -9,11 +9,13 @@ export class ThirdPersonControllerMoveEvent {
   public readonly speedX: number;
   public readonly speedZ: number;
   public readonly angleXZ: number;
+  public readonly fire: boolean;
 
-  public constructor(speedX: number, speedZ: number, angleXZ: number) {
+  public constructor(speedX: number, speedZ: number, angleXZ: number, fire: boolean) {
     this.speedX = speedX;
     this.speedZ = speedZ;
     this.angleXZ = angleXZ;
+    this.fire = fire;
   }
 }
 
@@ -119,7 +121,8 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
       return {
         speedX: x,
         speedZ: z,
-        angleXZ: this.angleXZ
+        angleXZ: this.angleXZ,
+        fire: false
       }
     }
 
@@ -127,10 +130,13 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
     x = this.speedX;
     z = this.speedZ;
 
-    if (this.input.pressedKeys.KeyA) {
+    // there is bit of magit here
+    // we want w to be forward.. but it is relative to our position
+    // so we will rotate speed vector in sprite3.
+    if (this.input.pressedKeys.KeyS) {
       x -= this.config.keySpeed;
     }
-    if (this.input.pressedKeys.KeyD) {
+    if (this.input.pressedKeys.KeyW) {
       x += this.config.keySpeed;
     }
 
@@ -138,11 +144,11 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
       x -= Math.sign(x) * this.config.keySpeed;
     }
 
-    if (this.input.pressedKeys.KeyS) {
+    if (this.input.pressedKeys.KeyA) {
       z += this.config.keySpeed;
     }
 
-    if (this.input.pressedKeys.KeyW) {
+    if (this.input.pressedKeys.KeyD) {
       z -= this.config.keySpeed;
     }
 
@@ -171,6 +177,11 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
       }
     }
 
+    let fire = false;
+    if (this.input.pressedKeys.ArrowUp) {
+      fire = true;
+    }
+
     if (this.input.pressedKeys.ArrowDown) {
       // z += this.config.keySpeedX;
     }
@@ -182,7 +193,8 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
     return {
       speedX: x,
       speedZ: z,
-      angleXZ: this.angleXZ
+      angleXZ: this.angleXZ,
+      fire: fire
     }
   }
 
