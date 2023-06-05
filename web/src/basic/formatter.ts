@@ -134,6 +134,13 @@ function renderOn(parentBlock: TextBlock, ast: OnNode) {
 
   let line = ctx.appendLine('on', undefined, { selectable: false });
   line.appendToken(ast.event, {});
+  if (ast.filter) {
+    line.appendConst('=', { spaceLeft: false, selectable: false });
+    line.appendToken(ast.filter, {});
+  }
+
+
+  line.appendConst('function', { spaceLeft: false, selectable: false });
   line.appendConst('(', { spaceLeft: false, selectable: false });
   if (ast.params.length > 0) {
     renderParams(line, ast.params);
