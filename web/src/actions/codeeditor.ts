@@ -3,7 +3,7 @@ import { KeyBinder } from "../ui/keybinder";
 import { createButton, setElementVisible } from "../lib/htmlutils";
 import { renderModule, findParentNode, isParentNode } from "../basic/formatter";
 import { vm } from "../engine/ivm";
-import { ITextSegment, TextBlock, TextSpan } from "../basic/textblock";
+import { ATextSegment, TextBlock, TextSpan } from "../basic/textblock";
 
 export type CodeEditorProps = UiLayerProps & {
 }
@@ -11,8 +11,8 @@ export type CodeEditorProps = UiLayerProps & {
 // editor is bar on the side and code area
 export class CodeEditor {
   private renderBlock: TextBlock | undefined;
-  private selectedNode: TextBlock | ITextSegment | TextSpan | undefined = undefined;
-  private initialSelectedNode: TextBlock | ITextSegment | TextSpan | undefined = undefined;
+  private selectedNode: TextBlock | ATextSegment | TextSpan | undefined = undefined;
+  private initialSelectedNode: TextBlock | ATextSegment | TextSpan | undefined = undefined;
   private selectedElem: HTMLElement | undefined = undefined;
   public readonly editEditor: HTMLDivElement;
   private readonly editArea: HTMLDivElement;
@@ -52,7 +52,11 @@ export class CodeEditor {
   }
 
   public addAbove() {
+    if (!this.selectedNode) {
+      return;
+    }
 
+    this.selectedNode.parent.addLineAbove();
   }
 
   public addBelow() {
@@ -82,7 +86,7 @@ export class CodeEditor {
 
   }
 
-  private onTextClick(node: TextBlock | ITextSegment | TextSpan, event: Event) {
+  private onTextClick(node: TextBlock | ATextSegment | TextSpan, event: Event) {
     event.stopPropagation();
 
     if (this.selectedNode && isParentNode(this.selectedNode, node)) {
@@ -92,7 +96,7 @@ export class CodeEditor {
     }
   }
 
-  private selectNode(node: TextBlock | ITextSegment | TextSpan | undefined) {
+  private selectNode(node: TextBlock | ATextSegment | TextSpan | undefined) {
     if (this.selectedNode) {
       this.selectedElem!.style.border = '';
       this.selectedNode = undefined;
@@ -113,7 +117,7 @@ export class CodeEditor {
     this.selectedElem.style.border = 'solid';
   }
 
-  private static isParentText(v1: TextBlock | ITextSegment | TextSpan, v2: TextBlock | ITextSegment | TextSpan): boolean {
+  private static isParentText(v1: TextBlock | ATextSegment | TextSpan, v2: TextBlock | ATextSegment | TextSpan): boolean {
     if (v1 === v2) {
       return false;
     }

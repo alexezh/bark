@@ -2,7 +2,7 @@ import { AstNode } from "./ast";
 import { ParseError, ParseErrorCode } from "./parseerror";
 import { Token, TokenKind } from "./token";
 
-type clickHandler = (node: TextBlock | ITextSegment | TextSpan, event: Event) => void;
+type clickHandler = (node: TextBlock | ATextSegment | TextSpan, event: Event) => void;
 
 let nextId: number = 1;
 
@@ -17,30 +17,38 @@ export type TextStyle = {
   css?: string;
 }
 
-export interface ITextSegment {
+export abstract class ATextSegment {
   readonly id: string;
-  readonly parent: ITextSegment | TextBlock;
-  get ast(): AstNode | undefined;
+  readonly parent: ATextSegment | TextBlock;
+  public readonly ast: AstNode | undefined;
+  public readonly style: TextStyle;
 
-  render(elem: HTMLSpanElement | HTMLDivElement, onClick: (elem: TextBlock | ITextSegment | TextSpan) => void);
-  appendSegment(ast: AstNode | undefined, style: TextStyle): ITextSegment;
+  public constructor(parent: ATextSegment | TextBlock, ast: AstNode | undefined, style: TextStyle) {
+    this.id = makeId();
+    this.parent = parent;
+    this.ast = ast;
+    this.style = style;
+  }
 
-  appendConst(val: string, style: TextStyle): void;
-  appendToken(token: Token, style: TextStyle);
+  abstract render(elem: HTMLSpanElement | HTMLDivElement, onClick: (elem: TextBlock | ATextSegment | TextSpan) => void);
+  abstract appendSegment(ast: AstNode | undefined, style: TextStyle): ATextSegment;
+
+  abstract appendConst(val: string, style: TextStyle): void;
+  abstract appendToken(token: Token, style: TextStyle);
 }
 
 export class TextSpan {
   public readonly id: string;
-  public readonly parent: ITextSegment;
+  public readonly parent: ATextSegment;
   private data: Token;
   private style: TextStyle;
   public ast: AstNode | undefined = undefined;
 
-  public static fromString(parent: ITextSegment, val: string, style: TextStyle): TextSpan {
+  public static fromString(parent: ATextSegment, val: string, style: TextStyle): TextSpan {
     return new TextSpan(parent, new Token(TokenKind.String, val, 0), style);
   }
 
-  public constructor(parent: ITextSegment, token: Token, style: TextStyle) {
+  public constructor(parent: ATextSegment, token: Token, style: TextStyle) {
     this.id = makeId();
     this.parent = parent;
     this.data = token;
@@ -67,21 +75,14 @@ export class TextSpan {
   }
 }
 
-export class TextSegment implements ITextSegment {
-  public readonly id: string;
-  public readonly parent: ITextSegment | TextBlock;
-  public readonly ast: AstNode | undefined;
+export class TextSegment extends ATextSegment {
   private segments: (TextSpan | TextSegment)[] = [];
-  private style: TextStyle;
 
-  public constructor(parent: ITextSegment | TextBlock, ast: AstNode | undefined, style: TextStyle) {
-    this.id = makeId();
-    this.style = style;
-    this.ast = ast;
-    this.parent = parent;
+  public constructor(parent: ATextSegment | TextBlock, ast: AstNode | undefined, style: TextStyle) {
+    super(parent, ast, style);
   }
 
-  public appendSegment(ast: AstNode | undefined, style: TextStyle): ITextSegment {
+  public appendSegment(ast: AstNode | undefined, style: TextStyle): ATextSegment {
     let span = new TextSegment(this, ast, style);
     this.segments.push(span);
     return span;
@@ -133,7 +134,7 @@ export class TextBlock {
   public readonly ast: AstNode;
   public readonly style: TextStyle;
   private margin: number = 0;
-  private children: (ITextSegment | TextBlock)[] = [];
+  private children: (ATextSegment | TextBlock)[] = [];
 
   public constructor(parent: TextBlock | undefined, root: AstNode, style?: TextStyle) {
     this.id = makeId();
@@ -144,6 +145,10 @@ export class TextBlock {
     if (parent) {
       this.margin = parent.margin + 1;
     }
+  }
+
+  public addEmptyLineBefore() {
+
   }
 
   public appendBlock(ast: AstNode, style?: TextStyle): TextBlock {
@@ -203,21 +208,14 @@ export class TextBlock {
   }
 }
 
-export class TextLine implements ITextSegment {
-  public readonly id: string;
-  public readonly parent: TextBlock | ITextSegment;
-  public readonly ast: AstNode | undefined;
-  private style: TextStyle;
+export class TextLine extends ATextSegment {
   private segments: (TextSpan | TextSegment)[] = [];
 
   public constructor(parent: TextBlock, ast: AstNode | undefined, style?: TextStyle) {
-    this.id = makeId();
-    this.parent = parent;
-    this.ast = ast;
-    this.style = style ?? {};
+    super(parent, ast, style ?? {});
   }
 
-  public appendSegment(ast: AstNode | undefined, style: TextStyle): ITextSegment {
+  public appendSegment(ast: AstNode | undefined, style: TextStyle): ATextSegment {
     let span = new TextSegment(this, ast, style);
     this.segments.push(span);
     return span;
@@ -231,7 +229,7 @@ export class TextLine implements ITextSegment {
   }
 
   public appendToken(token: Token, style: TextStyle) {
-    if (!style.spaceLeft) {
+    if (style.spaceLeft === undefined) {
       style.spaceLeft = this.segments.length > 0;
     }
     this.segments.push(new TextSpan(this, token, style))
@@ -251,18 +249,13 @@ export class TextLine implements ITextSegment {
   }
 }
 
-export class EmptyTextLine implements ITextSegment {
-  public readonly id: string;
-  public readonly parent: TextBlock | ITextSegment;
-  public readonly ast: AstNode | undefined;
+export class EmptyTextLine extends ATextSegment {
 
   public constructor(parent: TextBlock, ast: AstNode | undefined, style?: TextStyle) {
-    this.id = makeId();
-    this.parent = parent;
-    this.ast = ast;
+    super(parent, ast, style ?? {});
   }
 
-  public appendSegment(ast: AstNode | undefined, style: TextStyle): ITextSegment {
+  public appendSegment(ast: AstNode | undefined, style: TextStyle): ATextSegment {
     throw new ParseError(ParseErrorCode.NotImpl, undefined, 'Not implemented');
   }
 

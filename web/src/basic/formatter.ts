@@ -1,10 +1,10 @@
 import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForeachNode, ForNode, ForeverNode, FuncDefNode, IfNode, OnNode, ParamDefNode, ReturnNode, StatementNode, VarDefNode, WhileNode, ModuleNode, IdNode, AstErrorCode, AstError, ConstNode } from "./ast";
 import { ParseError, ParseErrorCode } from "./parseerror";
-import { ITextSegment, TextBlock, TextLine, TextSpan } from "./textblock";
+import { ATextSegment, TextBlock, TextLine, TextSpan } from "./textblock";
 import { Token, TokenKind } from "./token";
 
 
-export function isParentNode(parent: TextBlock | ITextSegment | TextSpan, node: TextBlock | ITextSegment | TextSpan): boolean {
+export function isParentNode(parent: TextBlock | ATextSegment | TextSpan, node: TextBlock | ATextSegment | TextSpan): boolean {
   if (parent === node) {
     return true;
   }
@@ -24,12 +24,12 @@ export function isParentNode(parent: TextBlock | ITextSegment | TextSpan, node: 
   return false;
 }
 
-export function findParentNode(node: TextBlock | ITextSegment | TextSpan): TextBlock | ITextSegment | undefined {
+export function findParentNode(node: TextBlock | ATextSegment | TextSpan): TextBlock | ATextSegment | undefined {
   if (!node) {
     return undefined;
   }
 
-  let cur: TextBlock | ITextSegment | undefined = node.parent;
+  let cur: TextBlock | ATextSegment | undefined = node.parent;
   while (cur) {
     if (cur.ast !== undefined) {
       return cur;
@@ -136,11 +136,11 @@ function renderOn(parentBlock: TextBlock, ast: OnNode) {
   line.appendToken(ast.event, {});
   if (ast.filter) {
     line.appendConst('=', { spaceLeft: false, selectable: false });
-    line.appendToken(ast.filter, {});
+    line.appendToken(ast.filter, { spaceLeft: false });
   }
 
 
-  line.appendConst('function', { spaceLeft: false, selectable: false });
+  line.appendConst('function', { spaceLeft: true, selectable: false });
   line.appendConst('(', { spaceLeft: false, selectable: false });
   if (ast.params.length > 0) {
     renderParams(line, ast.params);
@@ -261,7 +261,7 @@ function renderForever(parentBlock: TextBlock, ast: ForeverNode) {
 
   ctx.appendLine('end', undefined, { selectable: false });
 }
-function renderExpressionPart(line: ITextSegment, ast: AstNode, spaceLeft: boolean | undefined = undefined) {
+function renderExpressionPart(line: ATextSegment, ast: AstNode, spaceLeft: boolean | undefined = undefined) {
   if (ast.kind === AstNodeKind.id) {
     line.appendToken((ast as IdNode).name, { spaceLeft: spaceLeft });
   } else if (ast.kind === AstNodeKind.const) {
@@ -275,7 +275,7 @@ function renderExpressionPart(line: ITextSegment, ast: AstNode, spaceLeft: boole
   }
 }
 
-function renderExpression(line: ITextSegment, ast: ExpressionNode, spaceLeft: boolean | undefined = undefined) {
+function renderExpression(line: ATextSegment, ast: ExpressionNode, spaceLeft: boolean | undefined = undefined) {
   if (ast.left) {
     renderExpressionPart(line, ast.left);
   }
@@ -314,8 +314,8 @@ function renderWhile(parentBlock: TextBlock, ast: WhileNode) {
  * return true if call requires parenthesis
  * this happens if call is second in chain, or if call has parameter starting with operator
  */
-function requireParenthesis(block: ITextSegment | TextBlock): boolean {
-  let node: ITextSegment | TextBlock | undefined = block;
+function requireParenthesis(block: ATextSegment | TextBlock): boolean {
+  let node: ATextSegment | TextBlock | undefined = block;
   while (node) {
     if (node.ast !== undefined) {
       if (node.ast.kind === AstNodeKind.call) {
@@ -327,9 +327,9 @@ function requireParenthesis(block: ITextSegment | TextBlock): boolean {
   return false;
 }
 
-function renderCall(block: ITextSegment | TextBlock, ast: CallNode, spaceLeft: boolean | undefined = undefined) {
+function renderCall(block: ATextSegment | TextBlock, ast: CallNode, spaceLeft: boolean | undefined = undefined) {
 
-  let line: ITextSegment;
+  let line: ATextSegment;
   if (block instanceof TextBlock) {
     line = block.appendLine(undefined, undefined, {});
   } else {
