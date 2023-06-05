@@ -1,4 +1,5 @@
 import { AstNode } from "./ast";
+import { ParseError, ParseErrorCode } from "./parseerror";
 import { Token, TokenKind } from "./token";
 
 type clickHandler = (node: TextBlock | ITextSegment | TextSpan, event: Event) => void;
@@ -13,6 +14,7 @@ function makeId(): string {
 export type TextStyle = {
   spaceLeft?: boolean;
   selectable?: boolean;
+  css?: string;
 }
 
 export interface ITextSegment {
@@ -53,6 +55,9 @@ export class TextSpan {
     }
 
     let t = document.createElement('span');
+    if (this.style.css) {
+      t.className = this.style.css;
+    }
     t.id = this.id;
     t.textContent = this.data.value;
     if (this.style.selectable === undefined || this.style.selectable) {
@@ -105,6 +110,9 @@ export class TextSegment implements ITextSegment {
 
     let t = document.createElement('span');
     t.id = this.id;
+    if (this.style.css) {
+      t.className = this.style.css;
+    }
     t.addEventListener('click', (e) => onClick(this, e));
 
     for (let child of this.segments) {
@@ -123,36 +131,45 @@ export class TextBlock {
   public readonly id: string;
   public readonly parent: TextBlock | undefined;
   public readonly ast: AstNode;
+  public readonly style: TextStyle;
   private margin: number = 0;
-  private children: (TextLine | TextBlock)[] = [];
+  private children: (ITextSegment | TextBlock)[] = [];
 
-  public constructor(parent: TextBlock | undefined, root: AstNode) {
+  public constructor(parent: TextBlock | undefined, root: AstNode, style?: TextStyle) {
     this.id = makeId();
     this.parent = parent;
     this.ast = root;
+    this.style = style ?? {};
+
     if (parent) {
       this.margin = parent.margin + 1;
     }
   }
 
-  public appendBlock(ast: AstNode): TextBlock {
-    let block = new TextBlock(this, ast);
+  public appendBlock(ast: AstNode, style?: TextStyle): TextBlock {
+    let block = new TextBlock(this, ast, style);
     this.children.push(block);
     return block;
   }
 
+  public appendEmptyLine(ast: AstNode | undefined, style: TextStyle): EmptyTextLine {
+    let line = new EmptyTextLine(this, ast, style);
+    this.children.push(line);
+    return line;
+  }
+
   public appendLine(line: TextLine | string | Token | undefined, ast: AstNode | undefined, style: TextStyle): TextLine {
     if (line === undefined) {
-      let lc = new TextLine(this, ast);
+      let lc = new TextLine(this, ast, style);
       this.children.push(lc);
       return lc;
     } else if (typeof (line) === 'string') {
-      let lc = new TextLine(this, ast);
+      let lc = new TextLine(this, ast, style);
       lc.appendConst(line, style);
       this.children.push(lc);
       return lc;
     } else if (line instanceof Token) {
-      let lc = new TextLine(this, ast);
+      let lc = new TextLine(this, ast, style);
       lc.appendToken(line, style);
       this.children.push(lc);
       return lc;
@@ -164,6 +181,9 @@ export class TextBlock {
 
   public render(parent: HTMLDivElement, onClick: clickHandler) {
     let div = document.createElement('div') as HTMLDivElement;
+    if (this.style.css) {
+      div.className = this.style.css;
+    }
     div.style.marginLeft = (this.margin * 4).toString();
     div.id = this.id;
     div.addEventListener('click', (e) => onClick(this, e));
@@ -172,6 +192,10 @@ export class TextBlock {
         child.render(div, onClick);
       } else if (child instanceof TextLine) {
         child.render(div, onClick);
+      } else if (child instanceof EmptyTextLine) {
+        child.render(div, onClick);
+      } else {
+        throw 'Unknown type';
       }
     }
 
@@ -183,12 +207,14 @@ export class TextLine implements ITextSegment {
   public readonly id: string;
   public readonly parent: TextBlock | ITextSegment;
   public readonly ast: AstNode | undefined;
+  private style: TextStyle;
   private segments: (TextSpan | TextSegment)[] = [];
 
-  public constructor(parent: TextBlock, ast: AstNode | undefined) {
+  public constructor(parent: TextBlock, ast: AstNode | undefined, style?: TextStyle) {
     this.id = makeId();
     this.parent = parent;
     this.ast = ast;
+    this.style = style ?? {};
   }
 
   public appendSegment(ast: AstNode | undefined, style: TextStyle): ITextSegment {
@@ -214,10 +240,44 @@ export class TextLine implements ITextSegment {
   public render(elem: HTMLDivElement, onClick: clickHandler) {
     let line = document.createElement('div');
     line.id = this.id;
+    if (this.style.css) {
+      line.className = this.style.css;
+    }
     line.addEventListener('click', (e) => onClick(this, e));
     for (let token of this.segments) {
       token.render(line, onClick);
     }
+    elem.appendChild(line);
+  }
+}
+
+export class EmptyTextLine implements ITextSegment {
+  public readonly id: string;
+  public readonly parent: TextBlock | ITextSegment;
+  public readonly ast: AstNode | undefined;
+
+  public constructor(parent: TextBlock, ast: AstNode | undefined, style?: TextStyle) {
+    this.id = makeId();
+    this.parent = parent;
+    this.ast = ast;
+  }
+
+  public appendSegment(ast: AstNode | undefined, style: TextStyle): ITextSegment {
+    throw new ParseError(ParseErrorCode.NotImpl, undefined, 'Not implemented');
+  }
+
+  public appendConst(val: string, style: TextStyle): void {
+    throw new ParseError(ParseErrorCode.NotImpl, undefined, 'Not implemented');
+  }
+
+  public appendToken(token: Token, style: TextStyle) {
+    throw new ParseError(ParseErrorCode.NotImpl, undefined, 'Not implemented');
+  }
+
+  public render(elem: HTMLDivElement, onClick: clickHandler) {
+    let line = document.createElement('div');
+    let linep = document.createElement('br');
+    line.appendChild(linep);
     elem.appendChild(line);
   }
 }

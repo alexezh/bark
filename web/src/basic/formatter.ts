@@ -112,7 +112,7 @@ export function renderModule(ast: ModuleNode) {
 }
 
 function renderFuncDef(parentBlock: TextBlock, ast: FuncDefNode) {
-  let ctx = parentBlock.appendBlock(ast);
+  let ctx = parentBlock.appendBlock(ast, { css: 'code-function' });
 
   let line = ctx.appendLine('function', ast, { selectable: false });
   line.appendToken(ast.name!, { selectable: true });
@@ -126,6 +126,27 @@ function renderFuncDef(parentBlock: TextBlock, ast: FuncDefNode) {
   line.appendConst('begin', { selectable: false });
   renderBlock(ctx, ast.body);
   ctx.appendLine('end', undefined, { selectable: false });
+  parentBlock.appendEmptyLine(undefined, { selectable: false });
+}
+
+function renderOn(parentBlock: TextBlock, ast: OnNode) {
+  let ctx = parentBlock.appendBlock(ast, { css: 'code-on' });
+
+  let line = ctx.appendLine('on', undefined, { selectable: false });
+  line.appendToken(ast.event, {});
+  line.appendConst('(', { spaceLeft: false, selectable: false });
+  if (ast.params.length > 0) {
+    renderParams(line, ast.params);
+    line.appendConst(')', { selectable: false });
+  } else {
+    line.appendConst(')', { selectable: false });
+  }
+
+  line.appendConst('begin', { selectable: false });
+  renderBlock(ctx, ast.body);
+
+  ctx.appendLine('end', undefined, { selectable: false });
+  parentBlock.appendEmptyLine(undefined, { selectable: false });
 }
 
 function renderParams(line: TextLine, params: ParamDefNode[]) {
@@ -151,27 +172,8 @@ function renderBlock(parentBlock: TextBlock, block: BlockNode | Function) {
   }
 }
 
-function renderOn(parentBlock: TextBlock, ast: OnNode) {
-  let ctx = parentBlock.appendBlock(ast);
-
-  let line = ctx.appendLine('on', undefined, { selectable: false });
-  line.appendToken(ast.event, {});
-  line.appendConst('(', { spaceLeft: false, selectable: false });
-  if (ast.params.length > 0) {
-    renderParams(line, ast.params);
-    line.appendConst(')', { selectable: false });
-  } else {
-    line.appendConst(')', { selectable: false });
-  }
-
-  line.appendConst('begin', { selectable: false });
-  renderBlock(ctx, ast.body);
-
-  ctx.appendLine('end', undefined, { selectable: false });
-}
-
-function renderVarDef(parentBlock: TextBlock, ast: VarDefNode) {
-  let line = parentBlock.appendLine('var', ast, {});
+function renderVarDef(parentBlock1: TextBlock, ast: VarDefNode) {
+  let line = parentBlock1.appendLine('var', ast, { css: 'code-var' });
   line.appendToken(ast.name, {});
   if (ast.value) {
     line.appendConst(':=', { selectable: false });
@@ -180,38 +182,39 @@ function renderVarDef(parentBlock: TextBlock, ast: VarDefNode) {
 }
 
 function renderAssingment(parentBlock: TextBlock, ast: AssingmentNode) {
-  let line = parentBlock.appendLine(undefined, undefined, {});
+  let line = parentBlock.appendLine(undefined, undefined, { css: 'code-var' });
   line.appendToken(ast.name, {});
   line.appendConst(':=', { selectable: false });
   renderExpression(line, ast.value);
 }
 
 function renderIf(parentBlock: TextBlock, ast: IfNode) {
-  let ifline = parentBlock.appendLine(undefined, undefined, {});
+  let ctx = parentBlock.appendBlock(ast, { css: 'code-block' });
+  let ifline = ctx.appendLine(undefined, undefined, {});
   ifline.appendConst('if', {});
   renderExpression(ifline, ast.exp);
   ifline.appendConst('then', {});
 
-  renderBlock(parentBlock, ast.th);
+  renderBlock(ctx, ast.th);
   if (ast.elif.length > 0) {
     for (let block of ast.elif) {
-      let eifline = parentBlock.appendLine(undefined, undefined, {});
+      let eifline = ctx.appendLine(undefined, undefined, {});
       eifline.appendConst('elif', {});
       renderExpression(eifline, ast.exp);
       eifline.appendConst('then', {});
-      renderBlock(parentBlock, block.block);
+      renderBlock(ctx, block.block);
     }
   }
   if (ast.el) {
-    let eline = parentBlock.appendLine(undefined, undefined, {});
+    let eline = ctx.appendLine(undefined, undefined, {});
     eline.appendConst('else', {});
-    renderBlock(parentBlock, ast.el);
+    renderBlock(ctx, ast.el);
   }
-  parentBlock.appendLine('end', undefined, {});
+  ctx.appendLine('end', undefined, {});
 }
 
 function renderFor(parentBlock: TextBlock, ast: ForNode) {
-  let ctx = parentBlock.appendBlock(ast);
+  let ctx = parentBlock.appendBlock(ast, { css: 'code-block' });
   let line = ctx.appendLine('for', undefined, {});
   line.appendToken(ast.name, {})
   line.appendConst(':=', { selectable: false });
@@ -327,7 +330,7 @@ function renderCall(block: ITextSegment | TextBlock, ast: CallNode, spaceLeft: b
   }
 
   // wrap parameters to span
-  let seg = line.appendSegment(ast, { spaceLeft: true });
+  let seg = line.appendSegment(ast, { spaceLeft: true, css: 'code-call' });
 
   seg.appendToken(ast.name, { spaceLeft: spaceLeft });
 
