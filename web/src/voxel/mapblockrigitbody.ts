@@ -1,7 +1,7 @@
 import { Vector3 } from "three";
 import { MapBlock, MapBlockCoord } from "../ui/ivoxellevel";
 import { WorldCoord3 } from "./pos3";
-import { IRigitBody, RigitAABB, RigitBodyKind } from "./irigitbody";
+import { CollisionOptions, IRigitBody, RigitAABB, RigitBodyKind } from "./irigitbody";
 
 export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   public readonly mapBlock: MapBlockCoord;
@@ -24,6 +24,8 @@ export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   get size(): Vector3 { return this.mapBlock!.model!.size; }
   get gravityFactor(): number { return 0 }
   get maxClimbSpeed(): number { return 0 }
+  get collisionOptions(): CollisionOptions { return CollisionOptions.None }
+  set collisionOptions(val: CollisionOptions) { }
 
   public get x(): number { return this._pos.x };
   public get y(): number { return this._pos.y };
@@ -61,6 +63,8 @@ export class MapBoundaryRigitBody implements IRigitBody, IDigBoundary {
   get size(): Vector3 { return this._size; }
   get gravityFactor(): number { return 0 }
   get maxClimbSpeed(): number { return 0 }
+  get collisionOptions(): CollisionOptions { return CollisionOptions.None }
+  set collisionOptions(val: CollisionOptions) { }
 
   public get x(): number { return this._pos.x };
   public get y(): number { return this._pos.y };

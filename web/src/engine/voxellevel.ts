@@ -5,7 +5,7 @@ import { VoxelModel } from "../voxel/voxelmodel";
 import { BlockPos3, BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { defaultMaterial, FileMapBlock, IVoxelLevel, IVoxelLevelFile, MapBlock, MapBlockCoord } from "../ui/ivoxellevel";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../voxel/mapblockrigitbody";
-import { IRigitBody } from "../voxel/irigitbody";
+import { CollisionOptions, IRigitBody } from "../voxel/irigitbody";
 
 
 export class MeshModel {
@@ -19,7 +19,7 @@ export class MeshModel {
     }
 }
 
-export const infiniteDown = -1000000;
+export const infiniteDown = 1000000;
 
 //////////////////////////////////////////////////////////////////////
 // Maps class - Loading of maps from images
@@ -32,7 +32,7 @@ export class VoxelLevel implements IVoxelLevel {
     private _file: IVoxelLevelFile;
     private layers: MeshLevelLayer[] = [];
 
-    private floorLevel = -30;
+    private _floorLevel = -30;
     private ambientLight!: AmbientLight;
     private directionalLight!: DirectionalLight;
 
@@ -44,6 +44,9 @@ export class VoxelLevel implements IVoxelLevel {
     }
     get file(): IVoxelLevelFile {
         return this._file;
+    }
+    get floorLevel(): number {
+        return this._floorLevel;
     }
 
     public constructor(file: IVoxelLevelFile) {
@@ -145,7 +148,7 @@ export class VoxelLevel implements IVoxelLevel {
         const floorGeometry = new PlaneGeometry(wsz.sx, wsz.sz);
         floorGeometry.rotateX(- Math.PI / 2);
         let floor = new Mesh(floorGeometry, new MeshBasicMaterial({ visible: false }));
-        floor.position.set(0, this.floorLevel, 0);
+        floor.position.set(0, this._floorLevel, 0);
         this.scene!.add(floor);
 
         /*
@@ -225,7 +228,7 @@ export class VoxelLevel implements IVoxelLevel {
 
         let sz = ro.size;
 
-        if (pos.y < this.floorLevel) {
+        if (pos.y < this._floorLevel) {
             func(new MapBoundaryRigitBody(new Vector3(pos.x, 0, pos.z), new Vector3(0, 0, 0)));
             return true;
         }
@@ -248,7 +251,9 @@ export class VoxelLevel implements IVoxelLevel {
                 for (let x = xStart; x < xEnd; x++) {
                     let block = layer.getBlock(x, z);
                     if (block !== undefined) {
-                        let height = block.model.frames[block.frame].getHeight(pos.x, pos.z);
+                        let xBlock = (pos.x - x * this._blockSize) | 0;
+                        let zBlock = (pos.z - z * this._blockSize) | 0;
+                        let height = block.model.frames[block.frame].getHeight(xBlock, zBlock);
 
                         // if we are below height
                         if (height > 0 && pos.y < y * this._blockSize + height) {
@@ -265,22 +270,24 @@ export class VoxelLevel implements IVoxelLevel {
         return false;
     }
 
-    // positive distance is we are above the surface
+
+    /**
+    * positive distance is we are above the surface
+     */
     public getDistanceY(ro: IRigitBody, pos: Vector3): number {
         if (pos.y < 0) {
             return infiniteDown;
         }
 
         let layerIdx = (pos.y / this._blockSize) | 0;
-        if (layerIdx < 0 || layerIdx >= this.layers.length) {
-            return 0;
-        }
+        layerIdx = Math.min(layerIdx, this.layers.length - 1);
+
         for (let i = layerIdx; i >= 0; i--) {
             let layer = this.layers[i];
             let height = layer.getHeight(pos);
             if (height !== 0) {
                 //console.log(`height: ${height} ${pos.y}`)
-                return height - (pos.y - (layer.layerY * this._blockSize));
+                return pos.y - (layer.layerY * this._blockSize + height);
             }
         }
 

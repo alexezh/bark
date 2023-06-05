@@ -214,7 +214,6 @@ export class VM implements IVM {
 
   public async removeSprite(sprite: Sprite3) {
     this.checkRunning();
-    this.physics.removeRigitObject(sprite);
     this._sprites.delete(sprite.id);
     sprite.removeFromScene(this._camera!.scene!);
   }

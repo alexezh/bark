@@ -6,6 +6,7 @@ import { StaticCubeModel } from "../../engine/avatars/staticcubemodel";
 import { Mammal4Model } from "../../engine/avatars/mammal4";
 import { vm } from "../../engine/ivm";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../../voxel/mapblockrigitbody";
+import { CollisionOptions } from "../../voxel/irigitbody";
 
 type DigAnimation = {
   sprite: Sprite3;
@@ -17,7 +18,8 @@ type DigAnimation = {
  * not other projectiles
  */
 async function createProjectile(baseSprite: Sprite3, uri: string, scale?: number): Promise<IDigSprite> {
-  let sprite = await vm.createSprite('', uri, new StaticCubeModel(scale ?? 1.0));
+  let sprite = await vm.createSprite('pl', uri, new StaticCubeModel(scale ?? 1.0));
+  sprite.collisionOptions = CollisionOptions.All;
 
   // set relative position of projetile based on sprite
   if (baseSprite) {
@@ -47,7 +49,13 @@ async function createMammal4Sprite(name: string, uri: string, scale?: number): P
 }
 
 function removeSprite(sprite: IDigSprite) {
+  vm.physics.removeRigitObject(sprite as Sprite3);
   return vm.removeSprite(sprite as Sprite3);
+}
+
+function removeProjectile(sprite: IDigSprite) {
+  vm.removeSprite(sprite as Sprite3);
+  vm.physics.removeProjectile(sprite as Sprite3);
 }
 
 function addAnimation(sprite: Sprite3, name: string): DigAnimation {
@@ -101,6 +109,7 @@ export function createSpriteModule(): ModuleNode {
   module.funcs.push(addSystemFunc(module, 'createMammal4Sprite', ['name:string', 'url:string', 'scale:number'], 'Sprite', true, createMammal4Sprite));
   module.funcs.push(addSystemFunc(module, 'removeSprite', ['sprite:Sprite'], 'void', false, removeSprite));
   module.funcs.push(addSystemFunc(module, 'createProjectile', ['url:string', 'scale:number'], 'Sprite', true, createProjectile));
+  module.funcs.push(addSystemFunc(module, 'removeProjectile', ['sprite:Sprite'], 'void', false, removeProjectile));
 
   module.funcs.push(addSystemFunc(module, 'addAnimation', ['sprite: Sprite', 'name: string'], 'Animation', false, addAnimation));
   module.funcs.push(addSystemFunc(module, 'addFrame', ['sprite: Sprite', 'animation: Animation', 'index: number', "duration: number"], 'void', false, addFrame));

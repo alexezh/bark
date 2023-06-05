@@ -3,8 +3,9 @@ import { IGameCollisionHandler, IGamePhysics, IGamePhysicsInputController, Rigit
 import { IVoxelLevel } from "../ui/ivoxellevel";
 import { BroadphaseCollision } from "./broadphasecollision";
 import { Vector3 } from "three";
-import { IRigitBody } from "../voxel/irigitbody";
+import { CollisionOptions, IRigitBody } from "../voxel/irigitbody";
 import { infiniteDown } from "./voxellevel";
+import { MapBoundaryRigitBody } from "../voxel/mapblockrigitbody";
 
 // manages movement and collisions between world objects
 export class GamePhysics implements IGamePhysics {
@@ -12,7 +13,7 @@ export class GamePhysics implements IGamePhysics {
   private bodies: IRigitBody[] = [];
   private projectiles: IRigitBody[] = [];
   private broadphase: BroadphaseCollision = new BroadphaseCollision();
-  private gravity: number = 10;
+  private gravity: number = 20;
   private _collideHandler: RigitCollisionHandler | undefined;
   private static collideHandlerSymbol = Symbol('CollideHandler');
 
@@ -95,11 +96,23 @@ export class GamePhysics implements IGamePhysics {
 
     // check if intersecs with the map
     let intersectBody: IRigitBody | undefined;
-    let collided = this.map.intersectBlocks(o, p, (target: IRigitBody) => {
-      // just check if there is a block
-      intersectBody = target;
-      return true;
-    });
+
+    let collided = false;
+
+    // if we only collide with sprites, skip collision check
+    if (o.collisionOptions > CollisionOptions.Sprites) {
+      collided = this.map.intersectBlocks(o, p, (target: IRigitBody) => {
+        // just check if there is a block
+        intersectBody = target;
+        return true;
+      });
+    } else {
+      // once we reach surface, we stop
+      if (o.position.y < this.map.floorLevel) {
+        intersectBody = new MapBoundaryRigitBody(new Vector3(o.position.x, 0, o.position.z), new Vector3(0, 0, 0));
+        return true;
+      }
+    }
 
     // when we stand on surface, we constantly trying to move down
     // and going back up. We do not want to notify about collision for such
@@ -110,8 +123,13 @@ export class GamePhysics implements IGamePhysics {
       collisions.push({ source: o, target: intersectBody! });
     } else {
       o.onMove(p);
+
+      // gravity !!!
       if (deltaSpeedY !== undefined) {
         o.setPhysicsSpeed(new Vector3(0, o.physicsSpeed.y + deltaSpeedY, 0));
+        if (o.name === 'pl') {
+          console.log('Pl: ' + o.position.y + ' ' + o.relativeSpeed.y + ' ' + o.physicsSpeed.y + ' ' + deltaSpeedY);
+        }
       } else {
         o.setPhysicsSpeed(undefined);
       }
@@ -124,23 +142,35 @@ export class GamePhysics implements IGamePhysics {
    */
   private detectSurface(o: IRigitBody, pos: Vector3, dt: number): { deltaPosY: number, deltaSpeedY: number } {
     let dist = this.map.getDistanceY(o, pos);
-    if (dist < 0) {
+
+    // if we are above the ground, apply gravity
+    if (dist > 0) {
       if (dist === infiniteDown) {
         //console.log(`fall: ${pos.y} ${dist} ${dt * this.gravity}`);
-      }
-      return {
-        deltaPosY: -dt * this.gravity,
-        deltaSpeedY: -dt * this.gravity
-      }
-    } else if (dist > 0) {
-      //console.log('climb:' + dist);
-      if (dist < o.maxClimbSpeed) {
         return {
-          deltaPosY: dist,
+          deltaPosY: 0,
+          deltaSpeedY: -dt * this.gravity * o.gravityFactor
+        }
+      }
+
+      // if we are falling, update our speed. On the next round, we will recompute position
+      // and then we will level on the floor
+      return {
+        deltaPosY: 0,
+        deltaSpeedY: -dt * this.gravity * o.gravityFactor
+      }
+    } else if (dist < 0) {
+      // console.log('climb:' + dist);
+
+      // we need to climb to surface; if we do not collide with map, just move all the way
+      if (dist < o.maxClimbSpeed || o.collisionOptions === CollisionOptions.Sprites) {
+        return {
+          deltaPosY: -dist,
           deltaSpeedY: 0
         }
       }
     }
+
     return { deltaPosY: 0, deltaSpeedY: 0 };
   }
 }

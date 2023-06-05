@@ -215,7 +215,7 @@ export function boxedBasic2(): string {
       forever do
         var collision := System.waitCollide monky
         if collision is Sprite.Boundary then
-          System.log 'hit boundary'
+          System.log 'monky hit boundary'
           System.sendMessage 'killedMonkey'
           break;
         end
@@ -225,16 +225,16 @@ export function boxedBasic2(): string {
     on message='shootBread' function(monky: Sprite) begin
       System.log 'shoot bread'
       var bullet := Sprite.createProjectile monky 'vox/bread.vox'
-      Sprite.setSpeed bullet 100 20 0
+      Sprite.setSpeed bullet 50 20 0
       forever do
         var collision := System.waitCollide bullet
         if collision = Sprite.Sprite then
           System.log 'collided with sprite'
-          Sprite.removeSprite(bullet);
+          Sprite.removeProjectile(bullet);
           break;
         elif collision != null then
           System.log 'collided with something'
-          Sprite.removeSprite(bullet);
+          Sprite.removeProjectile(bullet);
           break;
         end
       end

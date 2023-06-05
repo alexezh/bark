@@ -2,7 +2,7 @@ import { Scene, Vector3 } from "three";
 import { getSupportedCodeFixes } from "typescript";
 import { IRigitModel } from "./irigitmodel";
 import { StaticCubeModel } from "./avatars/staticcubemodel";
-import { IRigitBody, RigitAABB, RigitBodyKind } from "../voxel/irigitbody";
+import { CollisionOptions, IRigitBody, RigitAABB, RigitBodyKind } from "../voxel/irigitbody";
 
 export enum TrackingCameraKind {
   Direct,
@@ -26,6 +26,8 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   public owner: any;
   public rigit: IRigitModel;
   private _inactive: boolean = false;
+  private _collisionOptions: CollisionOptions = CollisionOptions.Sprites;
+
   /**
    * speed of sprite; speed is different from direction when it comes to strafe
    * we are moving sideways while looking in direction
@@ -61,6 +63,8 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   public get y(): number { return this._position.y };
   public get z(): number { return this._position.z };
   public get angleXZ(): number { return this._angleXZ };
+  public get collisionOptions(): CollisionOptions { return this._collisionOptions }
+  public set collisionOptions(val: CollisionOptions) { this._collisionOptions = val }
 
   /**
    * world speed is combination of physics speed, user speed and direction

@@ -8,7 +8,14 @@ export enum RigitBodyKind {
 
 export enum MassKind {
   stationary,
-  mavable,
+  moveable,
+}
+
+export enum CollisionOptions {
+  None = 0,
+  Sprites = 1,
+  Map = 2,
+  All = 3
 }
 
 export type RigitAABB = {
@@ -31,6 +38,8 @@ export interface IRigitBody {
   get kind(): RigitBodyKind;
   // owner set by application
   get owner(): any;
+  get collisionOptions(): CollisionOptions;
+  set collisionOptions(val: CollisionOptions);
 
   /**
    * multiplier for gravity. 0 is weightless, not affected by gravity

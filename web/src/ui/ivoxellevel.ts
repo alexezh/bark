@@ -80,6 +80,7 @@ export interface IVoxelLevel {
   get worldSize(): WorldSize3;
   get blockSize(): BlockSize3;
   get file(): IVoxelLevelFile;
+  get floorLevel(): number;
 
   // called when game started; at this point properties become non-persisted
   onStart();
