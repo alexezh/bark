@@ -1,21 +1,15 @@
 import { Vector3 } from "three";
 
 export enum RigitBodyKind {
-  sprite,
+  object,
   block,
-  boundary
+  boundary,
+  projectile
 }
 
 export enum MassKind {
   stationary,
   moveable,
-}
-
-export enum CollisionOptions {
-  None = 0,
-  Sprites = 1,
-  Map = 2,
-  All = 3
 }
 
 export type RigitAABB = {
@@ -35,11 +29,9 @@ export type RigitAABB = {
 export interface IRigitBody {
   get id(): number;
   get name(): string;
-  get kind(): RigitBodyKind;
+  get rigitKind(): RigitBodyKind;
   // owner set by application
   get owner(): any;
-  get collisionOptions(): CollisionOptions;
-  set collisionOptions(val: CollisionOptions);
 
   /**
    * multiplier for gravity. 0 is weightless, not affected by gravity

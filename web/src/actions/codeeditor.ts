@@ -35,6 +35,7 @@ export class CodeEditor {
     let module = vm.loader.getUserModule('default');
     if (module) {
       this.renderBlock = renderModule(module);
+      this.editArea.replaceChildren();
       this.renderBlock.render(this.editArea, this.onTextClick.bind(this));
     }
   }
@@ -56,7 +57,7 @@ export class CodeEditor {
       return;
     }
 
-    this.selectedNode.parent.addLineAbove();
+    //this.selectedNode.parent.addLineAbove();
   }
 
   public addBelow() {

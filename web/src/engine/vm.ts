@@ -22,7 +22,7 @@ import { CodeLoader } from "../basic/codeloader";
 import { CodeRunner } from "../basic/coderunner";
 import { registerSystemModules } from "../basic/lib/all";
 import { ILevelEditor } from "../ui/ileveleditor";
-import { IRigitBody } from "../voxel/irigitbody";
+import { IRigitBody, RigitBodyKind } from "../voxel/irigitbody";
 
 type CollisionWaiter = {
   // if resolve is undefined, there is no waiter
@@ -200,10 +200,11 @@ export class VM implements IVM {
   public async createSprite(
     name: string,
     uri: string,
-    rm: IRigitModel | undefined = undefined): Promise<Sprite3> {
+    rm: IRigitModel | undefined = undefined,
+    rigitKind?: RigitBodyKind): Promise<Sprite3> {
 
     this.checkRunning();
-    let s = new Sprite3(name, rm);
+    let s = new Sprite3(name, rm, rigitKind);
     await s.load(uri);
 
     this._sprites.set(s.id, s);

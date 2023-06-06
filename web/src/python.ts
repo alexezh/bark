@@ -228,15 +228,21 @@ export function boxedBasic2(): string {
       Sprite.setSpeed bullet 50 20 0
       forever do
         var collision := System.waitCollide bullet
-        if collision = Sprite.Sprite then
+        if collision is Sprite.Sprite then
           System.log 'collided with sprite'
+          Sprite.removeProjectile(bullet);
+          break;
+        elif collision is Sprite.Block then
+          System.log 'collided with block'
+          System.deleteBlock collision
+          System.createExplosion collision.position;
           Sprite.removeProjectile(bullet);
           break;
         elif collision != null then
           System.log 'collided with something'
           Sprite.removeProjectile(bullet);
-          break;
-        end
+        break;
+      end
       end
     end
 

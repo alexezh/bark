@@ -5,7 +5,7 @@ import { VoxelModel } from "../voxel/voxelmodel";
 import { BlockPos3, BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { defaultMaterial, FileMapBlock, IVoxelLevel, IVoxelLevelFile, MapBlock, MapBlockCoord } from "../ui/ivoxellevel";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../voxel/mapblockrigitbody";
-import { CollisionOptions, IRigitBody } from "../voxel/irigitbody";
+import { IRigitBody } from "../voxel/irigitbody";
 
 
 export class MeshModel {

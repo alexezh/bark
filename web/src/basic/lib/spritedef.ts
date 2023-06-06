@@ -6,7 +6,7 @@ import { StaticCubeModel } from "../../engine/avatars/staticcubemodel";
 import { Mammal4Model } from "../../engine/avatars/mammal4";
 import { vm } from "../../engine/ivm";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../../voxel/mapblockrigitbody";
-import { CollisionOptions } from "../../voxel/irigitbody";
+import { RigitBodyKind } from "../../voxel/irigitbody";
 
 type DigAnimation = {
   sprite: Sprite3;
@@ -18,8 +18,7 @@ type DigAnimation = {
  * not other projectiles
  */
 async function createProjectile(baseSprite: Sprite3, uri: string, scale?: number): Promise<IDigSprite> {
-  let sprite = await vm.createSprite('pl', uri, new StaticCubeModel(scale ?? 1.0));
-  sprite.collisionOptions = CollisionOptions.All;
+  let sprite = await vm.createSprite('pl', uri, new StaticCubeModel(scale ?? 1.0), RigitBodyKind.projectile);
 
   // set relative position of projetile based on sprite
   if (baseSprite) {

@@ -2,7 +2,7 @@ import { Scene, Vector3 } from "three";
 import { getSupportedCodeFixes } from "typescript";
 import { IRigitModel } from "./irigitmodel";
 import { StaticCubeModel } from "./avatars/staticcubemodel";
-import { CollisionOptions, IRigitBody, RigitAABB, RigitBodyKind } from "../voxel/irigitbody";
+import { IRigitBody, RigitAABB, RigitBodyKind } from "../voxel/irigitbody";
 
 export enum TrackingCameraKind {
   Direct,
@@ -26,7 +26,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   public owner: any;
   public rigit: IRigitModel;
   private _inactive: boolean = false;
-  private _collisionOptions: CollisionOptions = CollisionOptions.Sprites;
+  private _rigitKind: RigitBodyKind;
 
   /**
    * speed of sprite; speed is different from direction when it comes to strafe
@@ -50,7 +50,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
 
   public get id(): number { return this._id; }
   public get name(): string { return this._name; }
-  public get kind(): RigitBodyKind { return RigitBodyKind.sprite; }
+  public get rigitKind(): RigitBodyKind { return this._rigitKind; }
 
   public get relativeSpeed(): Vector3 { return this._speed; }
   public get position(): Vector3 { return this._position.clone() };
@@ -63,8 +63,6 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   public get y(): number { return this._position.y };
   public get z(): number { return this._position.z };
   public get angleXZ(): number { return this._angleXZ };
-  public get collisionOptions(): CollisionOptions { return this._collisionOptions }
-  public set collisionOptions(val: CollisionOptions) { this._collisionOptions = val }
 
   /**
    * world speed is combination of physics speed, user speed and direction
@@ -78,11 +76,12 @@ export class Sprite3 implements IRigitBody, IDigSprite {
     return speed;
   };
 
-  public constructor(name: string, rigit?: IRigitModel) {
+  public constructor(name: string, rigit?: IRigitModel, rigitKind?: RigitBodyKind) {
     this._id = Sprite3._nextId++;
     this._name = name;
     this.rigit = rigit ?? new StaticCubeModel(1.0);
     this._position = new Vector3();
+    this._rigitKind = rigitKind ?? RigitBodyKind.object;
   }
 
   public async load(uri: string): Promise<void> {

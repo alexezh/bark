@@ -27,11 +27,11 @@ async function waitCollide(sprite: IDigSprite, timeout: number): Promise<Sprite3
   let collide = await vm.waitCollide(sprite as Sprite3, timeout);
   if (collide === null) {
     return null;
-  } else if (collide.kind === RigitBodyKind.sprite) {
+  } else if (collide.rigitKind === RigitBodyKind.object) {
     return collide as Sprite3;
-  } else if (collide.kind === RigitBodyKind.block) {
+  } else if (collide.rigitKind === RigitBodyKind.block) {
     return collide as MapBlockRigitBody;
-  } else if (collide.kind === RigitBodyKind.boundary) {
+  } else if (collide.rigitKind === RigitBodyKind.boundary) {
     return collide as MapBoundaryRigitBody;
   } else {
     return null;

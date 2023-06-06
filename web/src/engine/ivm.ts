@@ -7,7 +7,7 @@ import { IRigitModel } from "./irigitmodel";
 import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxellevel";
 import { FuncDefNode, ModuleNode, OnNode, VarDefNode } from "../basic/ast";
 import { ILevelEditor } from "../ui/ileveleditor";
-import { IRigitBody } from "../voxel/irigitbody";
+import { IRigitBody, RigitBodyKind } from "../voxel/irigitbody";
 
 export interface IInputController {
   start();
@@ -94,7 +94,8 @@ export interface IVM {
   createSprite(
     name: string,
     uri: string,
-    rm: IRigitModel | undefined): Promise<Sprite3>;
+    rm: IRigitModel | undefined,
+    rigitKind?: RigitBodyKind): Promise<Sprite3>;
 
   /**
    * removes sprite from the scene

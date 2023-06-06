@@ -3,7 +3,7 @@ import { IGameCollisionHandler, IGamePhysics, IGamePhysicsInputController, Rigit
 import { IVoxelLevel } from "../ui/ivoxellevel";
 import { BroadphaseCollision } from "./broadphasecollision";
 import { Vector3 } from "three";
-import { CollisionOptions, IRigitBody } from "../voxel/irigitbody";
+import { IRigitBody, RigitBodyKind } from "../voxel/irigitbody";
 import { infiniteDown } from "./voxellevel";
 import { MapBoundaryRigitBody } from "../voxel/mapblockrigitbody";
 
@@ -86,31 +86,37 @@ export class GamePhysics implements IGamePhysics {
     let p = o.position.clone().add(s);
 
     let deltaSpeedY: number | undefined;
+    let intersectBody: IRigitBody | undefined;
+    let collided = false;
+
+    // first check if we collided with surface and we can level
     if (o.gravityFactor > 0) {
       let delta = this.detectSurface(o, p, dt);
       if (delta.deltaPosY != 0) {
         p.y += delta.deltaPosY;
       }
       deltaSpeedY = delta.deltaSpeedY;
+
+      if (delta.collided) {
+        intersectBody = new MapBoundaryRigitBody(new Vector3(o.position.x, 0, o.position.z), new Vector3(0, 0, 0));
+        collided = true;
+      }
     }
 
-    // check if intersecs with the map
-    let intersectBody: IRigitBody | undefined;
-
-    let collided = false;
-
-    // if we only collide with sprites, skip collision check
-    if (o.collisionOptions > CollisionOptions.Sprites) {
-      collided = this.map.intersectBlocks(o, p, (target: IRigitBody) => {
-        // just check if there is a block
-        intersectBody = target;
-        return true;
-      });
-    } else {
-      // once we reach surface, we stop
-      if (o.position.y < this.map.floorLevel) {
-        intersectBody = new MapBoundaryRigitBody(new Vector3(o.position.x, 0, o.position.z), new Vector3(0, 0, 0));
-        return true;
+    if (!collided) {
+      // if we only collide with sprites, skip collision check
+      if (o.rigitKind === RigitBodyKind.projectile) {
+        collided = this.map.intersectBlocks(o, p, (target: IRigitBody) => {
+          // just check if there is a block
+          intersectBody = target;
+          return true;
+        });
+      } else {
+        // once we reach surface, we stop
+        if (o.position.y < this.map.floorLevel) {
+          intersectBody = new MapBoundaryRigitBody(new Vector3(o.position.x, 0, o.position.z), new Vector3(0, 0, 0));
+          return true;
+        }
       }
     }
 
@@ -140,7 +146,7 @@ export class GamePhysics implements IGamePhysics {
    * adjusts position to surface
    * updates pos and speed if needed
    */
-  private detectSurface(o: IRigitBody, pos: Vector3, dt: number): { deltaPosY: number, deltaSpeedY: number } {
+  private detectSurface(o: IRigitBody, pos: Vector3, dt: number): { deltaPosY: number, deltaSpeedY: number, collided: boolean } {
     let dist = this.map.getDistanceY(o, pos);
 
     // if we are above the ground, apply gravity
@@ -149,7 +155,8 @@ export class GamePhysics implements IGamePhysics {
         //console.log(`fall: ${pos.y} ${dist} ${dt * this.gravity}`);
         return {
           deltaPosY: 0,
-          deltaSpeedY: -dt * this.gravity * o.gravityFactor
+          deltaSpeedY: -dt * this.gravity * o.gravityFactor,
+          collided: false
         }
       }
 
@@ -157,21 +164,29 @@ export class GamePhysics implements IGamePhysics {
       // and then we will level on the floor
       return {
         deltaPosY: 0,
-        deltaSpeedY: -dt * this.gravity * o.gravityFactor
+        deltaSpeedY: -dt * this.gravity * o.gravityFactor,
+        collided: false
       }
     } else if (dist < 0) {
       // console.log('climb:' + dist);
 
       // we need to climb to surface; if we do not collide with map, just move all the way
-      if (dist < o.maxClimbSpeed || o.collisionOptions === CollisionOptions.Sprites) {
+      if (dist < o.maxClimbSpeed && o.rigitKind === RigitBodyKind.object) {
         return {
           deltaPosY: -dist,
-          deltaSpeedY: 0
+          deltaSpeedY: 0,
+          collided: false
+        }
+      } else {
+        return {
+          deltaPosY: 0,
+          deltaSpeedY: 0,
+          collided: true
         }
       }
     }
 
-    return { deltaPosY: 0, deltaSpeedY: 0 };
+    return { deltaPosY: 0, deltaSpeedY: 0, collided: false };
   }
 }
 

@@ -124,7 +124,8 @@ export interface IVoxelLevel {
 
 
   /**
-   * get distance from bottom of body to surface
+    * get distance from bottom of body to surface
+    * positive distance is we are above the surface
    */
   getDistanceY(ro: IRigitBody, pos: Vector3): number;
 
