@@ -25,7 +25,10 @@ export class FrameClock {
       return 0;
     }
     let t = now() / 1000;
-    this._delta = t - this._lastTick;
+
+    // limit delta to 0.2 seconds in case of debugging
+    this._delta = Math.min(t - this._lastTick, 0.2);
+
     this._lastTick = t;
   }
 }

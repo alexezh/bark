@@ -9,7 +9,7 @@ import { MapBoundaryRigitBody } from "../voxel/mapblockrigitbody";
 
 // manages movement and collisions between world objects
 export class GamePhysics implements IGamePhysics {
-  private map: IVoxelLevel;
+  private level: IVoxelLevel;
   private bodies: IRigitBody[] = [];
   private projectiles: IRigitBody[] = [];
   private broadphase: BroadphaseCollision = new BroadphaseCollision();
@@ -17,8 +17,8 @@ export class GamePhysics implements IGamePhysics {
   private _collideHandler: RigitCollisionHandler | undefined;
   private static collideHandlerSymbol = Symbol('CollideHandler');
 
-  public constructor(map: IVoxelLevel) {
-    this.map = map;
+  public constructor(level: IVoxelLevel) {
+    this.level = level;
   }
 
   public addRigitObject(ro: IRigitBody): void {
@@ -87,9 +87,11 @@ export class GamePhysics implements IGamePhysics {
 
     let deltaSpeedY: number | undefined;
     let intersectBody: IRigitBody | undefined;
+    let intersectHeight: number | undefined;
     let collided = false;
 
     // first check if we collided with surface and we can level
+    /*
     if (o.gravityFactor > 0) {
       let delta = this.detectSurface(o, p, dt);
       if (delta.deltaPosY != 0) {
@@ -102,27 +104,32 @@ export class GamePhysics implements IGamePhysics {
         collided = true;
       }
     }
+    */
 
-    if (!collided) {
-      // if we only collide with sprites, skip collision check
-      if (o.rigitKind === RigitBodyKind.projectile) {
-        collided = this.map.intersectBlocks(o, p, (target: IRigitBody) => {
-          // just check if there is a block
-          intersectBody = target;
-          return true;
-        });
-      } else {
-        // once we reach surface, we stop
-        if (o.position.y < this.map.floorLevel) {
-          intersectBody = new MapBoundaryRigitBody(new Vector3(o.position.x, 0, o.position.z), new Vector3(0, 0, 0));
-          return true;
+    // if we only collide with sprites, skip collision check
+    collided = this.level.intersectBlocks(o, p, (target: IRigitBody, levelHeight: number) => {
+      // just check if there is a block
+      intersectBody = target;
+      intersectHeight = levelHeight;
+      return true;
+    });
+
+    // when we stand on surface, we constantly trying to move down
+    // and going back up. We do not want to notify about collision for such
+    // trivial cases.
+    let standing = false;
+
+    if (collided) {
+      console.log('collided: ' + intersectHeight! + ' ' + o.name);
+      if (o.rigitKind === RigitBodyKind.object) {
+        if (p.y + o.maxClimbSpeed > intersectHeight!) {
+          p.y = intersectHeight!;
+          collided = false;
+          standing = true;
         }
       }
     }
 
-    // when we stand on surface, we constantly trying to move down
-    // and going back up. We do not want to notify about collision for such
-    // trivial cases. 
     if (collided) {
       // if we collide, we do not move; but we keep user speed untouched??
       o.setPhysicsSpeed(undefined);
@@ -131,13 +138,11 @@ export class GamePhysics implements IGamePhysics {
       o.onMove(p);
 
       // gravity !!!
-      if (deltaSpeedY !== undefined) {
-        o.setPhysicsSpeed(new Vector3(0, o.physicsSpeed.y + deltaSpeedY, 0));
+      if (!standing) {
+        o.setPhysicsSpeed(new Vector3(0, o.physicsSpeed.y - dt * this.gravity * o.gravityFactor, 0));
         if (o.name === 'pl') {
-          console.log('Pl: ' + o.position.y + ' ' + o.relativeSpeed.y + ' ' + o.physicsSpeed.y + ' ' + deltaSpeedY);
+          console.log('Pl: ' + o.position.x + ' ' + o.position.z + ' ' + o.relativeSpeed.y + ' ' + o.physicsSpeed.y);
         }
-      } else {
-        o.setPhysicsSpeed(undefined);
       }
     }
   }
@@ -147,7 +152,7 @@ export class GamePhysics implements IGamePhysics {
    * updates pos and speed if needed
    */
   private detectSurface(o: IRigitBody, pos: Vector3, dt: number): { deltaPosY: number, deltaSpeedY: number, collided: boolean } {
-    let dist = this.map.getDistanceY(o, pos);
+    let dist = this.level.getDistanceY(o, pos);
 
     // if we are above the ground, apply gravity
     if (dist > 0) {

@@ -24,7 +24,7 @@ async function createProjectile(baseSprite: Sprite3, uri: string, scale?: number
   if (baseSprite) {
     sprite.setDirectionXZ(baseSprite.angleXZ);
 
-    let frontPos = new Vector3(0, 0, -baseSprite.size.z / 2);
+    let frontPos = new Vector3(0, baseSprite.size.y / 2, -baseSprite.size.z / 2);
     frontPos.applyAxisAngle(new Vector3(0, 1, 0), baseSprite.angleXZ);
     frontPos.add(baseSprite.position);
 

@@ -120,7 +120,7 @@ export interface IVoxelLevel {
   intersectBlocks(
     ro: IRigitBody,
     pos: WorldCoord3,
-    func: (target: IRigitBody) => boolean): boolean;
+    func: (target: IRigitBody, levelHeight: number) => boolean): boolean;
 
 
   /**

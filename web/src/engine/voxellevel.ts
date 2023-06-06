@@ -198,6 +198,7 @@ export class VoxelLevel implements IVoxelLevel {
     public deleteBlock(block: MapBlockCoord | MapBlockRigitBody) {
         let mb = (block instanceof MapBlockRigitBody) ? block.mapBlock : block;
 
+        console.log('delete ' + mb.mapPos.x + ' ' + mb.mapPos.z);
         let layer = this.layers[mb.mapPos.y];
         layer.deleteBlock(mb);
         layer.updateScene(this.scene);
@@ -224,12 +225,12 @@ export class VoxelLevel implements IVoxelLevel {
 
     public intersectBlocks(ro: IRigitBody,
         pos: WorldCoord3,
-        func: (target: IRigitBody) => boolean): boolean {
+        func: (target: IRigitBody, levelHeight: number) => boolean): boolean {
 
         let sz = ro.size;
 
         if (pos.y < this._floorLevel) {
-            func(new MapBoundaryRigitBody(new Vector3(pos.x, 0, pos.z), new Vector3(0, 0, 0)));
+            func(new MapBoundaryRigitBody(new Vector3(pos.x, 0, pos.z), new Vector3(0, 0, 0)), infiniteDown);
             return true;
         }
 
@@ -256,9 +257,10 @@ export class VoxelLevel implements IVoxelLevel {
                         let height = block.model.frames[block.frame].getHeight(xBlock, zBlock);
 
                         // if we are below height
-                        if (height > 0 && pos.y < y * this._blockSize + height) {
+                        height = y * this._blockSize + height;
+                        if (height > 0 && pos.y < height) {
                             let b = new MapBlockRigitBody(block, { x: x * this._blockSize, y: y * this._blockSize, z: z * this._blockSize });
-                            if (func(b)) {
+                            if (func(b, height)) {
                                 return true;
                             }
                         }
