@@ -1,9 +1,15 @@
 import { Scene, Vector3 } from "three";
 import { VoxelAnimationCollection, VoxelMeshModel } from "../voxel/voxelmeshmodel";
 import { RigitAABB } from "../voxel/irigitbody";
+import { Coord3 } from "../voxel/pos3";
 
 export interface IRigitModel {
   get size(): Vector3;
+
+  /**
+   * array of coordinates which model is standing on
+   */
+  get bottomPoints(): Coord3[];
 
   load(uri: string): Promise<void>;
   animate(id: string);

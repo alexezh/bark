@@ -1,5 +1,4 @@
 
-// same as vector but more efficient as it does use array
 export type WorldCoord3 = {
   x: number,
   y: number,
@@ -12,6 +11,9 @@ export type WorldSize3 = {
   sz: number;
 }
 
+/**
+ * position in block units
+ */
 export type BlockPos3 = {
   x: number,
   y: number,
@@ -22,4 +24,10 @@ export type BlockSize3 = {
   sx: number,
   sy: number,
   sz: number;
+}
+
+export type Coord3 = {
+  x: number,
+  y: number,
+  z: number;
 }

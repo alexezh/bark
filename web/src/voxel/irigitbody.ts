@@ -1,4 +1,5 @@
 import { Vector3 } from "three";
+import { IRigitModel } from "../engine/irigitmodel";
 
 export enum RigitBodyKind {
   object,
@@ -32,6 +33,7 @@ export interface IRigitBody {
   get rigitKind(): RigitBodyKind;
   // owner set by application
   get owner(): any;
+  get rigit(): IRigitModel | undefined;
 
   /**
    * multiplier for gravity. 0 is weightless, not affected by gravity

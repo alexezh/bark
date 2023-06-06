@@ -1,16 +1,14 @@
-import { Group, Matrix4, Quaternion, Scene, Vector3 } from "three";
-import { IRigitModel } from "../irigitmodel";
-import { Sprite3 } from "../sprite3";
+import { Quaternion, Scene, Vector, Vector3 } from "three";
 import { VoxelAnimationCollection, VoxelMeshModel } from "../../voxel/voxelmeshmodel";
+import { IRigitModel } from "../irigitmodel";
 import { RigitAABB } from "../../voxel/irigitbody";
 import { VoxelModel } from "../../voxel/voxelmodel";
 import { modelCache } from "../../voxel/voxelmodelcache";
+import { Coord3 } from "../../voxel/pos3";
 
-/*
-// handles animal with 4 legs, tail and head
-export class Mammal4Model implements IRigitModel {
+export class CubeModel implements IRigitModel {
   private voxelModel!: VoxelModel;
-  private meshModels: { [key: string]: VoxelMeshModel } = {};
+  private meshModel!: VoxelMeshModel;
   private _size!: Vector3;
   private _directionAngleXZ: number = 0;
   private _rotationAngleXZ: number = 0;
@@ -20,18 +18,14 @@ export class Mammal4Model implements IRigitModel {
   private _baseX: number = 0;
   private _baseZ: number = 0;
   private _scale: number = 1;
-  private _recalcBottom: boolean = true;
-  private _bottomPoints: Vector3[];
+  private _bottomPoints: Coord3[] = [];
 
   public get size(): Vector3 { return this._size; }
 
-  public bottomPoints(): number[] {
-    return [this._position.x, this._position.y, this._position.z]
-  }
+  public get bottomPoints(): Coord3[] { return this._bottomPoints; }
 
   public constructor(scale: number) {
     this._scale = scale;
-    this._bottomPoints = new Vector3[5];
   }
 
   public async load(uri: string): Promise<void> {
@@ -48,17 +42,23 @@ export class Mammal4Model implements IRigitModel {
     this._baseX = this._size.x / 2;
     this._position = new Vector3(-this._baseX, 0, -this._baseZ);
 
-    this.meshModels.main = VoxelMeshModel.create(this.voxelModel, this._scale);
-    this.meshModels.main.setBasePoint(new Vector3(-this._baseX, 0, -this._baseZ));
-    this.meshModels.main.setPosition(this._position);
+    this._bottomPoints.push({ x: 0, y: 0, z: 0 });
+    this._bottomPoints.push({ x: -this._baseX, y: 0, z: -this._baseZ });
+    this._bottomPoints.push({ x: this._baseX, y: 0, z: -this._baseZ });
+    this._bottomPoints.push({ x: this._baseX, y: 0, z: this._baseZ });
+    this._bottomPoints.push({ x: -this._baseX, y: 0, z: this._baseZ });
+
+    this.meshModel = VoxelMeshModel.create(this.voxelModel, this._scale);
+    this.meshModel.setBasePoint(new Vector3(-this._baseX, 0, -this._baseZ));
+    this.meshModel.setPosition(this._position);
   }
 
   public addAnimation(name: string) {
-    this.meshModels.main.animations[name] = [];
+    this.meshModel.animations[name] = [];
   }
 
   public addFrame(name: string, idx: number, duration: number) {
-    this.meshModels.main.animations[name].push({ idx: idx, dur: duration });
+    this.meshModel.animations[name].push({ idx: idx, dur: duration });
   }
 
   public aabb(pos: Vector3 | undefined): RigitAABB {
@@ -79,41 +79,25 @@ export class Mammal4Model implements IRigitModel {
   }
 
   public animate(id: string) {
-    for (let m of Object.keys(this.meshModels)) {
-      this.meshModels[m].playAnimation(id);
-    }
+    this.meshModel.playAnimation(id);
   }
 
   public addToScene(scene: Scene) {
-    for (let key of Object.keys(this.meshModels)) {
-      let model = this.meshModels[key];
-      model.addToScene(scene);
-    }
-    //    scene.add(this._group);
+    this.meshModel.addToScene(scene);
   }
 
   public removeFromScene(scene: Scene) {
-    for (let key of Object.keys(this.meshModels)) {
-      let model = this.meshModels[key];
-      model.removeFromScene(scene);
-    }
-    // scene.remove(this._group);
+    this.meshModel.removeFromScene(scene);
   }
 
   public onRenderFrame(tick: number) {
-    for (let key of Object.keys(this.meshModels)) {
-      let model = this.meshModels[key];
-      model.onRender(tick);
-    }
+    this.meshModel.onRender(tick);
   }
 
   public setPosition(pos: Vector3): void {
     // we adjusted mesh to base point; this way we do not have to adjust this pos
     this._position.set(pos.x, pos.y, pos.z);
-    for (let key of Object.keys(this.meshModels)) {
-      let model = this.meshModels[key];
-      model.setPosition(this._position);
-    }
+    this.meshModel.setPosition(this._position);
   }
 
   public setSpeed(speed: Vector3): void {
@@ -140,11 +124,7 @@ export class Mammal4Model implements IRigitModel {
 
   private updateRotation() {
     let qt = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), this._directionAngleXZ + this._rotationAngleXZ);
-
-    for (let key of Object.keys(this.meshModels)) {
-      let model = this.meshModels[key];
-      model.setRotation(qt);
-    }
+    this.meshModel.setRotation(qt);
   }
 
   // recalc from physics
@@ -152,4 +132,3 @@ export class Mammal4Model implements IRigitModel {
 
   }
 }
-*/

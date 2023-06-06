@@ -1,7 +1,7 @@
 import { Scene, Vector3 } from "three";
 import { getSupportedCodeFixes } from "typescript";
 import { IRigitModel } from "./irigitmodel";
-import { StaticCubeModel } from "./avatars/staticcubemodel";
+import { CubeModel } from "./avatars/cubemodel";
 import { IRigitBody, RigitAABB, RigitBodyKind } from "../voxel/irigitbody";
 
 export enum TrackingCameraKind {
@@ -24,7 +24,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   private _id: number;
   private _name: string;
   public owner: any;
-  public rigit: IRigitModel;
+  public readonly rigit: IRigitModel | undefined;
   private _inactive: boolean = false;
   private _rigitKind: RigitBodyKind;
 
@@ -54,7 +54,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
 
   public get relativeSpeed(): Vector3 { return this._speed; }
   public get position(): Vector3 { return this._position.clone() };
-  public get size(): Vector3 { return this.rigit.size };
+  public get size(): Vector3 { return this.rigit!.size };
   public get gravityFactor(): number { return 1 };
   public get maxClimbSpeed(): number { return 20 };
   public get physicsSpeed(): Vector3 { return this._physicsSpeed ?? new Vector3(0, 0, 0); }
@@ -79,24 +79,24 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   public constructor(name: string, rigit?: IRigitModel, rigitKind?: RigitBodyKind) {
     this._id = Sprite3._nextId++;
     this._name = name;
-    this.rigit = rigit ?? new StaticCubeModel(1.0);
+    this.rigit = rigit ?? new CubeModel(1.0);
     this._position = new Vector3();
     this._rigitKind = rigitKind ?? RigitBodyKind.object;
   }
 
   public async load(uri: string): Promise<void> {
     await this.rigit!.load(uri);
-    this.rigit.setPosition(this._position);
-    this.rigit.setDirectionXZ(0);
+    this.rigit!.setPosition(this._position);
+    this.rigit!.setDirectionXZ(0);
   }
 
   public addToScene(scene: Scene) {
-    this.rigit.addToScene(scene);
+    this.rigit!.addToScene(scene);
     // console.log('Loaded sprite: ' + this._id);
   }
 
   public removeFromScene(scene: Scene) {
-    this.rigit.removeFromScene(scene);
+    this.rigit!.removeFromScene(scene);
     // console.log('Remove sprite: ' + this._id);
   }
 
@@ -106,7 +106,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
 
   public setPosition(pos: Vector3) {
     this._position = pos;
-    this.rigit.setPosition(pos);
+    this.rigit!.setPosition(pos);
   }
 
   public setPhysicsSpeed(speed: Vector3 | undefined) {
@@ -137,7 +137,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
     this._angleXZ = angle;
 
     // TODO: need to separate speed from direction
-    this.rigit.setDirectionXZ(angle);
+    this.rigit!.setDirectionXZ(angle);
 
     this._inactive = (angle === 0);
     if (this._trackingCamera) {
@@ -146,7 +146,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   }
 
   public aabb(pos: Vector3 | undefined): RigitAABB {
-    return this.rigit.aabb(pos);
+    return this.rigit!.aabb(pos);
   }
 
   public setTrackingCamera(camera: ITrackingCamera | undefined) {
@@ -158,7 +158,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
 
     // move meshes; we should run this through rigitmodel to update
     // position correctly
-    this.rigit.setPosition(pos);
+    this.rigit!.setPosition(pos);
 
     if (this._trackingCamera) {
       this._trackingCamera.onTargetMove(pos);

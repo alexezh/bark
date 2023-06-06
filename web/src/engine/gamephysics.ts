@@ -143,6 +143,8 @@ export class GamePhysics implements IGamePhysics {
         if (o.name === 'pl') {
           console.log('Pl: ' + o.position.x + ' ' + o.position.z + ' ' + o.relativeSpeed.y + ' ' + o.physicsSpeed.y);
         }
+      } else {
+        o.setPhysicsSpeed(undefined);
       }
     }
   }

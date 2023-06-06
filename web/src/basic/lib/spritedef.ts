@@ -2,8 +2,7 @@ import { Vector3 } from "three";
 import { Sprite3 } from "../../engine/sprite3";
 import { ModuleNode } from "../ast";
 import { addSystemFunc, addSystemType, createModuleNode } from "./systemfunc";
-import { StaticCubeModel } from "../../engine/avatars/staticcubemodel";
-import { Mammal4Model } from "../../engine/avatars/mammal4";
+import { CubeModel } from "../../engine/avatars/cubemodel";
 import { vm } from "../../engine/ivm";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../../voxel/mapblockrigitbody";
 import { RigitBodyKind } from "../../voxel/irigitbody";
@@ -18,7 +17,7 @@ type DigAnimation = {
  * not other projectiles
  */
 async function createProjectile(baseSprite: Sprite3, uri: string, scale?: number): Promise<IDigSprite> {
-  let sprite = await vm.createSprite('pl', uri, new StaticCubeModel(scale ?? 1.0), RigitBodyKind.projectile);
+  let sprite = await vm.createSprite('pl', uri, new CubeModel(scale ?? 1.0), RigitBodyKind.projectile);
 
   // set relative position of projetile based on sprite
   if (baseSprite) {
@@ -36,16 +35,16 @@ async function createProjectile(baseSprite: Sprite3, uri: string, scale?: number
 }
 
 async function createCubeSprite(name: string, uri: string, scale?: number): Promise<IDigSprite> {
-  let sprite = await vm.createSprite(name, uri, new StaticCubeModel(scale ?? 1.0));
+  let sprite = await vm.createSprite(name, uri, new CubeModel(scale ?? 1.0));
   vm.physics.addRigitObject(sprite);
   return sprite;
 }
 
-async function createMammal4Sprite(name: string, uri: string, scale?: number): Promise<IDigSprite> {
-  let sprite = await vm.createSprite(name, uri, new Mammal4Model(scale ?? 1.0));
-  vm.physics.addRigitObject(sprite);
-  return sprite;
-}
+// async function createMammal4Sprite(name: string, uri: string, scale?: number): Promise<IDigSprite> {
+//   let sprite = await vm.createSprite(name, uri, new Mammal4Model(scale ?? 1.0));
+//   vm.physics.addRigitObject(sprite);
+//   return sprite;
+// }
 
 function removeSprite(sprite: IDigSprite) {
   vm.physics.removeRigitObject(sprite as Sprite3);
@@ -58,7 +57,7 @@ function removeProjectile(sprite: IDigSprite) {
 }
 
 function addAnimation(sprite: Sprite3, name: string): DigAnimation {
-  sprite.rigit.addAnimation(name);
+  sprite.rigit!.addAnimation(name);
   return {
     sprite: sprite,
     name: name
@@ -66,11 +65,11 @@ function addAnimation(sprite: Sprite3, name: string): DigAnimation {
 }
 
 function animate(sprite: Sprite3, name: string) {
-  sprite.rigit.animate(name);
+  sprite.rigit!.animate(name);
 }
 
 function addFrame(animation: DigAnimation, idx: number, duration: number) {
-  animation.sprite.rigit.addFrame(animation.name, idx, duration);
+  animation.sprite.rigit!.addFrame(animation.name, idx, duration);
 }
 
 function setPosition(sprite: Sprite3, x: number, y: number, z: number) {
@@ -78,7 +77,7 @@ function setPosition(sprite: Sprite3, x: number, y: number, z: number) {
 }
 
 function rotateModelXZ(sprite: Sprite3, angle: number) {
-  sprite.rigit.setRotationXZ(angle);
+  sprite.rigit!.setRotationXZ(angle);
   //sprite.setPosition(new Vector3(x, y, z));
 }
 
@@ -105,7 +104,7 @@ export function createSpriteModule(): ModuleNode {
   let module = createModuleNode('Sprite');
 
   module.funcs.push(addSystemFunc(module, 'createCubeSprite', ['name:string', 'url:string', 'scale:number'], 'Sprite', true, createCubeSprite));
-  module.funcs.push(addSystemFunc(module, 'createMammal4Sprite', ['name:string', 'url:string', 'scale:number'], 'Sprite', true, createMammal4Sprite));
+  //module.funcs.push(addSystemFunc(module, 'createMammal4Sprite', ['name:string', 'url:string', 'scale:number'], 'Sprite', true, createMammal4Sprite));
   module.funcs.push(addSystemFunc(module, 'removeSprite', ['sprite:Sprite'], 'void', false, removeSprite));
   module.funcs.push(addSystemFunc(module, 'createProjectile', ['url:string', 'scale:number'], 'Sprite', true, createProjectile));
   module.funcs.push(addSystemFunc(module, 'removeProjectile', ['sprite:Sprite'], 'void', false, removeProjectile));

@@ -4,27 +4,26 @@ import { Vector3, Vector4 } from "three";
 import { MoveController2D } from "./engine/movecontroller2d";
 import { IDigGame } from "./engine/idiggame";
 import { randInt } from "three/src/math/MathUtils";
-import { Mammal4Model } from "./engine/avatars/mammal4";
 import { MapBlockRigitBody } from "./voxel/mapblockrigitbody";
-import { StaticCubeModel } from "./engine/avatars/staticcubemodel";
+import { CubeModel } from "./engine/avatars/cubemodel";
 
 
 async function createBomb(pos: Vector3): Promise<Sprite3> {
-  let sprite = await vm.createSprite('bomb', 'vox/bomb.vox', new StaticCubeModel(1.0));
+  let sprite = await vm.createSprite('bomb', 'vox/bomb.vox', new CubeModel(1.0));
   sprite.setPosition(pos);
   return sprite;
 }
 
 async function createMonky(): Promise<Sprite3> {
-  let m = await vm.createSprite('monky', 'vox/monky.vox', new Mammal4Model(1.0));
+  let m = await vm.createSprite('monky', 'vox/monky.vox', new CubeModel(1.0));
   m.setPosition(new Vector3(120, 20, 120));
 
-  m.rigit.addAnimation('move');
-  m.rigit.addFrame('move', 1, 0.1);
-  m.rigit.addFrame('move', 2, 0.1);
+  m.rigit!.addAnimation('move');
+  m.rigit!.addFrame('move', 1, 0.1);
+  m.rigit!.addFrame('move', 2, 0.1);
 
-  m.rigit.addAnimation('stand');
-  m.rigit.addFrame('stand', 0, 0);
+  m.rigit!.addAnimation('stand');
+  m.rigit!.addFrame('stand', 0, 0);
 
   //inputController!.onKeyAction(this.onKey.bind(this));
   return m;
@@ -178,7 +177,7 @@ export function boxedBasic2(): string {
     var monky;
 
     on start function() begin
-      monky:= Sprite.createMammal4Sprite 'monky' 'vox/monky.vox' scale:=0.5
+      monky:= Sprite.createCubeSprite 'monky' 'vox/monky.vox' scale:=0.5
       Sprite.setPosition monky 120 20 120
 
       var ma:= Sprite.addAnimation monky 'move'

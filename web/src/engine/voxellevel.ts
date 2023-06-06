@@ -227,43 +227,37 @@ export class VoxelLevel implements IVoxelLevel {
         pos: WorldCoord3,
         func: (target: IRigitBody, levelHeight: number) => boolean): boolean {
 
-        let sz = ro.size;
+        let bottomPoints = ro.rigit?.bottomPoints;
+        if (!bottomPoints) {
+            return false;
+        }
 
         if (pos.y < this._floorLevel) {
             func(new MapBoundaryRigitBody(new Vector3(pos.x, 0, pos.z), new Vector3(0, 0, 0)), infiniteDown);
             return true;
         }
 
-        // we assume upper bound non-inclusive; ie if block is at position 0
-        // and size 16, it overlaps with one layer
-        let xStart = Math.floor(pos.x / this._blockSize);
-        let xEnd = Math.max(xStart + 1, Math.floor((pos.x + sz.x) / this._blockSize));
-        let yStart = Math.floor(pos.y / this._blockSize);
-        let yEnd = Math.max(yStart + 1, Math.floor((pos.y + sz.y) / this._blockSize));
-        let zStart = Math.floor(pos.z / this._blockSize);
-        let zEnd = Math.max(zStart + 1, Math.floor((pos.z + sz.z) / this._blockSize));
-
-        for (let y = yStart; y < yEnd; y++) {
-            let layer: MeshLevelLayer = this.layers[y];
-            if (layer === undefined) {
+        // for each block
+        for (let bp of bottomPoints) {
+            let layerIdx = (pos.y / this._blockSize) | 0;
+            if (layerIdx >= this.layers.length) {
                 continue;
             }
-            for (let z = zStart; z < zEnd; z++) {
-                for (let x = xStart; x < xEnd; x++) {
-                    let block = layer.getBlock(x, z);
-                    if (block !== undefined) {
-                        let xBlock = (pos.x - x * this._blockSize) | 0;
-                        let zBlock = (pos.z - z * this._blockSize) | 0;
-                        let height = block.model.frames[block.frame].getHeight(xBlock, zBlock);
+            let layer: MeshLevelLayer = this.layers[layerIdx];
 
-                        // if we are below height
-                        height = y * this._blockSize + height;
-                        if (height > 0 && pos.y < height) {
-                            let b = new MapBlockRigitBody(block, { x: x * this._blockSize, y: y * this._blockSize, z: z * this._blockSize });
-                            if (func(b, height)) {
-                                return true;
-                            }
-                        }
+            let x = (bp.x / this._blockSize) | 0;
+            let z = (bp.z / this._blockSize) | 0;
+            let block = layer.getBlock(x, z);
+
+            if (block !== undefined) {
+                let xBlock = (pos.x - x * this._blockSize) | 0;
+                let zBlock = (pos.z - z * this._blockSize) | 0;
+                let height = layer.layerY + block.model.frames[block.frame].getHeight(xBlock, zBlock);
+
+                if (height > 0 && pos.y < height) {
+                    let b = new MapBlockRigitBody(block, { x: x * this._blockSize, y: layer.layerY, z: z * this._blockSize });
+                    if (func(b, height)) {
+                        return true;
                     }
                 }
             }
