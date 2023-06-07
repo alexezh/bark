@@ -69,13 +69,20 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   /**
    * world speed is combination of physics speed, user speed and direction
    */
-  public get worldSpeed(): Vector3 {
+  public getWorldSpeed(): Vector3 {
+    //if (true || this.standing || this._rigitKind === RigitBodyKind.projectile) {
     // ATT: 0 means we are looking down to z axis. X is forward direction. We need to rotate speed so X becomes Z
     let speed = this._speed.clone().applyAxisAngle(new Vector3(0, 1, 0), this._angleXZ + Math.PI / 2);
     if (this._physicsSpeed) {
       speed.add(this._physicsSpeed);
     }
+
     return speed;
+    // } else {
+    //   // ATT: 0 means we are looking down to z axis. X is forward direction. We need to rotate speed so X becomes Z
+    //   let speed = (this._physicsSpeed) ? this._physicsSpeed.clone() : new Vector3(0, 0, 0);
+    //   return speed;
+    // }
   };
 
   public constructor(name: string, rigit?: IRigitModel, rigitKind?: RigitBodyKind) {

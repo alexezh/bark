@@ -40,13 +40,13 @@ export class CubeModel implements IRigitModel {
     this._size.multiplyScalar(this._scale);
 
     let center = this.voxelModel.modelCenter;
-    this._baseZ = center.x;
-    this._baseX = center.y;
+    this._baseZ = center.x * this._scale;
+    this._baseX = center.y * this._scale;
     this._position = new Vector3(0, 0, 0);
 
     let modelSize = this.voxelModel.modelSize;
-    let sx = modelSize.x / 2;
-    let sz = modelSize.z / 2;
+    let sx = modelSize.x * this._scale / 2;
+    let sz = modelSize.z * this._scale / 2;
 
     this._bottomPoints.push({ x: 0, y: 0, z: 0 });
     this._bottomPoints.push({ x: -sx, y: 0, z: -sz });
@@ -54,8 +54,9 @@ export class CubeModel implements IRigitModel {
     this._bottomPoints.push({ x: sx, y: 0, z: sz });
     this._bottomPoints.push({ x: -sx, y: 0, z: sz });
 
+    // we are loading scaled geometry; so we have to pass scaled coordinates
     this.meshModel = VoxelMeshModel.create(this.voxelModel, this._scale);
-    this.meshModel.setBasePoint(new Vector3(-this._baseX * this._scale, 0, -this._baseZ * this._scale));
+    this.meshModel.setBasePoint(new Vector3(-this._baseX, 0, -this._baseZ));
     this.meshModel.setPosition(this._position);
   }
 

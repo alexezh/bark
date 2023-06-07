@@ -19,7 +19,8 @@ export class MeshModel {
     }
 }
 
-export const infiniteDown = 1000000;
+export const infiniteUp = 1000000;
+export const infiniteDown = -1000000;
 
 //////////////////////////////////////////////////////////////////////
 // Maps class - Loading of maps from images
@@ -223,29 +224,30 @@ export class VoxelLevel implements IVoxelLevel {
         layer.updateScene(this.scene);
     }
 
-    public intersectBlocks(ro: IRigitBody,
-        pos: WorldCoord3,
-        func: (target: IRigitBody, levelHeight: number) => boolean): boolean {
+    public getDistanceY(ro: IRigitBody, pos: WorldCoord3): { intersectBody?: IRigitBody, height: number, distance: number } {
 
         let bottomPoints = ro.rigit?.bottomPoints;
         if (!bottomPoints) {
-            return false;
+            return { height: infiniteUp, distance: infiniteUp };
         }
 
         if (pos.y < this._floorLevel) {
-            func(new MapBoundaryRigitBody(new Vector3(pos.x, 0, pos.z), new Vector3(0, 0, 0)), infiniteDown);
-            return true;
+            return { intersectBody: new MapBoundaryRigitBody(new Vector3(pos.x, 0, pos.z), new Vector3(0, 0, 0)), height: infiniteDown, distance: infiniteDown };
         }
 
         let layerIdx = (pos.y / this._blockSize) | 0;
         if (layerIdx >= this.layers.length) {
-            return false;
+            return { height: infiniteUp, distance: infiniteUp };
         }
 
         let layer: MeshLevelLayer = this.layers[layerIdx];
         if (layer === undefined) {
-            return false;
+            return { height: infiniteUp, distance: infiniteUp };
         }
+
+        let minHeight: number = infiniteUp;
+        let minDistance: number = infiniteUp;
+        let intersectBody: MapBlockRigitBody | undefined;
 
         // for each block
         for (let bp of bottomPoints) {
@@ -261,41 +263,43 @@ export class VoxelLevel implements IVoxelLevel {
                 let zBlock = (bpz - blockZ * this._blockSize) | 0;
                 let height = layer.layerY + block.model.frames[block.frame].getHeight(xBlock, zBlock);
 
-                if (height > 0 && pos.y < height) {
-                    let b = new MapBlockRigitBody(block, { x: blockX * this._blockSize, y: layer.layerY, z: blockZ * this._blockSize });
-                    if (func(b, height)) {
-                        return true;
+                if (height > 0) {
+                    let distance = pos.y - height;
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        minHeight = height;
+                        intersectBody = new MapBlockRigitBody(block, { x: blockX * this._blockSize, y: layer.layerY, z: blockZ * this._blockSize });
                     }
                 }
             }
         }
 
-        return false;
+        return { intersectBody: intersectBody, height: minHeight, distance: minDistance };
     }
 
 
     /**
     * positive distance is we are above the surface
      */
-    public getDistanceY(ro: IRigitBody, pos: Vector3): number {
-        if (pos.y < 0) {
-            return infiniteDown;
-        }
+    // public getDistanceY(ro: IRigitBody, pos: Vector3): number {
+    //     if (pos.y < 0) {
+    //         return infiniteDown;
+    //     }
 
-        let layerIdx = (pos.y / this._blockSize) | 0;
-        layerIdx = Math.min(layerIdx, this.layers.length - 1);
+    //     let layerIdx = (pos.y / this._blockSize) | 0;
+    //     layerIdx = Math.min(layerIdx, this.layers.length - 1);
 
-        for (let i = layerIdx; i >= 0; i--) {
-            let layer = this.layers[i];
-            let height = layer.getHeight(pos);
-            if (height !== 0) {
-                //console.log(`height: ${height} ${pos.y}`)
-                return pos.y - (layer.layerY * this._blockSize + height);
-            }
-        }
+    //     for (let i = layerIdx; i >= 0; i--) {
+    //         let layer = this.layers[i];
+    //         let height = layer.getHeight(pos);
+    //         if (height !== 0) {
+    //             //console.log(`height: ${height} ${pos.y}`)
+    //             return pos.y - (layer.layerY * this._blockSize + height);
+    //         }
+    //     }
 
-        return infiniteDown;
-    }
+    //     return infiniteDown;
+    // }
 
     private onFileChangeBlock(blocks: FileMapBlock[]) {
         for (let i = 0; i < blocks.length; i++) {

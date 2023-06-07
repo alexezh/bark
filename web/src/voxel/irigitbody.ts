@@ -53,7 +53,7 @@ export interface IRigitBody {
    * sprite compute speed based on direction
    * physics engine will call adjustWorldSpeed once final compute is done
    */
-  get worldSpeed(): Vector3;
+  getWorldSpeed(): Vector3;
 
   /**
    * speed relative to current direction

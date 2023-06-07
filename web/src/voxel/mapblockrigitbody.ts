@@ -4,6 +4,9 @@ import { WorldCoord3 } from "./pos3";
 import { IRigitBody, RigitAABB, RigitBodyKind } from "./irigitbody";
 import { IRigitModel } from "../engine/irigitmodel";
 
+/**
+ * temporary body object for representing collisions with the map
+ */
 export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   public readonly mapBlock: MapBlockCoord;
   private _pos: Vector3;
@@ -32,7 +35,7 @@ export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   public get z(): number { return this._pos.z };
   public get standing(): boolean { return false };
 
-  get worldSpeed(): Vector3 { return new Vector3(0, 0, 0); }
+  getWorldSpeed(): Vector3 { return new Vector3(0, 0, 0); }
 
   aabb(pos: Vector3 | undefined): RigitAABB {
     return { xStart: 0, xEnd: 0, yStart: 0, yEnd: 0, zStart: 0, zEnd: 0 }
@@ -73,7 +76,7 @@ export class MapBoundaryRigitBody implements IRigitBody, IDigBoundary {
   public get y(): number { return this._pos.y };
   public get z(): number { return this._pos.z };
 
-  get worldSpeed(): Vector3 { return new Vector3(0, 0, 0); }
+  getWorldSpeed(): Vector3 { return new Vector3(0, 0, 0); }
   aabb(pos: Vector3 | undefined): RigitAABB {
     return { xStart: 0, xEnd: 0, yStart: 0, yEnd: 0, zStart: 0, zEnd: 0 }
   }

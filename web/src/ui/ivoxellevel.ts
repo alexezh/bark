@@ -117,17 +117,16 @@ export interface IVoxelLevel {
 
   // intersects sprite with block
   // creates rigit body for each interesecting block
-  intersectBlocks(
-    ro: IRigitBody,
-    pos: WorldCoord3,
-    func: (target: IRigitBody, levelHeight: number) => boolean): boolean;
+  // intersectBlocks(
+  //   ro: IRigitBody,
+  //   pos: WorldCoord3): boolean;
 
 
   /**
     * get distance from bottom of body to surface
     * positive distance is we are above the surface
    */
-  getDistanceY(ro: IRigitBody, pos: Vector3): number;
+  getDistanceY(ro: IRigitBody, pos: Vector3): { intersectBody?: IRigitBody, height: number, distance: number };
 
   //  readonly physics: IGamePhysics;
   //  readonly mechanics: IGameMechanics;

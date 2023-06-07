@@ -4,7 +4,7 @@ import { IVoxelLevel } from "../ui/ivoxellevel";
 import { BroadphaseCollision } from "./broadphasecollision";
 import { Vector3 } from "three";
 import { IRigitBody, RigitBodyKind } from "../voxel/irigitbody";
-import { infiniteDown } from "./voxellevel";
+import { infiniteDown, infiniteUp } from "./voxellevel";
 import { MapBoundaryRigitBody } from "../voxel/mapblockrigitbody";
 
 // manages movement and collisions between world objects
@@ -79,59 +79,79 @@ export class GamePhysics implements IGamePhysics {
   }
 
   private handleMapCollision(o: IRigitBody, dt: number, collisions: { source: IRigitBody, target: IRigitBody }[]) {
-    // clone speed so we can apply dt to it
-    let s = o.worldSpeed;
-
     if (o.gravityFactor === 0) {
       return;
     }
 
+    // we expect speed to be mutable
+    let s = o.getWorldSpeed();
+
+    // if we are standing and speed is 0, nothing to do
+    //if (o.rigitKind === RigitBodyKind.object && o.standing && s.x === 0 && s.y === 0 && s.z === 0) {
+    //  return;
+    //}
+
     s.multiplyScalar(dt);
     let p = o.position.clone().add(s);
 
-    let intersectBody: IRigitBody | undefined;
-    let intersectHeight: number | undefined;
     let collided = false;
 
     // if we only collide with sprites, skip collision check
-    collided = this.level.intersectBlocks(o, p, (target: IRigitBody, levelHeight: number) => {
-      // just check if there is a block
-      intersectBody = target;
-      intersectHeight = levelHeight;
-      return true;
-    });
+    let distance = this.level.getDistanceY(o, p);
 
     // when we stand on surface, we constantly trying to move down
     // and going back up. We do not want to notify about collision for such
     // trivial cases.
     let standing = false;
 
-    if (collided) {
+    if (distance.distance < 0) {
+      // for objects, climb back if we are not too deep
       if (o.rigitKind === RigitBodyKind.object) {
-        if (p.y + o.maxClimbSpeed > intersectHeight!) {
-          console.log('standing: ' + intersectHeight! + ' ' + o.name);
-          p.y = intersectHeight!;
+        if (o.maxClimbSpeed > Math.abs(distance.distance)) {
+          //console.log('standing: ' + intersectHeight! + ' ' + o.name);
+          p.y -= distance.distance;
           collided = false;
           standing = true;
+        } else {
+          collided = true;
         }
+      } else {
+        collided = true;
+      }
+    } else if (distance.distance > 0) {
+      // if we above and we were standing previous round, see if we can get down
+      // by applying gravity
+      let gravityDy = dt * this.gravity * o.gravityFactor;
+      if (distance.distance <= gravityDy) {
+        p.y -= distance.distance;
+        standing = true;
+      } else {
+        p.y -= gravityDy;
       }
     }
 
+    console.log('coord:' + p.y + ' ' + distance.distance);
+
     if (collided) {
+      console.log('collided');
       // if we collide, we do not move; but we keep user speed untouched??
       o.setPhysicsSpeed(undefined);
-      collisions.push({ source: o, target: intersectBody! });
+      collisions.push({ source: o, target: distance.intersectBody! });
     } else {
       o.onMove(p);
 
       // gravity !!!
       if (!standing) {
-        //o.setStanding(false);
+        //if (o.standing) {
+        console.log('not standing');
+        //}
+        o.setStanding(false);
         o.setPhysicsSpeed(new Vector3(0, o.physicsSpeed.y - dt * this.gravity * o.gravityFactor, 0));
         //if (o.name === 'pl') {
         //  console.log('Pl: ' + o.position.x + ' ' + o.position.z + ' ' + o.relativeSpeed.y + ' ' + o.physicsSpeed.y);
         //}
       } else {
+        console.log('standing');
         o.setStanding(true);
         o.setPhysicsSpeed(undefined);
       }
