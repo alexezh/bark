@@ -264,7 +264,7 @@ export class VoxelLevel implements IVoxelLevel {
                 let height = layer.layerY + block.model.frames[block.frame].getHeight(xBlock, zBlock);
 
                 if (height > 0) {
-                    let distance = pos.y - height;
+                    let distance = (pos.y - height);
                     if (distance < minDistance) {
                         minDistance = distance;
                         minHeight = height;
