@@ -55,7 +55,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
 
   public get relativeSpeed(): Vector3 { return this._speed; }
   public get position(): Vector3 { return this._position.clone() };
-  public get size(): Vector3 { return this.rigit!.size };
+  public get modelSize(): Vector3 { return this.rigit!.size };
   public get gravityFactor(): number { return 1 };
   public get maxClimbSpeed(): number { return 20 };
   public get physicsSpeed(): Vector3 { return this._physicsSpeed ?? new Vector3(0, 0, 0); }

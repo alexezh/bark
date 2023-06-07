@@ -48,6 +48,14 @@ export class VoxelModel {
     let frame = this.frames[0];
     return new Vector3(frame.chunk_sx * this.scale | 0, frame.chunk_sy, frame.chunk_sz);
   }
+
+  public get modelSize(): Vector3 {
+    return this.frames[0].modelSize;
+  }
+
+  public get modelCenter(): Vector3 {
+    return this.frames[0].modelCenter;
+  }
 }
 
 // voxel model builds geometry which can be used to build geometry
@@ -59,6 +67,13 @@ export class VoxelModelFrame {
   public chunk_sy: number;
   public chunk_sz: number;
   public stride_z: number;
+
+  public min_x: number;
+  public min_y: number;
+  public min_z: number;
+  public max_x: number;
+  public max_y: number;
+  public max_z: number;
 
   // blocks populated from model
   public wireframe = false;
@@ -76,6 +91,17 @@ export class VoxelModelFrame {
   public get verticeCount(): number { return this.v.length }
   public get colorCount(): number { return this.c.length }
 
+  public get modelSize(): Vector3 {
+    return new Vector3(this.max_x - this.min_x, this.max_y - this.min_y, this.max_z - this.min_z);
+  }
+
+  public get modelCenter(): Vector3 {
+    return new Vector3(
+      this.min_x + (this.max_x - this.min_x) / 2,
+      this.min_y + (this.max_y - this.min_y) / 2,
+      this.min_z + (this.max_z - this.min_z) / 2);
+  }
+
   private constructor(data: VoxelFileFrame) {
     this.data = data;
     this.heightMap = new Int8Array(data.sx * data.sz);
@@ -83,13 +109,19 @@ export class VoxelModelFrame {
     this.chunk_sx = data.sx;
     this.chunk_sy = data.sy;
     this.chunk_sz = data.sz;
+
+    this.min_x = this.chunk_sx
+    this.min_y = this.chunk_sy;
+    this.min_z = this.chunk_sz;
+    this.max_x = 0;
+    this.max_y = 0;
+    this.max_z = 0;
+
     this.stride_z = this.chunk_sx * this.chunk_sy;
   }
 
   public static load(data: VoxelFileFrame): VoxelModelFrame {
     let model = new VoxelModelFrame(data);
-
-    console.log(`loaded frame: ${model.chunk_sx} ${model.chunk_sy} ${model.chunk_sz}`);
 
     // 3d array takes too much space and we do not really need it
     let voxels = new Uint32Array(model.stride_z * model.chunk_sz);
@@ -98,7 +130,17 @@ export class VoxelModelFrame {
       let d = model.data.data[i];
       let blockIdx = (d.x | 0) + ((d.y | 0) * model.chunk_sx) + ((d.z | 0) * model.stride_z);
       voxels[blockIdx] = d.color | 0x00000080;
+
+      model.min_x = Math.min(model.min_x, d.x);
+      model.min_y = Math.min(model.min_y, d.y);
+      model.min_z = Math.min(model.min_z, d.z);
+      model.max_x = Math.max(model.max_x, d.x);
+      model.max_y = Math.max(model.max_y, d.y);
+      model.max_z = Math.max(model.max_z, d.z);
     }
+
+    let ms = model.modelSize;
+    console.log(`loaded frame: ${ms.x} ${ms.y} ${ms.z}`);
 
     model.loadModel(voxels);
     model.loadHeightMap(voxels);

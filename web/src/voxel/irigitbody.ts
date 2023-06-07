@@ -64,7 +64,15 @@ export interface IRigitBody {
    * preturns current position
    */
   get position(): Vector3;
-  get size(): Vector3;
+
+  /**
+   * TODO: need actual rigit size instead of block size
+   */
+  get modelSize(): Vector3;
+
+  /**
+   * speed assigned by physics
+   */
   get physicsSpeed(): Vector3;
 
   /**

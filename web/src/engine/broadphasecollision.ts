@@ -17,12 +17,12 @@ export class BroadphaseCollision {
 
     for (let ro of rigitObjects) {
       let pos = ro.position;
-      let sz = ro.size;
+      let sz = ro.modelSize;
       this.xEdges.push(pos.x);
-      this.xEdges.push(pos.x + ro.size.x);
+      this.xEdges.push(pos.x + ro.modelSize.x);
 
       this.yEdges.push(pos.y);
-      this.yEdges.push(pos.y + ro.size.y);
+      this.yEdges.push(pos.y + ro.modelSize.y);
     }
 
     this.xEdges.sort();

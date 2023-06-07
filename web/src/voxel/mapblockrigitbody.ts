@@ -22,7 +22,7 @@ export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   get physicsSpeed(): Vector3 { return new Vector3(0, 0, 0); }
 
   get position(): Vector3 { return this._pos; }
-  get size(): Vector3 { return this.mapBlock!.model!.size; }
+  get modelSize(): Vector3 { return this.mapBlock!.model!.modelSize; }
   get gravityFactor(): number { return 0 }
   get maxClimbSpeed(): number { return 0 }
   get rigit(): IRigitModel | undefined { return undefined; }
@@ -63,7 +63,7 @@ export class MapBoundaryRigitBody implements IRigitBody, IDigBoundary {
   get relativeSpeed(): Vector3 { return new Vector3(0, 0, 0); }
   get physicsSpeed(): Vector3 { return new Vector3(0, 0, 0); }
   get position(): Vector3 { return this._pos; }
-  get size(): Vector3 { return this._size; }
+  get modelSize(): Vector3 { return this._size; }
   get gravityFactor(): number { return 0 }
   get maxClimbSpeed(): number { return 0 }
   get rigit(): IRigitModel | undefined { return undefined; }
