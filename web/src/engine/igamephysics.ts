@@ -15,6 +15,7 @@ export interface IGamePhysicsInputController {
 export type RigitCollisionHandler = (collisions: { source: IRigitBody, target: IRigitBody }[]) => void;
 
 export interface IGamePhysics {
+  setGravity(val: number): void;
   addRigitObject(ro: IRigitBody): void;
   removeRigitObject(ro: IRigitBody): void;
   addProjectile(ro: IRigitBody): void;

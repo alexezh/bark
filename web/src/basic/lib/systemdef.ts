@@ -86,15 +86,3 @@ export function createSystemModule(): ModuleNode {
   return module;
 }
 
-function setGravity(val: number) {
-
-}
-
-export function createPhysicsModule(): ModuleNode {
-  let module = createModuleNode('Physics')
-
-  module.funcs.push(addSystemFunc(module, 'setGravity', ['value: number'], 'void', true, setGravity));
-
-  return module;
-}
-

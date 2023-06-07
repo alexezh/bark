@@ -21,6 +21,10 @@ export class GamePhysics implements IGamePhysics {
     this.level = level;
   }
 
+  public setGravity(val: number): void {
+    this.gravity = val;
+  }
+
   public addRigitObject(ro: IRigitBody): void {
     this.bodies.push(ro);
   }
@@ -76,35 +80,18 @@ export class GamePhysics implements IGamePhysics {
 
   private handleMapCollision(o: IRigitBody, dt: number, collisions: { source: IRigitBody, target: IRigitBody }[]) {
     // clone speed so we can apply dt to it
-    let s = o.getWorldSpeed();
+    let s = o.worldSpeed;
 
-    if (o.gravityFactor === 0 || (s.x === 0 && s.y === 0 && s.z === 0)) {
+    if (o.gravityFactor === 0) {
       return;
     }
 
     s.multiplyScalar(dt);
     let p = o.position.clone().add(s);
 
-    let deltaSpeedY: number | undefined;
     let intersectBody: IRigitBody | undefined;
     let intersectHeight: number | undefined;
     let collided = false;
-
-    // first check if we collided with surface and we can level
-    /*
-    if (o.gravityFactor > 0) {
-      let delta = this.detectSurface(o, p, dt);
-      if (delta.deltaPosY != 0) {
-        p.y += delta.deltaPosY;
-      }
-      deltaSpeedY = delta.deltaSpeedY;
-
-      if (delta.collided) {
-        intersectBody = new MapBoundaryRigitBody(new Vector3(o.position.x, 0, o.position.z), new Vector3(0, 0, 0));
-        collided = true;
-      }
-    }
-    */
 
     // if we only collide with sprites, skip collision check
     collided = this.level.intersectBlocks(o, p, (target: IRigitBody, levelHeight: number) => {
@@ -120,9 +107,9 @@ export class GamePhysics implements IGamePhysics {
     let standing = false;
 
     if (collided) {
-      console.log('collided: ' + intersectHeight! + ' ' + o.name);
       if (o.rigitKind === RigitBodyKind.object) {
         if (p.y + o.maxClimbSpeed > intersectHeight!) {
+          console.log('standing: ' + intersectHeight! + ' ' + o.name);
           p.y = intersectHeight!;
           collided = false;
           standing = true;
@@ -139,61 +126,16 @@ export class GamePhysics implements IGamePhysics {
 
       // gravity !!!
       if (!standing) {
+        //o.setStanding(false);
         o.setPhysicsSpeed(new Vector3(0, o.physicsSpeed.y - dt * this.gravity * o.gravityFactor, 0));
-        if (o.name === 'pl') {
-          console.log('Pl: ' + o.position.x + ' ' + o.position.z + ' ' + o.relativeSpeed.y + ' ' + o.physicsSpeed.y);
-        }
+        //if (o.name === 'pl') {
+        //  console.log('Pl: ' + o.position.x + ' ' + o.position.z + ' ' + o.relativeSpeed.y + ' ' + o.physicsSpeed.y);
+        //}
       } else {
+        o.setStanding(true);
         o.setPhysicsSpeed(undefined);
       }
     }
-  }
-
-  /**
-   * adjusts position to surface
-   * updates pos and speed if needed
-   */
-  private detectSurface(o: IRigitBody, pos: Vector3, dt: number): { deltaPosY: number, deltaSpeedY: number, collided: boolean } {
-    let dist = this.level.getDistanceY(o, pos);
-
-    // if we are above the ground, apply gravity
-    if (dist > 0) {
-      if (dist === infiniteDown) {
-        //console.log(`fall: ${pos.y} ${dist} ${dt * this.gravity}`);
-        return {
-          deltaPosY: 0,
-          deltaSpeedY: -dt * this.gravity * o.gravityFactor,
-          collided: false
-        }
-      }
-
-      // if we are falling, update our speed. On the next round, we will recompute position
-      // and then we will level on the floor
-      return {
-        deltaPosY: 0,
-        deltaSpeedY: -dt * this.gravity * o.gravityFactor,
-        collided: false
-      }
-    } else if (dist < 0) {
-      // console.log('climb:' + dist);
-
-      // we need to climb to surface; if we do not collide with map, just move all the way
-      if (dist < o.maxClimbSpeed && o.rigitKind === RigitBodyKind.object) {
-        return {
-          deltaPosY: -dist,
-          deltaSpeedY: 0,
-          collided: false
-        }
-      } else {
-        return {
-          deltaPosY: 0,
-          deltaSpeedY: 0,
-          collided: true
-        }
-      }
-    }
-
-    return { deltaPosY: 0, deltaSpeedY: 0, collided: false };
   }
 }
 

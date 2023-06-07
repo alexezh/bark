@@ -200,10 +200,17 @@ export function boxedBasic2(): string {
         else
           Sprite.animate monky 'stand'
         end
-        Sprite.setSpeed monky x:=ev.speedX y:=0 z:=ev.speedZ
+
+        if Physics.isStanding(monky) then
+          Sprite.setSpeed monky x:=ev.speedX y:=0 z:=ev.speedY
+        else
+          Sprite.setSpeed monky x:=0 y:=0 z:=0
+        end
+
         Sprite.setAngleXZ monky ev.angleXZ
 
         if ev.fire then
+          System.log 'shoot bread'
           System.sendMessage 'shootBread' monky
         end
       end

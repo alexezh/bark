@@ -34,6 +34,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
    */
   private _speed: Vector3 = new Vector3();
   private _physicsSpeed: Vector3 | undefined;
+  private _standing: boolean = false;
 
   /**
    * direction of the move
@@ -63,11 +64,12 @@ export class Sprite3 implements IRigitBody, IDigSprite {
   public get y(): number { return this._position.y };
   public get z(): number { return this._position.z };
   public get angleXZ(): number { return this._angleXZ };
+  public get standing(): boolean { return this._standing };
 
   /**
    * world speed is combination of physics speed, user speed and direction
    */
-  public getWorldSpeed(): Vector3 {
+  public get worldSpeed(): Vector3 {
     // ATT: 0 means we are looking down to z axis. X is forward direction. We need to rotate speed so X becomes Z
     let speed = this._speed.clone().applyAxisAngle(new Vector3(0, 1, 0), this._angleXZ + Math.PI / 2);
     if (this._physicsSpeed) {
@@ -111,6 +113,9 @@ export class Sprite3 implements IRigitBody, IDigSprite {
 
   public setPhysicsSpeed(speed: Vector3 | undefined) {
     this._physicsSpeed = speed;
+  }
+  public setStanding(val: boolean): void {
+    this._standing = val;
   }
 
   /**

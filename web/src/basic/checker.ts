@@ -182,9 +182,11 @@ function validateExpression(parentCtx: ValidationContext, ast: ExpressionNode) {
 }
 
 function validateIf(parentCtx: ValidationContext, ast: IfNode) {
+  validateExpression(parentCtx, ast.exp);
   validateBlock(parentCtx, ast.th);
   if (ast.elif) {
     for (let node of ast.elif) {
+      validateExpression(parentCtx, node.exp);
       validateBlock(parentCtx, node.block);
     }
   }

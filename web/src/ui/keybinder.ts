@@ -62,17 +62,11 @@ type KeyBinding = {
 // game logic can update scene periodically
 export class KeyBinder {
   private htmlElem: HTMLElement;
-  private moveKeys: { [id: string]: boolean } = {};
   private keyUpHandlers: { [id: string]: KeyBinding } = {};
   public pressedKeys: any = {};
   private onInput: (() => void) | undefined;
 
   public constructor(htmlElem: HTMLElement, onInput: (() => void) | undefined = undefined, attach: boolean = true) {
-    this.moveKeys.ArrowLeft = true;
-    this.moveKeys.ArrowRight = true;
-    this.moveKeys.ArrowUp = true;
-    this.moveKeys.ArrowDown = true;
-
     this.htmlElem = htmlElem;
     this.onInput = onInput;
 
@@ -94,16 +88,6 @@ export class KeyBinder {
   }
 
   private onKeyDown(evt: any) {
-    let isMove = this.moveKeys[evt.code];
-
-    // reset all move keys, we want to capture the last
-    if (isMove !== undefined) {
-      this.pressedKeys.ArrowDown = false;
-      this.pressedKeys.ArrowUp = false;
-      this.pressedKeys.ArrowLeft = false;
-      this.pressedKeys.ArrowRight = false;
-    }
-
     this.pressedKeys[evt.code] = true;
 
     if (this.onInput !== undefined) {
@@ -132,3 +116,4 @@ export class KeyBinder {
     delete this.keyUpHandlers[key];
   }
 }
+

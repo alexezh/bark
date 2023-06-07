@@ -34,6 +34,7 @@ export interface IRigitBody {
   // owner set by application
   get owner(): any;
   get rigit(): IRigitModel | undefined;
+  get standing(): boolean;
 
   /**
    * multiplier for gravity. 0 is weightless, not affected by gravity
@@ -52,12 +53,19 @@ export interface IRigitBody {
    * sprite compute speed based on direction
    * physics engine will call adjustWorldSpeed once final compute is done
    */
-  getWorldSpeed(): Vector3;
+  get worldSpeed(): Vector3;
 
   /**
    * speed relative to current direction
    */
   get relativeSpeed(): Vector3;
+
+  /**
+   * preturns current position
+   */
+  get position(): Vector3;
+  get size(): Vector3;
+  get physicsSpeed(): Vector3;
 
   /**
    * get aabb of the body
@@ -70,11 +78,9 @@ export interface IRigitBody {
   setPhysicsSpeed(speed: Vector3 | undefined): void;
 
   /**
-   * returns current position
+   * set by physics engine to indicate that object is standing
    */
-  get position(): Vector3;
-  get size(): Vector3;
-  get physicsSpeed(): Vector3;
+  setStanding(standing: boolean): void;
 
   /**
    * update position from physics engine based on slope, gravity and collision

@@ -1,6 +1,6 @@
 import { AmbientLight, BufferGeometry, DirectionalLight, Mesh, MeshBasicMaterial, MeshPhongMaterial, PlaneGeometry, Scene, Vector3 } from "three";
 import { modelCache } from "../voxel/voxelmodelcache";
-import { MeshLevelLayer } from "./maplayer";
+import { MeshLevelLayer } from "./meshlevellayer";
 import { VoxelModel } from "../voxel/voxelmodel";
 import { BlockPos3, BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { defaultMaterial, FileMapBlock, IVoxelLevel, IVoxelLevelFile, MapBlock, MapBlockCoord } from "../ui/ivoxellevel";
@@ -237,25 +237,32 @@ export class VoxelLevel implements IVoxelLevel {
             return true;
         }
 
+        let layerIdx = (pos.y / this._blockSize) | 0;
+        if (layerIdx >= this.layers.length) {
+            return false;
+        }
+
+        let layer: MeshLevelLayer = this.layers[layerIdx];
+        if (layer === undefined) {
+            return false;
+        }
+
         // for each block
         for (let bp of bottomPoints) {
-            let layerIdx = (pos.y / this._blockSize) | 0;
-            if (layerIdx >= this.layers.length) {
-                continue;
-            }
-            let layer: MeshLevelLayer = this.layers[layerIdx];
+            let bpx = pos.x + bp.x;
+            let bpz = pos.z + bp.z;
 
-            let x = (bp.x / this._blockSize) | 0;
-            let z = (bp.z / this._blockSize) | 0;
-            let block = layer.getBlock(x, z);
+            let blockX = (bpx / this._blockSize) | 0;
+            let blockZ = (bpz / this._blockSize) | 0;
+            let block = layer.getBlock(blockX, blockZ);
 
             if (block !== undefined) {
-                let xBlock = (pos.x - x * this._blockSize) | 0;
-                let zBlock = (pos.z - z * this._blockSize) | 0;
+                let xBlock = (bpx - blockX * this._blockSize) | 0;
+                let zBlock = (bpz - blockZ * this._blockSize) | 0;
                 let height = layer.layerY + block.model.frames[block.frame].getHeight(xBlock, zBlock);
 
                 if (height > 0 && pos.y < height) {
-                    let b = new MapBlockRigitBody(block, { x: x * this._blockSize, y: layer.layerY, z: z * this._blockSize });
+                    let b = new MapBlockRigitBody(block, { x: blockX * this._blockSize, y: layer.layerY, z: blockZ * this._blockSize });
                     if (func(b, height)) {
                         return true;
                     }

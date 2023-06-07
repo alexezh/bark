@@ -145,11 +145,11 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
     }
 
     if (this.input.pressedKeys.KeyA) {
-      z += this.config.keySpeed;
+      z -= this.config.keySpeed;
     }
 
     if (this.input.pressedKeys.KeyD) {
-      z -= this.config.keySpeed;
+      z += this.config.keySpeed;
     }
 
     if (z !== 0 && z === this.speedZ) {

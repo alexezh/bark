@@ -30,8 +30,9 @@ export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   public get x(): number { return this._pos.x };
   public get y(): number { return this._pos.y };
   public get z(): number { return this._pos.z };
+  public get standing(): boolean { return false };
 
-  getWorldSpeed(): Vector3 { return new Vector3(0, 0, 0); }
+  get worldSpeed(): Vector3 { return new Vector3(0, 0, 0); }
 
   aabb(pos: Vector3 | undefined): RigitAABB {
     return { xStart: 0, xEnd: 0, yStart: 0, yEnd: 0, zStart: 0, zEnd: 0 }
@@ -41,6 +42,8 @@ export class MapBlockRigitBody implements IRigitBody, IDigBlock {
   setSpeed(speed: Vector3): void {
   }
   onMove(pos: Vector3): void {
+  }
+  setStanding(val: boolean): void {
   }
 }
 
@@ -64,18 +67,21 @@ export class MapBoundaryRigitBody implements IRigitBody, IDigBoundary {
   get gravityFactor(): number { return 0 }
   get maxClimbSpeed(): number { return 0 }
   get rigit(): IRigitModel | undefined { return undefined; }
+  public get standing(): boolean { return false };
 
   public get x(): number { return this._pos.x };
   public get y(): number { return this._pos.y };
   public get z(): number { return this._pos.z };
 
-  getWorldSpeed(): Vector3 { return new Vector3(0, 0, 0); }
+  get worldSpeed(): Vector3 { return new Vector3(0, 0, 0); }
   aabb(pos: Vector3 | undefined): RigitAABB {
     return { xStart: 0, xEnd: 0, yStart: 0, yEnd: 0, zStart: 0, zEnd: 0 }
   }
   setPhysicsSpeed(speed: Vector3 | undefined) {
   }
   setSpeed(speed: Vector3): void {
+  }
+  setStanding(val: boolean): void {
   }
   onMove(pos: Vector3): void {
   }
