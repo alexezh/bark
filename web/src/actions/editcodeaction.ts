@@ -29,7 +29,6 @@ export class EditCodeAction extends BasicAction {
 
     bar.pushActions(
       [
-        new FuncAction('Back', {}, () => this.onBack(bar)),
         new FuncAction('Copy', { closePane: false }, () => this.codeEditor!.copyText()),
         new FuncAction('Cut', { closePane: false }, () => this.codeEditor!.cutText()),
         new FuncAction('Paste', { closePane: false }, () => this.codeEditor!.pasteText()),
@@ -40,10 +39,6 @@ export class EditCodeAction extends BasicAction {
         new FuncAction('Add on', { closePane: false }, () => addOn(this.codeEditor!)),
       ]);
     bar.openDetailsPane(this.codeEditor.editEditor, DetailsPaneKind.Full);
-  }
-
-  public onBack(bar: ICommandLayer) {
-    bar.popActions();
   }
 
   public editCode() {

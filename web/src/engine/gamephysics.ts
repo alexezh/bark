@@ -123,8 +123,8 @@ export class GamePhysics implements IGamePhysics {
     } else if (distance.distance > epsilon) {
       // if we above and we were standing previous round, see if we can get down
       // by applying gravity
-      let gravityDy = dt * this.gravity * o.gravityFactor;
       if (o.rigitKind === RigitBodyKind.object) {
+        let gravityDy = dt * this.gravity * o.gravityFactor;
         if (distance.distance <= gravityDy) {
           p.y -= distance.distance;
           standing = true;

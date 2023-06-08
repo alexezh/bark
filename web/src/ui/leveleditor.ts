@@ -1,14 +1,10 @@
 import _ from "lodash";
-import { BufferGeometry, Camera, Line, LineBasicMaterial, PerspectiveCamera, Raycaster, Scene, Vector3 } from "three";
-import { mapEditorState } from "./mapeditorstate";
-import { PxSize } from "../lib/pos";
+import { BufferGeometry, Line, LineBasicMaterial, Raycaster, Vector3 } from "three";
 import { ILevelEditor as ILevelEditor } from "./ileveleditor";
 import { KeyBinder, MEvent } from "./keybinder";
-import { IVoxelLevel, IVoxelLevelFile, MapBlockCoord } from "./ivoxellevel";
+import { IVoxelLevel, MapBlockCoord } from "./ivoxellevel";
 import { BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
-import { modelCache } from "../voxel/voxelmodelcache";
 import { ICameraLayer } from "../engine/icameralayer";
-import { vm } from "../engine/ivm";
 import { VoxelModel } from "../voxel/voxelmodel";
 
 export interface IMapEditorHost {

@@ -1,5 +1,4 @@
-import { MapEditorState } from "../ui/mapeditorstate";
-import { createButton, setElementVisible } from "../lib/htmlutils";
+import { createButton } from "../lib/htmlutils";
 import { DetailsPaneKind, IAction, ICommandLayer } from "./iaction";
 import { ShellProps } from "../ui/shell";
 import { UiLayer2, UiLayerProps } from "../ui/uilayer";
@@ -8,14 +7,14 @@ import { getTopLevelActions } from "./actionregistry";
 export type CommandBarProps = UiLayerProps & {
   shellProps: ShellProps;
   // world: World;
-  mapEditorState: MapEditorState;
+  //mapEditorState: MapEditorState;
 }
 
 /**
  * scrollable list of commands
  */
 export class CommandList {
-  private actionStack: Array<IAction[]> = new Array<IAction[]>();
+  private navStack: Array<IAction[]> = new Array<IAction[]>();
   private renderedActions: IAction[] | undefined;
   private props: CommandBarProps;
   private wrapperDiv: HTMLDivElement | undefined;
@@ -24,13 +23,14 @@ export class CommandList {
   private readonly layer: ICommandLayer;
 
   public get isOpened(): boolean { return this.opened; };
+  public get navStackDepth(): number { return this.navStack.length; }
 
   public constructor(props: CommandBarProps, layer: ICommandLayer) {
     this.props = props;
     this.layer = layer;
 
     // make list of possible actions
-    this.actionStack.push(getTopLevelActions());
+    this.navStack.push(getTopLevelActions());
   }
 
   public open(parent: HTMLElement) {
@@ -58,12 +58,12 @@ export class CommandList {
   }
 
   public pushActions(actions: IAction[]) {
-    this.actionStack.push(actions);
+    this.navStack.push(actions);
     this.renderList();
   }
 
   public popActions() {
-    this.actionStack.pop();
+    this.navStack.pop();
     this.renderList();
   }
 
@@ -74,7 +74,7 @@ export class CommandList {
       }
     }
 
-    let actions = this.actionStack[this.actionStack.length - 1];
+    let actions = this.navStack[this.navStack.length - 1];
     for (let a of actions) {
       a.renderButton(this.listDiv!, this.layer);
     }
@@ -109,7 +109,7 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
   //private editButton: HTMLButtonElement;
   //private tileButton: HTMLButtonElement;
   private grid: HTMLElement;
-  private actionButton: HTMLButtonElement;
+  private mainButton: HTMLButtonElement;
   private _commandList: CommandList;
   private _detailsPane: HTMLElement | undefined;
   private _fullHeight: number;
@@ -135,7 +135,7 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
     this._fullHeight = fullHeight;
 
     // add button to open pane
-    this.actionButton = createButton(this.grid, 'commandOpenButton', 'A', this.onCommandList.bind(this));
+    this.mainButton = createButton(this.grid, 'commandMainButton', 'A', this.onCommandMain.bind(this));
 
     this._commandList = new CommandList(this.props, this);
 
@@ -175,11 +175,8 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
   }
 
   public pushActions(actions: IAction[]) {
+    this.mainButton.textContent = '<Back';
     this._commandList.pushActions(actions);
-  }
-
-  public popActions() {
-    this._commandList.popActions();
   }
 
   public openActionGroup(group: IAction) {
@@ -189,20 +186,27 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
 
   }
 
-  private onCommandList() {
-    if (this._commandList.isOpened) {
-      this.closeDetailsPane();
-      this._commandList.close(this.grid);
-
-      this.props.w = 0;
-      this.props.h = 0;
-      this.updateElementSize();
+  private onCommandMain() {
+    if (this._commandList.navStackDepth > 1) {
+      this._commandList.popActions();
+      if (this._commandList.navStackDepth === 1) {
+        this.mainButton.textContent = 'A';
+      }
     } else {
-      this.props.w = this.getCommandListWidth();
-      this.props.h = this._fullHeight;
-      this.updateElementSize();
+      if (this._commandList.isOpened) {
+        this.closeDetailsPane();
+        this._commandList.close(this.grid);
 
-      this._commandList.open(this.grid);
+        this.props.w = 0;
+        this.props.h = 0;
+        this.updateElementSize();
+      } else {
+        this.props.w = this.getCommandListWidth();
+        this.props.h = this._fullHeight;
+        this.updateElementSize();
+
+        this._commandList.open(this.grid);
+      }
     }
     //this._commandList.updateList(this, this._pane!);
   }

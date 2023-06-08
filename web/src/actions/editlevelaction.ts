@@ -20,7 +20,6 @@ export class EditLevelAction extends BasicAction {
 
     bar.pushActions(
       [
-        new FuncAction('Back', {}, () => this.onBack(bar)),
         new FuncAction('Copy', { closePane: false }, () => vm.levelEditor?.copyBlock()),
         new FuncAction('Cut', { closePane: false }, () => vm.levelEditor?.cutBlock()),
         new FuncAction('Paste', { closePane: false }, () => vm.levelEditor?.pasteBlock()),
@@ -31,10 +30,6 @@ export class EditLevelAction extends BasicAction {
         new FuncAction('Block Library', { closePane: false }, () => this.showLibrary(bar)),
         new ImportVoxAction()
       ]);
-  }
-
-  private onBack(bar: ICommandLayer) {
-    bar.popActions();
   }
 
   private showLibrary(bar: ICommandLayer) {

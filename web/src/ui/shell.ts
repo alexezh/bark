@@ -1,9 +1,6 @@
 import { CommandLayer } from "../actions/commandlayer";
 import { UiCompositor2 } from "./uicompositor";
-import { createMapEditorState, mapEditorState } from "./mapeditorstate";
-import { CodeEditor } from "../actions/codeeditor";
 import { IGameShell as IGameShell } from "./igameshell";
-import { decorateCommand } from "../lib/termcolors";
 import { CameraLayer } from "./cameralayer";
 import { IVoxelLevel } from "./ivoxellevel";
 
@@ -42,9 +39,6 @@ export class Shell implements IGameShell {
     this.props.canvasWidth = this.props.width / this.props.scale;
     this.props.canvasHeight = this.props.height / this.props.scale;
 
-    createMapEditorState();
-    mapEditorState.onChanged(this, (evt) => this.refresh());
-
     this.compositor2 = new UiCompositor2(gameContainer, { w: this.props.width, h: this.props.height });
 
     this.refresh();
@@ -56,8 +50,7 @@ export class Shell implements IGameShell {
       w: this.props.width,
       h: this.props.height,
       shellProps: this.props,
-      visible: true,
-      mapEditorState: mapEditorState
+      visible: true
     });
     this.compositor2.appendLayer(this.barLayer);
 
