@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { AstNode } from "./ast";
+import { AstNode, AstNodeKind } from "./ast";
 import { ParseError, ParseErrorCode } from "./parseerror";
 import { Token, TokenKind } from "./token";
 
@@ -223,9 +223,9 @@ export class TextLine extends ATextSegment {
 
   public render(onClick: clickHandler): HTMLDivElement | HTMLSpanElement {
     let line = document.createElement('div');
+    line.id = this.id;
 
     if (this.segments.length > 0) {
-      line.id = this.id;
       if (this.style.css) {
         line.className = this.style.css;
       }
@@ -234,6 +234,7 @@ export class TextLine extends ATextSegment {
         line.appendChild(token.render(onClick));
       }
     } else {
+      line.style.minWidth = '20px';
       let linep = document.createElement('br');
       line.appendChild(linep);
     }
@@ -270,7 +271,7 @@ export class TextBlock {
       if (idx === -1) {
         return undefined;
       }
-      let line = new TextLine(this, undefined, {});
+      let line = new TextLine(this, { kind: AstNodeKind.placeholder }, { selectable: true });
       this.children.splice(idx, 0, line);
       return line;
     } else {

@@ -39,6 +39,7 @@ export enum AstNodeKind {
   foreach = 18,
   while = 19,
   on = 20,
+  placeholder = 100
 }
 
 export type AstNode = {

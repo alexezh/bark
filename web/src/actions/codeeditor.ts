@@ -62,6 +62,7 @@ export class CodeEditor {
       return;
     }
     this.updateNode(line.parent);
+    this.selectNode(line);
   }
 
   public addBelow() {
