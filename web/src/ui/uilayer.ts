@@ -40,13 +40,17 @@ export class UiLayer2<T extends UiLayerProps> implements IUiLayer2 {
     element.id = props.id;
     this.updateElementSize();
 
-    if (attachMouse) {
-      let self = this;
-      element.addEventListener('mousedown', (evt) => self.onMouseDown(evt), false);
-      element.addEventListener('mouseup', (evt) => self.onMouseUp(evt), false);
-      element.addEventListener('mousemove', (evt) => self.onMouseMove(evt), false);
-      element.addEventListener('wheel', (evt) => self.onWheel(evt), false);
-    }
+    // if (attachMouse) {
+    //   element.addEventListener('mousedown', this.onMouseDown.bind(this), false);
+    //   element.addEventListener('mouseup', this.onMouseUp.bind(this), false);
+    //   element.addEventListener('mousemove', this.onMouseMove.bind(this), false);
+    //   element.addEventListener('wheel', this.onWheel.bind(this), false);
+
+    //   element.addEventListener('contextmenu', this.onContextMenu.bind(this), false);
+
+    //   element.addEventListener('pointerdown', this.onPointerDown.bind(this), false);
+    //   element.addEventListener('pointercancel', this.onPointerUp.bind(this), false);
+    // }
 
     // update initial visibility
     this.visible = (props.visible !== undefined && props.visible === true);
@@ -72,22 +76,6 @@ export class UiLayer2<T extends UiLayerProps> implements IUiLayer2 {
 
   public setCompositor(compositor: IUiCompositor | undefined): void {
     this._compositor = compositor;
-  }
-
-  public onMouseMove(evt: MouseEvent): boolean {
-    return false;
-  }
-
-  public onMouseDown(evt: MouseEvent): boolean {
-    return false;
-  }
-
-  public onMouseUp(evt: MouseEvent): boolean {
-    return false;
-  }
-
-  public onWheel(evt: WheelEvent): boolean {
-    return false;
   }
 
   protected updateElementSize() {

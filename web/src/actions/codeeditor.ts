@@ -3,7 +3,7 @@ import { KeyBinder } from "../ui/keybinder";
 import { createButton, setElementVisible } from "../lib/htmlutils";
 import { renderModule, findParentNode, isParentNode } from "../basic/formatter";
 import { vm } from "../engine/ivm";
-import { ATextSegment, TextBlock, TextSpan } from "../basic/textblock";
+import { ATextSegment, ChangeStatus, TextBlock, TextSpan } from "../basic/textblock";
 
 export type CodeEditorProps = UiLayerProps & {
 }
@@ -53,11 +53,12 @@ export class CodeEditor {
   }
 
   public addAbove() {
-    if (!this.selectedNode) {
+    if (!this.selectedNode || !this.selectedNode.parent) {
       return;
     }
 
-    //this.selectedNode.parent.addLineAbove();
+    let line = this.selectedNode.parent.insertLineAbove(undefined);
+    this.updateNode(this.selectedNode.parent);
   }
 
   public addBelow() {
@@ -77,6 +78,14 @@ export class CodeEditor {
 
   public addBlock(text: string) {
 
+  }
+
+  private updateNode(node: TextBlock | ATextSegment) {
+    let domNode = document.getElementById(node.id);
+    if (domNode === null) {
+      return;
+    }
+    node.update(domNode, this.onTextInput.bind(this));
   }
 
   private onTextInput(e: Event) {

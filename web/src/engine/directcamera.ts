@@ -13,9 +13,11 @@ export class DirectCamera implements ITrackingCamera {
     //ßthis.camera.lookAt(point);
     let angleZ = Math.PI / 4;
 
+    this.camera.position.set(100, 200, 100 + 100 * Math.tan(angleZ));
+
     //this.cameraGroup.position.set(0, 0, 0);
     this.cameraGroup.rotation.set(-angleZ, 0, 0);
-    this.cameraGroup.position.set(100, 200, 100 + 100 * Math.tan(angleZ));
+    //this.cameraGroup.position.set(100, 200, 100 + 100 * Math.tan(angleZ));
     (this.camera as PerspectiveCamera).updateProjectionMatrix();
   }
 

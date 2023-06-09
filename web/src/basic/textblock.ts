@@ -17,11 +17,19 @@ export type TextStyle = {
   css?: string;
 }
 
+export enum ChangeStatus {
+  clean,
+  newNode,
+  dirty,
+  deleted
+}
+
 export abstract class ATextSegment {
   readonly id: string;
   readonly parent: ATextSegment | TextBlock;
   public readonly ast: AstNode | undefined;
   public readonly style: TextStyle;
+  public changeStatus: ChangeStatus = ChangeStatus.clean;
 
   public constructor(parent: ATextSegment | TextBlock, ast: AstNode | undefined, style: TextStyle) {
     this.id = makeId();
@@ -31,10 +39,13 @@ export abstract class ATextSegment {
   }
 
   abstract render(elem: HTMLSpanElement | HTMLDivElement, onClick: (elem: TextBlock | ATextSegment | TextSpan) => void);
+  public update(domNode: HTMLDivElement, onClick: clickHandler);
   abstract appendSegment(ast: AstNode | undefined, style: TextStyle): ATextSegment;
 
   abstract appendConst(val: string, style: TextStyle): void;
   abstract appendToken(token: Token, style: TextStyle);
+
+  abstract insertLineAbove(cur: ATextSegment | undefined): ATextSegment | undefined;
 }
 
 export class TextSpan {
@@ -55,7 +66,10 @@ export class TextSpan {
     this.style = style;
   }
 
-  public render(elem: HTMLSpanElement | HTMLDivElement, onClick: clickHandler) {
+  public render(parent: HTMLSpanElement | HTMLDivElement, onClick: clickHandler) {
+    let elem = document.createElement('span');
+    elem.id = this.id;
+
     if (this.style.spaceLeft) {
       let space = document.createElement('span');
       space.textContent = ' ';
@@ -66,14 +80,15 @@ export class TextSpan {
     if (this.style.css) {
       t.className = this.style.css;
     }
-    t.id = this.id;
     t.textContent = this.data.value;
     if (this.style.selectable === undefined || this.style.selectable) {
       t.addEventListener('click', (e) => onClick(this, e));
     }
     elem.appendChild(t);
+    parent.appendChild(elem);
   }
 }
+
 
 export class TextSegment extends ATextSegment {
   private segments: (TextSpan | TextSegment)[] = [];
@@ -100,6 +115,13 @@ export class TextSegment extends ATextSegment {
       style.spaceLeft = this.segments.length > 0;
     }
     this.segments.push(new TextSpan(this, token, style))
+  }
+
+  public insertLineAbove(cur: ATextSegment | undefined): ATextSegment | undefined {
+    if (!this.parent) {
+      return undefined;
+    }
+    return this.parent.insertLineAbove(this);
   }
 
   public render(elem: HTMLSpanElement | HTMLDivElement, onClick: clickHandler) {
@@ -133,8 +155,9 @@ export class TextBlock {
   public readonly parent: TextBlock | undefined;
   public readonly ast: AstNode;
   public readonly style: TextStyle;
+  public changeStatus: ChangeStatus = ChangeStatus.clean;
   private margin: number = 0;
-  private children: (ATextSegment | TextBlock)[] = [];
+  public readonly children: (ATextSegment | TextBlock)[] = [];
 
   public constructor(parent: TextBlock | undefined, root: AstNode, style?: TextStyle) {
     this.id = makeId();
@@ -147,8 +170,12 @@ export class TextBlock {
     }
   }
 
-  public addEmptyLineBefore() {
-
+  public insertLineAbove(cur: ATextSegment | undefined): ATextSegment | undefined {
+    let idx = this.children.findIndex((val: ATextSegment | TextBlock) => { val === cur });
+    if (idx === -1) {
+      return undefined;
+    }
+    this.children.splice(idx, 0, new EmptyTextLine(this, undefined, {}));
   }
 
   public appendBlock(ast: AstNode, style?: TextStyle): TextBlock {
@@ -184,7 +211,7 @@ export class TextBlock {
     }
   }
 
-  public render(parent: HTMLDivElement, onClick: clickHandler) {
+  public render(parent: HTMLDivElement, onClick: clickHandler): HTMLDivElement | HTMLSpanElement {
     let div = document.createElement('div') as HTMLDivElement;
     if (this.style.css) {
       div.className = this.style.css;
@@ -206,6 +233,23 @@ export class TextBlock {
 
     parent.appendChild(div);
   }
+
+  public update(domNode: HTMLDivElement, onClick: clickHandler) {
+    let iDomNode = 0;
+    let domNodes: HTMLElement[] = [];
+    let clearDeleted = false;
+    for (let iNode = 0; iNode < this.children.length; iNode++) {
+      let child = this.children[iNode];
+      let domChild = domNode.childNodes.item(iDomNode) as HTMLDivElement;
+      if (child.changeStatus === ChangeStatus.newNode) {
+        domNodes.push(child.render(onClick));
+        child.changeStatus = ChangeStatus.clean;
+      } else if (child.changeStatus === ChangeStatus.deleted) {
+      } else if (child.changeStatus === ChangeStatus.dirty) {
+        domNodes.push(child.render(node, this.onTextInput.bind(this)));
+      }
+    }
+  }
 }
 
 export class TextLine extends ATextSegment {
@@ -213,6 +257,10 @@ export class TextLine extends ATextSegment {
 
   public constructor(parent: TextBlock, ast: AstNode | undefined, style?: TextStyle) {
     super(parent, ast, style ?? {});
+  }
+
+  public insertLineAbove(cur: ATextSegment | undefined): ATextSegment | undefined {
+    return this.parent.insertLineAbove(this);
   }
 
   public appendSegment(ast: AstNode | undefined, style: TextStyle): ATextSegment {
@@ -253,6 +301,10 @@ export class EmptyTextLine extends ATextSegment {
 
   public constructor(parent: TextBlock, ast: AstNode | undefined, style?: TextStyle) {
     super(parent, ast, style ?? {});
+  }
+
+  public insertLineAbove(): ATextSegment | undefined {
+    return this.parent.insertLineAbove(this);
   }
 
   public appendSegment(ast: AstNode | undefined, style: TextStyle): ATextSegment {

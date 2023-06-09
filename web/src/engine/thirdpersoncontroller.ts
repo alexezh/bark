@@ -3,7 +3,6 @@ import { addSystemFunc, addSystemType, createModuleNode } from "../basic/lib/sys
 import { KeyBinder } from "../ui/keybinder";
 import { IGamePhysicsInputController } from "./igamephysics";
 import { IInputController, vm } from "./ivm";
-import { IMoveEvent2D, MoveControllerConfig, MoveEvent2D } from "./movecontroller2d";
 
 export class ThirdPersonControllerMoveEvent {
   public readonly speedX: number;
@@ -39,7 +38,6 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
   private angleXZ: number = 0;
   private speedX: number = 0;
   private speedZ: number = 0;
-
 
   public constructor(config: ThirdPersonControllerConfig) {
     this.config = config;

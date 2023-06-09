@@ -37,7 +37,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     public chunk_material = new MeshPhongMaterial({ vertexColors: true, wireframe: false });
     public p_light = new PointLight(0xFFAA00, 1, 10);
 
-    public maps_ground = 6;
+    public get scale(): number { return this.props.scale }
 
     public constructor(props: CameraLayerProps) {
         super(props, (() => {
@@ -50,6 +50,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         })());
 
         //this.input = new KeyBinder(this.element, () => { });
+        this.element.addEventListener('contextmenu', this.onContextMenu.bind(this));
 
         // Iosmetric view
         //Object3D.DefaultUp = new Vector3(0, 0, 1);
@@ -130,6 +131,10 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         this.levelEditor = editor;
     }
 
+    private onContextMenu(event: Event) {
+        event.preventDefault();
+    }
+
     private createCamera(w: number, h: number) {
         this.camera = new PerspectiveCamera(70, w / h, 1, this.visible_distance);
         //this.camera.up.set(0, 0, 1);
@@ -163,18 +168,6 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     };
-
-    public onMouseDown(htmlEvt: MouseEvent): boolean {
-        let evt = makeMEvent(htmlEvt, undefined, this.props.scale);
-        this.levelEditor?.onMouseDown(evt);
-        return true;
-    }
-
-    public onMouseUp(htmlEvt: MouseEvent): boolean {
-        let evt = makeMEvent(htmlEvt, undefined, this.props.scale);
-        this.levelEditor?.onMouseUp(evt);
-        return true;
-    }
 
     private animate() {
         //      requestAnimationFrame( this.animate.bind(this) );

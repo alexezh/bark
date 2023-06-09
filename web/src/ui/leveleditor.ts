@@ -6,6 +6,9 @@ import { IVoxelLevel, MapBlockCoord } from "./ivoxellevel";
 import { BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { ICameraLayer } from "../engine/icameralayer";
 import { VoxelModel } from "../voxel/voxelmodel";
+import { OrbitControls } from "./orbitccntrols";
+import { FirstPersonControls } from "./firstpersoncontrols";
+import { PointerLockControls } from "./pointerlockcontrols";
 
 export interface IMapEditorHost {
   //get 
@@ -20,6 +23,7 @@ export class LevelEditor implements ILevelEditor {
   private level: IVoxelLevel;
   private input: KeyBinder;
   static material = new LineBasicMaterial({ color: 0x0000ff });
+  private orbitControls: PointerLockControls;
 
   private selectedBlock: MapBlockCoord | undefined = undefined;
   private selection: Line | undefined = undefined;
@@ -38,41 +42,45 @@ export class LevelEditor implements ILevelEditor {
     this.input.registerKeyUp('KeyV', this.pasteBlock.bind(this));
     this.input.registerKeyUp('KeyX', this.clearBlock.bind(this));
 
-    this.input.registerKeyUp('KeyA', () => this.onScroll(0, -1, 0));
-    this.input.registerKeyUp('KeyS', () => this.onScroll(1, 0, 0));
-    this.input.registerKeyUp('KeyD', () => this.onScroll(0, 1, 0));
-    this.input.registerKeyUp('KeyW', () => this.onScroll(-1, 0, 0));
-    this.input.registerKeyUp('KeyQ', () => this.onScroll(0, 0, 1), 'Move camera up');
-    this.input.registerKeyUp('KeyE', () => this.onScroll(0, 0, -1), 'Move camera down');
+    this.camera.canvas.addEventListener('mousedown', () => {
+      this.orbitControls.lock();
+    });
+
+    this.orbitControls = new PointerLockControls(this.camera.camera, this.camera.canvas);
+
+    // @ts-ignore
+    //this.orbitControls.update();
   }
 
   public dispose() {
     this.input.detach();
   }
 
-  private onScroll(x: number, y: number, z: number) {
-    //this.cameraLayer.scrollBy(this.level.blockPosToWorldPos({ x: x, y: y, z: z }));
-  }
+  public onMouseDown(evt: MouseEvent): boolean {
+    if (evt.shiftKey) {
+      // 
+    } else {
+      let coords = {
+        x: (evt.x / this.camera.viewSize.w) * 2 - 1,
+        y: -(evt.y / this.camera.viewSize.h) * 2 + 1
+      }
 
-  public onMouseDown(evt: MEvent): boolean {
-    let coords = {
-      x: (evt.x / this.camera.viewSize.w) * 2 - 1,
-      y: -(evt.y / this.camera.viewSize.h) * 2 + 1
-    }
+      let raycaster = new Raycaster();
+      raycaster.setFromCamera(coords, this.camera.camera);
 
-    let raycaster = new Raycaster();
-    raycaster.setFromCamera(coords, this.camera.camera);
+      var intersects = raycaster.intersectObjects(this.camera.scene!.children, false);
 
-    var intersects = raycaster.intersectObjects(this.camera.scene!.children, false);
-
-    if (intersects.length > 0) {
-      this.selectBlockFace(intersects[0].point);
+      if (intersects.length > 0) {
+        this.selectBlockFace(intersects[0].point);
+      }
     }
     return true;
   };
 
-  public onMouseUp(evt: MEvent): boolean {
+  public onMouseUp(evt: MouseEvent): boolean {
     this.isDown = false;
+    //let evt = makeMEvent(htmlEvt, undefined, this.props.scale);
+
     /*
     let coords = {
         x: (evt.clientX / window.innerWidth) * 2 - 1,
@@ -95,7 +103,7 @@ export class LevelEditor implements ILevelEditor {
     return true;
   };
 
-  public onMouseMove(evt: MEvent): boolean {
+  public onMouseMove(evt: MouseEvent): boolean {
     if (this.isDown === false) {
       return true;
     }

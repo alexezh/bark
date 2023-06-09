@@ -8,6 +8,7 @@ export interface ICameraLayer {
   get camera(): PerspectiveCamera;
   get canvas(): HTMLDivElement;
   get viewSize(): PxSize;
+  get scale(): number;
 
   get position(): Vector3;
   set position(pos: Vector3);
