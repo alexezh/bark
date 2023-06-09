@@ -36,7 +36,7 @@ export class CodeEditor {
     if (module) {
       this.renderBlock = renderModule(module);
       this.editArea.replaceChildren();
-      this.renderBlock.render(this.editArea, this.onTextClick.bind(this));
+      this.editArea.append(this.renderBlock.render(this.onTextClick.bind(this)));
     }
   }
 
@@ -85,7 +85,11 @@ export class CodeEditor {
     if (domNode === null) {
       return;
     }
-    node.update(domNode, this.onTextInput.bind(this));
+    if (node instanceof TextBlock) {
+      node.update(domNode as HTMLDivElement, this.onTextClick.bind(this));
+    } else {
+      node.update(domNode as (HTMLDivElement | HTMLSpanElement), this.onTextClick.bind(this));
+    }
   }
 
   private onTextInput(e: Event) {
