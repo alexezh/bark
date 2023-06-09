@@ -58,7 +58,10 @@ export class CodeEditor {
     }
 
     let line = this.selectedNode.parent.insertLineAbove(undefined);
-    this.updateNode(this.selectedNode.parent);
+    if (!line) {
+      return;
+    }
+    this.updateNode(line.parent);
   }
 
   public addBelow() {

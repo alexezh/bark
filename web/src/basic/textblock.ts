@@ -24,6 +24,40 @@ export enum ChangeStatus {
   deleted
 }
 
+/**
+ * updates children of parentHtml according to nodes
+ */
+function updateHtmlTree(nodes: (TextBlock | ATextSegment | TextSpan)[], parentHtml: HTMLDivElement | HTMLSpanElement, onClick: clickHandler) {
+  let iDomNode = 0;
+  let domNodes: HTMLElement[] = [];
+  let clearDeleted = false;
+  for (let iNode = 0; iNode < nodes.length; iNode++) {
+    let child = nodes[iNode];
+    let domChild = parentHtml.childNodes.item(iDomNode) as (HTMLDivElement | HTMLSpanElement);
+    if (child.changeStatus === ChangeStatus.dirty) {
+      domNodes.push(child.render(onClick));
+
+      // if ID is the same, we are updating child node
+      // otherwise we are creating a new one. In the latter case, we should not move forward
+      // in dom list
+      if (domChild.id === child.id) {
+        iDomNode++;
+      }
+    } else if (child.changeStatus === ChangeStatus.deleted) {
+      clearDeleted = true;
+      iDomNode++;
+    } else {
+      domNodes.push(domChild);
+      iDomNode++;
+    }
+  }
+
+  parentHtml.replaceChildren(...domNodes);
+  if (clearDeleted) {
+    _.remove(nodes, (x: TextBlock | ATextSegment | TextSpan) => { x.changeStatus === ChangeStatus.deleted });
+  }
+}
+
 export class TextSpan {
   public readonly id: string;
   public readonly parent: ATextSegment;
@@ -92,25 +126,7 @@ export abstract class ATextSegment {
   abstract insertLineAbove(cur: ATextSegment | undefined): ATextSegment | undefined;
 
   update(domNode: HTMLDivElement | HTMLSpanElement, onClick: clickHandler) {
-    let iDomNode = 0;
-    let domNodes: HTMLElement[] = [];
-    let clearDeleted = false;
-    for (let iNode = 0; iNode < this.segments.length; iNode++) {
-      let child = this.segments[iNode];
-      let domChild = domNode.childNodes.item(iDomNode) as (HTMLDivElement | HTMLSpanElement);
-      if (child.changeStatus === ChangeStatus.dirty) {
-        domNodes.push(child.render(onClick));
-      } else if (child.changeStatus === ChangeStatus.deleted) {
-        clearDeleted = true;
-      } else {
-        domNodes.push(domChild);
-      }
-    }
-
-    domNode.replaceChildren(...domNodes);
-    if (clearDeleted) {
-      _.remove(this.segments, (x: TextSpan | TextSegment) => { x.changeStatus === ChangeStatus.deleted });
-    }
+    updateHtmlTree(this.segments, domNode, onClick)
   }
 }
 
@@ -149,6 +165,8 @@ export class TextSegment extends ATextSegment {
 
   public render(onClick: clickHandler): HTMLSpanElement | HTMLDivElement {
     let elem = document.createElement('span');
+    elem.id = this.id;
+
     if (this.style.spaceLeft) {
       let space = document.createElement('span');
       space.textContent = ' ';
@@ -156,7 +174,6 @@ export class TextSegment extends ATextSegment {
     }
 
     let t = document.createElement('span');
-    t.id = this.id;
     if (this.style.css) {
       t.className = this.style.css;
     }
@@ -253,7 +270,9 @@ export class TextBlock {
       if (idx === -1) {
         return undefined;
       }
-      this.children.splice(idx, 0, new TextLine(this, undefined, {}));
+      let line = new TextLine(this, undefined, {});
+      this.children.splice(idx, 0, line);
+      return line;
     } else {
       return this.parent?.insertLineAbove(this);
     }
@@ -315,25 +334,7 @@ export class TextBlock {
   }
 
   public update(domNode: HTMLDivElement, onClick: clickHandler) {
-    let iDomNode = 0;
-    let domNodes: HTMLElement[] = [];
-    let clearDeleted = false;
-    for (let iNode = 0; iNode < this.children.length; iNode++) {
-      let child = this.children[iNode];
-      let domChild = domNode.childNodes.item(iDomNode) as HTMLDivElement;
-      if (child.changeStatus === ChangeStatus.dirty) {
-        domNodes.push(child.render(onClick));
-      } else if (child.changeStatus === ChangeStatus.deleted) {
-        clearDeleted = true;
-      } else {
-        domNodes.push(domChild);
-      }
-    }
-
-    domNode.replaceChildren(...domNodes);
-    if (clearDeleted) {
-      _.remove(this.children, (x: TextBlock | ATextSegment) => { x.changeStatus === ChangeStatus.deleted });
-    }
+    updateHtmlTree(this.children, domNode, onClick);
   }
 }
 
