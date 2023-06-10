@@ -1,7 +1,6 @@
 import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForeachNode, ForNode, ForeverNode, FuncDefNode, IfNode, OnNode, ParamDefNode, ReturnNode, StatementNode, VarDefNode, WhileNode, ModuleNode, IdNode, AstErrorCode, AstError, ConstNode } from "./ast";
 import { ParseError, ParseErrorCode } from "./parseerror";
 import { ATextSegment, TextBlock, TextLine, TextSpan } from "./textblock";
-import { Token, TokenKind } from "./token";
 
 
 export function isParentNode(parent: TextBlock | ATextSegment | TextSpan, node: TextBlock | ATextSegment | TextSpan): boolean {
@@ -43,55 +42,35 @@ export function findParentNode(node: TextBlock | ATextSegment | TextSpan): TextB
 /**
  * convers tree to array of lines
  */
-export function renderNode(rb: TextBlock, ast: AstNode) {
+export function renderNode(rb: TextBlock, ast: AstNode): TextBlock | TextLine {
 
   switch (ast.kind) {
     case AstNodeKind.funcDef:
-      renderFuncDef(rb, ast as FuncDefNode);
-      break;
+      return renderFuncDef(rb, ast as FuncDefNode);
     case AstNodeKind.on:
-      renderOn(rb, ast as OnNode);
-      break;
+      return renderOn(rb, ast as OnNode);
     case AstNodeKind.varDef:
-      renderVarDef(rb, ast as VarDefNode);
-      break;
+      return renderVarDef(rb, ast as VarDefNode);
     case AstNodeKind.assingment:
-      renderAssingment(rb, ast as AssingmentNode);
-      break;
+      return renderAssingment(rb, ast as AssingmentNode);
     case AstNodeKind.if:
-      renderIf(rb, ast as IfNode);
-      break;
+      return renderIf(rb, ast as IfNode);
     case AstNodeKind.for:
-      renderFor(rb, ast as ForNode);
-      break;
+      return renderFor(rb, ast as ForNode);
     case AstNodeKind.foreach:
-      renderForeach(rb, ast as ForeachNode);
-      break;
+      return renderForeach(rb, ast as ForeachNode);
     case AstNodeKind.forever:
-      renderForever(rb, ast as ForeverNode);
-      break;
+      return renderForever(rb, ast as ForeverNode);
     case AstNodeKind.while:
-      renderWhile(rb, ast as WhileNode);
-      break;
+      return renderWhile(rb, ast as WhileNode);
     case AstNodeKind.return:
-      renderReturn(rb, ast as ReturnNode);
-      break;
+      return renderReturn(rb, ast as ReturnNode);
     case AstNodeKind.break:
-      renderBreak(rb, ast as StatementNode);
-      break;
+      return renderBreak(rb, ast as StatementNode);
     case AstNodeKind.block:
-      renderBlock(rb, ast as BlockNode);
-      break;
-    case AstNodeKind.const:
-    case AstNodeKind.op:
-    case AstNodeKind.id:
-      break;
-    case AstNodeKind.expression:
-      //validateExpression(rb, ast as ExpressionNode);
-      break;
+      return renderBlock(rb, ast as BlockNode);
     case AstNodeKind.call:
-      renderCall(rb, ast as CallNode);
-      break;
+      return renderCall(rb, ast as CallNode);
     default:
       throw new ParseError(ParseErrorCode.NotImpl, undefined, 'Not implemented');
   }
@@ -99,6 +78,10 @@ export function renderNode(rb: TextBlock, ast: AstNode) {
 
 export function renderModule(ast: ModuleNode) {
   let modelBlock = new TextBlock(undefined, ast);
+
+  for (let v of ast.vars) {
+    renderNode(modelBlock, v);
+  }
 
   for (let on of ast.on) {
     renderNode(modelBlock, on);
@@ -111,10 +94,10 @@ export function renderModule(ast: ModuleNode) {
   return modelBlock;
 }
 
-function renderFuncDef(parentBlock: TextBlock, ast: FuncDefNode) {
-  let ctx = parentBlock.appendBlock(ast, { css: 'code-function' });
+function renderFuncDef(parentBlock: TextBlock, ast: FuncDefNode): TextBlock {
+  let funcBlock = parentBlock.appendBlock(ast, { css: 'code-function' });
 
-  let line = ctx.appendLine('function', ast, { selectable: false });
+  let line = funcBlock.appendLine('function', ast, { selectable: false });
   line.appendToken(ast.name!, { selectable: true });
   line.appendConst('(', { selectable: false });
 
@@ -124,15 +107,16 @@ function renderFuncDef(parentBlock: TextBlock, ast: FuncDefNode) {
     line.appendToken(ast.returnType, {});
   }
   line.appendConst('begin', { selectable: false });
-  renderBlock(ctx, ast.body);
-  ctx.appendLine('end', undefined, { selectable: false });
+  renderBlock(funcBlock, ast.body);
+  funcBlock.appendLine('end', undefined, { selectable: false });
   parentBlock.appendEmptyLine(undefined, { selectable: false });
+  return funcBlock;
 }
 
-function renderOn(parentBlock: TextBlock, ast: OnNode) {
-  let ctx = parentBlock.appendBlock(ast, { css: 'code-on' });
+function renderOn(parentBlock: TextBlock, ast: OnNode): TextBlock {
+  let onBlock = parentBlock.appendBlock(ast, { css: 'code-on' });
 
-  let line = ctx.appendLine('on', undefined, { selectable: false });
+  let line = onBlock.appendLine('on', undefined, { selectable: false });
   line.appendToken(ast.event, {});
   if (ast.filter) {
     line.appendConst('=', { spaceLeft: false, selectable: false });
@@ -150,10 +134,12 @@ function renderOn(parentBlock: TextBlock, ast: OnNode) {
   }
 
   line.appendConst('begin', { selectable: false });
-  renderBlock(ctx, ast.body);
+  renderBlock(onBlock, ast.body);
 
-  ctx.appendLine('end', undefined, { selectable: false });
+  onBlock.appendLine('end', undefined, { selectable: false });
   parentBlock.appendEmptyLine(undefined, { selectable: false });
+
+  return onBlock;
 }
 
 function renderParams(line: TextLine, params: ParamDefNode[]) {
@@ -168,61 +154,68 @@ function renderParams(line: TextLine, params: ParamDefNode[]) {
   }
 }
 
-function renderBlock(parentBlock: TextBlock, block: BlockNode | Function) {
+function renderBlock(parentBlock: TextBlock, block: BlockNode | Function): TextBlock | TextLine {
   if (block instanceof Function) {
     // ???
+    console.warn('renderBlock: cannot render system call');
+    let ctx = parentBlock.appendLine('native function', undefined, {});
+    return ctx;
   } else {
     let ctx = parentBlock.appendBlock(block);
     for (let node of block.statements) {
       renderNode(ctx, node);
     }
+    return ctx;
   }
 }
 
-function renderVarDef(parentBlock1: TextBlock, ast: VarDefNode) {
-  let line = parentBlock1.appendLine('var', ast, { css: 'code-var' });
+function renderVarDef(parentBlock: TextBlock, ast: VarDefNode): TextLine {
+  let line = parentBlock.appendLine('var', ast, { css: 'code-var' });
   line.appendToken(ast.name, {});
   if (ast.value) {
     line.appendConst(':=', { selectable: false });
     renderExpression(line, ast.value);
   }
+  return line;
 }
 
-function renderAssingment(parentBlock: TextBlock, ast: AssingmentNode) {
+function renderAssingment(parentBlock: TextBlock, ast: AssingmentNode): TextLine {
   let line = parentBlock.appendLine(undefined, ast, { css: 'code-var' });
   line.appendToken(ast.name, {});
   line.appendConst(':=', { selectable: false });
   renderExpression(line, ast.value);
+  return line;
 }
 
-function renderIf(parentBlock: TextBlock, ast: IfNode) {
-  let ctx = parentBlock.appendBlock(ast, { css: 'code-block' });
-  let ifline = ctx.appendLine(undefined, undefined, {});
+function renderIf(parentBlock: TextBlock, ast: IfNode): TextBlock {
+  let ifBlock = parentBlock.appendBlock(ast, { css: 'code-block' });
+  let ifline = ifBlock.appendLine(undefined, ast.exp, {});
   ifline.appendConst('if', {});
   renderExpression(ifline, ast.exp);
   ifline.appendConst('then', {});
 
-  renderBlock(ctx, ast.th);
+  renderBlock(ifBlock, ast.th);
   if (ast.elif.length > 0) {
     for (let block of ast.elif) {
-      let eifline = ctx.appendLine(undefined, undefined, {});
+      let eifline = ifBlock.appendLine(undefined, block.exp, {});
       eifline.appendConst('elif', {});
       renderExpression(eifline, ast.exp);
       eifline.appendConst('then', {});
-      renderBlock(ctx, block.block);
+      renderBlock(ifBlock, block.block);
     }
   }
   if (ast.el) {
-    let eline = ctx.appendLine(undefined, undefined, {});
+    let eline = ifBlock.appendLine(undefined, ast.el, {});
     eline.appendConst('else', {});
-    renderBlock(ctx, ast.el);
+    renderBlock(ifBlock, ast.el);
   }
-  ctx.appendLine('end', undefined, {});
+  ifBlock.appendLine('end', undefined, {});
+  return ifBlock;
 }
 
-function renderFor(parentBlock: TextBlock, ast: ForNode) {
-  let ctx = parentBlock.appendBlock(ast, { css: 'code-block' });
-  let line = ctx.appendLine('for', undefined, {});
+function renderFor(parentBlock: TextBlock, ast: ForNode): TextBlock {
+  let forBlock = parentBlock.appendBlock(ast, { css: 'code-block' });
+  let line = forBlock.appendLine('for', undefined, {});
   line.appendToken(ast.name, {})
   line.appendConst(':=', { selectable: false });
   renderExpression(line, ast.startExp);
@@ -234,33 +227,37 @@ function renderFor(parentBlock: TextBlock, ast: ForNode) {
   }
   line.appendConst('do', { selectable: false });
 
-  renderBlock(ctx, ast.body);
+  renderBlock(forBlock, ast.body);
 
-  ctx.appendLine('end', undefined, { selectable: false });
+  forBlock.appendLine('end', undefined, { selectable: false });
+  return forBlock;
 }
 
-function renderForeach(parentBlock: TextBlock, ast: ForeachNode) {
-  let ctx = parentBlock.appendBlock(ast);
-  let line = ctx.appendLine('foreach', undefined, {});
+function renderForeach(parentBlock: TextBlock, ast: ForeachNode): TextBlock {
+  let foreachBlock = parentBlock.appendBlock(ast);
+  let line = foreachBlock.appendLine('foreach', undefined, {});
   line.appendToken(ast.name, {})
   line.appendConst('in', { selectable: false });
   renderExpression(line, ast.exp);
   line.appendConst('do', { selectable: false });
 
-  renderBlock(ctx, ast.body);
+  renderBlock(foreachBlock, ast.body);
 
-  ctx.appendLine('end', undefined, {});
+  foreachBlock.appendLine('end', undefined, {});
+  return foreachBlock;
 }
 
-function renderForever(parentBlock: TextBlock, ast: ForeverNode) {
-  let ctx = parentBlock.appendBlock(ast);
-  let line = ctx.appendLine('forever', undefined, {});
+function renderForever(parentBlock: TextBlock, ast: ForeverNode): TextBlock {
+  let foreverBlock = parentBlock.appendBlock(ast);
+  let line = foreverBlock.appendLine('forever', undefined, {});
   line.appendConst('do', { selectable: false });
 
-  renderBlock(ctx, ast.body);
+  renderBlock(foreverBlock, ast.body);
 
-  ctx.appendLine('end', undefined, { selectable: false });
+  foreverBlock.appendLine('end', undefined, { selectable: false });
+  return foreverBlock;
 }
+
 function renderExpressionPart(line: ATextSegment, ast: AstNode, spaceLeft: boolean | undefined = undefined) {
   if (ast.kind === AstNodeKind.id) {
     line.appendToken((ast as IdNode).name, { spaceLeft: spaceLeft });
@@ -288,26 +285,28 @@ function renderExpression(line: ATextSegment, ast: ExpressionNode, spaceLeft: bo
     renderExpressionPart(line, ast.right);
   }
 }
-function renderBreak(parentBlock: TextBlock, ast: AstNode) {
-  parentBlock.appendLine('break', ast, {});
+function renderBreak(parentBlock: TextBlock, ast: AstNode): TextLine {
+  return parentBlock.appendLine('break', ast, {});
 }
 
-function renderReturn(parentBlock: TextBlock, ast: ReturnNode) {
+function renderReturn(parentBlock: TextBlock, ast: ReturnNode): TextLine {
   let line = parentBlock.appendLine('return', ast, {});
   if (ast.value) {
     renderExpression(line, ast.value);
   }
+  return line;
 }
 
-function renderWhile(parentBlock: TextBlock, ast: WhileNode) {
-  let ctx = parentBlock.appendBlock(ast);
-  let line = ctx.appendLine('while', undefined, {});
+function renderWhile(parentBlock: TextBlock, ast: WhileNode): TextBlock {
+  let whileBlock = parentBlock.appendBlock(ast);
+  let line = whileBlock.appendLine('while', undefined, {});
   renderExpression(line, ast.exp);
   line.appendConst('do', {});
 
-  renderBlock(ctx, ast.body);
+  renderBlock(whileBlock, ast.body);
 
-  ctx.appendLine('end', undefined, {});
+  whileBlock.appendLine('end', undefined, {});
+  return whileBlock;
 }
 
 /**
@@ -327,7 +326,7 @@ function requireParenthesis(block: ATextSegment | TextBlock): boolean {
   return false;
 }
 
-function renderCall(block: ATextSegment | TextBlock, ast: CallNode, spaceLeft: boolean | undefined = undefined) {
+function renderCall(block: ATextSegment | TextBlock, ast: CallNode, spaceLeft: boolean | undefined = undefined): TextLine {
 
   let line: ATextSegment;
   if (block instanceof TextBlock) {
@@ -359,5 +358,7 @@ function renderCall(block: ATextSegment | TextBlock, ast: CallNode, spaceLeft: b
   if (parenthesis) {
     seg.appendConst(')', { spaceLeft: false, selectable: false });
   }
+
+  return line;
 }
 

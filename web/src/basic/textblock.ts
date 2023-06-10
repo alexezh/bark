@@ -123,7 +123,7 @@ export abstract class ATextSegment {
   abstract appendConst(val: string, style: TextStyle): void;
   abstract appendToken(token: Token, style: TextStyle);
 
-  abstract insertLineAbove(cur: ATextSegment | undefined): ATextSegment | undefined;
+  abstract insertLineAbove(cur: TextBlock | ATextSegment | TextSpan | undefined): ATextSegment | undefined;
 
   update(domNode: HTMLDivElement | HTMLSpanElement, onClick: clickHandler) {
     updateHtmlTree(this.segments, domNode, onClick)
@@ -156,7 +156,7 @@ export class TextSegment extends ATextSegment {
     this.segments.push(new TextSpan(this, token, style))
   }
 
-  public insertLineAbove(cur: ATextSegment | undefined): ATextSegment | undefined {
+  public insertLineAbove(cur: TextBlock | ATextSegment | TextSpan | undefined): ATextSegment | undefined {
     if (!this.parent) {
       return undefined;
     }
@@ -201,7 +201,7 @@ export class TextLine extends ATextSegment {
     }
   }
 
-  public insertLineAbove(cur: ATextSegment | undefined): ATextSegment | undefined {
+  public insertLineAbove(cur: TextBlock | ATextSegment | TextSpan | undefined): ATextSegment | undefined {
     return this.parent.insertLineAbove(this);
   }
 
@@ -276,6 +276,8 @@ export class TextBlock {
         return undefined;
       }
 
+      // we found item in the block; it is either line or another block
+      // it should have ast associated with it
       let lineAst = insertPlaceholderBefore(cur.ast!);
 
       let line = new TextLine(this, lineAst, { selectable: true });
