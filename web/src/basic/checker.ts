@@ -74,20 +74,24 @@ export function validateModule(module: ModuleNode, loader: ICodeLoader | undefin
   }
 
   for (let node of module.funcs) {
-    validateNode(ctx, node);
+    validateNode(ctx, node, module);
   }
 
   for (let node of module.on) {
-    validateNode(ctx, node);
+    validateNode(ctx, node, module);
   }
 }
 
-function validateNode(parentCtx: ValidationContext, ast: AstNode) {
+/**
+ * we only create parent context when there are local values (which means any block)
+ * but we want to link nodes in a tree, so we are going to pass parentAst node
+ */
+function validateNode(parentCtx: ValidationContext, ast: AstNode, parentAst: AstNode) {
   if (parentCtx.validated.get(ast)) {
     return;
   }
 
-  ast.parent = parentCtx.node;
+  ast.parent = parentAst;
 
   parentCtx.validated.set(ast, true);
   switch (ast.kind) {
@@ -125,7 +129,7 @@ function validateNode(parentCtx: ValidationContext, ast: AstNode) {
       validateBreak(parentCtx, ast as StatementNode);
       break;
     case AstNodeKind.block:
-      validateBlock(parentCtx, ast as BlockNode);
+      validateBlock(parentCtx, ast as BlockNode, parentAst);
       break;
     case AstNodeKind.const:
     case AstNodeKind.op:
@@ -147,7 +151,7 @@ function validateFuncDef(parentCtx: ValidationContext, ast: FuncDefNode) {
     ;
   } else {
     let ctx = new ValidationContext(ast, parentCtx);
-    validateBlock(ctx, ast.body);
+    validateBlock(ctx, ast.body, ast);
   }
 }
 
@@ -160,7 +164,7 @@ function validateOn(parentCtx: ValidationContext, ast: OnNode) {
     ;
   } else {
     let ctx = new ValidationContext(ast, parentCtx);
-    validateBlock(ctx, ast.body);
+    validateBlock(ctx, ast.body, ast);
   }
 }
 
@@ -176,41 +180,41 @@ function validateAssingment(parentCtx: ValidationContext, ast: AssingmentNode) {
 
 function validateExpression(parentCtx: ValidationContext, ast: ExpressionNode) {
   if (ast.left) {
-    validateNode(parentCtx, ast.left);
+    validateNode(parentCtx, ast.left, ast);
   }
   if (ast.right) {
-    validateNode(parentCtx, ast.right);
+    validateNode(parentCtx, ast.right, ast);
   }
 }
 
 function validateIf(parentCtx: ValidationContext, ast: IfNode) {
   validateExpression(parentCtx, ast.exp);
-  validateBlock(parentCtx, ast.th);
+  validateBlock(parentCtx, ast.th, ast);
   if (ast.elif) {
     for (let node of ast.elif) {
       validateExpression(parentCtx, node.exp);
-      validateBlock(parentCtx, node.block);
+      validateBlock(parentCtx, node.block, ast);
     }
   }
   if (ast.el) {
-    validateBlock(parentCtx, ast.el);
+    validateBlock(parentCtx, ast.el, ast);
   }
 }
 
 function validateFor(parentCtx: ValidationContext, ast: ForNode) {
-  validateBlock(parentCtx, ast.body);
+  validateBlock(parentCtx, ast.body, ast);
 }
 
 function validateWhile(parentCtx: ValidationContext, ast: WhileNode) {
-  validateBlock(parentCtx, ast.body);
+  validateBlock(parentCtx, ast.body, ast);
 }
 
 function validateForeach(parentCtx: ValidationContext, ast: ForeachNode) {
-  validateBlock(parentCtx, ast.body);
+  validateBlock(parentCtx, ast.body, ast);
 }
 
 function validateForever(parentCtx: ValidationContext, ast: ForeverNode) {
-  validateBlock(parentCtx, ast.body);
+  validateBlock(parentCtx, ast.body, ast);
   updateAsyncFlag(parentCtx);
 }
 
@@ -224,11 +228,11 @@ function validateBreak(parentCtx: ValidationContext, ast: AstNode) {
   // nothing to do
 }
 
-function validateBlock(parentCtx: ValidationContext, ast: BlockNode) {
-  ast.parent = parentCtx.node;
+function validateBlock(parentCtx: ValidationContext, ast: BlockNode, parentAst: AstNode) {
+  ast.parent = parentAst;
 
   for (let node of ast.statements) {
-    validateNode(parentCtx, node);
+    validateNode(parentCtx, node, ast);
   }
 }
 
@@ -243,7 +247,10 @@ function validateCall(parentCtx: ValidationContext, ast: CallNode) {
   ast.funcDef = fd;
 
   // first validate the method we are calling
-  validateNode(getRootContext(parentCtx), fd);
+  let rootCtx = getRootContext(parentCtx);
+
+  // pass root node (which should be module as root)
+  validateNode(getRootContext(parentCtx), fd, rootCtx.node);
 
   // now we have async flag, set it on our chain of calls
   if (fd.isAsync) {

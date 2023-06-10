@@ -163,7 +163,9 @@ function renderBlock(parentBlock: TextBlock, block: BlockNode | Function): TextB
   } else {
     let ctx = parentBlock.appendBlock(block);
     for (let node of block.statements) {
-      renderNode(ctx, node);
+      let nodeBlock = renderNode(ctx, node);
+      nodeBlock.style.insertAbove = true;
+      nodeBlock.style.insertBelow = true;
     }
     return ctx;
   }
@@ -330,7 +332,7 @@ function renderCall(block: ATextSegment | TextBlock, ast: CallNode, spaceLeft: b
 
   let line: ATextSegment;
   if (block instanceof TextBlock) {
-    line = block.appendLine(undefined, undefined, {});
+    line = block.appendLine(undefined, ast, {});
   } else {
     line = block as TextLine;
   }

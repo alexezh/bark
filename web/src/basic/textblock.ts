@@ -16,6 +16,8 @@ export type TextStyle = {
   spaceLeft?: boolean;
   selectable?: boolean;
   css?: string;
+  insertAbove?: boolean;
+  insertBelow?: boolean;
 }
 
 export enum ChangeStatus {
@@ -77,6 +79,10 @@ export class TextSpan {
     this.style = style;
   }
 
+  public insertLineAbove(cur: TextBlock | ATextSegment | undefined): AstNode | undefined {
+    return this.parent.insertLineAbove(undefined);
+  }
+
   public render(onClick: clickHandler): HTMLSpanElement | HTMLDivElement {
     let elem = document.createElement('span');
     elem.id = this.id;
@@ -123,7 +129,7 @@ export abstract class ATextSegment {
   abstract appendConst(val: string, style: TextStyle): void;
   abstract appendToken(token: Token, style: TextStyle);
 
-  abstract insertLineAbove(cur: TextBlock | ATextSegment | TextSpan | undefined): ATextSegment | undefined;
+  abstract insertLineAbove(cur: TextBlock | ATextSegment | undefined): AstNode | undefined;
 
   update(domNode: HTMLDivElement | HTMLSpanElement, onClick: clickHandler) {
     updateHtmlTree(this.segments, domNode, onClick)
@@ -156,7 +162,7 @@ export class TextSegment extends ATextSegment {
     this.segments.push(new TextSpan(this, token, style))
   }
 
-  public insertLineAbove(cur: TextBlock | ATextSegment | TextSpan | undefined): ATextSegment | undefined {
+  public insertLineAbove(cur: TextBlock | ATextSegment | undefined): AstNode | undefined {
     if (!this.parent) {
       return undefined;
     }
@@ -195,13 +201,9 @@ export class TextSegment extends ATextSegment {
 export class TextLine extends ATextSegment {
   public constructor(parent: TextBlock, ast: AstNode | undefined, style?: TextStyle) {
     super(parent, ast, style ?? {});
-
-    if (ast === undefined) {
-      console.log('undef');
-    }
   }
 
-  public insertLineAbove(cur: TextBlock | ATextSegment | TextSpan | undefined): ATextSegment | undefined {
+  public insertLineAbove(cur: TextBlock | ATextSegment | undefined): AstNode | undefined {
     return this.parent.insertLineAbove(this);
   }
 
@@ -259,6 +261,10 @@ export class TextBlock {
   public readonly children: (ATextSegment | TextBlock)[] = [];
 
   public constructor(parent: TextBlock | undefined, root: AstNode, style?: TextStyle) {
+    if (root === undefined) {
+      console.log('undef');
+    }
+
     this.id = makeId();
     this.parent = parent;
     this.ast = root;
@@ -269,8 +275,8 @@ export class TextBlock {
     }
   }
 
-  public insertLineAbove(cur: TextBlock | ATextSegment | undefined): ATextSegment | undefined {
-    if (cur) {
+  public insertLineAbove(cur: TextBlock | ATextSegment | undefined): AstNode | undefined {
+    if (cur && cur.style.insertAbove) {
       let idx = this.children.findIndex((val: ATextSegment | TextBlock) => { return val === cur });
       if (idx === -1) {
         return undefined;
@@ -280,9 +286,7 @@ export class TextBlock {
       // it should have ast associated with it
       let lineAst = insertPlaceholderBefore(cur.ast!);
 
-      let line = new TextLine(this, lineAst, { selectable: true });
-      this.children.splice(idx, 0, line);
-      return line;
+      return lineAst;
     } else {
       return this.parent?.insertLineAbove(this);
     }

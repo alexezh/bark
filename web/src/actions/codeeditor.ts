@@ -59,7 +59,7 @@ export class CodeEditor {
       return;
     }
 
-    let line = this._selectedNode.parent.insertLineAbove(this._selectedNode);
+    let line = this._selectedNode.insertLineAbove(undefined);
     if (!line) {
       return;
     }
