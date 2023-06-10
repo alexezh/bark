@@ -189,7 +189,7 @@ function renderVarDef(parentBlock1: TextBlock, ast: VarDefNode) {
 }
 
 function renderAssingment(parentBlock: TextBlock, ast: AssingmentNode) {
-  let line = parentBlock.appendLine(undefined, undefined, { css: 'code-var' });
+  let line = parentBlock.appendLine(undefined, ast, { css: 'code-var' });
   line.appendToken(ast.name, {});
   line.appendConst(':=', { selectable: false });
   renderExpression(line, ast.value);
@@ -288,12 +288,12 @@ function renderExpression(line: ATextSegment, ast: ExpressionNode, spaceLeft: bo
     renderExpressionPart(line, ast.right);
   }
 }
-function renderBreak(parentBlock: TextBlock, arg1: AstNode) {
-  parentBlock.appendLine('break', undefined, {});
+function renderBreak(parentBlock: TextBlock, ast: AstNode) {
+  parentBlock.appendLine('break', ast, {});
 }
 
 function renderReturn(parentBlock: TextBlock, ast: ReturnNode) {
-  let line = parentBlock.appendLine('return', undefined, {});
+  let line = parentBlock.appendLine('return', ast, {});
   if (ast.value) {
     renderExpression(line, ast.value);
   }

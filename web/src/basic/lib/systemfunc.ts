@@ -13,6 +13,7 @@ function typeNameToTokenKind(name: string): TokenKind {
 export function createModuleNode(name: string): ModuleNode {
   let module: ModuleNode = {
     kind: AstNodeKind.module,
+    startToken: new Token(TokenKind.Id, name, 0),
     name: name,
     types: [],
     vars: [],
@@ -36,9 +37,11 @@ export function addSystemType(digName: string, systemType: Function, fields: str
     })
   }
 
+  let name = new Token(TokenKind.Id, digName, 0);
   return {
     kind: AstNodeKind.typeDef,
-    digName: new Token(TokenKind.Id, digName, 0),
+    startToken: name,
+    digName: name,
     systemType: systemType,
     fields: fieldDefs,
   }
@@ -51,19 +54,23 @@ export function addSystemFunc(module: ModuleNode, name: string, params: string[]
 
     let paramKind = typeNameToTokenKind(parts[1]);
 
+    let name = new Token(TokenKind.Id, parts[0], 0)
     paramDefs.push({
       kind: AstNodeKind.paramDef,
-      name: new Token(TokenKind.Id, parts[0], 0),
+      startToken: name,
+      name: name,
       paramType: new Token(paramKind, parts[1], 0)
     })
   }
 
   let returnType = new Token(typeNameToTokenKind(rval), rval, 0);
+  let nameToken = new Token(TokenKind.Id, name, 0);
 
   return {
     kind: AstNodeKind.funcDef,
     module: module,
-    name: new Token(TokenKind.Id, name, 0),
+    startToken: nameToken,
+    name: nameToken,
     params: paramDefs,
     returnType: returnType,
     isAsync: isAsync,

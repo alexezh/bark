@@ -4,19 +4,21 @@ import { createButton, setElementVisible } from "../lib/htmlutils";
 import { renderModule, findParentNode, isParentNode } from "../basic/formatter";
 import { vm } from "../engine/ivm";
 import { ATextSegment, ChangeStatus, TextBlock, TextSpan } from "../basic/textblock";
+import { updateAst } from "../basic/updateast";
 
 export type CodeEditorProps = UiLayerProps & {
 }
 
 // editor is bar on the side and code area
 export class CodeEditor {
-  private renderBlock: TextBlock | undefined;
-  private selectedNode: TextBlock | ATextSegment | TextSpan | undefined = undefined;
+  private _renderBlock: TextBlock | undefined;
+  private _selectedNode: TextBlock | ATextSegment | TextSpan | undefined = undefined;
   private initialSelectedNode: TextBlock | ATextSegment | TextSpan | undefined = undefined;
-  private selectedElem: HTMLElement | undefined = undefined;
+  private _selectedElem: HTMLElement | undefined = undefined;
   public readonly editEditor: HTMLDivElement;
   private readonly editArea: HTMLDivElement;
-  private textEditActive: boolean = false;
+  private _textEditActive: boolean = false;
+  private _textDirty: boolean = false;
 
   public constructor() {
 
@@ -34,9 +36,9 @@ export class CodeEditor {
   public loadContent() {
     let module = vm.loader.getUserModule('default');
     if (module) {
-      this.renderBlock = renderModule(module);
+      this._renderBlock = renderModule(module);
       this.editArea.replaceChildren();
-      this.editArea.append(this.renderBlock.render(this.onTextClick.bind(this)));
+      this.editArea.append(this._renderBlock.render(this.onTextClick.bind(this)));
     }
   }
 
@@ -53,11 +55,11 @@ export class CodeEditor {
   }
 
   public addAbove() {
-    if (!this.selectedNode || !this.selectedNode.parent) {
+    if (!this._selectedNode || !this._selectedNode.parent) {
       return;
     }
 
-    let line = this.selectedNode.parent.insertLineAbove(undefined);
+    let line = this._selectedNode.parent.insertLineAbove(undefined);
     if (!line) {
       return;
     }
@@ -70,14 +72,14 @@ export class CodeEditor {
   }
 
   public editText() {
-    if (!this.selectedElem) {
+    if (!this._selectedElem) {
       return;
     }
 
-    this.textEditActive = true;
-    this.selectedElem.contentEditable = 'true';
-    this.selectedElem.addEventListener('input', this.onTextInput.bind(this));
-    this.selectedElem.focus();
+    this._textEditActive = true;
+    this._selectedElem.contentEditable = 'true';
+    this._selectedElem.addEventListener('input', this.onTextInput.bind(this));
+    this._selectedElem.focus();
   }
 
   public addBlock(text: string) {
@@ -97,7 +99,7 @@ export class CodeEditor {
   }
 
   private onTextInput(e: Event) {
-    console.log('edit');
+    this._textDirty = true;
   }
 
   private onTextScroll(e: Event) {
@@ -107,18 +109,30 @@ export class CodeEditor {
   private onTextClick(node: TextBlock | ATextSegment | TextSpan, event: Event) {
     event.stopPropagation();
 
-    if (this.selectedNode && isParentNode(this.selectedNode, node)) {
-      this.selectNode(findParentNode(this.selectedNode));
+    if (this._selectedNode && isParentNode(this._selectedNode, node)) {
+      this.selectNode(findParentNode(this._selectedNode));
     } else {
       this.selectNode(node);
     }
   }
 
   private selectNode(node: TextBlock | ATextSegment | TextSpan | undefined) {
-    if (this.selectedNode) {
-      this.selectedElem!.style.border = '';
-      this.selectedNode = undefined;
-      this.selectedElem = undefined;
+    if (this._textEditActive) {
+      if (this._textDirty && this._selectedNode) {
+        let text = this._selectedElem?.innerText;
+        if (text) {
+          console.log('input: ' + text);
+          updateAst(this._selectedNode, text);
+        }
+        this._textDirty = false;
+      }
+
+      this._textEditActive = false;
+    }
+    if (this._selectedNode) {
+      this._selectedElem!.style.border = '';
+      this._selectedNode = undefined;
+      this._selectedElem = undefined;
     }
 
     if (node === undefined) {
@@ -130,9 +144,9 @@ export class CodeEditor {
       return;
     }
 
-    this.selectedNode = node;
-    this.selectedElem = htmlElement;
-    this.selectedElem.style.border = 'solid';
+    this._selectedNode = node;
+    this._selectedElem = htmlElement;
+    this._selectedElem.style.border = 'solid';
   }
 
   private static isParentText(v1: TextBlock | ATextSegment | TextSpan, v2: TextBlock | ATextSegment | TextSpan): boolean {

@@ -14,8 +14,14 @@ import { Token, TokenKind } from "./token";
 
 
 export function parseModule(parser: BasicParser): ModuleNode {
+  let startToken = parser.peek();
+  if (!startToken) {
+    startToken = Token.makeWs();
+  }
+
   let module: ModuleNode = {
     kind: AstNodeKind.module,
+    startToken: startToken,
     name: undefined,
     types: [],
     funcs: [],
@@ -78,6 +84,7 @@ function parseFuncDef(parser: BasicParser, module: ModuleNode): FuncDefNode {
 
   return {
     kind: AstNodeKind.funcDef,
+    startToken: v,
     module: module,
     name: name,
     params: params,
@@ -100,11 +107,13 @@ function parseVarDef(parser: BasicParser): VarDefNode {
     // we are keeping policy as is; so we can just pass parser
     return {
       kind: AstNodeKind.varDef,
+      startToken: v,
       name: name, value: parseExpressionCore(parser)
     }
   } else {
     return {
       kind: AstNodeKind.varDef,
+      startToken: v,
       name: name, value: undefined
     }
   }
@@ -132,9 +141,10 @@ function parseOnDef(parser: BasicParser, module: ModuleNode): OnNode {
 
   // we are keeping policy as is; so we can just pass parser
   return {
+    kind: AstNodeKind.on,
+    startToken: v,
     module: module,
     name: undefined,
-    kind: AstNodeKind.on,
     event: event,
     returnType: undefined,
     params: params,
@@ -169,6 +179,7 @@ function parseFuncParams(parser: BasicParser, endTokens: TokenKind[]): ParamDefN
 
     params.push({
       kind: AstNodeKind.paramDef,
+      startToken: name,
       name: name,
       paramType: paramType
     });
@@ -219,6 +230,7 @@ function parseIf(parser: BasicParser, startToken: TokenKind): IfNode {
 
     return {
       kind: AstNodeKind.if,
+      startToken: iif,
       exp: exp,
       th: thBlock,
       elif: elIf,
@@ -256,6 +268,7 @@ function parseFor(parser: BasicParser): ForNode {
 
   return {
     kind: AstNodeKind.for,
+    startToken: ft,
     name: varToken, startExp: startExp, endExp: endExp, byExp: byExp, body: body
   }
 }
@@ -272,6 +285,7 @@ function parseForever(parser: BasicParser): ForeverNode {
 
   return {
     kind: AstNodeKind.forever,
+    startToken: ft,
     body: body
   }
 }
@@ -290,6 +304,7 @@ function parseForeach(parser: BasicParser): ForeachNode {
 
   return {
     kind: AstNodeKind.foreach,
+    startToken: ft,
     name: varToken, exp: exp, body: body
   }
 }
@@ -304,6 +319,7 @@ function parseWhile(parser: BasicParser): WhileNode {
 
   return {
     kind: AstNodeKind.while,
+    startToken: w,
     exp: exp,
     body: body
   }
@@ -333,6 +349,7 @@ function parseBlock(parser: BasicParser, startTokenKind: TokenKind, endTokens: T
 
   return {
     kind: AstNodeKind.block,
+    startToken: start,
     statements: body
   };
 }
@@ -364,7 +381,8 @@ function parseStatement(token: Token, parser: BasicParser): StatementNode | unde
         return parser.withContextGreedy2('return', token, parseReturn);
       case TokenKind.Break:
         return {
-          kind: AstNodeKind.break
+          kind: AstNodeKind.break,
+          startToken: token
         };
     }
 
@@ -379,6 +397,7 @@ function parseStatement(token: Token, parser: BasicParser): StatementNode | unde
 
       let assingment: AssingmentNode = {
         kind: AstNodeKind.assingment,
+        startToken: token,
         name: token,
         value: parser.withContextGreedy(parser.read(), parseExpression)
       }
@@ -400,6 +419,7 @@ function parseReturn(parser: BasicParser): ReturnNode {
   // we are keeping policy as is; so we can just pass parser
   return {
     kind: AstNodeKind.return,
+    startToken: v,
     value: parseExpression(parser)
   }
 }
@@ -441,6 +461,7 @@ function parseCall(parser: BasicParser, endTokens: TokenKind[] | undefined = und
 
     return {
       kind: AstNodeKind.call,
+      startToken: name,
       name: name,
       params: params
     }
@@ -496,6 +517,7 @@ function parseExpressionCore(parser: BasicParser): ExpressionNode {
   if (isOpTokenKind(ltoken.kind)) {
     op = {
       kind: AstNodeKind.op,
+      startToken: ltoken,
       op: ltoken
     }
 
@@ -522,13 +544,12 @@ function parseExpressionCore(parser: BasicParser): ExpressionNode {
 
       return {
         kind: AstNodeKind.expression,
+        startToken: ltoken,
         left: left,
         op: undefined,
         right: undefined
       }
     }
-
-
 
     // if token is op - it is expression, otherwise if it is id or parentesys
     // it is a function call
@@ -537,6 +558,7 @@ function parseExpressionCore(parser: BasicParser): ExpressionNode {
 
       op = {
         kind: AstNodeKind.op,
+        startToken: token,
         op: token
       }
 
@@ -566,6 +588,7 @@ function parseExpressionCore(parser: BasicParser): ExpressionNode {
 
   return {
     kind: AstNodeKind.expression,
+    startToken: ltoken,
     left: left,
     op: op,
     right: right

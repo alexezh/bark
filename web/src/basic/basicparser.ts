@@ -1,3 +1,4 @@
+import { AstNode, AstNodeKind } from "./ast";
 import { BasicLexer } from "./lexer";
 import { ParseError, ParseErrorCode } from "./parseerror";
 import { Token, TokenKind } from "./token";

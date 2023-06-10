@@ -58,6 +58,9 @@ export enum TokenKind {
   Event,
 }
 
+/**
+ * not sure why we need class here; type will work just fine
+ */
 export class Token {
   public readonly kind: TokenKind;
   public readonly value: string;
@@ -68,6 +71,10 @@ export class Token {
     this.kind = kind;
     this.value = value;
     this.pos = pos;
+  }
+
+  public static makeWs(): Token {
+    return new Token(TokenKind.Ws, '', 0);
   }
 }
 

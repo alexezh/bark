@@ -1,5 +1,6 @@
 import { Block } from "typescript";
 import { Token } from "./token";
+import { ParseError, ParseErrorCode } from "./parseerror";
 
 export enum AstErrorCode {
   generic,
@@ -39,11 +40,22 @@ export enum AstNodeKind {
   foreach = 18,
   while = 19,
   on = 20,
+  comment = 21,
   placeholder = 100
 }
 
 export type AstNode = {
-  kind: AstNodeKind
+  kind: AstNodeKind;
+  startToken: Token;
+  parent?: AstNode;
+}
+
+export type CommentNode = AstNode & {
+  text?: string;
+}
+
+export type PlaceholderNode = AstNode & {
+  text?: string;
 }
 
 export type ModuleNode = AstNode & {
@@ -124,6 +136,7 @@ export type ConstNode = AstNode & {
 export function makeConstNode(token: Token): ConstNode {
   return {
     kind: AstNodeKind.const,
+    startToken: token,
     value: token
   }
 }
@@ -135,6 +148,7 @@ export type IdNode = AstNode & {
 export function makeIdNode(token: Token): IdNode {
   return {
     kind: AstNodeKind.id,
+    startToken: token,
     name: token
   }
 }
@@ -219,3 +233,24 @@ export function forEachChild(ast: AstNode, func: (ast: AstNode) => void) {
   }
 }
 
+export function insertPlaceholderBefore(before: AstNode): AstNode {
+  if (!before.parent) {
+    throw new ParseError(ParseErrorCode.InvalidArg, undefined, 'Cannot get parent');
+  }
+
+  // we can only insert empty line if there is a block
+  if (before.parent.kind === AstNodeKind.block) {
+    let ph: PlaceholderNode = { kind: AstNodeKind.placeholder, startToken: Token.makeWs() };
+
+    let block = before.parent as BlockNode;
+    let idx = block.statements.findIndex((e) => e === before);
+    if (idx === -1) {
+      throw new ParseError(ParseErrorCode.InvalidArg, undefined, 'Cannot find node');
+    }
+    ph.parent = block;
+    block.statements.splice(idx, 0, ph);
+    return ph;
+  } else {
+    return insertPlaceholderBefore(before.parent);
+  }
+}

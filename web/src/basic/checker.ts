@@ -3,14 +3,14 @@ import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNo
 import { ParseError, ParseErrorCode, throwUnexpectedError } from "./parseerror";
 
 class ValidationContext {
-  parent: ValidationContext | undefined;
+  readonly parentCtx: ValidationContext | undefined;
   readonly node: AstNode;
   readonly funcDefs: Map<string, FuncDefNode>;
   readonly validated: WeakMap<AstNode, boolean>;
 
   public constructor(node: AstNode, parent: ValidationContext | undefined) {
     this.node = node;
-    this.parent = parent;
+    this.parentCtx = parent;
     if (parent) {
       this.funcDefs = parent.funcDefs;
       this.validated = parent.validated;
@@ -37,16 +37,16 @@ function updateAsyncFlag(ctx: ValidationContext | undefined) {
       }
       on.isAsync = true;
     }
-    ctx = ctx.parent;
+    ctx = ctx.parentCtx;
   }
 }
 
 function getRootContext(ctx: ValidationContext): ValidationContext {
   while (ctx) {
-    if (ctx.parent === undefined) {
+    if (ctx.parentCtx === undefined) {
       return ctx;
     }
-    ctx = ctx.parent;
+    ctx = ctx.parentCtx;
   }
   throw 'Invalid chain';
 }
@@ -86,6 +86,8 @@ function validateNode(parentCtx: ValidationContext, ast: AstNode) {
   if (parentCtx.validated.get(ast)) {
     return;
   }
+
+  ast.parent = parentCtx.node;
 
   parentCtx.validated.set(ast, true);
   switch (ast.kind) {
@@ -219,9 +221,12 @@ function validateReturn(parentCtx: ValidationContext, ast: ReturnNode) {
 }
 
 function validateBreak(parentCtx: ValidationContext, ast: AstNode) {
+  // nothing to do
 }
 
 function validateBlock(parentCtx: ValidationContext, ast: BlockNode) {
+  ast.parent = parentCtx.node;
+
   for (let node of ast.statements) {
     validateNode(parentCtx, node);
   }

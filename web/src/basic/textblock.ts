@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { AstNode, AstNodeKind } from "./ast";
+import { AstNode, AstNodeKind, insertPlaceholderBefore } from "./ast";
 import { ParseError, ParseErrorCode } from "./parseerror";
 import { Token, TokenKind } from "./token";
 
@@ -195,6 +195,10 @@ export class TextSegment extends ATextSegment {
 export class TextLine extends ATextSegment {
   public constructor(parent: TextBlock, ast: AstNode | undefined, style?: TextStyle) {
     super(parent, ast, style ?? {});
+
+    if (ast === undefined) {
+      console.log('undef');
+    }
   }
 
   public insertLineAbove(cur: ATextSegment | undefined): ATextSegment | undefined {
@@ -271,7 +275,10 @@ export class TextBlock {
       if (idx === -1) {
         return undefined;
       }
-      let line = new TextLine(this, { kind: AstNodeKind.placeholder }, { selectable: true });
+
+      let lineAst = insertPlaceholderBefore(cur.ast!);
+
+      let line = new TextLine(this, lineAst, { selectable: true });
       this.children.splice(idx, 0, line);
       return line;
     } else {
