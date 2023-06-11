@@ -7,9 +7,13 @@ type clickHandler = (node: TextBlock | ATextSegment | TextSpan, event: Event) =>
 
 let nextId: number = 1;
 
-function makeId(): string {
-  let id = nextId++;
-  return 'tn_' + id.toString();
+function makeId(ast: AstNode | undefined, kind: string): string {
+  if (ast) {
+    return kind + '_ast_' + ast.id.toString();
+  } else {
+    let id = nextId++;
+    return kind + '_' + id.toString();
+  }
 }
 
 export type TextStyle = {
@@ -73,7 +77,7 @@ export class TextSpan {
   }
 
   public constructor(parent: ATextSegment, token: Token, style: TextStyle) {
-    this.id = makeId();
+    this.id = makeId(undefined, 'sp');
     this.parent = parent;
     this.data = token;
     this.style = style;
@@ -115,8 +119,8 @@ export abstract class ATextSegment {
   public readonly style: TextStyle;
   public changeStatus: ChangeStatus = ChangeStatus.dirty;
 
-  public constructor(parent: ATextSegment | TextBlock, ast: AstNode | undefined, style: TextStyle) {
-    this.id = makeId();
+  public constructor(parent: ATextSegment | TextBlock, ast: AstNode | undefined, style: TextStyle, prefix: string) {
+    this.id = makeId(ast, prefix);
     this.parent = parent;
     this.ast = ast;
     this.style = style;
@@ -131,7 +135,11 @@ export abstract class ATextSegment {
 
   abstract insertLineAbove(cur: TextBlock | ATextSegment | undefined): AstNode | undefined;
 
-  update(domNode: HTMLDivElement | HTMLSpanElement, onClick: clickHandler) {
+  clearChildren() {
+    this.segments.length = 0;
+  }
+
+  updateHtmlDom(domNode: HTMLDivElement | HTMLSpanElement, onClick: clickHandler) {
     updateHtmlTree(this.segments, domNode, onClick)
   }
 }
@@ -139,7 +147,7 @@ export abstract class ATextSegment {
 export class TextSegment extends ATextSegment {
 
   public constructor(parent: ATextSegment | TextBlock, ast: AstNode | undefined, style: TextStyle) {
-    super(parent, ast, style);
+    super(parent, ast, style, 'sp');
   }
 
   public appendSegment(ast: AstNode | undefined, style: TextStyle): ATextSegment {
@@ -200,7 +208,7 @@ export class TextSegment extends ATextSegment {
 
 export class TextLine extends ATextSegment {
   public constructor(parent: TextBlock, ast: AstNode | undefined, style?: TextStyle) {
-    super(parent, ast, style ?? {});
+    super(parent, ast, style ?? {}, 'ln');
   }
 
   public insertLineAbove(cur: TextBlock | ATextSegment | undefined): AstNode | undefined {
@@ -252,6 +260,7 @@ export class TextLine extends ATextSegment {
 
 // block is either line or collection of blocks and lines
 export class TextBlock {
+  public readonly module: TextModule;
   public readonly id: string;
   public readonly parent: TextBlock | undefined;
   public readonly ast: AstNode;
@@ -259,13 +268,13 @@ export class TextBlock {
   public changeStatus: ChangeStatus = ChangeStatus.dirty;
   private margin: number = 0;
   public readonly children: (ATextSegment | TextBlock)[] = [];
+  public renderBlock?: () => void;
 
-  public constructor(parent: TextBlock | undefined, root: AstNode, style?: TextStyle) {
-    if (root === undefined) {
-      console.log('undef');
-    }
+  public constructor(module: TextModule, parent: TextBlock | undefined, root: AstNode, style?: TextStyle) {
+    this.module = module;
+    this.id = makeId(root, 'bl');
+    this.module.setNode(root.id, this);
 
-    this.id = makeId();
     this.parent = parent;
     this.ast = root;
     this.style = style ?? {};
@@ -292,8 +301,12 @@ export class TextBlock {
     }
   }
 
+  public clearChildren() {
+    this.children.length = 0;
+  }
+
   public appendBlock(ast: AstNode, style?: TextStyle): TextBlock {
-    let block = new TextBlock(this, ast, style);
+    let block = new TextBlock(this.module, this, ast, style);
     this.children.push(block);
     return block;
   }
@@ -347,21 +360,28 @@ export class TextBlock {
     return div;
   }
 
-  public update(domNode: HTMLDivElement, onClick: clickHandler) {
+  public updateHtmlDom(domNode: HTMLDivElement, onClick: clickHandler) {
     updateHtmlTree(this.children, domNode, onClick);
   }
 }
 
 export class TextModule {
-  private readonly nodes: Map<string, TextBlock | ATextSegment | TextSpan>;
-  public readonly block: TextBlock;
+  private readonly nodes = new Map<number, TextBlock | ATextSegment | TextSpan>();
+  private _root!: TextBlock;
+  public get root(): TextBlock { return this._root }
 
-  public constructor(block: TextBlock, nodes: Map<string, TextBlock | ATextSegment | TextSpan>) {
-    this.block = block;
-    this.nodes = nodes;
+  public constructor() {
   }
 
-  public getNodeById(id: string): TextBlock | ATextSegment | TextSpan | undefined {
+  public getNodeById(id: number): TextBlock | ATextSegment | TextSpan | undefined {
     return this.nodes.get(id);
+  }
+
+  public setNode(id: number, node: TextBlock | ATextSegment | TextSpan) {
+    return this.nodes.set(id, node);
+  }
+
+  public setRoot(node: TextBlock) {
+    this._root = node;
   }
 }

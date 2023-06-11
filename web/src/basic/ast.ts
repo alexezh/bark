@@ -46,7 +46,7 @@ export enum AstNodeKind {
 
 let nextId: number = 1;
 
-function makeAstId(): number {
+export function makeAstId(): number {
   let id = nextId++;
   return id;
 }

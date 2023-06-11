@@ -1,4 +1,4 @@
-import { AstNodeKind, FieldDef, FuncDefNode, ModuleNode, ParamDefNode, TypeDefNode } from "../ast";
+import { AstNodeKind, FieldDef, FuncDefNode, ModuleNode, ParamDefNode, TypeDefNode, makeAstId } from "../ast";
 import { Token, TokenKind } from "../token";
 
 function typeNameToTokenKind(name: string): TokenKind {
@@ -13,6 +13,7 @@ function typeNameToTokenKind(name: string): TokenKind {
 export function createModuleNode(name: string): ModuleNode {
   let module: ModuleNode = {
     kind: AstNodeKind.module,
+    id: makeAstId(),
     startToken: new Token(TokenKind.Id, name, 0),
     name: name,
     types: [],
@@ -40,6 +41,7 @@ export function addSystemType(digName: string, systemType: Function, fields: str
   let name = new Token(TokenKind.Id, digName, 0);
   return {
     kind: AstNodeKind.typeDef,
+    id: makeAstId(),
     startToken: name,
     digName: name,
     systemType: systemType,
@@ -57,6 +59,7 @@ export function addSystemFunc(module: ModuleNode, name: string, params: string[]
     let name = new Token(TokenKind.Id, parts[0], 0)
     paramDefs.push({
       kind: AstNodeKind.paramDef,
+      id: makeAstId(),
       startToken: name,
       name: name,
       paramType: new Token(paramKind, parts[1], 0)
@@ -68,6 +71,7 @@ export function addSystemFunc(module: ModuleNode, name: string, params: string[]
 
   return {
     kind: AstNodeKind.funcDef,
+    id: makeAstId(),
     module: module,
     startToken: nameToken,
     name: nameToken,

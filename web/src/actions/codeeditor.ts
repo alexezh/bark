@@ -1,7 +1,7 @@
 import { UiLayer2, UiLayerProps } from "../ui/uilayer";
 import { KeyBinder } from "../ui/keybinder";
 import { createButton, setElementVisible } from "../lib/htmlutils";
-import { renderModule, findParentNode, isParentNode } from "../basic/formatter";
+import { renderModule, findParentNode, isParentNode, renderNode } from "../basic/formatter";
 import { vm } from "../engine/ivm";
 import { ATextSegment, ChangeStatus, TextBlock, TextModule, TextSpan } from "../basic/textblock";
 import { updateAst } from "../basic/updateast";
@@ -39,7 +39,7 @@ export class CodeEditor {
     if (module) {
       this._textModule = renderModule(module);
       this.editArea.replaceChildren();
-      this.editArea.append(this._textModule.render(this.onTextClick.bind(this)));
+      this.editArea.append(this._textModule.root.render(this.onTextClick.bind(this)));
     }
   }
 
@@ -94,12 +94,6 @@ export class CodeEditor {
       return;
     }
 
-    let domNode = document.getElementById(ast.id);
-    if (!domNode) {
-      console.warn('updateNode: cannot fine dom node:' + ast.id);
-      return;
-    }
-
     let node = this._textModule?.getNodeById(ast.id);
     if (!node) {
       console.warn('updateNode: cannot fine node:' + ast.id);
@@ -107,9 +101,28 @@ export class CodeEditor {
     }
 
     if (node instanceof TextBlock) {
-      node.update(domNode as HTMLDivElement, this.onTextClick.bind(this));
+      node.clearChildren();
+      if (node.renderBlock) {
+        node.renderBlock();
+      } else {
+        console.warn('not defined');
+      }
     } else if (node instanceof ATextSegment) {
-      node.update(domNode as (HTMLDivElement | HTMLSpanElement), this.onTextClick.bind(this));
+      node.clearChildren();
+      //renderNode(node, ast)
+      //throw 'hello';
+    }
+
+    let domNode = document.getElementById(node.id);
+    if (!domNode) {
+      console.warn('updateNode: cannot fine dom node:' + ast.id);
+      return;
+    }
+
+    if (node instanceof TextBlock) {
+      node.updateHtmlDom(domNode as HTMLDivElement, this.onTextClick.bind(this));
+    } else if (node instanceof ATextSegment) {
+      node.updateHtmlDom(domNode as (HTMLDivElement | HTMLSpanElement), this.onTextClick.bind(this));
     } else {
       console.warn('updateNode: should not be span');
     }

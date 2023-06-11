@@ -5,7 +5,7 @@ import {
   ParamDefNode,
   IfNode,
   VarDefNode, StatementNode, AssingmentNode, CallNode,
-  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode, WhileNode, makeConstNode, makeIdNode, CallParamNode, ForeachNode, OnNode, ForeverNode
+  ExpressionNode, OpNode, ConstNode, BlockNode, ForNode, AstNodeKind, IdNode, ReturnNode, WhileNode, makeConstNode, makeIdNode, CallParamNode, ForeachNode, OnNode, ForeverNode, makeAstId
 } from "./ast";
 import { BasicParser } from "./basicparser";
 import { isConstTokenKind, isOpTokenKind } from "./lexer";
@@ -618,8 +618,5 @@ function parseExpressionCore(parser: BasicParser): ExpressionNode {
 
 export class BasicGenerator {
 
-}
-function makeAstId(): number {
-  throw new Error("Function not implemented.");
 }
 
