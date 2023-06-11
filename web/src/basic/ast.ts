@@ -41,7 +41,11 @@ export enum AstNodeKind {
   while = 19,
   on = 20,
   comment = 21,
-  placeholder = 100
+  linePlaceholder = 100,
+  idPlaceholder = 101,
+  expressionPlaceholder = 102,
+  paramPlaceholder = 103,
+  bodyPlaceholder = 104,
 }
 
 let nextId: number = 1;
@@ -251,7 +255,7 @@ export function insertPlaceholderBefore(before: AstNode): AstNode {
   // we can only insert empty line if there is a block
   if (before.parent.kind === AstNodeKind.block) {
     let ph: PlaceholderNode = {
-      kind: AstNodeKind.placeholder,
+      kind: AstNodeKind.linePlaceholder,
       id: makeAstId(),
       startToken: Token.makeWs()
     };

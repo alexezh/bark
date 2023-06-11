@@ -64,7 +64,7 @@ export function parseModule(parser: BasicParser): ModuleNode {
 
 
 // proc foo(params):return begin ... end
-function parseFuncDef(parser: BasicParser, module: ModuleNode): FuncDefNode {
+export function parseFuncDef(parser: BasicParser, module: ModuleNode): FuncDefNode {
 
   parser.setEndRule([TokenKind.End]);
 
@@ -96,7 +96,7 @@ function parseFuncDef(parser: BasicParser, module: ModuleNode): FuncDefNode {
   }
 }
 
-function parseVarDef(parser: BasicParser): VarDefNode {
+export function parseVarDef(parser: BasicParser): VarDefNode {
   parser.ignoreEol(false);
   parser.setEndRule([TokenKind.Eol]);
 
@@ -123,7 +123,7 @@ function parseVarDef(parser: BasicParser): VarDefNode {
   }
 }
 
-function parseOnDef(parser: BasicParser, module: ModuleNode): OnNode {
+export function parseOnDef(parser: BasicParser, module: ModuleNode): OnNode {
   parser.ignoreEol(true);
   parser.setEndRule([TokenKind.Eol]);
 

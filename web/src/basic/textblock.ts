@@ -112,6 +112,7 @@ export class TextSpan {
 }
 
 export abstract class ATextSegment {
+  readonly module: TextModule;
   readonly id: string;
   readonly parent: ATextSegment | TextBlock;
   protected segments: (TextSpan | TextSegment)[] = [];
@@ -121,6 +122,10 @@ export abstract class ATextSegment {
 
   public constructor(parent: ATextSegment | TextBlock, ast: AstNode | undefined, style: TextStyle, prefix: string) {
     this.id = makeId(ast, prefix);
+    this.module = parent.module;
+    if (ast) {
+      this.module.setNode(ast.id, this);
+    }
     this.parent = parent;
     this.ast = ast;
     this.style = style;

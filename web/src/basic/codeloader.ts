@@ -1,5 +1,5 @@
 import { ICodeLoader, IVMCodeRunner } from "../engine/ivm";
-import { AstNodeKind, FuncDefNode, ModuleNode, OnNode, VarDefNode } from "./ast";
+import { AstNode, AstNodeKind, FuncDefNode, ModuleNode, OnNode, VarDefNode } from "./ast";
 import { parseModule } from "./basic";
 import { BasicParser } from "./basicparser";
 import { JsWriter } from "./jswriter";
@@ -41,6 +41,15 @@ export class CodeLoader implements ICodeLoader {
     } else {
       this._userModules.set(name, text);
     }
+  }
+
+  public updateUserModule(node: AstNode, text: string) {
+    let tokenize = BasicLexer.load(text);
+    let parser = new BasicParser(tokenize);
+    let ast = parseModule(parser);
+
+    // we want to clone lexer and update tokens in lexer... 
+    // we are assuming that edit tokens are valid which is reasonable as we start with ast
   }
 
   public getUserModule(name: string): ModuleNode | undefined {

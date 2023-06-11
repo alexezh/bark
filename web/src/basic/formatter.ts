@@ -77,7 +77,7 @@ export function renderNode(rb: TextBlock, ast: AstNode): TextBlock | TextLine {
       return renderCall(rb, ast as CallNode);
     case AstNodeKind.comment:
       return renderComment(rb, ast as CallNode);
-    case AstNodeKind.placeholder:
+    case AstNodeKind.linePlaceholder:
       return renderPlaceholder(rb, ast as CallNode);
     default:
       throw new ParseError(ParseErrorCode.NotImpl, undefined, 'Not implemented');
@@ -320,7 +320,7 @@ function renderBreak(parentBlock: TextBlock, ast: AstNode): TextLine {
 }
 
 function renderPlaceholder(parentBlock: TextBlock, ast: AstNode): TextLine {
-  return parentBlock.appendLine(undefined, ast, {});
+  return parentBlock.appendLine(undefined, ast, { selectable: true });
 }
 
 function renderComment(parentBlock: TextBlock, ast: AstNode): TextLine {
