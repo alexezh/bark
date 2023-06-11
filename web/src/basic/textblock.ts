@@ -352,3 +352,16 @@ export class TextBlock {
   }
 }
 
+export class TextModule {
+  private readonly nodes: Map<string, TextBlock | ATextSegment | TextSpan>;
+  public readonly block: TextBlock;
+
+  public constructor(block: TextBlock, nodes: Map<string, TextBlock | ATextSegment | TextSpan>) {
+    this.block = block;
+    this.nodes = nodes;
+  }
+
+  public getNodeById(id: string): TextBlock | ATextSegment | TextSpan | undefined {
+    return this.nodes.get(id);
+  }
+}

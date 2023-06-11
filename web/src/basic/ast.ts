@@ -44,9 +44,17 @@ export enum AstNodeKind {
   placeholder = 100
 }
 
+let nextId: number = 1;
+
+function makeAstId(): number {
+  let id = nextId++;
+  return id;
+}
+
 export type AstNode = {
   kind: AstNodeKind;
   startToken: Token;
+  id: number;
   parent?: AstNode;
 }
 
@@ -136,6 +144,7 @@ export type ConstNode = AstNode & {
 export function makeConstNode(token: Token): ConstNode {
   return {
     kind: AstNodeKind.const,
+    id: makeAstId(),
     startToken: token,
     value: token
   }
@@ -148,6 +157,7 @@ export type IdNode = AstNode & {
 export function makeIdNode(token: Token): IdNode {
   return {
     kind: AstNodeKind.id,
+    id: makeAstId(),
     startToken: token,
     name: token
   }
@@ -240,7 +250,11 @@ export function insertPlaceholderBefore(before: AstNode): AstNode {
 
   // we can only insert empty line if there is a block
   if (before.parent.kind === AstNodeKind.block) {
-    let ph: PlaceholderNode = { kind: AstNodeKind.placeholder, startToken: Token.makeWs() };
+    let ph: PlaceholderNode = {
+      kind: AstNodeKind.placeholder,
+      id: makeAstId(),
+      startToken: Token.makeWs()
+    };
 
     let block = before.parent as BlockNode;
     let idx = block.statements.findIndex((e) => e === before);

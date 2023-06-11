@@ -3,15 +3,16 @@ import { KeyBinder } from "../ui/keybinder";
 import { createButton, setElementVisible } from "../lib/htmlutils";
 import { renderModule, findParentNode, isParentNode } from "../basic/formatter";
 import { vm } from "../engine/ivm";
-import { ATextSegment, ChangeStatus, TextBlock, TextSpan } from "../basic/textblock";
+import { ATextSegment, ChangeStatus, TextBlock, TextModule, TextSpan } from "../basic/textblock";
 import { updateAst } from "../basic/updateast";
+import { AstNode } from "../basic/ast";
 
 export type CodeEditorProps = UiLayerProps & {
 }
 
 // editor is bar on the side and code area
 export class CodeEditor {
-  private _renderBlock: TextBlock | undefined;
+  private _textModule: TextModule | undefined;
   private _selectedNode: TextBlock | ATextSegment | TextSpan | undefined = undefined;
   private initialSelectedNode: TextBlock | ATextSegment | TextSpan | undefined = undefined;
   private _selectedElem: HTMLElement | undefined = undefined;
@@ -36,9 +37,9 @@ export class CodeEditor {
   public loadContent() {
     let module = vm.loader.getUserModule('default');
     if (module) {
-      this._renderBlock = renderModule(module);
+      this._textModule = renderModule(module);
       this.editArea.replaceChildren();
-      this.editArea.append(this._renderBlock.render(this.onTextClick.bind(this)));
+      this.editArea.append(this._textModule.render(this.onTextClick.bind(this)));
     }
   }
 
@@ -59,11 +60,13 @@ export class CodeEditor {
       return;
     }
 
-    let line = this._selectedNode.insertLineAbove(undefined);
-    if (!line) {
+    let lineAst = this._selectedNode.insertLineAbove(undefined);
+    if (!lineAst) {
       return;
     }
-    this.updateNode(line.parent);
+    this.updateNode(lineAst.parent!);
+
+    let line = this._textModule?.getNodeById(lineAst.id!);
     this.selectNode(line);
   }
 
@@ -86,15 +89,29 @@ export class CodeEditor {
 
   }
 
-  private updateNode(node: TextBlock | ATextSegment) {
-    let domNode = document.getElementById(node.id);
-    if (domNode === null) {
+  private updateNode(ast: AstNode) {
+    if (!ast.id) {
       return;
     }
+
+    let domNode = document.getElementById(ast.id);
+    if (!domNode) {
+      console.warn('updateNode: cannot fine dom node:' + ast.id);
+      return;
+    }
+
+    let node = this._textModule?.getNodeById(ast.id);
+    if (!node) {
+      console.warn('updateNode: cannot fine node:' + ast.id);
+      return;
+    }
+
     if (node instanceof TextBlock) {
       node.update(domNode as HTMLDivElement, this.onTextClick.bind(this));
-    } else {
+    } else if (node instanceof ATextSegment) {
       node.update(domNode as (HTMLDivElement | HTMLSpanElement), this.onTextClick.bind(this));
+    } else {
+      console.warn('updateNode: should not be span');
     }
   }
 
