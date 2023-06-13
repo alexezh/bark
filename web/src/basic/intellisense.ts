@@ -11,6 +11,10 @@ function idTokenPl(): Token {
   return new Token(TokenKind.IdPlaceholder, '', 0);
 }
 
+function idToken(name: string): Token {
+  return new Token(TokenKind.Id, name, 0);
+}
+
 function expTokenPl(): Token {
   return new Token(TokenKind.ExpPlaceholder, '', 0);
 }
@@ -35,54 +39,51 @@ function bodyNodePl(): BlockNode {
   }
 }
 
-export function moduleInsertSuggestion(): AstTemplate[] {
+export function varTemplateAst(module: ModuleNode): VarDefNode {
+  return {
+    kind: AstNodeKind.varDef,
+    id: makeAstId(),
+    startToken: idTokenPl(),
+    name: idTokenPl(),
+    value: expNodePl()
+  }
+}
+
+export function functionTemplateAst(module: ModuleNode): FuncDefNode {
+  return {
+    module: module,
+    kind: AstNodeKind.funcDef,
+    id: makeAstId(),
+    startToken: idTokenPl(),
+    name: idTokenPl(),
+    params: [{ kind: AstNodeKind.paramPlaceholder, id: makeAstId(), startToken: idTokenPl(), name: idTokenPl(), paramType: idTokenPl() }],
+    returnType: undefined,
+    isAsync: false,
+    body: bodyNodePl(),
+  }
+}
+
+export function eventTemplateAst(module: ModuleNode, name: string, filter?: string): OnNode {
+  return {
+    module: module,
+    kind: AstNodeKind.funcDef,
+    id: makeAstId(),
+    startToken: idTokenPl(),
+    name: undefined,
+    event: idToken(name),
+    filter: (filter) ? idToken(filter) : undefined,
+    params: [{ kind: AstNodeKind.paramPlaceholder, id: makeAstId(), startToken: idTokenPl(), name: idTokenPl(), paramType: idTokenPl() }],
+    returnType: undefined,
+    isAsync: false,
+    body: bodyNodePl(),
+  }
+}
+
+export function eventTemplates(): AstTemplate[] {
   return [
-    {
-      name: 'var',
-      ast: (module: ModuleNode): VarDefNode => {
-        return {
-          kind: AstNodeKind.varDef,
-          id: makeAstId(),
-          startToken: idTokenPl(),
-          name: idTokenPl(),
-          value: expNodePl()
-        }
-      }
-    },
-    {
-      name: 'function',
-      ast: (module: ModuleNode): FuncDefNode => {
-        return {
-          module: module,
-          kind: AstNodeKind.funcDef,
-          id: makeAstId(),
-          startToken: idTokenPl(),
-          name: idTokenPl(),
-          params: [{ kind: AstNodeKind.paramPlaceholder, id: makeAstId(), startToken: idTokenPl(), name: idTokenPl(), paramType: idTokenPl() }],
-          returnType: undefined,
-          isAsync: false,
-          body: bodyNodePl(),
-        }
-      }
-    },
-    {
-      name: 'on',
-      ast: (module: ModuleNode): OnNode => {
-        return {
-          module: module,
-          kind: AstNodeKind.funcDef,
-          id: makeAstId(),
-          startToken: idTokenPl(),
-          name: undefined,
-          event: idTokenPl(),
-          filter: idTokenPl(),
-          params: [{ kind: AstNodeKind.paramPlaceholder, id: makeAstId(), startToken: idTokenPl(), name: idTokenPl(), paramType: idTokenPl() }],
-          returnType: undefined,
-          isAsync: false,
-          body: bodyNodePl(),
-        }
-      }
-    }
+    { name: 'load', ast: (module) => eventTemplateAst(module, 'load') },
+    { name: 'start', ast: (module) => eventTemplateAst(module, 'start') },
+    { name: 'message', ast: (module) => eventTemplateAst(module, 'message', 'YourMessage') }
   ]
 }
 

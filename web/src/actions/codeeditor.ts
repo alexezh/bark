@@ -1,11 +1,9 @@
-import { UiLayer2, UiLayerProps } from "../ui/uilayer";
-import { KeyBinder } from "../ui/keybinder";
-import { createButton, setElementVisible } from "../lib/htmlutils";
-import { renderModule, findParentNode, isParentNode, renderNode } from "../basic/formatter";
+import { UiLayerProps } from "../ui/uilayer";
+import { renderModule, findParentNode, isParentNode } from "../basic/formatter";
 import { vm } from "../engine/ivm";
-import { ATextSegment, ChangeStatus, TextBlock, TextModule, TextSpan } from "../basic/textblock";
+import { ATextSegment, TextBlock, TextModule, TextSpan } from "../basic/textblock";
 import { updateAst } from "../basic/updateast";
-import { AstNode } from "../basic/ast";
+import { AstNode, ModuleNode } from "../basic/ast";
 
 export type CodeEditorProps = UiLayerProps & {
 }
@@ -20,6 +18,7 @@ export class CodeEditor {
   private readonly editArea: HTMLDivElement;
   private _textEditActive: boolean = false;
   private _textDirty: boolean = false;
+  private _module?: ModuleNode;
 
   public constructor() {
 
@@ -35,9 +34,9 @@ export class CodeEditor {
   }
 
   public loadContent() {
-    let module = vm.loader.getUserModule('default');
-    if (module) {
-      this._textModule = renderModule(module);
+    this._module = vm.loader.getUserModule('default');
+    if (this._module) {
+      this._textModule = renderModule(this._module!);
       this.editArea.replaceChildren();
       this.editArea.append(this._textModule.root.render(this.onTextClick.bind(this)));
     }
@@ -52,6 +51,10 @@ export class CodeEditor {
   }
 
   public pasteText() {
+
+  }
+
+  public deleteText() {
 
   }
 
@@ -72,6 +75,14 @@ export class CodeEditor {
 
   public addBelow() {
 
+  }
+
+  public addTemplate(astFunc: (module: ModuleNode) => AstNode) {
+    if (!this._module) {
+      return;
+    }
+
+    let ast = astFunc(this._module)
   }
 
   public editText() {

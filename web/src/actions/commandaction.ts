@@ -86,3 +86,10 @@ export class FuncAction extends BasicAction {
     this._func(bar);
   }
 }
+
+export class MenuAction extends BasicAction {
+  public constructor(name: string, actions: IAction[]) {
+    super(name, {});
+    //this._func = func;
+  }
+}

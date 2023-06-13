@@ -37,7 +37,7 @@ export enum TokenKind {
   // const end
   Break = 50,
   Id = 51,
-  For = 51,
+  For = 52,
   Foreach = 53,
   Forever = 54,
   In = 55,
