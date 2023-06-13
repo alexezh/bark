@@ -3,7 +3,7 @@ import { renderModule, findParentNode, isParentNode } from "../basic/formatter";
 import { vm } from "../engine/ivm";
 import { ATextSegment, TextBlock, TextModule, TextSpan } from "../basic/textblock";
 import { updateAst } from "../basic/updateast";
-import { AstNode, ModuleNode } from "../basic/ast";
+import { AstNode, AstNodeKind, FuncDefNode, ModuleNode, OnNode, VarDefNode } from "../basic/ast";
 
 export type CodeEditorProps = UiLayerProps & {
 }
@@ -82,7 +82,21 @@ export class CodeEditor {
       return;
     }
 
-    let ast = astFunc(this._module)
+
+    let ast = astFunc(this._module);
+
+    if (ast.kind === AstNodeKind.varDef) {
+      this._module.vars.push(ast as VarDefNode);
+    } else if (ast.kind === AstNodeKind.on) {
+      this._module.on.push(ast as OnNode);
+    } else if (ast.kind === AstNodeKind.funcDef) {
+      this._module.funcs.push(ast as FuncDefNode);
+    } else {
+      if (!this._selectedNode) {
+        console.warn('addTemplate: no selection')
+        return;
+      }
+    }
   }
 
   public editText() {
