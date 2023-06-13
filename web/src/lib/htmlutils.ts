@@ -32,12 +32,11 @@ export function createButton(parent: HTMLElement, className: string, text: strin
   return button;
 }
 
-export function createCommandButton(parent: HTMLElement, text: string, handler: (evt: any) => any): HTMLButtonElement {
+export function createCommandButton(text: string, handler: (evt: any) => any): HTMLButtonElement {
   let button = document.createElement('button');
   button.textContent = text;
   button.className = "commandButton";
 
-  parent.appendChild(button);
   button.addEventListener('click', handler);
 
   return button;

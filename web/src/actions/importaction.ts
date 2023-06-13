@@ -22,24 +22,24 @@ export class ImportVoxAction implements IAction {
 
   get tags(): string[] { return ['import', 'upload', 'vox', 'block'] }
   public get name(): string { return 'Import Vox' }
+  public get element(): HTMLElement | undefined { return this._element }
 
   public constructor() {
     this._id = ImportVoxAction._nextId++;
   }
 
-  public renderButton(parent: HTMLElement, bar: ICommandLayer) {
+  public renderButton(bar: ICommandLayer) {
 
     this._element = document.createElement('div') as HTMLDivElement;
     this.createImportButton(bar);
 
-    parent.appendChild(this._element);
+    return this._element;
   }
 
-  public destroyButton(parent: HTMLElement) {
+  public destroyButton() {
     if (this._element === undefined) {
       return;
     }
-    parent.removeChild(this._element);
     this._element = undefined;
     this._inputElem = undefined;
   }

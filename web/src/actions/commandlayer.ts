@@ -1,5 +1,5 @@
 import { createButton } from "../lib/htmlutils";
-import { DetailsPaneKind, IAction, ICommandLayer } from "./iaction";
+import { DetailsPaneKind, IAction, ICommandLayer, IMenuAction } from "./iaction";
 import { ShellProps } from "../ui/shell";
 import { UiLayer2, UiLayerProps } from "../ui/uilayer";
 import { getTopLevelActions } from "./actionregistry";
@@ -67,16 +67,42 @@ export class CommandList {
     this.renderList();
   }
 
+  public openMenu(group: IMenuAction) {
+    let idx = this.renderedActions?.findIndex((x) => x === group);
+    if (idx === -1 || idx === undefined) {
+      console.warn('openMenu: cannot find group');
+      return;
+    }
+
+
+    for (let item of group.getChildActions()) {
+      let elem = item.renderButton(this.layer);
+      if (idx + 1 === this.renderedActions?.length) {
+        this.listDiv!.appendChild(elem);
+        this.renderedActions!.push(item);
+      } else {
+        this.listDiv!.insertBefore(elem, this.renderedActions![idx + 1].element!);
+        this.renderedActions!.splice(idx + 1, 0, item);
+      }
+      idx = idx + 1;
+    }
+  }
+
+  public closeMenu(group: IMenuAction) {
+  }
+
   private renderList() {
     if (this.renderedActions) {
+      this.listDiv!.replaceChildren();
       for (let a of this.renderedActions) {
-        a.destroyButton(this.listDiv!);
+        a.destroyButton();
       }
     }
 
     let actions = this.navStack[this.navStack.length - 1];
     for (let a of actions) {
-      a.renderButton(this.listDiv!, this.layer);
+      let elem = a.renderButton(this.layer);
+      this.listDiv!.appendChild(elem);
     }
     this.renderedActions = actions;
   }
@@ -179,11 +205,12 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
     this._commandList.pushActions(actions);
   }
 
-  public openActionGroup(group: IAction) {
-
+  public openMenu(group: IMenuAction) {
+    this._commandList.openMenu(group);
   }
-  public closeActionGroup(group: IAction) {
 
+  public closeMenu(group: IMenuAction) {
+    this._commandList.closeMenu(group);
   }
 
   private onCommandMain() {

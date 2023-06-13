@@ -17,6 +17,7 @@ export abstract class BasicAction implements IAction {
   public get name(): string { return this._name; }
   public get tags(): string[] { return this._tags; };
   private button: HTMLButtonElement | undefined;
+  get element(): HTMLElement | undefined { return this.button }
 
   public constructor(name: string, params: BasicActionParams) {
     this._name = name;
@@ -24,21 +25,22 @@ export abstract class BasicAction implements IAction {
     this.closePane = params.closePane ?? true;
   }
 
-  public renderButton(parent: HTMLElement, bar: ICommandLayer) {
-    this.button = createCommandButton(parent, this.name, () => {
+  public renderButton(bar: ICommandLayer): HTMLElement {
+    this.button = createCommandButton(this.name, () => {
       if (this.closePane) {
         bar.closeDetailsPane();
       }
       this.onClick(bar)
     });
+
+    return this.button;
   }
 
-  public destroyButton(parent: HTMLElement) {
+  public destroyButton() {
     if (this.button === undefined) {
       return;
     }
 
-    parent.removeChild(this.button);
     this.button = undefined;
   }
 
@@ -50,12 +52,12 @@ export abstract class BasicAction implements IAction {
   }
 }
 
-export class ActionGroup extends BasicAction {
+export class MenuAction extends BasicAction {
   private isExtended: boolean = false;
   private children: IAction[];
 
   public constructor(name: string, tags: string[], children: IAction[]) {
-    super(name, { tags: tags });
+    super('<' + name, { tags: tags });
     this.children = children;
   }
 
@@ -64,12 +66,12 @@ export class ActionGroup extends BasicAction {
   }
 
   protected onClick(bar: ICommandLayer) {
-    if (this.isExtended) {
+    if (!this.isExtended) {
       this.isExtended = true;
-      bar.openActionGroup(this);
+      bar.openMenu(this);
     } else {
       this.isExtended = false;
-      bar.closeActionGroup(this);
+      bar.closeMenu(this);
     }
   }
 }
@@ -86,10 +88,17 @@ export class FuncAction extends BasicAction {
     this._func(bar);
   }
 }
-
+/*
 export class MenuAction extends BasicAction {
+  private _actions: IAction[];
+
   public constructor(name: string, actions: IAction[]) {
     super(name, {});
-    //this._func = func;
+    this._actions = actions;
+  }
+
+  protected onClick(bar: ICommandLayer) {
+    this._func(bar);
   }
 }
+*/

@@ -1,17 +1,18 @@
 export interface IAction {
   get name(): string;
   get tags(): string[];
+  get element(): HTMLElement | undefined;
 
   /**
    * create button for an action and attach it to parent
    * this implies that action can be rendered once which is fine for now
    */
-  renderButton(parent: HTMLElement, bar: ICommandLayer);
+  renderButton(bar: ICommandLayer): HTMLElement;
 
   /**
    * destroy button from an action
    */
-  destroyButton(parent: HTMLElement);
+  destroyButton();
 
   /**
    * return child actions for this action
@@ -22,6 +23,10 @@ export interface IAction {
 export enum DetailsPaneKind {
   Partial,
   Full,
+}
+
+export interface IMenuAction extends IAction {
+  getChildActions(): Iterable<IAction>;
 }
 
 export interface ICommandLayer {
@@ -38,7 +43,7 @@ export interface ICommandLayer {
   closeDetailsPane(): void;
 
   pushActions(actions: IAction[]);
-  openActionGroup(group: IAction);
-  closeActionGroup(group: IAction);
+  openMenu(group: IAction);
+  closeMenu(group: IAction);
 }
 

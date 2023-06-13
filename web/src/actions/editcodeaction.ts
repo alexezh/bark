@@ -53,11 +53,11 @@ export class EditCodeAction extends BasicAction {
         new FuncAction('Paste', { closePane: false }, () => this.codeEditor!.pasteText()),
         new FuncAction('Delete', { closePane: false }, () => this.codeEditor!.deleteText()),
         new FuncAction('Edit Text', { closePane: false }, () => this.codeEditor!.editText()),
-        new MenuAction('Insert',
+        new MenuAction('Insert', ['edit'],
           [
             new FuncAction('Line Above', { closePane: false }, () => this.codeEditor!.addAbove()),
             new FuncAction('Line Below', { closePane: false }, () => this.codeEditor!.addBelow()),
-            new MenuAction('Events', makeAddAstActions(this.codeEditor!, eventTemplates())),
+            new MenuAction('Events', ['edit'], makeAddAstActions(this.codeEditor!, eventTemplates())),
             new AddAstAction(this.codeEditor!, { name: 'Variable', ast: varTemplateAst }),
             new AddAstAction(this.codeEditor!, { name: 'Function', ast: functionTemplateAst }),
             //            new MenuAction('Control', controlTemplates()),

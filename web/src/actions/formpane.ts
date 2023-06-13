@@ -42,6 +42,7 @@ export abstract class FormAction implements IAction {
   private propPage: HTMLDivElement | undefined;
   private _name: string;
   private _tags: string[];
+  get element(): HTMLElement | undefined { return this.button }
 
   get name(): string { return this._name }
   get tags(): string[] { return this._tags }
@@ -51,18 +52,18 @@ export abstract class FormAction implements IAction {
     this._tags = tags;
   }
 
-  renderButton(parent: HTMLElement, bar: ICommandLayer) {
-    this.button = createCommandButton(parent, this.name, () => {
+  renderButton(bar: ICommandLayer): HTMLElement {
+    this.button = createCommandButton(this.name, () => {
       this.onClick(bar)
     });
+    return this.button;
   }
 
-  destroyButton(parent: HTMLElement) {
+  destroyButton() {
     if (this.button === undefined) {
       return;
     }
 
-    parent.removeChild(this.button);
     this.button = undefined;
   }
 

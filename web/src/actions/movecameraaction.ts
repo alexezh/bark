@@ -1,7 +1,5 @@
-import { Vector3 } from "three";
 import { vm } from "../engine/ivm";
-import { createButton, createCommandButton, createNumberEntry, createTextEntry } from "../lib/htmlutils";
-import { IAction, ICommandLayer } from "./iaction"
+import { ICommandLayer } from "./iaction"
 import { BasicAction } from "./commandaction";
 import { FormAction, FormPane } from "./formpane";
 
