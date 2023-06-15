@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { AstNode, AstNodeKind, insertPlaceholderBefore } from "./ast";
+import { AstNode, AstNodeKind, getChildNodes, insertPlaceholderBefore } from "./ast";
 import { ParseError, ParseErrorCode } from "./parseerror";
 import { Token, TokenKind } from "./token";
 
@@ -22,6 +22,7 @@ export type TextStyle = {
   css?: string;
   insertAbove?: boolean;
   insertBelow?: boolean;
+  placeholder?: boolean;
 }
 
 export enum ChangeStatus {
@@ -89,7 +90,6 @@ export class TextSpan {
 
   public render(onClick: clickHandler): HTMLSpanElement | HTMLDivElement {
     let elem = document.createElement('span');
-    elem.id = this.id;
 
     if (this.style.spaceLeft) {
       let space = document.createElement('span');
@@ -98,10 +98,18 @@ export class TextSpan {
     }
 
     let t = document.createElement('span');
+    t.id = this.id;
     if (this.style.css) {
       t.className = this.style.css;
     }
-    t.textContent = this.data.value;
+
+    if (this.style.placeholder) {
+      // min width and style
+      t.textContent = ' ';
+    } else {
+      t.textContent = this.data.value;
+    }
+
     if (this.style.selectable === undefined || this.style.selectable) {
       t.addEventListener('click', (e) => onClick(this, e));
     }
@@ -273,6 +281,11 @@ export class TextBlock {
   public changeStatus: ChangeStatus = ChangeStatus.dirty;
   private margin: number = 0;
   public readonly children: (ATextSegment | TextBlock)[] = [];
+
+  /**
+   * set by individual components to render content
+   * same as virtual method
+   */
   public renderBlock?: () => void;
 
   public constructor(module: TextModule, parent: TextBlock | undefined, root: AstNode, style?: TextStyle) {
@@ -384,6 +397,17 @@ export class TextModule {
 
   public setNode(id: number, node: TextBlock | ATextSegment | TextSpan) {
     return this.nodes.set(id, node);
+  }
+
+  /**
+   * remove all nodes starting with ast
+   */
+  public removeNode(ast: AstNode) {
+    //return this.nodes.set(id, node);
+    this.nodes.delete(ast.id);
+    for (let child of getChildNodes(ast)) {
+      this.nodes.delete(child.id);
+    }
   }
 
   public setRoot(node: TextBlock) {

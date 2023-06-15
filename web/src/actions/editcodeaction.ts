@@ -18,7 +18,7 @@ export class AddAstAction extends BasicAction {
   private editor: CodeEditor;
 
   public constructor(editor: CodeEditor, t: AstTemplate) {
-    super(t.name, {})
+    super(t.name, { closePane: false })
     this.tmpl = t;
     this.editor = editor;
   }

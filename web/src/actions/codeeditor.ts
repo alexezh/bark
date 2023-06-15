@@ -87,10 +87,13 @@ export class CodeEditor {
 
     if (ast.kind === AstNodeKind.varDef) {
       this._module.vars.push(ast as VarDefNode);
+      this.updateNode(this._module);
     } else if (ast.kind === AstNodeKind.on) {
       this._module.on.push(ast as OnNode);
+      this.updateNode(this._module);
     } else if (ast.kind === AstNodeKind.funcDef) {
       this._module.funcs.push(ast as FuncDefNode);
+      this.updateNode(this._module);
     } else {
       if (!this._selectedNode) {
         console.warn('addTemplate: no selection')
@@ -106,6 +109,17 @@ export class CodeEditor {
 
     this._textEditActive = true;
     this._selectedElem.contentEditable = 'true';
+
+    let elem = this._selectedElem;
+    this._selectedElem.addEventListener('keydown', (event: Event) => {
+      let ke = event as KeyboardEvent;
+      if (ke.key === 'Enter') {
+        event.preventDefault();
+        this.onCompleteEdit();
+      }
+    });
+
+    this._selectedElem.enterKeyHint = "done";
     this._selectedElem.addEventListener('input', this.onTextInput.bind(this));
     this._selectedElem.focus();
   }
@@ -114,6 +128,28 @@ export class CodeEditor {
 
   }
 
+  private onCompleteEdit() {
+    if (!this._selectedNode || !this._selectedElem) {
+      return;
+    }
+
+    this._selectedElem.contentEditable = 'false';
+    this._textEditActive = false;
+
+    if (this._textDirty && this._selectedNode) {
+      let text = this._selectedElem?.innerText;
+      if (text) {
+        console.log('input: ' + text);
+        updateAst(this._selectedNode, text);
+      }
+      this._textDirty = false;
+    }
+  }
+
+  // we need to change this
+  // from ast, get node.. or parent
+  // re-render text if dirty
+  // 
   private updateNode(ast: AstNode) {
     if (!ast.id) {
       return;
@@ -173,17 +209,9 @@ export class CodeEditor {
 
   private selectNode(node: TextBlock | ATextSegment | TextSpan | undefined) {
     if (this._textEditActive) {
-      if (this._textDirty && this._selectedNode) {
-        let text = this._selectedElem?.innerText;
-        if (text) {
-          console.log('input: ' + text);
-          updateAst(this._selectedNode, text);
-        }
-        this._textDirty = false;
-      }
-
-      this._textEditActive = false;
+      this.onCompleteEdit();
     }
+
     if (this._selectedNode) {
       this._selectedElem!.style.border = '';
       this._selectedNode = undefined;

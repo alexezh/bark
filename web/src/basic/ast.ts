@@ -55,7 +55,10 @@ export function makeAstId(): number {
   return id;
 }
 
+//export let astTag = Symbol('AstNode');
+
 export type AstNode = {
+  //[astTag]?: boolean;
   kind: AstNodeKind;
   startToken: Token;
   id: number;
@@ -66,7 +69,7 @@ export type CommentNode = AstNode & {
   text?: string;
 }
 
-export type PlaceholderNode = AstNode & {
+export type LinePlaceholderNode = AstNode & {
   text?: string;
 }
 
@@ -207,46 +210,6 @@ export type WhileNode = StatementNode & {
   body: BlockNode
 }
 
-export function forEachChild(ast: AstNode, func: (ast: AstNode) => void) {
-  switch (ast.kind) {
-    case AstNodeKind.module:
-      (ast as ModuleNode).funcs.forEach(func);
-      break;
-    case AstNodeKind.funcDef:
-      let body = (ast as FuncDefNode).body;
-      if (body instanceof Function) {
-        ;
-      } else {
-        body.statements.forEach(func);
-      }
-      break;
-    case AstNodeKind.return:
-      break;
-    case AstNodeKind.assingment:
-      break;
-    case AstNodeKind.call:
-      break;
-    case AstNodeKind.op:
-      break;
-    case AstNodeKind.const:
-      break;
-    case AstNodeKind.id:
-      break;
-    case AstNodeKind.expression:
-      break;
-    case AstNodeKind.block:
-      break;
-    case AstNodeKind.if:
-      break;
-    case AstNodeKind.for:
-      break;
-    case AstNodeKind.foreach:
-      break;
-    case AstNodeKind.while:
-      break;
-  }
-}
-
 export function insertPlaceholderBefore(before: AstNode): AstNode {
   if (!before.parent) {
     throw new ParseError(ParseErrorCode.InvalidArg, undefined, 'Cannot get parent');
@@ -254,7 +217,7 @@ export function insertPlaceholderBefore(before: AstNode): AstNode {
 
   // we can only insert empty line if there is a block
   if (before.parent.kind === AstNodeKind.block) {
-    let ph: PlaceholderNode = {
+    let ph: LinePlaceholderNode = {
       kind: AstNodeKind.linePlaceholder,
       id: makeAstId(),
       startToken: Token.makeWs()
@@ -270,5 +233,25 @@ export function insertPlaceholderBefore(before: AstNode): AstNode {
     return ph;
   } else {
     return insertPlaceholderBefore(before.parent);
+  }
+}
+
+/**
+ * for now we are going to treat any object with .kind property as ast
+ * layer we can add symbol tag if needed
+ */
+export function* getChildNodes(ast: AstNode): Iterable<AstNode> {
+  for (let k in ast) {
+    let v = ast[k];
+    if (Array.isArray(v)) {
+      for (let cv of v) {
+        if (cv.kind !== undefined) {
+          yield cv as AstNode;
+        }
+      }
+    }
+    else if (v.kind !== undefined) {
+      yield v as AstNode;
+    }
   }
 }

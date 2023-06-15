@@ -57,7 +57,7 @@ export class MenuAction extends BasicAction {
   private children: IAction[];
 
   public constructor(name: string, tags: string[], children: IAction[]) {
-    super('<' + name, { tags: tags });
+    super('<' + name, { tags: tags, closePane: false });
     this.children = children;
   }
 

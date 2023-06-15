@@ -1,6 +1,7 @@
-import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForeachNode, ForNode, ForeverNode, FuncDefNode, IfNode, OnNode, ParamDefNode, ReturnNode, StatementNode, VarDefNode, WhileNode, ModuleNode, IdNode, AstErrorCode, AstError, ConstNode } from "./ast";
+import { AssingmentNode, AstNode, AstNodeKind, BlockNode, CallNode, ExpressionNode, ForeachNode, ForNode, ForeverNode, FuncDefNode, IfNode, OnNode, ParamDefNode, ReturnNode, StatementNode, VarDefNode, WhileNode, ModuleNode, IdNode, AstErrorCode, AstError, ConstNode, LinePlaceholderNode } from "./ast";
 import { ParseError, ParseErrorCode } from "./parseerror";
 import { ATextSegment, TextBlock, TextLine, TextModule, TextSpan } from "./textblock";
+import { TokenKind } from "./token";
 
 
 export function isParentNode(parent: TextBlock | ATextSegment | TextSpan, node: TextBlock | ATextSegment | TextSpan): boolean {
@@ -88,19 +89,23 @@ export function renderModule(ast: ModuleNode): TextModule {
   let tm = new TextModule();
   let modelBlock = new TextBlock(tm, undefined, ast);
   tm.setRoot(modelBlock);
-  let ctx: RenderCtx = { nodes: new Map<string, TextBlock | ATextSegment | TextSpan>() };
 
-  for (let v of ast.vars) {
-    renderNode(modelBlock, v);
-  }
+  modelBlock.renderBlock = () => {
+    let ctx: RenderCtx = { nodes: new Map<string, TextBlock | ATextSegment | TextSpan>() };
 
-  for (let on of ast.on) {
-    renderNode(modelBlock, on);
-  }
+    for (let v of ast.vars) {
+      renderNode(modelBlock, v);
+    }
 
-  for (let p of ast.funcs) {
-    renderNode(modelBlock, p);
-  }
+    for (let on of ast.on) {
+      renderNode(modelBlock, on);
+    }
+
+    for (let p of ast.funcs) {
+      renderNode(modelBlock, p);
+    }
+  };
+  modelBlock.renderBlock();
 
   return tm;
 }
@@ -187,7 +192,13 @@ function renderBlock(parentBlock: TextBlock, block: BlockNode | Function): TextB
 
 function renderVarDef(parentBlock: TextBlock, ast: VarDefNode): TextLine {
   let line = parentBlock.appendLine('var', ast, { css: 'code-var' });
-  line.appendToken(ast.name, {});
+
+  if (ast.name.kind === TokenKind.IdPlaceholder) {
+    line.appendToken(ast.name, { placeholder: true, css: 'code-idpl' });
+  } else {
+    line.appendToken(ast.name, {});
+  }
+
   if (ast.value) {
     line.appendConst(':=', { selectable: false });
     renderExpression(line, ast.value);
@@ -289,32 +300,44 @@ function renderForever(parentBlock: TextBlock, ast: ForeverNode): TextBlock {
 }
 
 function renderExpressionPart(line: ATextSegment, ast: AstNode, spaceLeft: boolean | undefined = undefined) {
-  if (ast.kind === AstNodeKind.id) {
-    line.appendToken((ast as IdNode).name, { spaceLeft: spaceLeft });
-  } else if (ast.kind === AstNodeKind.const) {
-    line.appendToken((ast as ConstNode).value, { spaceLeft: spaceLeft });
-  } else if (ast.kind === AstNodeKind.call) {
-    renderCall(line, ast as CallNode);
-  } else if (ast.kind === AstNodeKind.expression) {
-    renderExpression(line, ast as ExpressionNode);
-  } else {
-    throw new AstError(AstErrorCode.invalidNode, ast, 'Unsupported formatting code');
+  switch (ast.kind) {
+    case AstNodeKind.id:
+      line.appendToken((ast as IdNode).name, { spaceLeft: spaceLeft });
+      return;
+    case AstNodeKind.const:
+      line.appendToken((ast as ConstNode).value, { spaceLeft: spaceLeft });
+      return;
+    case AstNodeKind.call:
+      renderCall(line, ast as CallNode);
+      return;
+    case AstNodeKind.expression:
+      renderExpression(line, ast as ExpressionNode);
+      return;
+    default:
+      throw new AstError(AstErrorCode.invalidNode, ast, 'Unsupported formatting code');
   }
 }
 
 function renderExpression(line: ATextSegment, ast: ExpressionNode, spaceLeft: boolean | undefined = undefined) {
-  if (ast.left) {
-    renderExpressionPart(line, ast.left);
-  }
+  if (ast.kind === AstNodeKind.expressionPlaceholder) {
+    let idNode = ast.left as IdNode;
 
-  if (ast.op) {
-    line.appendToken(ast.op.op, { spaceLeft: spaceLeft });
-  }
+    line.appendToken(idNode.name, { spaceLeft: spaceLeft, placeholder: true, css: 'code-idpl' });
+  } else {
+    if (ast.left) {
+      renderExpressionPart(line, ast.left);
+    }
 
-  if (ast.right) {
-    renderExpressionPart(line, ast.right);
+    if (ast.op) {
+      line.appendToken(ast.op.op, { spaceLeft: spaceLeft });
+    }
+
+    if (ast.right) {
+      renderExpressionPart(line, ast.right);
+    }
   }
 }
+
 function renderBreak(parentBlock: TextBlock, ast: AstNode): TextLine {
   return parentBlock.appendLine('break', ast, {});
 }
