@@ -31,7 +31,7 @@ type CollisionWaiter = {
   targets: IRigitBody[];
 }
 
-export class NotRunningError {
+export class NotRunningError extends Error {
 
 }
 
@@ -201,7 +201,6 @@ export class VM implements IVM {
     rm: IRigitModel | undefined = undefined,
     rigitKind?: RigitBodyKind): Promise<Sprite3> {
 
-    this.checkRunning();
     let s = new Sprite3(name, rm, rigitKind);
     await s.load(uri);
 
@@ -212,7 +211,6 @@ export class VM implements IVM {
   }
 
   public async removeSprite(sprite: Sprite3) {
-    this.checkRunning();
     this._sprites.delete(sprite.id);
     sprite.removeFromScene(this._camera!.scene!);
   }

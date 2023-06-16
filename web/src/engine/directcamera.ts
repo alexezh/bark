@@ -1,5 +1,5 @@
 import { Group, PerspectiveCamera, Vector3 } from "three";
-import { ITrackingCamera, TrackingCameraKind } from "./sprite3";
+import { ITrackingCamera } from "./sprite3";
 
 export class DirectCamera implements ITrackingCamera {
   private camera!: PerspectiveCamera;
@@ -20,8 +20,6 @@ export class DirectCamera implements ITrackingCamera {
     //this.cameraGroup.position.set(100, 200, 100 + 100 * Math.tan(angleZ));
     (this.camera as PerspectiveCamera).updateProjectionMatrix();
   }
-
-  get cemraKind(): TrackingCameraKind { return TrackingCameraKind.Direct; }
 
   dispose() {
   }

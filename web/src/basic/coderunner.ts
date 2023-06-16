@@ -31,7 +31,7 @@ export class CodeRunner implements ICodeRunner {
       }
     }
     catch (e) {
-      console.log('Cannot load. Exception: ' + (e as any).toString())
+      console.log('Cannot load. Exception: ' + (<Error>e).message)
     }
   }
 

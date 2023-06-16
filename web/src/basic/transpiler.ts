@@ -19,6 +19,10 @@ export function transpile(mainFunction: string | undefined, loader: ICodeLoader)
       writer.append(`let ${module.name} = __loader.getModule(\'${module.name}\');`);
     }
 
+    for (let v of loader.vars()) {
+      processVarDef(v, writer);
+    }
+
     for (let n of loader.userOns()) {
       processOn(n, writer);
     }

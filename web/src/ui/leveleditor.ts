@@ -1,13 +1,11 @@
 import _ from "lodash";
 import { BufferGeometry, Line, LineBasicMaterial, Raycaster, Vector3 } from "three";
 import { ILevelEditor as ILevelEditor } from "./ileveleditor";
-import { KeyBinder, MEvent } from "./keybinder";
+import { KeyBinder } from "./keybinder";
 import { IVoxelLevel, MapBlockCoord } from "./ivoxellevel";
 import { BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { ICameraLayer } from "../engine/icameralayer";
 import { VoxelModel } from "../voxel/voxelmodel";
-import { OrbitControls } from "./orbitccntrols";
-import { FirstPersonControls } from "./firstpersoncontrols";
 import { PointerLockControls } from "./pointerlockcontrols";
 
 export interface IMapEditorHost {
@@ -46,7 +44,7 @@ export class LevelEditor implements ILevelEditor {
       this.orbitControls.lock();
     });
 
-    this.orbitControls = new PointerLockControls(this.camera._camera, this.camera.canvas);
+    this.orbitControls = new PointerLockControls(this.camera.camera, this.camera.canvas);
 
     // @ts-ignore
     //this.orbitControls.update();
@@ -66,7 +64,7 @@ export class LevelEditor implements ILevelEditor {
       }
 
       let raycaster = new Raycaster();
-      raycaster.setFromCamera(coords, this.camera._camera);
+      raycaster.setFromCamera(coords, this.camera.camera);
 
       var intersects = raycaster.intersectObjects(this.camera.scene!.children, false);
 
