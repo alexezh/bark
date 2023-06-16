@@ -67,7 +67,7 @@ export class CodeEditor {
     if (!lineAst) {
       return;
     }
-    this.renderNode(lineAst.parent!);
+    this.renderNode(this._textModule!.root!, lineAst.parent!);
 
     let line = this._textModule?.getNodeById(lineAst.id!);
     this.selectNode(line);
@@ -87,13 +87,13 @@ export class CodeEditor {
 
     if (ast.kind === AstNodeKind.varDef) {
       this._module.vars.push(ast as VarDefNode);
-      this.renderNode(this._module);
+      this.renderNode(this._textModule!.root!, this._module);
     } else if (ast.kind === AstNodeKind.on) {
       this._module.on.push(ast as OnNode);
-      this.renderNode(this._module);
+      this.renderNode(this._textModule!.root!, this._module);
     } else if (ast.kind === AstNodeKind.funcDef) {
       this._module.funcs.push(ast as FuncDefNode);
-      this.renderNode(this._module);
+      this.renderNode(this._textModule!.root!, this._module);
     } else {
       if (!this._selectedNode) {
         console.warn('addTemplate: no selection')
@@ -115,7 +115,7 @@ export class CodeEditor {
       let ke = event as KeyboardEvent;
       if (ke.key === 'Enter') {
         event.preventDefault();
-        this.onCompleteEdit();
+        this.onEditTextCompleted();
       }
     });
 
@@ -128,7 +128,7 @@ export class CodeEditor {
 
   }
 
-  private onCompleteEdit() {
+  private onEditTextCompleted() {
     if (!this._selectedNode || !this._selectedElem) {
       return;
     }
@@ -163,7 +163,7 @@ export class CodeEditor {
   // from ast, get node.. or parent
   // re-render text if dirty
   // 
-  private renderNode(seg: ATextSegment, ast: AstNode) {
+  private renderNode(text: ATextSegment | TextBlock, ast: AstNode) {
     if (!ast.id) {
       return;
     }
@@ -222,7 +222,7 @@ export class CodeEditor {
 
   private selectNode(node: TextBlock | ATextSegment | TextSpan | undefined) {
     if (this._textEditActive) {
-      this.onCompleteEdit();
+      this.onEditTextCompleted();
     }
 
     if (this._selectedNode) {

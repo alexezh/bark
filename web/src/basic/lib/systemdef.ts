@@ -53,10 +53,6 @@ async function sendMessage(address: string, text: string): Promise<void> {
   vm.sendMesssage(address, text);
 }
 
-function setThirdPersonCamera(sprite: Sprite3, x: number, y: number, z: number): void {
-  vm.camera.setThirdPersonCamera(sprite, new Vector3(x, y, z));
-}
-
 export function createSystemModule(): ModuleNode {
 
   let module = createModuleNode('System');
@@ -71,7 +67,6 @@ export function createSystemModule(): ModuleNode {
   module.funcs.push(addSystemFunc(module, 'loadLevel', ['name:string'], 'void', true, loadLevel));
   module.funcs.push(addSystemFunc(module, 'deleteBlock', ['block:Block'], 'void', false, deleteBlock));
   module.funcs.push(addSystemFunc(module, 'createExplosion', ['x: number', 'y: number', 'z: number'], 'void', false, createExplosion));
-  module.funcs.push(addSystemFunc(module, 'setThirdPersonCamera', ['sprite: Sprite', 'x: number', 'y: number', 'z:number'], 'void', false, setThirdPersonCamera));
 
   return module;
 }

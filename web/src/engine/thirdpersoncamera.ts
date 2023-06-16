@@ -1,10 +1,10 @@
 import { Group, PerspectiveCamera, Vector3 } from "three";
-import { ITrackingCamera, Sprite3, TrackingCameraKind } from "./sprite3";
+import { ITrackingCamera, Sprite3 } from "./sprite3";
 
 /**
  * updates camera position based on sprite position? 
  */
-export class ThirtPersonCamera implements ITrackingCamera {
+export class ThirdPersonCamera implements ITrackingCamera {
   private camera!: PerspectiveCamera;
   private cameraGroup!: Group;
   private sprite: Sprite3;
@@ -30,8 +30,6 @@ export class ThirtPersonCamera implements ITrackingCamera {
     this.updateCameraPos();
     this.sprite.setTrackingCamera(this);
   }
-
-  get cemraKind(): TrackingCameraKind { return TrackingCameraKind.ThirdPerson; }
 
   dispose() {
     this.sprite.setTrackingCamera(undefined);

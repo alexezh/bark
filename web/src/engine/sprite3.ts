@@ -4,14 +4,7 @@ import { IRigitModel } from "./irigitmodel";
 import { CubeModel } from "./avatars/cubemodel";
 import { IRigitBody, RigitAABB, RigitBodyKind } from "../voxel/irigitbody";
 
-export enum TrackingCameraKind {
-  Direct,
-  FirstPerson,
-  ThirdPerson,
-}
-
 export interface ITrackingCamera {
-  get cemraKind(): TrackingCameraKind;
   onTargetMove(pos: Vector3): void;
   onTargetSpeed(pos: Vector3): void;
   onTargetDirectionXZ(angle: number): void;

@@ -103,14 +103,15 @@ export function boxedGame() {
 
 export function boxedBasic(): string {
   return `
+    var monky;
     on load() begin
       System.loadLevel 'default'
 
+      monky:= System.createMammal4Sprite 'monky' 'vox/monky.vox' scale:=0.6
       ThirdPersonController.activate maxSpeed:=40 keySpeedX:=10 keySpeedZ:=10 thumbSpeedX:=10 thumbSpeedZ:=10 timeoutSeconds:=0.1
     end
 
     on start() begin
-      var monky:= System.createMammal4Sprite 'monky' 'vox/monky.vox' scale:=0.6
       Sprite.setPosition monky 120 20 120
 
       var ma:= Sprite.addAnimation monky 'move'
@@ -168,17 +169,19 @@ export function boxedBasic(): string {
 
 export function boxedBasic2(): string {
   return `
-    on load function() begin
+  var monky;
+
+  on load function() begin
       System.loadLevel 'default'
 
-      ThirdPersonController.activate maxSpeed:=40 keySpeed:=10 thumbSpeed:=10 timeoutSeconds:=0.1
-    end
-
-    var monky;
-
-    on start function() begin
       monky:= Sprite.createCubeSprite 'monky' 'vox/monky.vox' scale:=0.5
       Sprite.setPosition monky 120 20 120
+
+      ThirdPersonController.activate maxSpeed:=40 keySpeed:=10 thumbSpeed:=10 timeoutSeconds:=0.1
+      ThirdPersonController.followSprite monky x:=100 y:=50 z:=0
+    end
+
+    on start function() begin
 
       var ma:= Sprite.addAnimation monky 'move'
       Sprite.addFrame ma idx:= 1 dur:=0.1 
@@ -186,8 +189,6 @@ export function boxedBasic2(): string {
   
       ma:= Sprite.addAnimation monky 'stand'
       Sprite.addFrame ma idx:= 0 dur:=0
-
-      System.setThirdPersonCamera monky x:=100 y:=50 z:=0
 
       System.log 'send start message'
       System.sendMessage 'startMonky' monky

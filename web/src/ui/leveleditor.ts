@@ -46,7 +46,7 @@ export class LevelEditor implements ILevelEditor {
       this.orbitControls.lock();
     });
 
-    this.orbitControls = new PointerLockControls(this.camera.camera, this.camera.canvas);
+    this.orbitControls = new PointerLockControls(this.camera._camera, this.camera.canvas);
 
     // @ts-ignore
     //this.orbitControls.update();
@@ -66,7 +66,7 @@ export class LevelEditor implements ILevelEditor {
       }
 
       let raycaster = new Raycaster();
-      raycaster.setFromCamera(coords, this.camera.camera);
+      raycaster.setFromCamera(coords, this.camera._camera);
 
       var intersects = raycaster.intersectObjects(this.camera.scene!.children, false);
 

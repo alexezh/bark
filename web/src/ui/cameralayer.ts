@@ -7,8 +7,8 @@ import { VRButton } from "./vrbutton";
 import SyncEventSource from "../lib/synceventsource";
 import { ILevelEditor } from "./ileveleditor";
 import { PxSize } from "../lib/pos";
-import { ITrackingCamera, Sprite3, TrackingCameraKind } from "../engine/sprite3";
-import { ThirtPersonCamera } from "../engine/thirdpersoncamera";
+import { Sprite3 } from "../engine/sprite3";
+import { ThirdPersonCamera } from "../engine/thirdpersoncamera";
 import { DirectCamera } from "../engine/directcamera";
 //import { VRButton } from 'three/addons/webxr/VRButton';
 
@@ -18,8 +18,8 @@ export type CameraLayerProps = UiLayerProps & {
 
 export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLayer {
     public renderer!: WebGLRenderer;
-    public camera!: PerspectiveCamera;
-    public cameraGroup!: Group;
+    public _camera!: PerspectiveCamera;
+    public _cameraGroup!: Group;
     public scene: Scene | undefined;
     //private input!: KeyBinder;
 
@@ -31,7 +31,6 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     private isDown: boolean = false;
     private vrButton!: VRButton;
     private xrSessionChangedSource = new SyncEventSource<XRSession | undefined>();
-    private trackingCamera: ITrackingCamera | undefined;
 
     // Particle stuff.
     public chunk_material = new MeshPhongMaterial({ vertexColors: true, wireframe: false });
@@ -79,8 +78,10 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     };
 
     public get canvas(): HTMLDivElement { return this.element as HTMLDivElement; }
-    public get position(): Vector3 { return this.cameraGroup.position }
-    public set position(pos: Vector3) { this.cameraGroup.position.copy(pos); }
+    public get position(): Vector3 { return this._cameraGroup.position }
+    public get camera(): PerspectiveCamera { return this._camera }
+    public get cameraGroup(): Group { return this._cameraGroup }
+    public set position(pos: Vector3) { this._cameraGroup.position.copy(pos); }
     public get viewSize(): PxSize { return { w: this.props.w, h: this.props.h } }
 
     public createScene() {
@@ -101,23 +102,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         this.scene.add(controller2);
 
         // add camera to group for UI
-        this.scene.add(this.cameraGroup);
-    }
-
-    public setThirdPersonCamera(sprite: Sprite3, cameraOffset: Vector3): void {
-        this.trackingCamera?.dispose();
-        this.trackingCamera = undefined;
-        this.trackingCamera = new ThirtPersonCamera(sprite, cameraOffset, this.camera, this.cameraGroup);
-    }
-
-    public setDirectCamera(): void {
-        if (this.trackingCamera instanceof DirectCamera) {
-            return;
-        }
-
-        this.trackingCamera?.dispose();
-        this.trackingCamera = undefined;
-        this.trackingCamera = new DirectCamera(this.camera, this.cameraGroup);
+        this.scene.add(this._cameraGroup);
     }
 
     public registerXrSessionHandler(target: any, func: (session: XRSession | undefined) => void): void {
@@ -136,14 +121,12 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     }
 
     private createCamera(w: number, h: number) {
-        this.camera = new PerspectiveCamera(70, w / h, 1, this.visible_distance);
+        this._camera = new PerspectiveCamera(70, w / h, 1, this.visible_distance);
         //this.camera.up.set(0, 0, 1);
-        this.camera.layers.enable(1);
+        this._camera.layers.enable(1);
 
-        this.cameraGroup = new Group();
-        this.cameraGroup.add(this.camera);
-
-        this.trackingCamera = new DirectCamera(this.camera, this.cameraGroup);
+        this._cameraGroup = new Group();
+        this._cameraGroup.add(this._camera);
     }
 
     /**
@@ -163,8 +146,8 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     };
 
     public onWindowResize() {
-        (this.camera as PerspectiveCamera).aspect = window.innerWidth / window.innerHeight;
-        (this.camera as PerspectiveCamera).updateProjectionMatrix();
+        (this._camera as PerspectiveCamera).aspect = window.innerWidth / window.innerHeight;
+        (this._camera as PerspectiveCamera).updateProjectionMatrix();
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     };
@@ -181,7 +164,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         }
 
         vm.onRenderFrame();
-        this.renderer.render(this.scene, this.camera);
+        this.renderer.render(this.scene, this._camera);
     };
 }
 

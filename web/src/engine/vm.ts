@@ -164,7 +164,6 @@ export class VM implements IVM {
     animator.stop();
     this.inputController?.stop();
     this.clock.stop();
-    this.camera.setDirectCamera();
     this._running = false;
   }
 

@@ -1,9 +1,12 @@
+import { Group, PerspectiveCamera, Vector3 } from "three";
 import { ModuleNode } from "../basic/ast";
 import { addSystemFunc, addSystemType, createModuleNode } from "../basic/lib/systemfunc";
 import { KeyBinder } from "../ui/keybinder";
 import { PointerLockControls } from "../ui/pointerlockcontrols";
 import { IGamePhysicsInputController } from "./igamephysics";
 import { IInputController, vm } from "./ivm";
+import { ITrackingCamera, Sprite3 } from "./sprite3";
+import { ThirdPersonCamera } from "./thirdpersoncamera";
 
 export class ThirdPersonControllerMoveEvent {
   public readonly speedX: number;
@@ -40,6 +43,9 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
   private speedX: number = 0;
   private speedZ: number = 0;
   private pointer: PointerLockControls;
+  private sprite: Sprite3 | undefined;
+  private spriteOffset: Vector3 | undefined;
+  private trackingCamera: ThirdPersonCamera | undefined;
 
   public constructor(config: ThirdPersonControllerConfig) {
     this.config = config;
@@ -64,6 +70,11 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
       throw new Error('already started');
     }
 
+    if (!this.sprite) {
+      throw new Error('followSprite not called')
+    }
+
+    this.trackingCamera = new ThirdPersonCamera(this.sprite, this.spriteOffset!, vm.camera.camera, vm.camera.cameraGroup);
     this.started = true;
     this.input.attach();
     this.pointer.connect();
@@ -77,6 +88,12 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
     this.started = false;
     this.input.detach();
     this.pointer.disconnect();
+    this.trackingCamera?.dispose();
+  }
+
+  public followSprite(sprite: Sprite3, offset: Vector3) {
+    this.sprite = sprite;
+    this.spriteOffset = offset;
   }
 
   private onXrInputChanged() {
@@ -245,10 +262,15 @@ function readInput(): Promise<ThirdPersonControllerMoveEvent | undefined> {
   return controller.readInput();
 }
 
+function followSprite(sprite: Sprite3, x: number, y: number, z: number): void {
+  controller?.followSprite(sprite, new Vector3(x, y, z));
+}
+
 export function createThirdPersonControllerModule(): ModuleNode {
 
   let module = createModuleNode('ThirdPersonController');
 
+  module.funcs.push(addSystemFunc(module, 'followSprite', ['sprite: Sprite', 'x: number', 'y: number', 'z:number'], 'void', false, followSprite));
   module.funcs.push(addSystemFunc(module, 'readInput', [], 'void', true, readInput));
   module.funcs.push(addSystemFunc(module, 'activate', [
     'maxSpeed:number',
