@@ -152,7 +152,7 @@ export class CodeEditor {
       let text = astDom.innerText;
       if (text) {
         console.log('input: ' + text);
-        let ast2 = updateAst(astSeg.ast!, text);
+        let ast2 = updateAst(astSeg.ast!, text, vm.loader);
         this.renderNode(ast2!);
       }
       this._textDirty = false;

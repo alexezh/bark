@@ -1,4 +1,4 @@
-import { ICodeLoader, IVMCodeRunner } from "../engine/ivm";
+import { ICodeLoader, ICodeRunner } from "../engine/ivm";
 import { AstNode, AstNodeKind, FuncDefNode, ModuleNode, OnNode, VarDefNode } from "./ast";
 import { parseModule } from "./basic";
 import { BasicParser } from "./basicparser";

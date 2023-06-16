@@ -1,3 +1,4 @@
+import { ICodeLoader } from "../engine/ivm";
 import { AstNode, AstNodeKind, getModule, replaceNode } from "./ast";
 import { parseFuncDef, parseOnDef, parseStatement, parseVarDef } from "./basic";
 import { BasicParser } from "./basicparser";
@@ -9,7 +10,7 @@ import { ATextSegment, TextBlock, TextSpan } from "./textblock";
 /**
  * update ast to include text
  */
-export function updateAst(ast: AstNode, text: string): AstNode | undefined {
+export function updateAst(ast: AstNode, text: string, loader: ICodeLoader): AstNode | undefined {
   let parent = ast.parent;
 
   if (ast.kind === AstNodeKind.linePlaceholder) {
@@ -55,7 +56,7 @@ function buildAst(ast: AstNode, text: string): AstNode {
       parser.read();
       let statement = parseStatement(parser.token, parser);
       if (!statement) {
-        return;
+        throw new ParseError(ParseErrorCode.InvalidArg, undefined, 'unconnected node');
       }
       return statement;
   }

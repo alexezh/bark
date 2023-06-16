@@ -6,7 +6,7 @@ import { FrameClock } from "./clock";
 import { VoxelLevel } from "./voxellevel";
 import { GamePhysics } from "./gamephysics";
 import { IGamePhysics } from "./igamephysics";
-import { ICodeLoader, IInputController, IVM, IVMCodeRunner, setVM } from "./ivm";
+import { ICodeLoader, IInputController, IVM, ICodeRunner, setVM } from "./ivm";
 import { Sprite3 } from "./sprite3";
 import { Ticker } from "./ticker";
 import { IRigitModel } from "./irigitmodel";
@@ -14,10 +14,9 @@ import { ParticlePool } from "../voxel/particles";
 import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxellevel";
 import { VoxelLevelFile } from "./voxellevelfile";
 import { LevelEditor } from "../ui/leveleditor";
-import { boxedBasic, boxedBasic2 } from "../python";
+import { boxedBasic2 } from "../python";
 import { WireProjectConfig, wireGetObject } from "../lib/fetchadapter";
 import { modelCache } from "../voxel/voxelmodelcache";
-import { MessageHandler } from "../basic/coderunner";
 import { CodeLoader } from "../basic/codeloader";
 import { CodeRunner } from "../basic/coderunner";
 import { registerSystemModules } from "../basic/lib/all";
@@ -85,7 +84,7 @@ export class VM implements IVM {
   }
 
   public get loader(): ICodeLoader { return this._loader; }
-  public get runner(): IVMCodeRunner { return this._runner; }
+  public get runner(): ICodeRunner { return this._runner; }
 
   public attachCamera(camera: ICameraLayer) {
     this._camera = camera;

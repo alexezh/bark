@@ -35,7 +35,7 @@ export interface ICodeLoader {
   getFunction(): Function;
 }
 
-export interface IVMCodeRunner {
+export interface ICodeRunner {
   sendMesssage(address: string, msg: any): Promise<void>;
   onLoad(func: () => Promise<void>);
   onStart(func: () => Promise<void>);
@@ -50,7 +50,7 @@ export interface IVM {
   get levelFile(): IVoxelLevelFile;
   get camera(): ICameraLayer;
   get loader(): ICodeLoader;
-  get runner(): IVMCodeRunner;
+  get runner(): ICodeRunner;
   get levelEditor(): ILevelEditor | undefined;
 
   attachCamera(camera: ICameraLayer): void;

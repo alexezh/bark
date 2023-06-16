@@ -1,5 +1,4 @@
-import { ICodeLoader, IVMCodeRunner } from "../engine/ivm";
-import { ModuleNode } from "./ast";
+import { ICodeLoader, ICodeRunner as ICodeRunner } from "../engine/ivm";
 
 export type MessageHandler = (...args: any[]) => Promise<void>;
 export type StartHandler = () => Promise<void>;
@@ -7,12 +6,9 @@ export type LoadHandler = () => Promise<void>;
 
 export type RuntimeModule = { [key: string]: Function };
 
-export class CodeRunner implements IVMCodeRunner {
+export class CodeRunner implements ICodeRunner {
   private readonly _startHandlers: StartHandler[] = [];
   private readonly _loadHandlers: StartHandler[] = [];
-
-  private readonly _systemModules: Map<string, ModuleNode> = new Map<string, ModuleNode>();
-  private readonly _userModules: Map<string, ModuleNode> = new Map<string, ModuleNode>();
 
   // we are going to copy/write of handler array
   // so it is safe to enumerate even if handler changes it
