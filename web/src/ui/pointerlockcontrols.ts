@@ -16,6 +16,8 @@ const _PI_2 = Math.PI / 2;
 
 class PointerLockControls extends EventDispatcher {
 
+  public isLocked: boolean;
+
   constructor(camera, domElement) {
 
     super();

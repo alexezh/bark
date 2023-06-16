@@ -40,23 +40,21 @@ export class LevelEditor implements ILevelEditor {
     this.input.registerKeyUp('KeyV', this.pasteBlock.bind(this));
     this.input.registerKeyUp('KeyX', this.clearBlock.bind(this));
 
-    this.camera.canvas.addEventListener('mousedown', () => {
-      this.orbitControls.lock();
-    });
+    _.bindAll(this, ['onMouseDown', 'onMouseUp']);
+
+    this.camera.canvas.addEventListener('mousedown', this.onMouseDown);
+    this.camera.canvas.addEventListener('mouseup', this.onMouseUp);
 
     this.orbitControls = new PointerLockControls(this.camera.camera, this.camera.canvas);
-
-    // @ts-ignore
-    //this.orbitControls.update();
   }
 
   public dispose() {
     this.input.detach();
   }
 
-  public onMouseDown(evt: MouseEvent): boolean {
+  private onMouseDown(evt: MouseEvent): boolean {
     if (evt.shiftKey) {
-      // 
+      this.orbitControls.lock();
     } else {
       let coords = {
         x: (evt.x / this.camera.viewSize.w) * 2 - 1,
@@ -75,29 +73,33 @@ export class LevelEditor implements ILevelEditor {
     return true;
   };
 
-  public onMouseUp(evt: MouseEvent): boolean {
-    this.isDown = false;
-    //let evt = makeMEvent(htmlEvt, undefined, this.props.scale);
+  private onMouseUp(evt: MouseEvent): boolean {
+    if (this.orbitControls.isLocked) {
+      this.orbitControls.unlock();
+    } else {
+      this.isDown = false;
+      //let evt = makeMEvent(htmlEvt, undefined, this.props.scale);
 
-    /*
-    let coords = {
-        x: (evt.clientX / window.innerWidth) * 2 - 1,
-        y: -(evt.clientY / window.innerHeight) * 2 + 1
+      /*
+      let coords = {
+          x: (evt.clientX / window.innerWidth) * 2 - 1,
+          y: -(evt.clientY / window.innerHeight) * 2 + 1
+      }
+  
+      let raycaster = new Raycaster();
+      raycaster.setFromCamera(coords, this.camera);
+  
+      var intersects = raycaster.intersectObjects(this.scene.children, false);
+  
+      if (intersects.length > 0) {
+          var object = intersects[0].object;
+          // @ts-ignore
+          object.material.color.set(Math.random() * 0xffffff);
+          this.selected = object;
+          //object.geometry.setAttribute('color', Math.random() * 0xffffff);
+      }
+      */
     }
-
-    let raycaster = new Raycaster();
-    raycaster.setFromCamera(coords, this.camera);
-
-    var intersects = raycaster.intersectObjects(this.scene.children, false);
-
-    if (intersects.length > 0) {
-        var object = intersects[0].object;
-        // @ts-ignore
-        object.material.color.set(Math.random() * 0xffffff);
-        this.selected = object;
-        //object.geometry.setAttribute('color', Math.random() * 0xffffff);
-    }
-    */
     return true;
   };
 
