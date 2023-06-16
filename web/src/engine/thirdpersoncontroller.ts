@@ -1,6 +1,7 @@
 import { ModuleNode } from "../basic/ast";
 import { addSystemFunc, addSystemType, createModuleNode } from "../basic/lib/systemfunc";
 import { KeyBinder } from "../ui/keybinder";
+import { PointerLockControls } from "../ui/pointerlockcontrols";
 import { IGamePhysicsInputController } from "./igamephysics";
 import { IInputController, vm } from "./ivm";
 
@@ -38,12 +39,14 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
   private angleXZ: number = 0;
   private speedX: number = 0;
   private speedZ: number = 0;
+  private pointer: PointerLockControls;
 
   public constructor(config: ThirdPersonControllerConfig) {
     this.config = config;
     this.timeoutMilliseconds = config.timeoutSeconds * 1000;
     // create detached key binder
     this.input = new KeyBinder(vm.camera.canvas, undefined, false);
+    this.pointer = new PointerLockControls(vm.camera.camera, vm.camera.canvas);
     this.lastTick = performance.now();
   }
 
@@ -63,6 +66,7 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
 
     this.started = true;
     this.input.attach();
+    this.pointer.connect();
   }
 
   stop() {
@@ -72,6 +76,7 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
 
     this.started = false;
     this.input.detach();
+    this.pointer.disconnect();
   }
 
   private onXrInputChanged() {

@@ -1,6 +1,9 @@
 import { Group, PerspectiveCamera, Vector3 } from "three";
 import { ITrackingCamera, Sprite3, TrackingCameraKind } from "./sprite3";
 
+/**
+ * updates camera position based on sprite position? 
+ */
 export class ThirtPersonCamera implements ITrackingCamera {
   private camera!: PerspectiveCamera;
   private cameraGroup!: Group;
@@ -13,7 +16,9 @@ export class ThirtPersonCamera implements ITrackingCamera {
    */
   private angleXZ: number = 0;
 
-  // offset related to sprite direction; such as x, y, 0 means camera behind by X units
+  /**
+   * offset related to sprite direction; such as x, y, 0 means camera behind by X units
+   */
   public constructor(sprite: Sprite3, cameraOffset: Vector3, camera: PerspectiveCamera, cameraGroup: Group) {
     this.camera = camera;
     this.cameraGroup = cameraGroup;

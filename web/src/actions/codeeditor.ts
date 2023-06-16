@@ -153,7 +153,7 @@ export class CodeEditor {
       if (text) {
         console.log('input: ' + text);
         let ast2 = updateAst(astSeg.ast!, text, vm.loader);
-        this.renderNode(ast2!);
+        this.renderNode(astSeg, ast2!);
       }
       this._textDirty = false;
     }
@@ -163,14 +163,14 @@ export class CodeEditor {
   // from ast, get node.. or parent
   // re-render text if dirty
   // 
-  private renderNode(ast: AstNode) {
+  private renderNode(seg: ATextSegment, ast: AstNode) {
     if (!ast.id) {
       return;
     }
 
     let node = this._textModule?.getNodeById(ast.id);
     if (!node) {
-      console.warn('updateNode: cannot fine node:' + ast.id);
+      console.warn('updateNode: cannot find node:' + ast.id);
       return;
     }
 
@@ -189,7 +189,7 @@ export class CodeEditor {
 
     let domNode = document.getElementById(node.id);
     if (!domNode) {
-      console.warn('updateNode: cannot fine dom node:' + ast.id);
+      console.warn('updateNode: cannot find dom node:' + ast.id);
       return;
     }
 

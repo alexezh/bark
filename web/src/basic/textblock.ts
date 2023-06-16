@@ -42,6 +42,7 @@ function updateHtmlTree(nodes: (TextBlock | ATextSegment | TextSpan)[], parentHt
     let child = nodes[iNode];
     let domChild = parentHtml.childNodes.item(iDomNode) as (HTMLDivElement | HTMLSpanElement);
     if (child.changeStatus === ChangeStatus.dirty) {
+      console.log('updateHtmlTree: node ' + child.id);
       domNodes.push(child.render(onClick));
 
       // if ID is the same, we are updating child node
