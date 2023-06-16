@@ -111,7 +111,10 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
     }
 
     this.lastTick = now;
+    return this.computeEvent();
+  }
 
+  private computeEvent(): ThirdPersonControllerMoveEvent {
     let x: number = 0;
     let z: number = 0;
 
@@ -219,6 +222,21 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
   }
 
   public update(tick: number) {
+    if (!this.started) {
+      return undefined;
+    }
+    this.lastTick = tick;
+    let e = this.computeEvent();
+
+    if (this.sprite!.standing) {
+      this.sprite!.setRelativeSpeed(new Vector3(e.speedX, 0, e.speedZ));
+    } else {
+      this.sprite!.setRelativeSpeed(new Vector3(0, 0, 0));
+    }
+
+    let angleXZ = Math.PI * e.angleXZ / 180;
+
+    this.sprite?.setDirectionXZ(angleXZ);
   }
 
   private attachGamepad() {
