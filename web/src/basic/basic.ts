@@ -371,7 +371,7 @@ function parseBlock(parser: BasicParser, startTokenKind: TokenKind, endTokens: T
 //
 // some rules (such as assign) support single line
 // other rules are more flexible
-function parseStatement(token: Token, parser: BasicParser): StatementNode | undefined {
+export function parseStatement(token: Token, parser: BasicParser): StatementNode | undefined {
   try {
     parser.pushContext('statement');
     parser.setEndRule([TokenKind.Semi]);

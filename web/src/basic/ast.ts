@@ -255,3 +255,53 @@ export function* getChildNodes(ast: AstNode): Iterable<AstNode> {
     }
   }
 }
+
+/**
+ * for now we are going to treat any object with .kind property as ast
+ * layer we can add symbol tag if needed
+ */
+export function getModule(ast: AstNode): ModuleNode | undefined {
+
+  while (true) {
+    if (ast.kind === AstNodeKind.module) {
+      return (ast as ModuleNode);
+    }
+    if (!ast.parent) {
+      return undefined;
+    }
+    ast = ast.parent;
+  }
+}
+
+/**
+ * replace node with new node by scanning parent node
+ */
+export function replaceNode(cur: AstNode, upd: AstNode) {
+  let parent = cur.parent;
+  if (!parent) {
+    throw new ParseError(ParseErrorCode.InvalidArg, undefined, 'Unconnected node');
+  }
+
+  for (let k in parent) {
+    let field = parent[k];
+    if (Array.isArray(field)) {
+      for (let i = 0; i < field.length; i++) {
+        let arrVal = field[i];
+        if (arrVal.kind !== undefined) {
+          let arrValAst = arrVal as AstNode;
+          if (arrValAst.id === cur.id) {
+            field[i] = upd;
+            return;
+          }
+        }
+      }
+    }
+    else if (field.kind !== undefined) {
+      let fieldAst = field as AstNode;
+      if (fieldAst.id === cur.id) {
+        parent[k] = upd;
+        return;
+      }
+    }
+  }
+}

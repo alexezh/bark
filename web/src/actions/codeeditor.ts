@@ -1,7 +1,7 @@
 import { UiLayerProps } from "../ui/uilayer";
 import { renderModule, findParentNode, isParentNode } from "../basic/formatter";
 import { vm } from "../engine/ivm";
-import { ATextSegment, TextBlock, TextModule, TextSpan } from "../basic/textblock";
+import { ATextSegment, TextBlock, TextModule, TextSpan, parentAstSegment } from "../basic/textblock";
 import { updateAst } from "../basic/updateast";
 import { AstNode, AstNodeKind, FuncDefNode, ModuleNode, OnNode, VarDefNode } from "../basic/ast";
 
@@ -67,7 +67,7 @@ export class CodeEditor {
     if (!lineAst) {
       return;
     }
-    this.updateNode(lineAst.parent!);
+    this.renderNode(lineAst.parent!);
 
     let line = this._textModule?.getNodeById(lineAst.id!);
     this.selectNode(line);
@@ -87,13 +87,13 @@ export class CodeEditor {
 
     if (ast.kind === AstNodeKind.varDef) {
       this._module.vars.push(ast as VarDefNode);
-      this.updateNode(this._module);
+      this.renderNode(this._module);
     } else if (ast.kind === AstNodeKind.on) {
       this._module.on.push(ast as OnNode);
-      this.updateNode(this._module);
+      this.renderNode(this._module);
     } else if (ast.kind === AstNodeKind.funcDef) {
       this._module.funcs.push(ast as FuncDefNode);
-      this.updateNode(this._module);
+      this.renderNode(this._module);
     } else {
       if (!this._selectedNode) {
         console.warn('addTemplate: no selection')
@@ -137,10 +137,23 @@ export class CodeEditor {
     this._textEditActive = false;
 
     if (this._textDirty && this._selectedNode) {
-      let text = this._selectedElem?.innerText;
+
+      let astSeg = parentAstSegment(this._selectedNode);
+      if (!astSeg) {
+        console.warn('Cannot find ast segment')
+        return;
+      }
+
+      let astDom = document.getElementById(astSeg.id);
+      if (!astDom) {
+        console.warn('Cannot find ast html node')
+        return;
+      }
+      let text = astDom.innerText;
       if (text) {
         console.log('input: ' + text);
-        updateAst(this._selectedNode, text);
+        let ast2 = updateAst(astSeg.ast!, text);
+        this.renderNode(ast2!);
       }
       this._textDirty = false;
     }
@@ -150,7 +163,7 @@ export class CodeEditor {
   // from ast, get node.. or parent
   // re-render text if dirty
   // 
-  private updateNode(ast: AstNode) {
+  private renderNode(ast: AstNode) {
     if (!ast.id) {
       return;
     }

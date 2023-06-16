@@ -65,12 +65,34 @@ function updateHtmlTree(nodes: (TextBlock | ATextSegment | TextSpan)[], parentHt
   }
 }
 
+export function parentAstSegment(elem: TextBlock | ATextSegment | TextSpan): ATextSegment | undefined {
+  if (elem instanceof TextSpan) {
+    return parentAstSegment(elem.parent);
+  } else if (elem instanceof ATextSegment) {
+    if (elem.ast) {
+      return elem;
+    } else {
+      if (elem.parent instanceof ATextSegment) {
+        return parentAstSegment(elem.parent);
+      } else {
+        return undefined;
+      }
+    }
+  } else {
+    return undefined;
+  }
+}
+
+/**
+ * represents a single HTML span
+ * even though we edit span by span, we are not attaching AST to it
+ * instead we are going to read the outer text and process the whole statement
+ */
 export class TextSpan {
   public readonly id: string;
   public readonly parent: ATextSegment;
   private data: Token;
   private style: TextStyle;
-  public ast: AstNode | undefined = undefined;
   public changeStatus: ChangeStatus = ChangeStatus.dirty;
 
   public static fromString(parent: ATextSegment, val: string, style: TextStyle): TextSpan {
@@ -241,11 +263,13 @@ export class TextLine extends ATextSegment {
     this.segments.push(TextSpan.fromString(this, val, style));
   }
 
-  public appendToken(token: Token, style: TextStyle) {
+  public appendToken(token: Token, style: TextStyle): TextSpan {
     if (style.spaceLeft === undefined) {
       style.spaceLeft = this.segments.length > 0;
     }
-    this.segments.push(new TextSpan(this, token, style))
+    let span = new TextSpan(this, token, style);
+    this.segments.push(span);
+    return span;
   }
 
   public render(onClick: clickHandler): HTMLDivElement | HTMLSpanElement {
