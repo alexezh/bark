@@ -7,7 +7,7 @@ import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
 import { Vox } from "../voxel/vox";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
 import { VoxelModelFrame } from "../voxel/voxelmodel";
-import { createButton } from "../lib/htmlutils";
+import { addText, createButton } from "../lib/htmlutils";
 import { encode as PngEncode } from 'fast-png';
 import { ImportFile, modelCache, VoxelModelCache, WireModelInfo } from "../voxel/voxelmodelcache";
 
@@ -189,11 +189,20 @@ export class ImportVoxAction implements IAction {
     for (let file of importFiles) {
       let bitmap = await createImageBitmap(file.png!);
 
+      let imageElem = document.createElement('div');
+      imageElem.className = 'blockLibraryItem';
+
       let canvas: HTMLCanvasElement = document.createElement('canvas');
       let ctx = canvas.getContext("2d");
       //ctx?.scale(1, -1);
       ctx?.drawImage(bitmap, 0, 0, bitmap.width, bitmap.height);
-      this._filesElem.appendChild(canvas);
+      imageElem.appendChild(canvas);
+
+      //imageElem
+      addText(imageElem, file.fn, 'blockLibraryItemText');
+      addText(imageElem, `size: ${bitmap.width}, ${bitmap.height}`, 'blockLibraryItemText');
+
+      this._filesElem.appendChild(imageElem);
     }
   }
 

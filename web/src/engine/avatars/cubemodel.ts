@@ -14,7 +14,7 @@ export class CubeModel implements IRigitModel {
   private _rotationAngleXZ: number = 0;
 
   // position is offset by the base
-  private _position!: Vector3;
+  private _position: Vector3 = new Vector3();
   private _baseX: number = 0;
   private _baseZ: number = 0;
   private _scale: number = 1;

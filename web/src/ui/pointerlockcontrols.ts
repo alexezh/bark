@@ -2,6 +2,8 @@
 import {
   Euler,
   EventDispatcher,
+  Matrix4,
+  PerspectiveCamera,
   Vector3
 } from 'three';
 
@@ -17,6 +19,7 @@ const _PI_2 = Math.PI / 2;
 class PointerLockControls extends EventDispatcher {
 
   public isLocked: boolean;
+  private camera: PerspectiveCamera;
 
   constructor(camera, domElement) {
 
@@ -76,7 +79,15 @@ class PointerLockControls extends EventDispatcher {
 
   }
 
-  moveForward(distance) {
+  moveDirection(dx: number, dz: number) {
+    let v = new Vector3(dx, 0, dz);
+    let r = new Matrix4();
+    r.extractRotation(this.camera.matrixWorld);
+    v.applyMatrix4(r);
+    this.camera.position.add(v);
+  }
+
+  moveForward(distance: number) {
 
     // move forward parallel to the xz-plane
     // assumes camera.up is y-up
@@ -91,7 +102,7 @@ class PointerLockControls extends EventDispatcher {
 
   }
 
-  moveRight(distance) {
+  moveRight(distance: number) {
 
     const camera = this.camera;
 
@@ -139,8 +150,6 @@ function onMouseMove(event) {
 }
 
 function onPointerlockChange() {
-
-  console.log('onPointerlockChange');
 
   if (this.domElement.ownerDocument.pointerLockElement === this.domElement) {
 

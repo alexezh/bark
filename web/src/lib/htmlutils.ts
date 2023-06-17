@@ -106,3 +106,10 @@ export function createNumberEntry(
 
   return d;
 }
+
+export function addText(parent: HTMLElement, text: string, css: string) {
+  let elem = document.createElement('div');
+  elem.className = css;
+  elem.textContent = text;
+  parent.appendChild(elem);
+}

@@ -40,6 +40,11 @@ export class LevelEditor implements ILevelEditor {
     this.input.registerKeyUp('KeyV', this.pasteBlock.bind(this));
     this.input.registerKeyUp('KeyX', this.clearBlock.bind(this));
 
+    this.input.registerKeyUp('KeyA', () => this.moveCamera(-5, 0));
+    this.input.registerKeyUp('KeyS', () => this.moveCamera(0, 5));
+    this.input.registerKeyUp('KeyD', () => this.moveCamera(5, 0));
+    this.input.registerKeyUp('KeyW', () => this.moveCamera(0, -5));
+
     _.bindAll(this, ['onMouseDown', 'onMouseUp']);
 
     this.camera.canvas.addEventListener('mousedown', this.onMouseDown);
@@ -136,6 +141,13 @@ export class LevelEditor implements ILevelEditor {
 
   public selectBlock(model: VoxelModel): void {
     this.currentModel = model;
+  }
+
+  /**
+   * x and z are relative to the direction of the camera
+   */
+  private moveCamera(dx: number, dz: number) {
+    this.orbitControls.moveDirection(dx, dz);
   }
 
   rotateXZ(): void {

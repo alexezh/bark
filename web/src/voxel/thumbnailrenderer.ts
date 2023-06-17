@@ -49,7 +49,7 @@ export class ThumbnailRenderer {
     this.camera.updateProjectionMatrix();
 
     this.scene.add(target);
-    let ambient_light = new AmbientLight(0xFFFFFF, 0.8);
+    let ambient_light = new AmbientLight(0xFFFFFF, 0.4);
     this.scene.add(ambient_light);
 
     const directionalLight = new DirectionalLight(0xffffff);
