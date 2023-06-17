@@ -140,10 +140,11 @@ export class VoxelModelFrame {
     }
 
     let ms = model.modelSize;
-    console.log(`loaded frame: ${ms.x} ${ms.y} ${ms.z}`);
 
     model.loadModel(voxels);
     model.loadHeightMap(voxels);
+
+    console.log(`VoxelModelFrame.load size: (${ms.x} ${ms.y} ${ms.z}) vertices: ${model.v.length}`);
 
     return model;
   }

@@ -39,6 +39,9 @@ export class MeshLevelLayer {
   }
 
   public build() {
+    this._mesh.length = 0;
+    this._meshDirty.length = 0;
+
     for (let i = 0; i < this.sliceCount; i++) {
       this._mesh.push(this.buildSlice(i));
       this._meshDirty.push(false);
@@ -47,23 +50,26 @@ export class MeshLevelLayer {
     this.dirty = false;
   }
 
-  private buildSlice(sliceIdx: number) {
+  private buildSlice(sliceIdx: number): Mesh {
     let maxZ = Math.min((sliceIdx + 1) * this.sliceZSize, this.size.h);
 
     let vCount = 0;
     let cCount = 0;
+    let blocks = 0;
     for (let z = sliceIdx * this.sliceZSize; z < maxZ; z++) {
       for (let x = 0; x < this.size.w; x++) {
         let pos = z * this.size.w + x;
         let block = this.blocks[pos];
         if (block !== undefined) {
           let model = block.model.frames[block.frame];
+          blocks += 1;
           vCount += model.verticeCount;
           cCount += model.colorCount;
         }
       }
     }
 
+    console.log('buildSlice ' + blocks);
     let writer: VoxelGeometryWriter = new VoxelGeometryWriter(vCount, cCount, 6);
 
     for (let z = sliceIdx * this.sliceZSize; z < maxZ; z++) {
