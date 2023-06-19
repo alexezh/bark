@@ -36,7 +36,7 @@ export class NotRunningError extends Error {
 }
 
 export class VM implements IVM {
-  private _running: boolean = false;
+  private _appMode: AppMode = AppMode.stop;
   private _ticker!: Ticker;
   private _physics!: GamePhysics;
   private _canvas: HTMLElement;
@@ -85,6 +85,7 @@ export class VM implements IVM {
 
   public get loader(): ICodeLoader { return this._loader; }
   public get runner(): ICodeRunner { return this._runner; }
+  public get appMode(): AppMode { return this._appMode; }
 
   public attachCamera(camera: ICameraLayer) {
     this._camera = camera;
@@ -130,7 +131,7 @@ export class VM implements IVM {
   }
 
   public async start(): Promise<void> {
-    if (this._running) {
+    if (this._appMode === AppMode.run) {
       console.log('VM: already running');
       return;
     }
@@ -150,7 +151,7 @@ export class VM implements IVM {
 
     this._ticker = new Ticker();
     animator.start(this._ticker);
-    this._running = true;
+    this._appMode = AppMode.run;
 
     this._runner.start();
   }
@@ -167,7 +168,7 @@ export class VM implements IVM {
     animator.stop();
     this.inputController?.stop();
     this.clock.stop();
-    this._running = false;
+    this._appMode = AppMode.edit;
   }
 
   public async sendMesssage(address: string, msg: any): Promise<void> {
@@ -185,7 +186,7 @@ export class VM implements IVM {
   }
 
   public onRenderFrame() {
-    if (!this._running) {
+    if (this._appMode !== AppMode.run) {
       return;
     }
 
@@ -220,7 +221,7 @@ export class VM implements IVM {
   }
 
   public async forever(func: () => Promise<void>): Promise<void> {
-    while (this._running) {
+    while (this._appMode === AppMode.run) {
       await func();
     }
     this.checkRunning();
@@ -290,7 +291,7 @@ export class VM implements IVM {
   }
 
   private checkRunning() {
-    if (!this._running) {
+    if (this._appMode !== AppMode.run) {
       throw new NotRunningError();
     }
   }

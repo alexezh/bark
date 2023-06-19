@@ -61,9 +61,10 @@ export class ThirdPersonCamera implements ITrackingCamera {
     cpos.add(off);
 
     this.cameraGroup.position.copy(cpos);
-    (this.camera as PerspectiveCamera).updateProjectionMatrix();
 
     // camera is looking in direction of the model
     this.cameraGroup.quaternion.setFromAxisAngle(new Vector3(0, 1, 0), this.angleXZ);
+
+    (this.camera as PerspectiveCamera).updateProjectionMatrix();
   }
 }

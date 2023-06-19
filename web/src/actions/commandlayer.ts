@@ -1,8 +1,9 @@
-import { createButton } from "../lib/htmlutils";
+import { createButton, setElementVisible } from "../lib/htmlutils";
 import { DetailsPaneKind, IAction, ICommandLayer, IMenuAction } from "./iaction";
 import { ShellProps } from "../ui/shell";
 import { UiLayer2, UiLayerProps } from "../ui/uilayer";
 import { getTopLevelActions } from "./actionregistry";
+import { AppMode, vm } from "../engine/ivm";
 
 export type CommandBarProps = UiLayerProps & {
   shellProps: ShellProps;
@@ -134,8 +135,18 @@ export class CommandList {
 export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandLayer {
   //private editButton: HTMLButtonElement;
   //private tileButton: HTMLButtonElement;
-  private grid: HTMLElement;
-  private mainButton: HTMLButtonElement;
+  private bar: HTMLDivElement;
+  private pane: HTMLDivElement;
+  // @ts-ignore
+  private homeButton: HTMLButtonElement;
+  // @ts-ignore
+  private startButton: HTMLButtonElement;
+  // @ts-ignore
+  private pauseButton: HTMLButtonElement;
+  // @ts-ignore
+  private editButton: HTMLButtonElement;
+  // @ts-ignore
+  private cameraButton: HTMLButtonElement;
   private _commandList: CommandList;
   private _detailsPane: HTMLElement | undefined;
   private _fullHeight: number;
@@ -152,16 +163,19 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
     props.h = 0;
     super(props, element, false);
 
-    this.grid = document.createElement('div');
-    this.grid.className = 'commandLayerGrid';
-    this.element.appendChild(this.grid);
+    this.bar = document.createElement('div');
+    this.bar.className = 'commandBar';
+    this.element.appendChild(this.bar);
+
+    this.pane = document.createElement('div');
+    this.pane.className = 'commandPane';
+    this.element.appendChild(this.pane);
 
     // save properties for later
     this._fullWidth = fullWidth;
     this._fullHeight = fullHeight;
 
-    // add button to open pane
-    this.mainButton = createButton(this.grid, 'commandMainButton', 'A', this.onCommandMain.bind(this));
+    this.createButtons();
 
     this._commandList = new CommandList(this.props, this);
 
@@ -183,7 +197,7 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
     elem.style.gridColumn = '2';
     elem.style.gridRow = '2';
 
-    this.grid.appendChild(elem);
+    this.pane.appendChild(elem);
     this._detailsPane = elem;
     this.props.w = this.getCommandListWidth() + this.getPropertyPaneWidth(kind);
     this.updateElementSize();
@@ -194,14 +208,14 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
       return;
     }
 
-    this.grid.removeChild(this._detailsPane);
+    this.pane.removeChild(this._detailsPane);
     this._detailsPane = undefined;
     this.props.w = this.getCommandListWidth();
     this.updateElementSize();
   }
 
   public pushActions(actions: IAction[]) {
-    this.mainButton.textContent = '<Back';
+    this.homeButton.textContent = '<Back';
     this._commandList.pushActions(actions);
   }
 
@@ -213,16 +227,46 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
     this._commandList.closeMenu(group);
   }
 
-  private onCommandMain() {
+  private createButtons() {
+    // add button to open pane
+    //this.homeButton = createButton(this.pane, 'commandBarButton', 'Home', this.onCommandHome.bind(this));
+    this.startButton = createButton(this.bar, 'commandBarButton', 'Start', this.onCommandStart.bind(this));
+    this.pauseButton = createButton(this.bar, 'commandBarButton', 'Pause', this.onCommandPause.bind(this));
+    this.editButton = createButton(this.bar, 'commandBarButton', 'Edit', this.onCommandEdit.bind(this));
+    this.cameraButton = createButton(this.bar, 'commandBarButton', 'Camera', this.onCommandCamera.bind(this));
+
+    //this.cameraButton.toolto
+    /**
+    .tooltip {
+        position: relative;
+        display: inline-block;
+        border-bottom: 1px dotted black; 
+    }
+    .tooltip .tooltiptextstyle {
+        visibility: hidden; 
+        display: block;
+        width: 120px;
+        background-color: black;
+        color: #fff;
+        text-align: center;
+        padding: 5px 0;
+        border-radius: 6px;
+        position: absolute;
+        z-index: 1;
+    }
+    */
+  }
+
+  private onCommandHome() {
     if (this._commandList.navStackDepth > 1) {
       this._commandList.popActions();
       if (this._commandList.navStackDepth === 1) {
-        this.mainButton.textContent = 'A';
+        this.homeButton.textContent = 'A';
       }
     } else {
       if (this._commandList.isOpened) {
         this.closeDetailsPane();
-        this._commandList.close(this.grid);
+        this._commandList.close(this.pane);
 
         this.props.w = 0;
         this.props.h = 0;
@@ -232,10 +276,40 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
         this.props.h = this._fullHeight;
         this.updateElementSize();
 
-        this._commandList.open(this.grid);
+        this._commandList.open(this.pane);
       }
     }
     //this._commandList.updateList(this, this._pane!);
+  }
+
+  private onCommandStart() {
+    setTimeout(async () => {
+      if (vm.appMode !== AppMode.run) {
+        await vm.start();
+      } else {
+        await vm.stop();
+      }
+
+      this.updateCommandButtons();
+    });
+  }
+
+  private onCommandPause() {
+
+  }
+  private onCommandEdit() {
+
+    this.updateCommandButtons();
+  }
+  private onCommandCamera() {
+    vm.levelEditor?.editCamera();
+    this.updateCommandButtons();
+  }
+
+  private updateCommandButtons() {
+    this.startButton.textContent = (vm.appMode === AppMode.run) ? 'Stop' : 'Start';
+    setElementVisible(this.editButton, vm.appMode !== AppMode.run);
+    setElementVisible(this.cameraButton, vm.appMode !== AppMode.run);
   }
 
   private getCommandListWidth() {
@@ -252,9 +326,9 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
 
   protected updateElementSize() {
     super.updateElementSize();
-    if (this.grid) {
-      this.grid.style.width = this.props.w.toString();
-      this.grid.style.height = this.props.h.toString();
+    if (this.pane) {
+      this.pane.style.width = this.props.w.toString();
+      this.pane.style.height = this.props.h.toString();
     }
   }
 }

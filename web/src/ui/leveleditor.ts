@@ -35,6 +35,7 @@ export class LevelEditor implements ILevelEditor {
     this.level = level;
 
     this.input = new KeyBinder(this.camera.canvas, undefined, true);
+
     this.input.registerKeyUp('KeyC', this.copyBlock.bind(this), 'Copy block to buffer');
     this.input.registerKeyUp('KeyV', this.pasteBlock.bind(this));
     this.input.registerKeyUp('KeyX', this.clearBlock.bind(this));
@@ -57,23 +58,28 @@ export class LevelEditor implements ILevelEditor {
   }
 
   private onMouseDown(evt: MouseEvent): boolean {
-    if (evt.shiftKey) {
-      this.orbitControls.lock();
-    } else {
-      let coords = {
-        x: (evt.x / this.camera.viewSize.w) * 2 - 1,
-        y: -(evt.y / this.camera.viewSize.h) * 2 + 1
-      }
+    let coords = {
+      x: (evt.x / this.camera.viewSize.w) * 2 - 1,
+      y: -(evt.y / this.camera.viewSize.h) * 2 + 1
+    }
 
-      let raycaster = new Raycaster();
-      raycaster.setFromCamera(coords, this.camera.camera);
+    let raycaster = new Raycaster();
+    raycaster.setFromCamera(coords, this.camera.camera);
 
-      var intersects = raycaster.intersectObjects(this.camera.scene!.children, false);
+    var intersects = raycaster.intersectObjects(this.camera.scene!.children, false);
 
-      if (intersects.length > 0) {
-        this.selectBlockFace(intersects[0].point);
+    if (intersects.length > 0) {
+      this.selectBlockFace(intersects[0].point);
+
+      if (evt.shiftKey) {
+        // do nothing
+      } else if (evt.ctrlKey || evt.button === 2) {
+        this.clearBlock();
+      } else {
+        this.pasteBlock();
       }
     }
+
     return true;
   };
 
@@ -137,6 +143,10 @@ export class LevelEditor implements ILevelEditor {
             }
            */
   };
+
+  public editCamera() {
+    this.orbitControls.lock();
+  }
 
   /**
    * x and z are relative to the direction of the camera

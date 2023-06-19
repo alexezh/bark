@@ -14,6 +14,12 @@ export function getBlockRegister(): VoxelModel | undefined {
   return blockRegister.model;
 }
 
+//export enum LevelEditorTool {
+//  erase,
+//  insert,
+//  mix,
+//}
+
 export interface ILevelEditor {
   //  attach(camera: ICameraControl, input: KeyBinder): void;
   //  detach(): void;
@@ -21,6 +27,9 @@ export interface ILevelEditor {
   cutBlock(): void;
   clearBlock(): void;
   pasteBlock(): void;
+
+  editCamera(): void;
+
   rotateXZ(): void;
   flipX(): void;
   flipZ(): void;

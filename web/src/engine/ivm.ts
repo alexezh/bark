@@ -18,6 +18,7 @@ export interface IInputController {
 
 export enum AppMode {
   run,
+  stop,
   edit,
 }
 
@@ -57,6 +58,7 @@ export interface IVM {
   get loader(): ICodeLoader;
   get runner(): ICodeRunner;
   get levelEditor(): ILevelEditor | undefined;
+  get appMode(): AppMode;
 
   attachCamera(camera: ICameraLayer): void;
   registerLevelLoaded(target: any, func: () => void): void;
