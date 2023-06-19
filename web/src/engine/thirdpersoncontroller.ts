@@ -252,7 +252,7 @@ export class ThirdPersonController implements IGamePhysicsInputController, IInpu
 
 let controller: ThirdPersonController | undefined;
 
-function activate(
+function configureController(
   maxSpeed: number,
   keySpeed: number,
   thumbSpeed: number,
@@ -290,11 +290,11 @@ export function createThirdPersonControllerModule(): ModuleNode {
 
   module.funcs.push(addSystemFunc(module, 'followSprite', ['sprite: Sprite', 'x: number', 'y: number', 'z:number'], 'void', false, followSprite));
   module.funcs.push(addSystemFunc(module, 'readInput', [], 'void', true, readInput));
-  module.funcs.push(addSystemFunc(module, 'activate', [
+  module.funcs.push(addSystemFunc(module, 'configureController', [
     'maxSpeed:number',
     'keySpeed:number',
     'thumbSpeed:number',
-    'timeoutSeconds:number'], 'void', false, activate));
+    'timeoutSeconds:number'], 'void', false, configureController));
 
   module.types.push(addSystemType('MoveEvent2D', ThirdPersonControllerMoveEvent, ['speedX: number', 'speedZ: number']));
 

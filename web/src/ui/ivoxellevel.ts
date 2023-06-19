@@ -23,6 +23,7 @@ export type MapBlock = {
 export type MapBlockCoord = {
   model: VoxelModel;
   frame: number;
+
   /**
    * block index in the array (as z * width + x)
    */
@@ -71,7 +72,7 @@ export interface IVoxelLevelFile {
   registerOnChangeBlock(func: (blocks: FileMapBlock[]) => void);
 
   load(isTest: boolean): Promise<void>;
-  deleteBlock(block: MapBlockCoord);
+  deleteBlock(pos: BlockPos3);
   addBlock(pos: BlockPos3, blockId: number);
 }
 
@@ -96,13 +97,18 @@ export interface IVoxelLevel {
   /**
    * load level into scene
    */
-  loadScene(scene: Scene);
-
-  findBlock(point: Vector3): MapBlockCoord | undefined;
+  loadScene(scene: Scene, editMode: boolean);
 
   /**
-   * deletes block to runtime representation; not saved
+   * finds block by point; returns undefined if there is no block
    */
+  getBlockByPoint(point: Vector3): MapBlockCoord | undefined;
+
+  getBlockByPos(x: number, y: number, z: number): MapBlockCoord | undefined;
+
+  /**
+ * deletes block to runtime representation; not saved
+ */
   deleteBlock(block: MapBlockCoord | MapBlockRigitBody);
 
   /**
@@ -114,6 +120,8 @@ export interface IVoxelLevel {
 
   blockSizeToWorldSize(gridSize: BlockSize3): WorldSize3;
   blockPosToWorldPos(gridPos: BlockPos3): WorldCoord3;
+
+  worldPosToBlockPos(pos: WorldCoord3): BlockPos3;
 
   // intersects sprite with block
   // creates rigit body for each interesecting block

@@ -1,5 +1,6 @@
 import { vm } from "../engine/ivm";
 import { getWireResourceUri } from "../lib/fetchadapter";
+import { setBlockRegister } from "../ui/ileveleditor";
 import { VoxelModel } from "../voxel/voxelmodel";
 import { VoxelModelCache, modelCache } from "../voxel/voxelmodelcache";
 import { BasicAction, FuncAction } from "./commandaction";
@@ -65,7 +66,7 @@ export class EditLevelAction extends BasicAction {
   }
 
   private onSelectItem(model: VoxelModel) {
-    vm.levelEditor?.selectBlock(model);
+    setBlockRegister(model);
   }
 }
 

@@ -176,7 +176,7 @@ export class VoxelModelFrame {
         for (var y = this.chunk_sy - 1; y >= 0; y--) {
           let blockIdx = this.getIdx(x, y, z);
           if (voxels[blockIdx] !== 0) {
-            this.heightMap[z * this.chunk_sx + x] = y;
+            this.heightMap[z * this.chunk_sx + x] = y + 1;
             break;
           }
         }

@@ -49,7 +49,7 @@ export class VoxelModelCache {
     return true;
   }
 
-  public async loadModelEntries(modelEntries: WireDict[]): Promise<void> {
+  private async loadModelEntries(modelEntries: WireDict[]): Promise<void> {
     let voxUrls: string[] = [];
     let modelInfos: Map<string, WireModelInfo> = new Map<string, WireModelInfo>();
     for (let modelEntry of modelEntries) {

@@ -6,7 +6,7 @@ import { FrameClock } from "./clock";
 import { VoxelLevel } from "./voxellevel";
 import { GamePhysics } from "./gamephysics";
 import { IGamePhysics } from "./igamephysics";
-import { ICodeLoader, IInputController, IVM, ICodeRunner, setVM } from "./ivm";
+import { ICodeLoader, IInputController, IVM, ICodeRunner, setVM, AppMode } from "./ivm";
 import { Sprite3 } from "./sprite3";
 import { Ticker } from "./ticker";
 import { IRigitModel } from "./irigitmodel";
@@ -110,6 +110,9 @@ export class VM implements IVM {
     await modelCache.load();
   }
 
+  /**
+   * called from code to load the level; or every time we do to edit mode
+   */
   public async loadLevel(id: string): Promise<void> {
     console.log('VM: load level:' + id);
 
@@ -122,7 +125,7 @@ export class VM implements IVM {
     this._physics = new GamePhysics(this._level);
     this._physics.setCollideHandler(this.onCollide.bind(this));
 
-    this.loadScene();
+    this.loadScene(AppMode.run);
     this.onLevelLoaded.invoke(true);
   }
 
@@ -175,6 +178,7 @@ export class VM implements IVM {
     console.log('editLevel');
 
     this.stop();
+    this.loadScene(AppMode.edit);
 
     this._levelEditor = new LevelEditor(this.camera, this.level);
     this.camera.setEditor(this._levelEditor);
@@ -291,7 +295,7 @@ export class VM implements IVM {
     }
   }
 
-  private loadScene() {
+  private loadScene(appMode: AppMode) {
     if (this._camera === undefined) {
       return;
     }
@@ -303,7 +307,7 @@ export class VM implements IVM {
     this._camera.createScene();
 
     // TODO: we should clear the previous scene
-    this._level.loadScene(this._camera.scene!);
+    this._level.loadScene(this._camera.scene!, appMode === AppMode.edit);
 
     this.particles = new ParticlePool(this._camera.scene!, 200, 1);
   }

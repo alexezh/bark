@@ -150,7 +150,7 @@ export class ImportVoxAction implements IAction {
   private async displayPane(bar: ICommandLayer, importFiles: ImportFile[]) {
 
     this._paneElem = document.createElement('div');
-    this._paneElem.className = 'commandPane';
+    this._paneElem.className = 'scrollableCell';
     this._filesElem = undefined;
 
     let rotateYZ = false;
@@ -180,6 +180,7 @@ export class ImportVoxAction implements IAction {
     }
 
     this._filesElem = document.createElement('div');
+    this._filesElem.className = 'blockLibrary';
     if (this._paneElem?.firstChild !== null) {
       this._paneElem!.insertBefore(this._filesElem, this._paneElem?.firstChild!);
     } else {

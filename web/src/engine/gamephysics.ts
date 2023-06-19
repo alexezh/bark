@@ -145,13 +145,10 @@ export class GamePhysics implements IGamePhysics {
 
       // gravity !!!
       if (!standing) {
-        //if (o.standing) {
-        //console.log('not standing');
-        //}
         o.setStanding(false);
         o.setPhysicsSpeed(new Vector3(0, o.physicsSpeed.y - dt * this.gravity * o.gravityFactor, 0));
         //if (o.name === 'pl') {
-        //  console.log('Pl: ' + o.position.x + ' ' + o.position.z + ' ' + o.relativeSpeed.y + ' ' + o.physicsSpeed.y);
+        // console.log('Pl: ' + o.position.y + ' ' + o.relativeSpeed.x + ' ' + o.physicsSpeed.y);
         //}
       } else {
         //console.log('standing');

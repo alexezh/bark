@@ -16,6 +16,11 @@ export interface IInputController {
   update(tick: number);
 }
 
+export enum AppMode {
+  run,
+  edit,
+}
+
 export interface ICodeLoader {
   addUserModule(name: string, text: string | ModuleNode);
   addSystemModule(module: ModuleNode);

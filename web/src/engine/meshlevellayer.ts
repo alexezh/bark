@@ -139,7 +139,7 @@ export class MeshLevelLayer {
   /**
    * return block by point coord
    */
-  public getBlockByCoord(point: WorldCoord3): MapBlockCoord | undefined {
+  public getBlockByPoint(point: WorldCoord3): MapBlockCoord | undefined {
     let x = (point.x / this.blockSize) | 0;
     let z = (point.z / this.blockSize) | 0;
 
@@ -150,7 +150,7 @@ export class MeshLevelLayer {
     }
 
     return {
-      model: block?.model,
+      model: block.model,
       frame: (block) ? block.frame : 0,
       idx: pos,
       mapPos: {
@@ -166,8 +166,8 @@ export class MeshLevelLayer {
     };
   }
 
-  public getBlock(xMap: number, zMap: number): MapBlockCoord | undefined {
-    let idx = zMap * this.size.w + xMap;
+  public getBlockByPos(xBlock: number, zBlock: number): MapBlockCoord | undefined {
+    let idx = zBlock * this.size.w + xBlock;
     let b = this.blocks[idx];
     if (b === undefined) {
       return undefined;
@@ -177,8 +177,8 @@ export class MeshLevelLayer {
       frame: b!.frame,
       idx: idx,
       mapPos: {
-        x: xMap,
-        z: zMap,
+        x: xBlock,
+        z: zBlock,
         y: this.layerY,
       },
       mapSize: {
@@ -196,9 +196,9 @@ export class MeshLevelLayer {
     this.dirty = true;
   }
 
-  public deleteBlockByCoord(x: number, z: number) {
-    this.blocks[z * this.size.w + x] = undefined;
-    let sliceIdx = Math.floor(z / this.sliceZSize);
+  public deleteBlockByPos(xPos: number, zPos: number) {
+    this.blocks[zPos * this.size.w + xPos] = undefined;
+    let sliceIdx = Math.floor(zPos / this.sliceZSize);
     this._meshDirty[sliceIdx] = true;
     this.dirty = true;
   }

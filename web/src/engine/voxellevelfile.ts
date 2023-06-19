@@ -116,8 +116,7 @@ export class VoxelLevelFile implements IVoxelLevelFile {
     this.onChangeBlock = func;
   }
 
-  deleteBlock(block: MapBlockCoord) {
-    let pos = block.mapPos;
+  deleteBlock(pos: BlockPos3) {
     let key = this.getBlockKey(pos.x, pos.y, pos.z);
 
     this._blocks.delete(key)

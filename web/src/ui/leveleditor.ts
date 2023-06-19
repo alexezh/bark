@@ -1,9 +1,9 @@
 import _ from "lodash";
 import { BufferGeometry, Line, LineBasicMaterial, Raycaster, Vector3 } from "three";
-import { ILevelEditor as ILevelEditor } from "./ileveleditor";
+import { BlockRegister, ILevelEditor as ILevelEditor, getBlockRegister, setBlockRegister } from "./ileveleditor";
 import { KeyBinder } from "./keybinder";
 import { IVoxelLevel, MapBlockCoord } from "./ivoxellevel";
-import { BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
+import { BlockPos3, BlockSize3, WorldCoord3, WorldSize3 } from "../voxel/pos3";
 import { ICameraLayer } from "../engine/icameralayer";
 import { VoxelModel } from "../voxel/voxelmodel";
 import { PointerLockControls } from "./pointerlockcontrols";
@@ -23,9 +23,8 @@ export class LevelEditor implements ILevelEditor {
   static material = new LineBasicMaterial({ color: 0x0000ff });
   private orbitControls: PointerLockControls;
 
-  private selectedBlock: MapBlockCoord | undefined = undefined;
+  private selectedArea: { pos: BlockPos3, size: BlockSize3 } | undefined = undefined;
   private selection: Line | undefined = undefined;
-  private currentModel: VoxelModel | undefined;
 
   public constructor(
     camera: ICameraLayer,
@@ -139,10 +138,6 @@ export class LevelEditor implements ILevelEditor {
            */
   };
 
-  public selectBlock(model: VoxelModel): void {
-    this.currentModel = model;
-  }
-
   /**
    * x and z are relative to the direction of the camera
    */
@@ -163,8 +158,18 @@ export class LevelEditor implements ILevelEditor {
   }
 
   public copyBlock(): void {
+    if (this.selectedArea === undefined) {
+      return;
+    }
 
+    let pos = this.selectedArea.pos;
+    let block = this.level.getBlockByPos(pos.x, pos.y, pos.z);
+
+    if (block) {
+      setBlockRegister(block.model);
+    }
   }
+
   public cutBlock(): void {
 
   }
@@ -174,27 +179,31 @@ export class LevelEditor implements ILevelEditor {
   }
 
   private async pasteBlockWorker(): Promise<boolean> {
-    if (this.selectedBlock === undefined || this.currentModel === undefined) {
+    let regBlock = getBlockRegister();
+    if (this.selectedArea === undefined || regBlock === undefined) {
       return false;
     }
 
-    let pos = this.selectedBlock.mapPos;
-    if (this.selectedBlock.model !== undefined) {
-      this.level.file.addBlock({ x: pos.x, y: pos.y + 1, z: pos.z }, this.currentModel.id);
+    let pos = this.selectedArea.pos;
+    let block = this.level.getBlockByPos(pos.x, pos.y, pos.z);
+
+    // if block has something, paste on top
+    if (block !== undefined) {
+      this.level.file.addBlock({ x: pos.x, y: pos.y + 1, z: pos.z }, regBlock.id);
     } else {
-      this.level.file.addBlock({ x: pos.x, y: pos.y, z: pos.z }, this.currentModel.id);
+      this.level.file.addBlock({ x: pos.x, y: pos.y, z: pos.z }, regBlock.id);
     }
 
     return true;
   }
 
   public clearBlock() {
-    if (this.selectedBlock === undefined || this.selectedBlock.model === undefined) {
+    if (this.selectedArea === undefined) {
       return;
     }
 
-    this.level.file.deleteBlock(this.selectedBlock);
-    this.selectedBlock = undefined;
+    this.level.file.deleteBlock(this.selectedArea.pos);
+    this.selectedArea = undefined;
     this.camera.scene!.remove(this.selection!);
     this.selection = undefined;
   }
@@ -206,29 +215,31 @@ export class LevelEditor implements ILevelEditor {
       point.y = 0;
     }
 
-    block = this.level.findBlock(point);
+    block = this.level.getBlockByPoint(point);
+    let gridPos: BlockPos3;
+    let gridSize: BlockSize3;
     if (block === undefined) {
-      return;
+      gridPos = this.level.worldPosToBlockPos(point);
+      gridSize = { sx: 1, sy: 1, sz: 1 };
+    } else {
+      gridPos = block.mapPos;
+      gridSize = block.mapSize;
     }
 
-    console.log(`selectBlockFace: ${block.mapPos.x} ${block.mapPos.y} ${block.mapPos.z} y:${point.y}`)
+    console.log(`selectBlockFace: ${gridPos.x} ${gridPos.y} ${gridPos.z} y:${point.y}`)
     // for now select top face and draw rect
     if (this.selection !== undefined) {
       this.camera.scene!.remove(this.selection);
       this.selection = undefined;
-      this.selectedBlock = undefined;
+      this.selectedArea = undefined;
     }
 
-    let pos = this.level.blockPosToWorldPos(block.mapPos);
-    let size: BlockSize3;
-    if (block.model !== undefined) {
-      size = this.level.blockSizeToWorldSize(block.mapSize);
-    } else {
-      size = this.level.blockSizeToWorldSize({ sx: 1, sy: 1, sz: 1 });
-    }
+    let pos = this.level.blockPosToWorldPos(gridPos);
+    let size = this.level.blockSizeToWorldSize(gridSize);
+
     this.buildSelectionBox(pos, size);
 
-    this.selectedBlock = block;
+    this.selectedArea = { pos: gridPos, size: gridSize }
   }
 
   private buildSelectionBox(pos: WorldCoord3, size: WorldSize3) {

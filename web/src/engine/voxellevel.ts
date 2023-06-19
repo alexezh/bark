@@ -124,7 +124,7 @@ export class VoxelLevel implements IVoxelLevel {
         return true;
     }
 
-    public loadScene(scene: Scene) {
+    public loadScene(scene: Scene, editMode: boolean) {
         this.scene = scene;
         for (let layer of this.layers) {
             layer.addToScene(this.scene);
@@ -149,7 +149,14 @@ export class VoxelLevel implements IVoxelLevel {
         const floorGeometry = new PlaneGeometry(wsz.sx, wsz.sz);
         floorGeometry.rotateX(- Math.PI / 2);
         let floor = new Mesh(floorGeometry, new MeshBasicMaterial({ visible: false }));
-        floor.position.set(0, this._floorLevel, 0);
+
+        // if we are editing, put floor at zero so we have correct positioning
+        // when we try to find a block
+        if (editMode) {
+            floor.position.set(0, 0, 0);
+        } else {
+            floor.position.set(0, this._floorLevel, 0);
+        }
         this.scene!.add(floor);
 
         /*
@@ -178,21 +185,34 @@ export class VoxelLevel implements IVoxelLevel {
         }
     }
 
-    public findBlock(point: Vector3): MapBlockCoord | undefined {
+    public worldPosToBlockPos(pos: WorldCoord3): BlockPos3 {
+        return {
+            x: (pos.x / this._blockSize) | 0,
+            y: (pos.y / this._blockSize) | 0,
+            z: (pos.z / this._blockSize) | 0
+        }
+    }
+
+    public getBlockByPoint(point: Vector3): MapBlockCoord | undefined {
         let layerIdx = (point.y / this._blockSize) | 0;
         if (layerIdx < 0 || layerIdx >= this.layers.length) {
             console.log(`unknown y layer ${point.y}`);
             return undefined;
         }
-        return this.layers[layerIdx].getBlockByCoord(point);
+        return this.layers[layerIdx].getBlockByPoint(point);
+    }
+
+    public getBlockByPos(x: number, y: number, z: number): MapBlockCoord | undefined {
+        let layer = this.layers[y];
+        return layer.getBlockByPos(x, z);
     }
 
     /**
      * delete block and mark layer as dirty
      */
-    private deleteBlockByCoord(x: number, y: number, z: number): MeshLevelLayer {
+    private deleteBlockByPos(x: number, y: number, z: number): MeshLevelLayer {
         let layer = this.layers[y];
-        layer.deleteBlockByCoord(x, z);
+        layer.deleteBlockByPos(x, z);
         return layer;
     }
 
@@ -256,7 +276,7 @@ export class VoxelLevel implements IVoxelLevel {
 
             let blockX = (bpx / this._blockSize) | 0;
             let blockZ = (bpz / this._blockSize) | 0;
-            let block = layer.getBlock(blockX, blockZ);
+            let block = layer.getBlockByPos(blockX, blockZ);
 
             if (block !== undefined) {
                 let xBlock = (bpx - blockX * this._blockSize) | 0;
@@ -311,7 +331,7 @@ export class VoxelLevel implements IVoxelLevel {
                     this.addBlockCore(fb, block);
                 }
             } else {
-                this.deleteBlockByCoord(fb.x, fb.y, fb.z);
+                this.deleteBlockByPos(fb.x, fb.y, fb.z);
             }
         }
 
