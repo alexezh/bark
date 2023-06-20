@@ -113,8 +113,8 @@ export class CommandList {
       return;
     }
     this.listDiv.style.left = '0';
-    if (this.props.w !== 0) {
-      this.listDiv.style.width = this.props.w.toString();
-    }
+    //if (this.props.w !== 0) {
+    //  this.listDiv.style.width = this.props.w.toString();
+    //}
   }
 }

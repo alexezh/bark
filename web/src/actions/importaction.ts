@@ -13,6 +13,7 @@ import { ImportFile, modelCache, VoxelModelCache, WireModelInfo } from "../voxel
 
 export class ImportVoxAction implements IAction {
   private static _nextId: number = 1;
+  private _name: string;
   private _id: number;
   private _element: HTMLDivElement | undefined;
   private _inputElem: HTMLInputElement | undefined;
@@ -21,10 +22,11 @@ export class ImportVoxAction implements IAction {
   private _filesElem: HTMLElement | undefined;
 
   get tags(): string[] { return ['import', 'upload', 'vox', 'block'] }
-  public get name(): string { return 'Import Vox' }
+  public get name(): string { return this._name }
   public get element(): HTMLElement | undefined { return this._element }
 
-  public constructor() {
+  public constructor(name: string) {
+    this._name = name;
     this._id = ImportVoxAction._nextId++;
   }
 

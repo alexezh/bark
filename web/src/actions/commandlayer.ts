@@ -101,15 +101,17 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
     this.updateElementSize();
   }
 
-  public closeDetailsPane(): void {
+  public closeDetailsPane(): HTMLElement | undefined {
     if (this._detailsPane === undefined) {
       return;
     }
 
+    let lastPane = this._detailsPane;
     this.pane.removeChild(this._detailsPane);
     this._detailsPane = undefined;
     this.props.w = this.getCommandListWidth();
     this.updateElementSize();
+    return lastPane;
   }
 
   public pushActions(actions: IAction[]) {
@@ -235,7 +237,7 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
   }
 
   private onLevel() {
-    this.openCommandList(getSpriteActions);
+    this.openCommandList(getLevelActions);
     //vm.editLevel();
 
 
@@ -244,7 +246,7 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
 
   private onSprite() {
     console.log('onSprite');
-    this.openCommandList(getLevelActions);
+    this.openCommandList(getSpriteActions);
     //vm.camera.editCamera();
     //this.updateCommandButtons();
   }

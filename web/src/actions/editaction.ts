@@ -3,7 +3,6 @@ import { IAction, ICommandLayer } from "./iaction";
 import { shell } from "../ui/igameshell";
 import { BasicAction } from "./commandaction";
 import { EditCodeAction, registerEditCodeActions } from "./editcodeaction";
-import { EditLevelAction } from "./editlevelaction";
 
 // display list of blocks, selects block as current
 export class SelectBlockAction extends BasicAction {
@@ -26,7 +25,6 @@ export class EditBlockAction extends BasicAction {
 
 
 export function registerEditActions(actions: IAction[]) {
-  actions.push(new EditLevelAction());
   actions.push(new EditBlockAction());
   registerEditCodeActions(actions);
 }

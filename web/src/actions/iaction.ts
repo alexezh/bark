@@ -40,7 +40,7 @@ export interface ICommandLayer {
   /**
    * close the current details pane
    */
-  closeDetailsPane(): void;
+  closeDetailsPane(): HTMLElement | undefined;
 
   pushActions(actions: IAction[]);
   openMenu(group: IAction);

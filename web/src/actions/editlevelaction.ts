@@ -3,7 +3,7 @@ import { getWireResourceUri } from "../lib/fetchadapter";
 import { setBlockRegister } from "../ui/ileveleditor";
 import { VoxelModel } from "../voxel/voxelmodel";
 import { VoxelModelCache, modelCache } from "../voxel/voxelmodelcache";
-import { BasicAction, FuncAction } from "./commandaction";
+import { BasicAction, FolderAction, FuncAction, PaneAction } from "./commandaction";
 import { ICommandLayer, DetailsPaneKind, IAction } from "./iaction";
 import { ImportVoxAction } from "./importaction";
 
@@ -16,60 +16,41 @@ export function getLevelActions(): IAction[] {
     new FuncAction('RotateXZ', { closePane: false }, () => vm.levelEditor?.rotateXZ()),
     new FuncAction('FlipX', { closePane: false }, () => vm.levelEditor?.flipX()),
     new FuncAction('FlipZ', { closePane: false }, () => vm.levelEditor?.flipZ()),
+    new PaneAction('Blocks', createBlocksPane),
     //new FuncAction('Block Library', { closePane: false }, () => this.showLibrary(bar)),
-    new ImportVoxAction()
+    new ImportVoxAction('Import Block')
   ]
 }
 
-export class EditLevelAction extends BasicAction {
-  private wrapper: HTMLDivElement | undefined;
-  private library: HTMLDivElement | undefined;
+function createBlocksPane(commandLayer: ICommandLayer): HTMLElement {
+  let wrapper = document.createElement('div');
+  wrapper.className = 'blockLibraryWrapper';
 
-  public constructor() {
-    super('EditLevel', { tags: ['level', 'edit', 'level'] });
-  }
+  let library = document.createElement('div');
+  library.className = 'blockLibrary';
+  wrapper.appendChild(library);
 
-  protected override onClick(bar: ICommandLayer) {
-    vm.stop();
-    vm.editLevel();
+  renderLibrary(library);
 
-    bar.pushActions(getLevelActions());
-  }
+  return wrapper;
+}
 
-  private showLibrary(bar: ICommandLayer) {
-    if (this.wrapper !== undefined) {
-      bar.closeDetailsPane();
-      this.wrapper = undefined;
-    } else {
+function renderLibrary(library: HTMLDivElement) {
+  for (let model of modelCache.getVoxelModels()) {
+    let item = document.createElement('div');
+    item.className = 'blockLibraryItem';
 
-      this.wrapper = document.createElement('div');
-      this.wrapper.className = 'blockLibraryWrapper';
+    let image = document.createElement('img') as HTMLImageElement;
+    image.src = getWireResourceUri(model.thumbnailUri);
+    item.appendChild(image);
+    item.addEventListener('click', () => onSelectItem(model));
 
-      this.library = document.createElement('div');
-      this.library.className = 'blockLibrary';
-      this.wrapper.appendChild(this.library);
-
-      this.renderLibrary();
-      bar.openDetailsPane(this.wrapper, DetailsPaneKind.Partial);
-    }
-  }
-
-  private renderLibrary() {
-    for (let model of modelCache.getVoxelModels()) {
-      let item = document.createElement('div');
-      item.className = 'blockLibraryItem';
-
-      let image = document.createElement('img') as HTMLImageElement;
-      image.src = getWireResourceUri(model.thumbnailUri);
-      item.appendChild(image);
-      item.addEventListener('click', () => this.onSelectItem(model));
-
-      this.library?.appendChild(item);
-    }
-  }
-
-  private onSelectItem(model: VoxelModel) {
-    setBlockRegister(model);
+    library.appendChild(item);
   }
 }
+
+function onSelectItem(model: VoxelModel) {
+  setBlockRegister(model);
+}
+
 
