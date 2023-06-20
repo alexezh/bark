@@ -126,17 +126,13 @@
     display: block
   }
 
-  .commandLayer {
-    position: absolute;
-    opacity: 1.0;
-    background: rgb(219, 210, 210);
-    top: 0;
-    left: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
   .commandBar {
+    position: fixed;
+    opacity: 1.0;
+    top: 0;
+    left: 50%;
+    -webkit-transform: translate(-50%, 0);
+    transform: translate(-50%, 0);
     width: '100%';
     height: 2em;
     display: flex;
@@ -146,6 +142,13 @@
   }
 
   .commandPane {
+    position: fixed;
+    opacity: 1.0;
+    top: 50%;
+    left: 0;
+    -webkit-transform: translate(0, -50%);
+    transform: translate(0, -50%);
+    background: rgb(219, 210, 210);
     width: '100%';
     height: '100%';
     display: grid;

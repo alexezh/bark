@@ -49,23 +49,26 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
   private _fullWidth: number;
 
   public constructor(props: CommandBarProps) {
-    let element = document.createElement('div');
-    element.className = 'commandLayer';
+    let bar = document.createElement('div');
+    bar.className = 'commandBar';
+
+    let pane = document.createElement('div');
+    bar.className = 'commandPane';
+
     let fullWidth = props.w;
     let fullHeight = props.h;
 
     // reset layer size to 0 to hide it
     props.w = 0;
     props.h = 0;
-    super(props, element, false);
+    super(props, [bar, pane]);
 
-    this.bar = document.createElement('div');
+    this.bar = bar;
     this.bar.className = 'commandBar';
-    this.element.appendChild(this.bar);
 
-    this.pane = document.createElement('div');
+    this.pane = pane;
     this.pane.className = 'commandPane';
-    this.element.appendChild(this.pane);
+    setElementVisible(this.pane, false);
 
     // save properties for later
     this._fullWidth = fullWidth;
@@ -75,7 +78,7 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
 
     this._commandList = new CommandList(this.props, this);
 
-    this.element.addEventListener('keydown', this.onKeyDown.bind(this));
+    this.pane.addEventListener('keydown', this.onKeyDown.bind(this));
 
     // <button type="button" class="nes-btn is-primary">Primary</button>
     //this.editButton = createButton(this._element, 'EDIT', (evt: any): any => props.onToggleEdit());
@@ -210,10 +213,9 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
   private closeCommandList() {
     this.closeDetailsPane();
     this._commandList.close(this.pane);
+    setElementVisible(this.pane, false);
 
-    this.props.w = 0;
-    this.props.h = 0;
-    this.updateElementSize();
+    //this.updateElementSize();
     this._getCommandListActions = undefined;
   }
 
@@ -226,10 +228,11 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
     }
 
     if (getListOld !== getListActions) {
-      this.props.w = this.getCommandListWidth();
-      this.props.h = this._fullHeight;
-      this.updateElementSize();
+      //this.props.w = this.getCommandListWidth();
+      //this.props.h = this._fullHeight;
+      //this.updateElementSize();
 
+      setElementVisible(this.pane, true);
       this._commandList.open(this.pane);
       this._commandList.loadActions(getListActions());
       this._getCommandListActions = getListActions;
@@ -276,10 +279,22 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
   }
 
   protected updateElementSize() {
-    super.updateElementSize();
-    if (this.pane) {
-      this.pane.style.width = this.props.w.toString();
-      this.pane.style.height = this.props.h.toString();
-    }
+    // not calling super here
+    // super.updateElementSize();
+    /*
+        this.bar.style.left = this.props.x.toString();
+        this.bar.style.top = this.props.y.toString();
+        if (this.props.w !== 0) {
+          this._elements[0].style.width = this.props.w.toString();
+        }
+        if (this.props.h !== 0) {
+          this._elements[0].style.height = this.props.h.toString();
+        }
+    
+        if (this.pane) {
+          this.pane.style.width = this.props.w.toString();
+          this.pane.style.height = this.props.h.toString();
+        }
+        */
   }
 }

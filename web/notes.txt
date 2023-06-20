@@ -8,18 +8,11 @@ https://skejven11.github.io/Fantasy-Map-Generator/
 https://github.com/lebesnec/island.js
 
 
-tiles:
- 50 sand
- 90 ground
- 87 grass
+raycaster
 
- isSolid
- island
- terrain
+https://github.com/gkjohnson/three-mesh-bvh/blob/master/example/physics.js
 
-my params
 
- 535 water:145 base:250
 
  https://gist.github.com/harunpehlivan/5dc9a2ea4b6831ef5b82aa8a19b708d0
  

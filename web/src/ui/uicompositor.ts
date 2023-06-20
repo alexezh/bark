@@ -21,7 +21,9 @@ export class UiCompositor2 implements IUiCompositor {
 
   public appendLayer(layer: IUiLayer2) {
     layer.setCompositor(this);
-    this.container.appendChild(layer.element);
+    for (let e of layer.elements) {
+      this.container.appendChild(e);
+    }
     this.layerMap[layer.id] = layer;
   }
 
@@ -30,14 +32,18 @@ export class UiCompositor2 implements IUiCompositor {
     this.layerMap[layer.id] = layer;
 
     let insertBeforeLayer = this.layerMap[insertBefore];
-    this.container.insertBefore(layer.element, insertBeforeLayer.element);
+    for (let e of layer.elements) {
+      this.container.insertBefore(e, insertBeforeLayer.elements[0]);
+    }
   }
 
   public removeLayer(id: string) {
     let layer = this.layerMap[id];
     layer.setCompositor(undefined);
     delete this.layerMap[id];
-    this.container.removeChild(layer.element);
+    for (let e of layer.elements) {
+      this.container.removeChild(e);
+    }
   }
 
   public getLayer(id: string) {

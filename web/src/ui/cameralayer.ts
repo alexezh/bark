@@ -39,17 +39,16 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
     public get scale(): number { return this.props.scale }
 
     public constructor(props: CameraLayerProps) {
-        super(props, (() => {
+        super(props, [(() => {
             let dd = document.createElement('div');
-            dd.id = props.id;
             dd.className = 'gameCanvas';
             dd.style.visibility = (props.visible) ? 'visible' : 'hidden';
             dd.setAttribute('tabindex', '0');
             return dd;
-        })());
+        })()]);
 
         //this.input = new KeyBinder(this.element, () => { });
-        this.element.addEventListener('contextmenu', this.onContextMenu.bind(this));
+        this.elements[0].addEventListener('contextmenu', this.onContextMenu.bind(this));
 
         // Iosmetric view
         //Object3D.DefaultUp = new Vector3(0, 0, 1);
@@ -69,7 +68,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         this.vrButton = new VRButton(this.renderer, (x) => {
             this.xrSessionChangedSource.invoke(x);
         });
-        this.element.appendChild(this.vrButton.element);
+        this.elements[0].appendChild(this.vrButton.element);
 
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
 
@@ -77,7 +76,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         vm.registerLevelLoaded(this, this.onLevelLoaded.bind(this));
     };
 
-    public get canvas(): HTMLDivElement { return this.element as HTMLDivElement; }
+    public get canvas(): HTMLDivElement { return this.elements[0] as HTMLDivElement; }
     public get position(): Vector3 { return this._cameraGroup.position }
     public get camera(): PerspectiveCamera { return this._camera }
     public get cameraGroup(): Group { return this._cameraGroup }
@@ -90,7 +89,7 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         //  this.scene.fog = new FogExp2( 0xFFA1C1, 0.0059 );
         this.scene.fog = new Fog(0x000000, 240, this.visible_distance);
 
-        this.element.appendChild(this.renderer.domElement);
+        this.elements[0].appendChild(this.renderer.domElement);
 
         // create VR elements
         let controller1 = this.renderer.xr.getController(0);
