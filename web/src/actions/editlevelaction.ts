@@ -4,8 +4,22 @@ import { setBlockRegister } from "../ui/ileveleditor";
 import { VoxelModel } from "../voxel/voxelmodel";
 import { VoxelModelCache, modelCache } from "../voxel/voxelmodelcache";
 import { BasicAction, FuncAction } from "./commandaction";
-import { ICommandLayer, DetailsPaneKind } from "./iaction";
+import { ICommandLayer, DetailsPaneKind, IAction } from "./iaction";
 import { ImportVoxAction } from "./importaction";
+
+export function getLevelActions(): IAction[] {
+  return [
+    new FuncAction('Copy', { closePane: false }, () => vm.levelEditor?.copyBlock()),
+    new FuncAction('Cut', { closePane: false }, () => vm.levelEditor?.cutBlock()),
+    new FuncAction('Paste', { closePane: false }, () => vm.levelEditor?.pasteBlock()),
+    new FuncAction('Clear', { closePane: false }, () => vm.levelEditor?.clearBlock()),
+    new FuncAction('RotateXZ', { closePane: false }, () => vm.levelEditor?.rotateXZ()),
+    new FuncAction('FlipX', { closePane: false }, () => vm.levelEditor?.flipX()),
+    new FuncAction('FlipZ', { closePane: false }, () => vm.levelEditor?.flipZ()),
+    //new FuncAction('Block Library', { closePane: false }, () => this.showLibrary(bar)),
+    new ImportVoxAction()
+  ]
+}
 
 export class EditLevelAction extends BasicAction {
   private wrapper: HTMLDivElement | undefined;
@@ -19,18 +33,7 @@ export class EditLevelAction extends BasicAction {
     vm.stop();
     vm.editLevel();
 
-    bar.pushActions(
-      [
-        new FuncAction('Copy', { closePane: false }, () => vm.levelEditor?.copyBlock()),
-        new FuncAction('Cut', { closePane: false }, () => vm.levelEditor?.cutBlock()),
-        new FuncAction('Paste', { closePane: false }, () => vm.levelEditor?.pasteBlock()),
-        new FuncAction('Clear', { closePane: false }, () => vm.levelEditor?.clearBlock()),
-        new FuncAction('RotateXZ', { closePane: false }, () => vm.levelEditor?.rotateXZ()),
-        new FuncAction('FlipX', { closePane: false }, () => vm.levelEditor?.flipX()),
-        new FuncAction('FlipZ', { closePane: false }, () => vm.levelEditor?.flipZ()),
-        new FuncAction('Block Library', { closePane: false }, () => this.showLibrary(bar)),
-        new ImportVoxAction()
-      ]);
+    bar.pushActions(getLevelActions());
   }
 
   private showLibrary(bar: ICommandLayer) {

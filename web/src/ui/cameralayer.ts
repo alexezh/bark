@@ -116,6 +116,11 @@ export class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLa
         this.levelEditor = editor;
     }
 
+    public editCamera() {
+        this.focus();
+        this.levelEditor?.editCamera();
+    }
+
     private onContextMenu(event: Event) {
         event.preventDefault();
     }

@@ -2,8 +2,10 @@ import { createButton, setElementVisible } from "../lib/htmlutils";
 import { DetailsPaneKind, IAction, ICommandLayer, IMenuAction } from "./iaction";
 import { ShellProps } from "../ui/shell";
 import { UiLayer2, UiLayerProps } from "../ui/uilayer";
-import { getTopLevelActions } from "./actionregistry";
 import { AppMode, vm } from "../engine/ivm";
+import { CommandList } from "./commandlist";
+import { getLevelActions } from "./editlevelaction";
+import { getSpriteActions } from "./editspriteactions";
 
 export type CommandBarProps = UiLayerProps & {
   shellProps: ShellProps;
@@ -11,113 +13,6 @@ export type CommandBarProps = UiLayerProps & {
   //mapEditorState: MapEditorState;
 }
 
-/**
- * scrollable list of commands
- */
-export class CommandList {
-  private navStack: Array<IAction[]> = new Array<IAction[]>();
-  private renderedActions: IAction[] | undefined;
-  private props: CommandBarProps;
-  private wrapperDiv: HTMLDivElement | undefined;
-  private listDiv: HTMLDivElement | undefined;
-  private opened: boolean = false;
-  private readonly layer: ICommandLayer;
-
-  public get isOpened(): boolean { return this.opened; };
-  public get navStackDepth(): number { return this.navStack.length; }
-
-  public constructor(props: CommandBarProps, layer: ICommandLayer) {
-    this.props = props;
-    this.layer = layer;
-
-    // make list of possible actions
-    this.navStack.push(getTopLevelActions());
-  }
-
-  public open(parent: HTMLElement) {
-    this.opened = true;
-
-    this.wrapperDiv = document.createElement('div');
-    this.wrapperDiv.style.gridColumn = '1';
-    this.wrapperDiv.style.gridRow = '2';
-
-    this.listDiv = document.createElement('div');
-    this.listDiv.className = 'commandList';
-    this.wrapperDiv.appendChild(this.listDiv);
-    parent.appendChild(this.wrapperDiv);
-    this.updateListSize();
-    this.renderList();
-  }
-
-  public close(parent: HTMLElement) {
-    if (!this.opened) {
-      return false;
-    }
-
-    parent.removeChild(this.listDiv!);
-    this.opened = false;
-  }
-
-  public pushActions(actions: IAction[]) {
-    this.navStack.push(actions);
-    this.renderList();
-  }
-
-  public popActions() {
-    this.navStack.pop();
-    this.renderList();
-  }
-
-  public openMenu(group: IMenuAction) {
-    let idx = this.renderedActions?.findIndex((x) => x === group);
-    if (idx === -1 || idx === undefined) {
-      console.warn('openMenu: cannot find group');
-      return;
-    }
-
-
-    for (let item of group.getChildActions()) {
-      let elem = item.renderButton(this.layer);
-      if (idx + 1 === this.renderedActions?.length) {
-        this.listDiv!.appendChild(elem);
-        this.renderedActions!.push(item);
-      } else {
-        this.listDiv!.insertBefore(elem, this.renderedActions![idx + 1].element!);
-        this.renderedActions!.splice(idx + 1, 0, item);
-      }
-      idx = idx + 1;
-    }
-  }
-
-  public closeMenu(group: IMenuAction) {
-  }
-
-  private renderList() {
-    if (this.renderedActions) {
-      this.listDiv!.replaceChildren();
-      for (let a of this.renderedActions) {
-        a.destroyButton();
-      }
-    }
-
-    let actions = this.navStack[this.navStack.length - 1];
-    for (let a of actions) {
-      let elem = a.renderButton(this.layer);
-      this.listDiv!.appendChild(elem);
-    }
-    this.renderedActions = actions;
-  }
-
-  private updateListSize() {
-    if (this.listDiv === undefined) {
-      return;
-    }
-    this.listDiv.style.left = '0';
-    if (this.props.w !== 0) {
-      this.listDiv.style.width = this.props.w.toString();
-    }
-  }
-}
 
 /**
  * shows scrollable bar with searchable command list
@@ -148,6 +43,7 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
   // @ts-ignore
   private cameraButton: HTMLButtonElement;
   private _commandList: CommandList;
+  private _getCommandListActions: (() => IAction[]) | undefined;
   private _detailsPane: HTMLElement | undefined;
   private _fullHeight: number;
   private _fullWidth: number;
@@ -178,6 +74,8 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
     this.createButtons();
 
     this._commandList = new CommandList(this.props, this);
+
+    this.element.addEventListener('keydown', this.onKeyDown.bind(this));
 
     // <button type="button" class="nes-btn is-primary">Primary</button>
     //this.editButton = createButton(this._element, 'EDIT', (evt: any): any => props.onToggleEdit());
@@ -230,10 +128,11 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
   private createButtons() {
     // add button to open pane
     //this.homeButton = createButton(this.pane, 'commandBarButton', 'Home', this.onCommandHome.bind(this));
-    this.startButton = createButton(this.bar, 'commandBarButton', 'Start', this.onCommandStart.bind(this));
-    this.pauseButton = createButton(this.bar, 'commandBarButton', 'Pause', this.onCommandPause.bind(this));
-    this.editButton = createButton(this.bar, 'commandBarButton', 'Edit', this.onCommandEdit.bind(this));
-    this.cameraButton = createButton(this.bar, 'commandBarButton', 'Camera', this.onCommandCamera.bind(this));
+    this.startButton = createButton(this.bar, 'commandBarButton', 'START', this.onCommandStart.bind(this));
+    this.pauseButton = createButton(this.bar, 'commandBarButton', 'PAUSE', this.onCommandPause.bind(this));
+    this.editButton = createButton(this.bar, 'commandBarButton', 'LEVEL', this.onLevel.bind(this));
+    this.editButton = createButton(this.bar, 'commandBarButton', 'SPRITE', this.onSprite.bind(this));
+    this.cameraButton = createButton(this.bar, 'commandBarButton', 'CAMERA', this.onCamera.bind(this));
 
     //this.cameraButton.toolto
     /**
@@ -282,6 +181,14 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
     //this._commandList.updateList(this, this._pane!);
   }
 
+  private onKeyDown(evt: Event) {
+    let ke = evt as KeyboardEvent;
+    if (ke.code === 'Escape') {
+      this.closeDetailsPane();
+      evt.preventDefault();
+    }
+  }
+
   private onCommandStart() {
     setTimeout(async () => {
       if (vm.appMode !== AppMode.run) {
@@ -295,21 +202,63 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
   }
 
   private onCommandPause() {
-
+    vm.pause();
   }
-  private onCommandEdit() {
+
+  private closeCommandList() {
+    this.closeDetailsPane();
+    this._commandList.close(this.pane);
+
+    this.props.w = 0;
+    this.props.h = 0;
+    this.updateElementSize();
+    this._getCommandListActions = undefined;
+  }
+
+  private openCommandList(getListActions: () => IAction[]) {
+
+    let getListOld = this._getCommandListActions;
+
+    if (this._commandList.isOpened) {
+      this.closeCommandList();
+    }
+
+    if (getListOld !== getListActions) {
+      this.props.w = this.getCommandListWidth();
+      this.props.h = this._fullHeight;
+      this.updateElementSize();
+
+      this._commandList.open(this.pane);
+      this._commandList.loadActions(getListActions());
+      this._getCommandListActions = getListActions;
+    }
+  }
+
+  private onLevel() {
+    this.openCommandList(getSpriteActions);
+    //vm.editLevel();
+
 
     this.updateCommandButtons();
   }
-  private onCommandCamera() {
-    vm.levelEditor?.editCamera();
+
+  private onSprite() {
+    console.log('onSprite');
+    this.openCommandList(getLevelActions);
+    //vm.camera.editCamera();
+    //this.updateCommandButtons();
+  }
+
+  private onCamera() {
+    console.log('onCommandCamera');
+    vm.camera.editCamera();
     this.updateCommandButtons();
   }
 
   private updateCommandButtons() {
-    this.startButton.textContent = (vm.appMode === AppMode.run) ? 'Stop' : 'Start';
+    this.startButton.textContent = (vm.appMode === AppMode.run) ? 'STOP' : 'START';
     setElementVisible(this.editButton, vm.appMode !== AppMode.run);
-    setElementVisible(this.cameraButton, vm.appMode !== AppMode.run);
+    setElementVisible(this.cameraButton, vm.appMode === AppMode.edit);
   }
 
   private getCommandListWidth() {

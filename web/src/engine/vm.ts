@@ -171,6 +171,14 @@ export class VM implements IVM {
     this._appMode = AppMode.edit;
   }
 
+  public pause() {
+    console.log('VM: pause');
+    //animator.stop();
+    //this.inputController?.stop();
+    //this.clock.stop();
+    this._appMode = AppMode.pause;
+  }
+
   public async sendMesssage(address: string, msg: any): Promise<void> {
     this._runner.sendMesssage(address, msg);
   }

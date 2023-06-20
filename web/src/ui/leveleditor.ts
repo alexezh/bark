@@ -145,6 +145,7 @@ export class LevelEditor implements ILevelEditor {
   };
 
   public editCamera() {
+    console.log('LevelEditor.lock')
     this.orbitControls.lock();
   }
 

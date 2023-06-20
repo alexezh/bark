@@ -17,6 +17,11 @@ export interface ICameraLayer {
   registerXrSessionHandler(target: any, func: (session: XRSession | undefined) => void): void;
 
   /**
+   * allows user to move edits camera with mouse
+   */
+  editCamera();
+
+  /**
    * reinitializer scene
    */
   createScene();

@@ -19,6 +19,7 @@ export interface IInputController {
 export enum AppMode {
   run,
   stop,
+  pause,
   edit,
 }
 
@@ -88,6 +89,11 @@ export interface IVM {
    * remove runtime objects from the scene
    */
   stop(): void;
+
+  /**
+   * pause game timers and any VM calls
+   */
+  pause(): void;
 
   /**
    * called every frame to render
