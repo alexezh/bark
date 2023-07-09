@@ -37,19 +37,21 @@ export class FormPane {
   }
 }
 
-export abstract class FormAction implements IAction {
+export class FormAction implements IAction {
   private button: HTMLButtonElement | undefined;
   private propPage: HTMLDivElement | undefined;
   private _name: string;
   private _tags: string[];
+  private createForm: (cl: ICommandLayer) => FormPane;
   get element(): HTMLElement | undefined { return this.button }
 
   get name(): string { return this._name }
   get tags(): string[] { return this._tags }
 
-  public constructor(name: string, tags: string[]) {
+  public constructor(name: string, tags: string[], createForm: (cl: ICommandLayer) => FormPane) {
     this._name = name;
     this._tags = tags;
+    this.createForm = createForm;
   }
 
   renderButton(bar: ICommandLayer): HTMLElement {
@@ -77,6 +79,4 @@ export abstract class FormAction implements IAction {
 
     cl.openDetailsPane(form.element, DetailsPaneKind.Partial);
   }
-
-  protected abstract createForm(cl: ICommandLayer): FormPane;
 }

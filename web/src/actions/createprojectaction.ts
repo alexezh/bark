@@ -10,6 +10,7 @@ import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
 import { VoxelLevelFile } from "../engine/voxellevelfile";
 import { FileMapBlock } from "../ui/ivoxellevel";
 import { FormPane } from "./formpane";
+import { SpriteFile } from "../engine/spritefile";
 
 export class CreateProjectAction extends BasicAction {
   get name(): string { return 'CreateProject' }
@@ -95,6 +96,13 @@ export async function createDefaultProject(): Promise<void> {
   if (modelInfos === undefined) {
     return;
   }
+
+  // create sprites
+  let f1 = SpriteFile.create('monky');
+  f1.addSkin('1', 'vox/monky.vox')
+
+  let f2 = SpriteFile.create('bomb');
+  f2.addSkin('1', 'vox/bomb.vox')
 
   let file = await VoxelLevelFile.createLevel('levels/default');
 

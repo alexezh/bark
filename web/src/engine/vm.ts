@@ -22,6 +22,7 @@ import { CodeRunner } from "../basic/coderunner";
 import { registerSystemModules } from "../basic/lib/all";
 import { ILevelEditor } from "../ui/ileveleditor";
 import { IRigitBody, RigitBodyKind } from "../voxel/irigitbody";
+import SyncEventSource from "../lib/synceventsource";
 
 type CollisionWaiter = {
   // if resolve is undefined, there is no waiter
@@ -57,6 +58,7 @@ export class VM implements IVM {
   private _levelEditor: LevelEditor | undefined = undefined;
 
   private readonly onLevelLoaded: AsyncEventSource<boolean> = new AsyncEventSource();
+  private readonly onAppModeChanged: SyncEventSource<boolean> = new SyncEventSource();
   public particles!: ParticlePool;
 
   //private _sprites: Map
@@ -94,6 +96,10 @@ export class VM implements IVM {
 
   public registerLevelLoaded(target: any, func: (val: boolean) => void) {
     this.onLevelLoaded.add(target, func);
+  }
+
+  public registerModeChanged(target: any, func: () => void): void {
+    this.onAppModeChanged.add(target, func);
   }
 
   public setController(controller: IInputController) {
@@ -151,9 +157,14 @@ export class VM implements IVM {
 
     this._ticker = new Ticker();
     animator.start(this._ticker);
-    this._appMode = AppMode.run;
+    this.setAppMode(AppMode.run);
 
     this._runner.start();
+  }
+
+  private setAppMode(mode: AppMode) {
+    this._appMode = mode;
+    this.onAppModeChanged.invoke();
   }
 
   private resetVm() {
@@ -168,7 +179,7 @@ export class VM implements IVM {
     animator.stop();
     this.inputController?.stop();
     this.clock.stop();
-    this._appMode = AppMode.edit;
+    this.setAppMode(AppMode.edit);
   }
 
   public pause() {
@@ -176,17 +187,22 @@ export class VM implements IVM {
     //animator.stop();
     //this.inputController?.stop();
     //this.clock.stop();
-    this._appMode = AppMode.pause;
+    this.setAppMode(AppMode.pause);
   }
 
   public async sendMesssage(address: string, msg: any): Promise<void> {
     this._runner.sendMesssage(address, msg);
   }
 
-  public editLevel(): void {
-    console.log('editLevel');
+  public edit(): void {
+    console.log('edit');
+
+    if (this._appMode === AppMode.edit) {
+      return;
+    }
 
     this.stop();
+    this.setAppMode(AppMode.edit);
     this.loadScene(AppMode.edit);
 
     this._levelEditor = new LevelEditor(this.camera, this.level);

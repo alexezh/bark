@@ -39,7 +39,9 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
   // @ts-ignore
   private pauseButton: HTMLButtonElement;
   // @ts-ignore
-  private editButton: HTMLButtonElement;
+  private levelButton: HTMLButtonElement;
+  // @ts-ignore
+  private spriteButton: HTMLButtonElement;
   // @ts-ignore
   private cameraButton: HTMLButtonElement;
   private _commandList: CommandList;
@@ -76,6 +78,7 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
 
     this.createButtons();
 
+    vm.registerModeChanged(this, () => this.onAppModeChanged.bind(this));
     this._commandList = new CommandList(this.props, this);
 
     this.pane.addEventListener('keydown', this.onKeyDown.bind(this));
@@ -135,8 +138,8 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
     //this.homeButton = createButton(this.pane, 'commandBarButton', 'Home', this.onCommandHome.bind(this));
     this.startButton = createButton(this.bar, 'commandBarButton', 'START', this.onCommandStart.bind(this));
     this.pauseButton = createButton(this.bar, 'commandBarButton', 'PAUSE', this.onCommandPause.bind(this));
-    this.editButton = createButton(this.bar, 'commandBarButton', 'LEVEL', this.onLevel.bind(this));
-    this.editButton = createButton(this.bar, 'commandBarButton', 'SPRITE', this.onSprite.bind(this));
+    this.levelButton = createButton(this.bar, 'commandBarButton', 'LEVEL', this.onLevel.bind(this));
+    this.spriteButton = createButton(this.bar, 'commandBarButton', 'SPRITE', this.onSprite.bind(this));
     this.cameraButton = createButton(this.bar, 'commandBarButton', 'CAMERA', this.onCamera.bind(this));
 
     //this.cameraButton.toolto
@@ -161,29 +164,11 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
     */
   }
 
-  private onCommandHome() {
-    if (this._commandList.navStackDepth > 1) {
-      this._commandList.popActions();
-      if (this._commandList.navStackDepth === 1) {
-        this.homeButton.textContent = 'A';
-      }
-    } else {
-      if (this._commandList.isOpened) {
-        this.closeDetailsPane();
-        this._commandList.close(this.pane);
-
-        this.props.w = 0;
-        this.props.h = 0;
-        this.updateElementSize();
-      } else {
-        this.props.w = this.getCommandListWidth();
-        this.props.h = this._fullHeight;
-        this.updateElementSize();
-
-        this._commandList.open(this.pane);
-      }
+  private onAppModeChanged() {
+    this.updateCommandButtons();
+    if (vm.appMode !== AppMode.edit) {
+      this.closeCommandList();
     }
-    //this._commandList.updateList(this, this._pane!);
   }
 
   private onKeyDown(evt: Event) {
@@ -211,6 +196,10 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
   }
 
   private closeCommandList() {
+    if (!this._commandList.isOpened) {
+      return;
+    }
+
     this.closeDetailsPane();
     this._commandList.close(this.pane);
     setElementVisible(this.pane, false);
@@ -237,33 +226,37 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
       this._commandList.loadActions(getListActions());
       this._getCommandListActions = getListActions;
     }
-  }
-
-  private onLevel() {
-    this.openCommandList(getLevelActions);
-    //vm.editLevel();
-
 
     this.updateCommandButtons();
   }
 
+  private onLevel() {
+    vm.edit();
+
+    this.openCommandList(getLevelActions);
+  }
+
   private onSprite() {
     console.log('onSprite');
+    vm.edit();
+
     this.openCommandList(getSpriteActions);
     //vm.camera.editCamera();
     //this.updateCommandButtons();
   }
 
   private onCamera() {
-    console.log('onCommandCamera');
+    console.log('onCamera');
+    vm.edit();
     vm.camera.editCamera();
     this.updateCommandButtons();
   }
 
   private updateCommandButtons() {
     this.startButton.textContent = (vm.appMode === AppMode.run) ? 'STOP' : 'START';
-    setElementVisible(this.editButton, vm.appMode !== AppMode.run);
-    setElementVisible(this.cameraButton, vm.appMode === AppMode.edit);
+    setElementVisible(this.levelButton, vm.appMode !== AppMode.run);
+    setElementVisible(this.spriteButton, vm.appMode !== AppMode.run);
+    setElementVisible(this.cameraButton, vm.appMode !== AppMode.run);
   }
 
   private getCommandListWidth() {

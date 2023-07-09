@@ -41,8 +41,8 @@ export type WireString = {
 }
 
 export type WireGetStringsRequest = {
-  pattern: string | undefined;
-  keys: string[];
+  pattern?: string;
+  keys?: string[];
 }
 
 export type WireGetStringsResponse = {
@@ -129,8 +129,7 @@ export async function wireGetObject<T>(key: string): Promise<T | undefined> {
   return o;
 }
 
-export async function wireGetStrings(keys: string[]): Promise<WireString[]> {
-  let request: WireGetStringsRequest = { keys: keys, pattern: undefined }
+export async function wireGetStrings(request: WireGetStringsRequest): Promise<WireString[]> {
   let response: WireGetStringsResponse = await (await fetchAdapter!.post(`/api/project/getstrings/${projectId}`, JSON.stringify(request))).json();
   return response.values;
 }

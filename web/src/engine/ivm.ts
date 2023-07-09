@@ -63,6 +63,7 @@ export interface IVM {
 
   attachCamera(camera: ICameraLayer): void;
   registerLevelLoaded(target: any, func: () => void): void;
+  registerModeChanged(target: any, func: () => void): void;
   setController(controller: IInputController);
 
   /**
@@ -76,7 +77,11 @@ export interface IVM {
    * load default level of the game or specific level
    */
   loadLevel(id: string): Promise<void>;
-  editLevel();
+
+  /**
+   * enter edit mode
+   */
+  edit();
 
   /**
    * run the game

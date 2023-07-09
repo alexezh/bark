@@ -59,7 +59,7 @@ export class VoxelModelCache {
     }
 
     // we might return different list than input
-    let voxs = await wireGetStrings(voxUrls);
+    let voxs = await wireGetStrings({ keys: voxUrls });
     for (let vox of voxs) {
       let modelInfo = modelInfos.get(vox.key);
       console.log(`load: ${vox.key} ${modelInfo?.id}`);
