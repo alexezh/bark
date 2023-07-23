@@ -1,14 +1,18 @@
+import { Sprite } from "three";
 import { ICodeLoader, ICodeRunner as ICodeRunner } from "../engine/ivm";
+import { Sprite3 } from "../engine/sprite3";
 
 export type MessageHandler = (...args: any[]) => Promise<void>;
 export type StartHandler = () => Promise<void>;
 export type LoadHandler = () => Promise<void>;
+export type CreateSpriteHandler = (sprite: Sprite3) => Promise<void>;
 
 export type RuntimeModule = { [key: string]: Function };
 
 export class CodeRunner implements ICodeRunner {
   private readonly _startHandlers: StartHandler[] = [];
   private readonly _loadHandlers: StartHandler[] = [];
+  private readonly _createHandlers = new Map<string, CreateSpriteHandler[]>();
 
   // we are going to copy/write of handler array
   // so it is safe to enumerate even if handler changes it
@@ -39,6 +43,7 @@ export class CodeRunner implements ICodeRunner {
     this._startHandlers.length = 0;
     this._loadHandlers.length = 0;
     this._messageHandlers.clear();
+    this._createHandlers.clear();
   }
 
   public async sendMesssage(address: string, ...args: any[]): Promise<void> {
@@ -61,7 +66,7 @@ export class CodeRunner implements ICodeRunner {
 
   public onMessage(address: string, func: MessageHandler) {
     let handlers = this._messageHandlers.get(address);
-    if (handlers === undefined) {
+    if (!handlers) {
       handlers = [];
       this._messageHandlers.set(address, handlers);
     }
@@ -76,6 +81,18 @@ export class CodeRunner implements ICodeRunner {
     this._startHandlers.push(func);
   }
 
+  public onCreateSprite(name: string, func: () => Promise<void>) {
+    let handlers = this._createHandlers.get(name);
+    if (!handlers) {
+      handlers = [];
+      this._createHandlers.set(name, handlers);
+    }
+    handlers.push(func);
+  }
+
+  /**
+   * execute all start handlers
+   */
   public async start(): Promise<void> {
     // now start the game
     // allow any start method to run as much as it wants
@@ -88,6 +105,16 @@ export class CodeRunner implements ICodeRunner {
           console.log('onStart exception:', (e as any).toString());
         }
       });
+    }
+  }
+
+  public async createSprite(name: string, sprite: Sprite3) {
+    let handlers = this._createHandlers.get(name);
+    if (!handlers) {
+      return;
+    }
+    for (let h of handlers) {
+      await h(sprite);
     }
   }
 }

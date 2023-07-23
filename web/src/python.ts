@@ -183,7 +183,7 @@ export function boxedMonkey(): string {
     Sprite.addFrame ma idx:= 0 dur:=0
   end
   
-  on start function() begin
+  on create function() begin
     System.log 'send start message'
     System.sendMessage 'startMonky' monky
 
@@ -259,7 +259,7 @@ export function boxedBasic2(): string {
   on load function() begin
     System.loadLevel 'default'
 
-    monky:= Sprite.createSprite 'monky' 'vox/monky.vox' scale:=0.5
+    monky:= Sprite.createSprite 'monky' scale:=0.5
     Sprite.setPosition monky 120 20 120
 
     ThirdPersonController.configureController maxSpeed:=40 keySpeed:=10 thumbSpeed:=10 timeoutSeconds:=0.1

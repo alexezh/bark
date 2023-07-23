@@ -8,6 +8,8 @@ import { Token, TokenKind } from "./token";
  * generates Js function from ast
  * ATT: if function is async, we have to wrap it as Function does not support
  * async method. So we are going to always wrap it
+ * 
+ * ATT: we combine all modules into one; no reload yet. This can change later
  */
 
 export function transpile(mainFunction: string | undefined, loader: ICodeLoader): Function {
@@ -37,6 +39,8 @@ export function transpile(mainFunction: string | undefined, loader: ICodeLoader)
     }
 
     let jsText = writer.toString();
+
+    // compile to JS function with two paramers : __loader and __runner
     return new Function('__loader', '__runner', jsText);
   }
   catch (e) {
@@ -217,14 +221,18 @@ function processCall(ast: CallNode, writer: JsWriter) {
 function processOn(ast: OnNode, writer: JsWriter) {
 
   let regName: string;
-  let filterParam: string = '';
+  // first parameter to the call; has to end with comma
+  let firstParam: string = '';
   if (ast.event.value === 'start') {
     regName = 'onStart';
   } else if (ast.event.value === 'load') {
     regName = 'onLoad';
+  } else if (ast.event.value === 'create') {
+    regName = 'onCreateSprite';
+    firstParam = `${ast.module.name},`;
   } else if (ast.event.value === 'message') {
     regName = 'onMessage';
-    filterParam = (ast.filter) ? `${ast.filter.value},` : '';
+    firstParam = (ast.filter) ? `${ast.filter.value},` : '';
   } else {
     throw new ParseError(ParseErrorCode.InvalidArg, undefined, 'Invalid on name');
   }
@@ -235,9 +243,9 @@ function processOn(ast: OnNode, writer: JsWriter) {
   }
 
   if (ast.isAsync) {
-    writer.append(`__runner.${regName}(${filterParam}async (${params.join(',')}) => {`)
+    writer.append(`__runner.${regName}(${firstParam}async (${params.join(',')}) => {`)
   } else {
-    writer.append(`__runner.${regName}(${filterParam}(${params.join(',')}) => {`)
+    writer.append(`__runner.${regName}(${firstParam}(${params.join(',')}) => {`)
   }
 
   if (ast.body instanceof Function) {

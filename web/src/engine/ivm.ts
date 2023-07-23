@@ -8,7 +8,7 @@ import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxellevel";
 import { FuncDefNode, ModuleNode, OnNode, VarDefNode } from "../basic/ast";
 import { ILevelEditor } from "../ui/ileveleditor";
 import { IRigitBody, RigitBodyKind } from "../voxel/irigitbody";
-import { SpriteFile } from "./spritefile";
+import { ISpriteFile } from "./ispritefile";
 
 export interface IInputController {
   start();
@@ -29,6 +29,7 @@ export interface ICodeLoader {
   addSystemModule(module: ModuleNode);
 
   getUserModule(name: string): ModuleNode | undefined;
+  hasUserModule(name: string): boolean;
 
   systemModules(): Iterable<ModuleNode>;
   userModules(): Iterable<ModuleNode>;
@@ -111,7 +112,7 @@ export interface IVM {
    * does not add it to physics; caller should do this
    */
   createSprite(
-    name: string,
+    file: ISpriteFile,
     rm: IRigitModel | undefined,
     rigitKind?: RigitBodyKind): Sprite3;
 

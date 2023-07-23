@@ -1,12 +1,11 @@
-import { snakeCase } from "lodash";
-import { WireString, wireGetDict, wireGetObject, wireGetObjects, wireGetString, wireGetStrings, wireIncrement, wireSetDict, wireSetObject, wireSetObjectBackground, wireSetString } from "../lib/fetchadapter";
-import { modelCache } from "../voxel/voxelmodelcache";
+import { wireGetObject, wireGetObjects, wireIncrement, wireSetObjectBackground } from "../lib/fetchadapter";
 import { Sprite3 } from "./sprite3";
 import { vm } from "./ivm";
 import { CubeModel } from "./avatars/cubemodel";
-import { IRigitBody, RigitBodyKind } from "../voxel/irigitbody";
+import { RigitBodyKind } from "../voxel/irigitbody";
 import { createDefaultSprites } from "../actions/createprojectaction";
 import { IRigitModel } from "./irigitmodel";
+import { ISpriteFile } from "./ispritefile";
 
 type WireSpriteFile = {
   id: number;
@@ -26,7 +25,7 @@ const defaultSkin = 'default';
  * SpriteFile is loaded at open and it then used to create Sprite3 by calling
  * 
  */
-export class SpriteFile {
+export class SpriteFile implements ISpriteFile {
   private id: number;
   private _code!: string;
 
@@ -78,7 +77,7 @@ export class SpriteFile {
     });
   }
 
-  public async addSkin(skinName: string | undefined, url: string): Promise<void> {
+  public async addSkin(url: string, skinName?: string): Promise<void> {
     skinName = skinName ?? defaultSkin;
     this._skins.set(skinName, url);
     this.saveBackground();

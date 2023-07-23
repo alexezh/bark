@@ -52,6 +52,10 @@ export class CodeLoader implements ICodeLoader {
     // we are assuming that edit tokens are valid which is reasonable as we start with ast
   }
 
+  public hasUserModule(name: string): boolean {
+    return this._userModules.has(name);
+  }
+
   public getUserModule(name: string): ModuleNode | undefined {
     return this._userModules.get(name);
   }

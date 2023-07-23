@@ -14,7 +14,6 @@ import { ParticlePool } from "../voxel/particles";
 import { IVoxelLevel, IVoxelLevelFile } from "../ui/ivoxellevel";
 import { VoxelLevelFile } from "./voxellevelfile";
 import { LevelEditor } from "../ui/leveleditor";
-import { boxedBasic2 } from "../python";
 import { WireProjectConfig, wireGetObject } from "../lib/fetchadapter";
 import { modelCache } from "../voxel/voxelmodelcache";
 import { CodeLoader } from "../basic/codeloader";
@@ -23,7 +22,8 @@ import { registerSystemModules } from "../basic/lib/all";
 import { ILevelEditor } from "../ui/ileveleditor";
 import { IRigitBody, RigitBodyKind } from "../voxel/irigitbody";
 import SyncEventSource from "../lib/synceventsource";
-import { SpriteFile, SpriteFileCollection, spriteFiles } from "./spritefile";
+import { spriteFiles } from "./spritefile";
+import { ISpriteFile } from "./ispritefile";
 
 type CollisionWaiter = {
   // if resolve is undefined, there is no waiter
@@ -228,14 +228,19 @@ export class VM implements IVM {
   }
 
   public createSprite(
-    name: string,
+    file: ISpriteFile,
     rm: IRigitModel | undefined = undefined,
     rigitKind?: RigitBodyKind): Sprite3 {
 
-    let s = new Sprite3(name, rm, rigitKind);
+    let s = new Sprite3(file.name, rm, rigitKind);
 
     this._sprites.set(s.id, s);
     s.addToScene(this._camera!.scene!);
+
+    if (!this._loader.hasUserModule(file.name)) {
+      this._loader.addUserModule(file.name, file.code);
+    }
+    this._runner.createSprite(file.name, s);
 
     return s;
   }
