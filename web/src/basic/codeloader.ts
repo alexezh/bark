@@ -37,6 +37,7 @@ export class CodeLoader implements ICodeLoader {
       let tokenize = BasicLexer.load(text);
       let parser = new BasicParser(tokenize);
       let ast = parseModule(parser);
+      ast.name = name;
       this._userModules.set(name, ast);
     } else {
       this._userModules.set(name, text);

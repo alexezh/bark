@@ -1,6 +1,6 @@
 import { wireGetObject, wireGetObjects, wireIncrement, wireSetObjectBackground } from "../lib/fetchadapter";
 import { Sprite3 } from "./sprite3";
-import { vm } from "./ivm";
+import { ICodeLoader, vm } from "./ivm";
 import { CubeModel } from "./avatars/cubemodel";
 import { RigitBodyKind } from "../voxel/irigitbody";
 import { createDefaultSprites } from "../actions/createprojectaction";
@@ -143,10 +143,19 @@ export class SpriteFileCollection {
       throw new Error('Failed to create sprite');
     }
     let sf = new SpriteFile(id);
+    sf.name = name;
     await sf.saveBackground();
     this.spritesById.set(id, sf);
     this.spritesByName.set(name, sf);
     return sf;
+  }
+
+  public loadCode(loader: ICodeLoader) {
+    for (let file of this.spritesById) {
+      if (file[1].code) {
+        loader.addUserModule(file[1].name, file[1].code);
+      }
+    }
   }
 }
 

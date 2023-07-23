@@ -47,10 +47,10 @@ export function parseModule(parser: BasicParser): ModuleNode {
           module.funcs.push(parser.withContextGreedy(token, parseFuncDef, module));
           break;
         case TokenKind.Var:
-          module.vars.push(parser.withContextGreedy(token, parseVarDef));
+          module.vars.push(parser.withContextGreedy(token, parseVarDef, module));
           break;
         case TokenKind.On:
-          module.on.push(parser.withContextGreedy(token, parseOnDef));
+          module.on.push(parser.withContextGreedy(token, parseOnDef, module));
           break;
       }
     }

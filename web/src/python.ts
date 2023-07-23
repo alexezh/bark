@@ -2,21 +2,15 @@
 
 export function boxedMonkey(): string {
   return `
-  var monky;
-
-  on load function() begin
-    monky:= Sprite.createSprite 'monky'
-    Sprite.setPosition monky 120 20 120
-
+  on create function(monky: Sprite) begin
     var ma:= Sprite.addAnimation monky 'move'
+
     Sprite.addFrame ma idx:= 1 dur:=0.1 
     Sprite.addFrame ma idx:= 2 dur:=0.1
 
     ma:= Sprite.addAnimation monky 'stand'
     Sprite.addFrame ma idx:= 0 dur:=0
-  end
-  
-  on create function() begin
+
     System.log 'send start message'
     System.sendMessage 'startMonky' monky
 

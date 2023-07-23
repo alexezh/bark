@@ -156,8 +156,8 @@ function validateFuncDef(parentCtx: ValidationContext, ast: FuncDefNode) {
 }
 
 function validateOn(parentCtx: ValidationContext, ast: OnNode) {
-  if (!(ast.event.value === 'start' || ast.event.value === 'load' || ast.event.value === 'message')) {
-    throwUnexpectedError(ast.event, 'start|load|message');
+  if (!(ast.event.value === 'start' || ast.event.value === 'load' || ast.event.value === 'message' || ast.event.value === "create")) {
+    throwUnexpectedError(ast.event, 'start|load|message|create');
   }
 
   if (ast.body instanceof Function) {

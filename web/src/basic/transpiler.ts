@@ -229,7 +229,7 @@ function processOn(ast: OnNode, writer: JsWriter) {
     regName = 'onLoad';
   } else if (ast.event.value === 'create') {
     regName = 'onCreateSprite';
-    firstParam = `${ast.module.name},`;
+    firstParam = `\'${ast.module.name}\',`;
   } else if (ast.event.value === 'message') {
     regName = 'onMessage';
     firstParam = (ast.filter) ? `${ast.filter.value},` : '';

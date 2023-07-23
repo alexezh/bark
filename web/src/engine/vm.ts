@@ -116,8 +116,6 @@ export class VM implements IVM {
       await this._createDefaultProject();
     }
 
-    this.loader.addUserModule('default', boxedBasic2());
-
     await spriteFiles.load();
 
     await modelCache.load();
@@ -151,7 +149,12 @@ export class VM implements IVM {
     console.log('VM: start');
     this.resetVm();
 
+    // reload all code. For now we load all user code as single JS function
+    // we can switch to load parts later
     registerSystemModules(this._loader);
+    this.loader.addUserModule('default', boxedBasic2());
+    spriteFiles.loadCode(this._loader);
+
     //this._loader.addUserModule('default', boxedBasic2())
     await this._runner.load(this._loader);
 
@@ -240,9 +243,6 @@ export class VM implements IVM {
     this._sprites.set(s.id, s);
     s.addToScene(this._camera!.scene!);
 
-    if (!this._loader.hasUserModule(file.name)) {
-      this._loader.addUserModule(file.name, file.code);
-    }
     this._runner.createSprite(file.name, s);
 
     return s;
