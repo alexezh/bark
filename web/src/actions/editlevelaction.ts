@@ -2,9 +2,9 @@ import { vm } from "../engine/ivm";
 import { getWireResourceUri } from "../lib/fetchadapter";
 import { setBlockRegister } from "../ui/ileveleditor";
 import { VoxelModel } from "../voxel/voxelmodel";
-import { VoxelModelCache, modelCache } from "../voxel/voxelmodelcache";
-import { BasicAction, FolderAction, FuncAction, PaneAction } from "./commandaction";
-import { ICommandLayer, DetailsPaneKind, IAction } from "./iaction";
+import { modelCache } from "../voxel/voxelmodelcache";
+import { FuncAction, PaneAction } from "./commandaction";
+import { ICommandLayer, IAction } from "./iaction";
 import { ImportVoxAction } from "./importaction";
 
 export function getLevelActions(): IAction[] {

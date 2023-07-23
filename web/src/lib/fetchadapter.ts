@@ -134,6 +134,21 @@ export async function wireGetStrings(request: WireGetStringsRequest): Promise<Wi
   return response.values;
 }
 
+export async function wireGetObjects<T>(request: WireGetStringsRequest): Promise<{ key: string, data: T }[] | undefined> {
+  let response: WireGetStringsResponse = await (await fetchAdapter!.post(`/api/project/getstrings/${projectId}`, JSON.stringify(request))).json();
+  if (response.values === undefined) {
+    return undefined;
+  }
+
+  let objs: { key: string, data: T }[] = [];
+  for (let value of response.values) {
+
+    let o = JSON.parse(value.data) as T;
+    objs.push({ key: value.key, data: o });
+  }
+  return objs;
+}
+
 export async function wireSetString(key: string, value: string): Promise<void> {
   let request: WireString[] = [{ key: key, data: value }]
   let requestData = JSON.stringify(request);

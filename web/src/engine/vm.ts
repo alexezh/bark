@@ -23,6 +23,7 @@ import { registerSystemModules } from "../basic/lib/all";
 import { ILevelEditor } from "../ui/ileveleditor";
 import { IRigitBody, RigitBodyKind } from "../voxel/irigitbody";
 import SyncEventSource from "../lib/synceventsource";
+import { SpriteFile, SpriteFileCollection, spriteFiles } from "./spritefile";
 
 type CollisionWaiter = {
   // if resolve is undefined, there is no waiter
@@ -114,6 +115,8 @@ export class VM implements IVM {
       await this._createDefaultProject();
     }
 
+    await spriteFiles.load();
+
     await modelCache.load();
   }
 
@@ -146,7 +149,7 @@ export class VM implements IVM {
     this.resetVm();
 
     registerSystemModules(this._loader);
-    this._loader.addUserModule('default', boxedBasic2())
+    //this._loader.addUserModule('default', boxedBasic2())
     await this._runner.load(this._loader);
 
     // now we are loaded; time to start
@@ -224,14 +227,12 @@ export class VM implements IVM {
     }
   }
 
-  public async createSprite(
+  public createSprite(
     name: string,
-    uri: string,
     rm: IRigitModel | undefined = undefined,
-    rigitKind?: RigitBodyKind): Promise<Sprite3> {
+    rigitKind?: RigitBodyKind): Sprite3 {
 
     let s = new Sprite3(name, rm, rigitKind);
-    await s.load(uri);
 
     this._sprites.set(s.id, s);
     s.addToScene(this._camera!.scene!);

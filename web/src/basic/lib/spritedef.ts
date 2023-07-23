@@ -6,6 +6,7 @@ import { CubeModel } from "../../engine/avatars/cubemodel";
 import { vm } from "../../engine/ivm";
 import { MapBlockRigitBody, MapBoundaryRigitBody } from "../../voxel/mapblockrigitbody";
 import { RigitBodyKind } from "../../voxel/irigitbody";
+import { spriteFiles } from "../../engine/spritefile";
 
 type DigAnimation = {
   sprite: Sprite3;
@@ -16,8 +17,12 @@ type DigAnimation = {
  * projectile is special sprites which collide with other sprites but 
  * not other projectiles
  */
-async function createProjectile(baseSprite: Sprite3, uri: string, scale?: number): Promise<IDigSprite> {
-  let sprite = await vm.createSprite('pl', uri, new CubeModel(scale ?? 1.0), RigitBodyKind.projectile);
+async function createProjectile(baseSprite: Sprite3, name: string, scale?: number): Promise<IDigSprite> {
+  let file = spriteFiles.findByName(name);
+  if (!file) {
+    throw new Error('Cannot find sprite ' + name)
+  }
+  let sprite = await file.createSprite(RigitBodyKind.projectile, undefined, scale);
 
   // set relative position of projetile based on sprite
   if (baseSprite) {
@@ -34,10 +39,9 @@ async function createProjectile(baseSprite: Sprite3, uri: string, scale?: number
   return sprite;
 }
 
-async function createCubeSprite(name: string, uri: string, scale?: number): Promise<IDigSprite> {
-  let sprite = await vm.createSprite(name, uri, new CubeModel(scale ?? 1.0));
-  vm.physics.addRigitObject(sprite);
-  return sprite;
+async function createSprite(name: string, scale?: number): Promise<IDigSprite> {
+  let file = spriteFiles.findByName(name);
+  return file?.createSprite(RigitBodyKind.object, undefined, scale)!;
 }
 
 // async function createMammal4Sprite(name: string, uri: string, scale?: number): Promise<IDigSprite> {
@@ -103,7 +107,7 @@ export function createSpriteModule(): ModuleNode {
 
   let module = createModuleNode('Sprite');
 
-  module.funcs.push(addSystemFunc(module, 'createCubeSprite', ['name:string', 'url:string', 'scale:number'], 'Sprite', true, createCubeSprite));
+  module.funcs.push(addSystemFunc(module, 'createSprite', ['name:string', 'url:string', 'scale:number'], 'Sprite', true, createSprite));
   //module.funcs.push(addSystemFunc(module, 'createMammal4Sprite', ['name:string', 'url:string', 'scale:number'], 'Sprite', true, createMammal4Sprite));
   module.funcs.push(addSystemFunc(module, 'removeSprite', ['sprite:Sprite'], 'void', false, removeSprite));
   module.funcs.push(addSystemFunc(module, 'createProjectile', ['url:string', 'scale:number'], 'Sprite', true, createProjectile));

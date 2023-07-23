@@ -9,28 +9,36 @@ export declare class GameApp {
 
 export declare function boxedGame(): void;
 export declare function boxedBasic(): string;
+export declare function boxedMonkey(): string;
+export declare function boxedBread(): string;
 export declare function boxedBasic2(): string;
 
 export declare function getTopLevelActions(): IAction[];
 export declare function registerActions(): void;
 
 export declare class CodeEditor {
-    private renderBlock;
-    private selectedNode;
+    private _textModule;
+    private _selectedNode;
     private initialSelectedNode;
-    private selectedElem;
+    private _selectedElem;
     readonly editEditor: HTMLDivElement;
     private readonly editArea;
-    private textEditActive;
+    private _textEditActive;
+    private _textDirty;
+    private _module?;
     constructor();
     loadContent(): void;
     copyText(): void;
     cutText(): void;
     pasteText(): void;
+    deleteText(): void;
     addAbove(): void;
     addBelow(): void;
+    addTemplate(astFunc: (module: ModuleNode) => AstNode): void;
     editText(): void;
     addBlock(text: string): void;
+    private onEditTextCompleted;
+    private renderNode;
     private onTextInput;
     private onTextScroll;
     private onTextClick;
@@ -49,31 +57,92 @@ export declare abstract class BasicAction implements IAction {
     get name(): string;
     get tags(): string[];
     private button;
+    get element(): HTMLElement | undefined;
     constructor(name: string, params: BasicActionParams);
-    renderButton(parent: HTMLElement, bar: ICommandLayer): void;
-    destroyButton(parent: HTMLElement): void;
+    renderButton(bar: ICommandLayer): HTMLElement;
+    destroyButton(): void;
     getChildActions(): Iterable<IAction>;
     protected onClick(bar: ICommandLayer): void;
 }
-export declare class ActionGroup extends BasicAction {
+export declare class MenuAction extends BasicAction {
     private isExtended;
     private children;
     constructor(name: string, tags: string[], children: IAction[]);
     getChildActions(): Iterable<IAction>;
     protected onClick(bar: ICommandLayer): void;
 }
+export declare class FolderAction implements IAction {
+    private isExtended;
+    private readonly _name;
+    private readonly _tags;
+    get name(): string;
+    get tags(): string[];
+    private container;
+    private add;
+    private button;
+    get element(): HTMLElement | undefined;
+    constructor(name: string);
+    renderButton(bar: ICommandLayer): HTMLElement;
+    destroyButton(): void;
+    getChildActions(): Iterable<IAction>;
+    protected onClick(bar: ICommandLayer): void;
+    protected onAdd(bar: ICommandLayer): void;
+}
 export declare class FuncAction extends BasicAction {
     private _func;
     constructor(name: string, params: BasicActionParams, func: (ICommandLayer: any) => void);
     protected onClick(bar: ICommandLayer): void;
 }
+export declare class PaneAction extends BasicAction {
+    private _func;
+    private _opened;
+    private _lastElem;
+    constructor(name: string, func: (ICommandLayer: any) => HTMLElement);
+    protected onClick(bar: ICommandLayer): void;
+}
 
 export type CommandBarProps = UiLayerProps & {
     shellProps: ShellProps;
-    mapEditorState: MapEditorState;
 };
+export declare class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandLayer {
+    private bar;
+    private pane;
+    private homeButton;
+    private startButton;
+    private pauseButton;
+    private levelButton;
+    private spriteButton;
+    private cameraButton;
+    private _commandList;
+    private _getCommandListActions;
+    private _detailsPane;
+    private _fullHeight;
+    private _fullWidth;
+    constructor(props: CommandBarProps);
+    displayError(text: string): void;
+    openDetailsPane(elem: HTMLElement, kind: DetailsPaneKind): void;
+    closeDetailsPane(): HTMLElement | undefined;
+    pushActions(actions: IAction[]): void;
+    openMenu(group: IMenuAction): void;
+    closeMenu(group: IMenuAction): void;
+    private createButtons;
+    private onAppModeChanged;
+    private onKeyDown;
+    private onCommandStart;
+    private onCommandPause;
+    private closeCommandList;
+    private openCommandList;
+    private onLevel;
+    private onSprite;
+    private onCamera;
+    private updateCommandButtons;
+    private getCommandListWidth;
+    private getPropertyPaneWidth;
+    protected updateElementSize(): void;
+}
+
 export declare class CommandList {
-    private actionStack;
+    private navStack;
     private renderedActions;
     private props;
     private wrapperDiv;
@@ -81,33 +150,17 @@ export declare class CommandList {
     private opened;
     private readonly layer;
     get isOpened(): boolean;
+    get navStackDepth(): number;
     constructor(props: CommandBarProps, layer: ICommandLayer);
     open(parent: HTMLElement): void;
     close(parent: HTMLElement): false | undefined;
     pushActions(actions: IAction[]): void;
+    loadActions(actions: IAction[]): void;
     popActions(): void;
+    openMenu(group: IMenuAction): void;
+    closeMenu(group: IMenuAction): void;
     private renderList;
     private updateListSize;
-}
-export declare class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandLayer {
-    private grid;
-    private actionButton;
-    private _commandList;
-    private _detailsPane;
-    private _fullHeight;
-    private _fullWidth;
-    constructor(props: CommandBarProps);
-    displayError(text: string): void;
-    openDetailsPane(elem: HTMLElement, kind: DetailsPaneKind): void;
-    closeDetailsPane(): void;
-    pushActions(actions: IAction[]): void;
-    popActions(): void;
-    openActionGroup(group: IAction): void;
-    closeActionGroup(group: IAction): void;
-    private onCommandList;
-    private getCommandListWidth;
-    private getPropertyPaneWidth;
-    protected updateElementSize(): void;
 }
 
 export declare class CreateProjectAction extends BasicAction {
@@ -136,26 +189,24 @@ export declare class EditBlockAction extends BasicAction {
 export declare function registerEditActions(actions: IAction[]): void;
 
 export declare function registerEditCodeActions(actions: IAction[]): void;
+export declare class AddAstAction extends BasicAction {
+    private tmpl;
+    private editor;
+    constructor(editor: CodeEditor, t: AstTemplate);
+    protected onClick(bar: ICommandLayer): void;
+}
 export declare class EditCodeAction extends BasicAction {
     private codeEditor?;
     get name(): string;
     get tags(): string[];
     constructor();
     protected onClick(bar: ICommandLayer): void;
-    onBack(bar: ICommandLayer): void;
     editCode(): void;
 }
 
-export declare class EditLevelAction extends BasicAction {
-    private wrapper;
-    private library;
-    constructor();
-    protected onClick(bar: ICommandLayer): void;
-    private onBack;
-    private showLibrary;
-    private renderLibrary;
-    private onSelectItem;
-}
+export declare function getLevelActions(): IAction[];
+
+export declare function getSpriteActions(): IAction[];
 
 export declare class FormPane {
     readonly element: HTMLDivElement;
@@ -168,19 +219,20 @@ export declare class FormPane {
     addIntField(name: string, value: number, setter?: ((val: number) => void) | undefined): void;
     addButtom(name: string, action: () => void): void;
 }
-export declare abstract class FormAction implements IAction {
+export declare class FormAction implements IAction {
     private button;
     private propPage;
     private _name;
     private _tags;
+    private createForm;
+    get element(): HTMLElement | undefined;
     get name(): string;
     get tags(): string[];
-    constructor(name: string, tags: string[]);
-    renderButton(parent: HTMLElement, bar: ICommandLayer): void;
-    destroyButton(parent: HTMLElement): void;
+    constructor(name: string, tags: string[], createForm: (cl: ICommandLayer) => FormPane);
+    renderButton(bar: ICommandLayer): HTMLElement;
+    destroyButton(): void;
     getChildActions(): Iterable<IAction>;
     private onClick;
-    protected abstract createForm(cl: ICommandLayer): FormPane;
 }
 
 export declare class RunGameAction extends BasicAction {
@@ -191,26 +243,30 @@ export declare class RunGameAction extends BasicAction {
 export interface IAction {
     get name(): string;
     get tags(): string[];
-    renderButton(parent: HTMLElement, bar: ICommandLayer): any;
-    destroyButton(parent: HTMLElement): any;
+    get element(): HTMLElement | undefined;
+    renderButton(bar: ICommandLayer): HTMLElement;
+    destroyButton(): any;
     getChildActions(): Iterable<IAction>;
 }
 export declare enum DetailsPaneKind {
     Partial = 0,
     Full = 1
 }
+export interface IMenuAction extends IAction {
+    getChildActions(): Iterable<IAction>;
+}
 export interface ICommandLayer {
     displayError(text: string): any;
     openDetailsPane(elem: HTMLElement, kind: DetailsPaneKind): void;
-    closeDetailsPane(): void;
+    closeDetailsPane(): HTMLElement | undefined;
     pushActions(actions: IAction[]): any;
-    popActions(): any;
-    openActionGroup(group: IAction): any;
-    closeActionGroup(group: IAction): any;
+    openMenu(group: IAction): any;
+    closeMenu(group: IAction): any;
 }
 
 export declare class ImportVoxAction implements IAction {
     private static _nextId;
+    private _name;
     private _id;
     private _element;
     private _inputElem;
@@ -219,9 +275,10 @@ export declare class ImportVoxAction implements IAction {
     private _filesElem;
     get tags(): string[];
     get name(): string;
-    constructor();
-    renderButton(parent: HTMLElement, bar: ICommandLayer): void;
-    destroyButton(parent: HTMLElement): void;
+    get element(): HTMLElement | undefined;
+    constructor(name: string);
+    renderButton(bar: ICommandLayer): HTMLDivElement;
+    destroyButton(): void;
     getChildActions(): Iterable<IAction>;
     private createImportButton;
     private processImport;
@@ -236,10 +293,7 @@ export declare class ThirdPersonCameraAction extends BasicAction {
     constructor();
     protected onClick(bar: ICommandLayer): void;
 }
-export declare class MoveCameraAction extends FormAction {
-    constructor();
-    protected createForm(bar: ICommandLayer): FormPane;
-}
+export declare function moveCameraForm(bar: ICommandLayer): FormPane;
 
 export declare enum AstErrorCode {
     generic = 0,
@@ -271,10 +325,26 @@ export declare enum AstNodeKind {
     forever = 17,
     foreach = 18,
     while = 19,
-    on = 20
+    on = 20,
+    comment = 21,
+    linePlaceholder = 100,
+    idPlaceholder = 101,
+    expressionPlaceholder = 102,
+    paramPlaceholder = 103,
+    bodyPlaceholder = 104
 }
+export declare function makeAstId(): number;
 export type AstNode = {
     kind: AstNodeKind;
+    startToken: Token;
+    id: number;
+    parent?: AstNode;
+};
+export type CommentNode = AstNode & {
+    text?: string;
+};
+export type LinePlaceholderNode = AstNode & {
+    text?: string;
 };
 export type ModuleNode = AstNode & {
     name: string | undefined;
@@ -374,9 +444,16 @@ export type WhileNode = StatementNode & {
     exp: ExpressionNode;
     body: BlockNode;
 };
-export declare function forEachChild(ast: AstNode, func: (ast: AstNode) => void): void;
+export declare function insertPlaceholderBefore(before: AstNode): AstNode;
+export declare function getChildNodes(ast: AstNode): Iterable<AstNode>;
+export declare function getModule(ast: AstNode): ModuleNode | undefined;
+export declare function replaceNode(cur: AstNode, upd: AstNode): void;
 
 export declare function parseModule(parser: BasicParser): ModuleNode;
+export declare function parseFuncDef(parser: BasicParser, module: ModuleNode): FuncDefNode;
+export declare function parseVarDef(parser: BasicParser): VarDefNode;
+export declare function parseOnDef(parser: BasicParser, module: ModuleNode): OnNode;
+export declare function parseStatement(token: Token, parser: BasicParser): StatementNode | undefined;
 export declare class BasicGenerator {
 }
 
@@ -451,6 +528,7 @@ export declare class CodeLoader implements ICodeLoader {
     private readonly modules;
     addSystemModule(ast: ModuleNode): void;
     addUserModule(name: string, text: string | ModuleNode): void;
+    updateUserModule(node: AstNode, text: string): void;
     getUserModule(name: string): ModuleNode | undefined;
     systemModules(): Iterable<ModuleNode>;
     userModules(): Iterable<ModuleNode>;
@@ -471,11 +549,9 @@ export type LoadHandler = () => Promise<void>;
 export type RuntimeModule = {
     [key: string]: Function;
 };
-export declare class CodeRunner implements IVMCodeRunner {
+export declare class CodeRunner implements ICodeRunner {
     private readonly _startHandlers;
     private readonly _loadHandlers;
-    private readonly _systemModules;
-    private readonly _userModules;
     private _messageHandlers;
     load(loader: ICodeLoader | Function): Promise<void>;
     reset(): void;
@@ -486,10 +562,10 @@ export declare class CodeRunner implements IVMCodeRunner {
     start(): Promise<void>;
 }
 
-export declare function isParentNode(parent: TextBlock | ITextSegment | TextSpan, node: TextBlock | ITextSegment | TextSpan): boolean;
-export declare function findParentNode(node: TextBlock | ITextSegment | TextSpan): TextBlock | ITextSegment | undefined;
-export declare function renderNode(rb: TextBlock, ast: AstNode): void;
-export declare function renderModule(ast: ModuleNode): TextBlock;
+export declare function isParentNode(parent: TextBlock | ATextSegment | TextSpan, node: TextBlock | ATextSegment | TextSpan): boolean;
+export declare function findParentNode(node: TextBlock | ATextSegment | TextSpan): TextBlock | ATextSegment | undefined;
+export declare function renderNode(rb: TextBlock, ast: AstNode): TextBlock | TextLine;
+export declare function renderModule(ast: ModuleNode): TextModule;
 
 interface IDigSprite {
     get x(): number;
@@ -508,6 +584,25 @@ interface IDigBoundary {
     get y(): number;
     get z(): number;
 }
+
+export type AstTemplate = {
+    name: string;
+    ast: (module: ModuleNode) => AstNode;
+};
+export declare function varTemplateAst(module: ModuleNode): VarDefNode;
+export declare function functionTemplateAst(module: ModuleNode): FuncDefNode;
+export declare function eventTemplateAst(module: ModuleNode, name: string, filter?: string): OnNode;
+export declare function eventTemplates(): AstTemplate[];
+export declare function statementInsertSuggestion(): ({
+    name: string;
+    template: string;
+} | {
+    name: string;
+    template?: undefined;
+})[];
+export declare function ifEditSuggestion(): {
+    name: string;
+}[];
 
 export declare class JsWriter {
     private output;
@@ -565,63 +660,93 @@ export declare class ParseError {
 }
 export declare function throwUnexpectedError(token: Token, exp: string): void;
 
-type clickHandler = (node: TextBlock | ITextSegment | TextSpan, event: Event) => void;
+type clickHandler = (node: TextBlock | ATextSegment | TextSpan, event: Event) => void;
 export type TextStyle = {
     spaceLeft?: boolean;
     selectable?: boolean;
+    css?: string;
+    insertAbove?: boolean;
+    insertBelow?: boolean;
+    placeholder?: boolean;
 };
-export interface ITextSegment {
-    readonly id: string;
-    readonly parent: ITextSegment | TextBlock;
-    get ast(): AstNode | undefined;
-    render(elem: HTMLSpanElement | HTMLDivElement, onClick: (elem: TextBlock | ITextSegment | TextSpan) => void): any;
-    appendSegment(ast: AstNode | undefined, style: TextStyle): ITextSegment;
-    appendConst(val: string, style: TextStyle): void;
-    appendToken(token: Token, style: TextStyle): any;
+export declare enum ChangeStatus {
+    clean = 0,
+    dirty = 1,
+    deleted = 2
 }
+export declare function parentAstSegment(elem: TextBlock | ATextSegment | TextSpan): ATextSegment | undefined;
 export declare class TextSpan {
     readonly id: string;
-    readonly parent: ITextSegment;
+    readonly parent: ATextSegment;
     private data;
     private style;
-    ast: AstNode | undefined;
-    static fromString(parent: ITextSegment, val: string, style: TextStyle): TextSpan;
-    constructor(parent: ITextSegment, token: Token, style: TextStyle);
-    render(elem: HTMLSpanElement | HTMLDivElement, onClick: clickHandler): void;
+    changeStatus: ChangeStatus;
+    static fromString(parent: ATextSegment, val: string, style: TextStyle): TextSpan;
+    constructor(parent: ATextSegment, token: Token, style: TextStyle);
+    insertLineAbove(cur: TextBlock | ATextSegment | undefined): AstNode | undefined;
+    render(onClick: clickHandler): HTMLSpanElement | HTMLDivElement;
 }
-export declare class TextSegment implements ITextSegment {
+export declare abstract class ATextSegment {
+    readonly module: TextModule;
     readonly id: string;
-    readonly parent: ITextSegment | TextBlock;
+    readonly parent: ATextSegment | TextBlock;
+    protected segments: (TextSpan | TextSegment)[];
     readonly ast: AstNode | undefined;
-    private segments;
-    private style;
-    constructor(parent: ITextSegment | TextBlock, ast: AstNode | undefined, style: TextStyle);
-    appendSegment(ast: AstNode | undefined, style: TextStyle): ITextSegment;
+    readonly style: TextStyle;
+    changeStatus: ChangeStatus;
+    constructor(parent: ATextSegment | TextBlock, ast: AstNode | undefined, style: TextStyle, prefix: string);
+    abstract render(onClick: clickHandler): HTMLSpanElement | HTMLDivElement;
+    abstract appendSegment(ast: AstNode | undefined, style: TextStyle): ATextSegment;
+    abstract appendConst(val: string, style: TextStyle): void;
+    abstract appendToken(token: Token, style: TextStyle): any;
+    abstract insertLineAbove(cur: TextBlock | ATextSegment | undefined): AstNode | undefined;
+    clearChildren(): void;
+    updateHtmlDom(domNode: HTMLDivElement | HTMLSpanElement, onClick: clickHandler): void;
+}
+export declare class TextSegment extends ATextSegment {
+    constructor(parent: ATextSegment | TextBlock, ast: AstNode | undefined, style: TextStyle);
+    appendSegment(ast: AstNode | undefined, style: TextStyle): ATextSegment;
     appendConst(val: string, style: TextStyle): void;
     appendToken(token: Token, style: TextStyle): void;
-    render(elem: HTMLSpanElement | HTMLDivElement, onClick: clickHandler): void;
+    insertLineAbove(cur: TextBlock | ATextSegment | undefined): AstNode | undefined;
+    render(onClick: clickHandler): HTMLSpanElement | HTMLDivElement;
+}
+export declare class TextLine extends ATextSegment {
+    constructor(parent: TextBlock, ast: AstNode | undefined, style?: TextStyle);
+    insertLineAbove(cur: TextBlock | ATextSegment | undefined): AstNode | undefined;
+    appendSegment(ast: AstNode | undefined, style: TextStyle): ATextSegment;
+    appendConst(val: string, style: TextStyle): void;
+    appendToken(token: Token, style: TextStyle): TextSpan;
+    render(onClick: clickHandler): HTMLDivElement | HTMLSpanElement;
 }
 export declare class TextBlock {
+    readonly module: TextModule;
     readonly id: string;
     readonly parent: TextBlock | undefined;
     readonly ast: AstNode;
+    readonly style: TextStyle;
+    changeStatus: ChangeStatus;
     private margin;
-    private children;
-    constructor(parent: TextBlock | undefined, root: AstNode);
-    appendBlock(ast: AstNode): TextBlock;
+    readonly children: (ATextSegment | TextBlock)[];
+    renderBlock?: () => void;
+    constructor(module: TextModule, parent: TextBlock | undefined, root: AstNode, style?: TextStyle);
+    insertLineAbove(cur: TextBlock | ATextSegment | undefined): AstNode | undefined;
+    clearChildren(): void;
+    appendBlock(ast: AstNode, style?: TextStyle): TextBlock;
+    appendEmptyLine(ast: AstNode | undefined, style: TextStyle): TextLine;
     appendLine(line: TextLine | string | Token | undefined, ast: AstNode | undefined, style: TextStyle): TextLine;
-    render(parent: HTMLDivElement, onClick: clickHandler): void;
+    render(onClick: clickHandler): HTMLDivElement | HTMLSpanElement;
+    updateHtmlDom(domNode: HTMLDivElement, onClick: clickHandler): void;
 }
-export declare class TextLine implements ITextSegment {
-    readonly id: string;
-    readonly parent: TextBlock | ITextSegment;
-    readonly ast: AstNode | undefined;
-    private segments;
-    constructor(parent: TextBlock, ast: AstNode | undefined);
-    appendSegment(ast: AstNode | undefined, style: TextStyle): ITextSegment;
-    appendConst(val: string, style: TextStyle): void;
-    appendToken(token: Token, style: TextStyle): void;
-    render(elem: HTMLDivElement, onClick: clickHandler): void;
+export declare class TextModule {
+    private readonly nodes;
+    private _root;
+    get root(): TextBlock;
+    constructor();
+    getNodeById(id: number): TextBlock | ATextSegment | TextSpan | undefined;
+    setNode(id: number, node: TextBlock | ATextSegment | TextSpan): Map<number, TextBlock | ATextSegment | TextSpan>;
+    removeNode(ast: AstNode): void;
+    setRoot(node: TextBlock): void;
 }
 
 export declare enum TokenKind {
@@ -657,27 +782,31 @@ export declare enum TokenKind {
     Boolean = 30,
     True = 31,
     False = 32,
-    Break = 33,
-    Id = 34,
-    For = 35,
-    Foreach = 36,
-    Forever = 37,
-    In = 38,
-    To = 39,
-    By = 40,
-    Do = 41,
-    While = 42,
-    If = 43,
-    Then = 44,
-    Else = 45,
-    ElIf = 46,
-    End = 47,
-    Begin = 48,
-    Function = 49,
-    Var = 50,
-    Return = 51,
-    On = 52,
-    Event = 53
+    Break = 50,
+    Id = 51,
+    For = 52,
+    Foreach = 53,
+    Forever = 54,
+    In = 55,
+    To = 56,
+    By = 57,
+    Do = 58,
+    While = 59,
+    If = 60,
+    Then = 61,
+    Else = 62,
+    ElIf = 63,
+    End = 64,
+    Begin = 65,
+    Function = 66,
+    Var = 67,
+    Return = 68,
+    On = 69,
+    Event = 70,
+    IdPlaceholder = 100,
+    ParamPlaceholder = 101,
+    ExpPlaceholder = 102,
+    StatementPlaceholder = 103
 }
 export declare class Token {
     readonly kind: TokenKind;
@@ -685,18 +814,22 @@ export declare class Token {
     readonly pos: number;
     idx: number;
     constructor(kind: TokenKind, value: string, pos: number);
+    static makeWs(): Token;
 }
 
 export declare function transpile(mainFunction: string | undefined, loader: ICodeLoader): Function;
+
+export declare function updateAst(ast: AstNode, text: string, loader: ICodeLoader): AstNode | undefined;
 
 export declare function registerSystemModules(loader: ICodeLoader): void;
 
 export declare function createMath(): ModuleNode;
 
+export declare function createPhysicsModule(): ModuleNode;
+
 export declare function createSpriteModule(): ModuleNode;
 
 export declare function createSystemModule(): ModuleNode;
-export declare function createPhysicsModule(): ModuleNode;
 
 export declare function createModuleNode(name: string): ModuleNode;
 export declare function addSystemType(digName: string, systemType: Function, fields: string[]): TypeDefNode;
@@ -777,24 +910,36 @@ export declare class FrameClock {
     tick(): 0 | undefined;
 }
 
+export declare class DirectCamera implements ITrackingCamera {
+    private camera;
+    private cameraGroup;
+    constructor(camera: PerspectiveCamera, cameraGroup: Group);
+    dispose(): void;
+    onTargetMove(pos: Vector3): void;
+    onTargetSpeed(pos: Vector3): void;
+    onTargetDirectionXZ(angle: number): void;
+}
+
+export declare const epsilon = 0.01;
+export declare const nepsilon = -0.01;
 export declare class GamePhysics implements IGamePhysics {
-    private map;
+    private level;
     private bodies;
+    private projectiles;
     private broadphase;
     private gravity;
-    private collisionHandler?;
-    private input?;
     private _collideHandler;
     private static collideHandlerSymbol;
-    constructor(map: IVoxelLevel);
-    attachInputController(handler?: IGamePhysicsInputController): void;
-    attachCollisionHandler(handler?: IGameCollisionHandler): void;
+    constructor(level: IVoxelLevel);
+    setGravity(val: number): void;
     addRigitObject(ro: IRigitBody): void;
-    setCollideHandler(func: RigitCollisionHandler | undefined): void;
     removeRigitObject(ro: IRigitBody): void;
+    addProjectile(ro: IRigitBody): void;
+    removeProjectile(ro: IRigitBody): void;
+    setCollideHandler(func: RigitCollisionHandler | undefined): void;
     update(dt: number): void;
     private handleMapCollisions;
-    private detectSurface;
+    private handleMapCollision;
 }
 
 export type WireSpawnCharacterRequest = {
@@ -831,13 +976,14 @@ export declare class RealtimeClient implements IRealtimeClient {
 export interface ICameraLayer {
     get scene(): Scene | undefined;
     get camera(): PerspectiveCamera;
+    get cameraGroup(): Group;
     get canvas(): HTMLDivElement;
     get viewSize(): PxSize;
+    get scale(): number;
     get position(): Vector3;
     set position(pos: Vector3);
-    setThirdPersonCamera(sprite: Sprite3, pos: Vector3): void;
-    setDirectCamera(): void;
     registerXrSessionHandler(target: any, func: (session: XRSession | undefined) => void): void;
+    editCamera(): any;
     createScene(): any;
     setEditor(editor: ILevelEditor | undefined): any;
 }
@@ -856,11 +1002,12 @@ export type RigitCollisionHandler = (collisions: {
     target: IRigitBody;
 }[]) => void;
 export interface IGamePhysics {
-    addRigitObject(ro: IRigitBody, onCollide: RigitCollisionHandler | undefined): void;
+    setGravity(val: number): void;
+    addRigitObject(ro: IRigitBody): void;
     removeRigitObject(ro: IRigitBody): void;
+    addProjectile(ro: IRigitBody): void;
+    removeProjectile(ro: IRigitBody): void;
     update(tick: number): void;
-    attachInputController(handler?: IGamePhysicsInputController): any;
-    setCollideHandler(func: RigitCollisionHandler | undefined): any;
 }
 export interface IGameCollisionHandler {
 }
@@ -870,6 +1017,7 @@ export interface IRealtimeClient {
 
 export interface IRigitModel {
     get size(): Vector3;
+    get bottomPoints(): Coord3[];
     load(uri: string): Promise<void>;
     animate(id: string): any;
     addAnimation(name: string): any;
@@ -880,6 +1028,7 @@ export interface IRigitModel {
     setPosition(pos: Vector3): void;
     setSpeed(speed: Vector3): void;
     setDirectionXZ(angle: number): void;
+    setRotationXZ(angle: number): void;
     update(): void;
     onRenderFrame(tick: number): any;
 }
@@ -889,6 +1038,12 @@ export interface IInputController {
     stop(): any;
     onXrSessionChanged(session: XRSession | undefined): any;
     update(tick: number): any;
+}
+export declare enum AppMode {
+    run = 0,
+    stop = 1,
+    pause = 2,
+    edit = 3
 }
 export interface ICodeLoader {
     addUserModule(name: string, text: string | ModuleNode): any;
@@ -903,7 +1058,7 @@ export interface ICodeLoader {
     imports(): Iterable<ModuleNode>;
     getFunction(): Function;
 }
-export interface IVMCodeRunner {
+export interface ICodeRunner {
     sendMesssage(address: string, msg: any): Promise<void>;
     onLoad(func: () => Promise<void>): any;
     onStart(func: () => Promise<void>): any;
@@ -917,18 +1072,21 @@ export interface IVM {
     get levelFile(): IVoxelLevelFile;
     get camera(): ICameraLayer;
     get loader(): ICodeLoader;
-    get runner(): IVMCodeRunner;
+    get runner(): ICodeRunner;
     get levelEditor(): ILevelEditor | undefined;
+    get appMode(): AppMode;
     attachCamera(camera: ICameraLayer): void;
     registerLevelLoaded(target: any, func: () => void): void;
+    registerModeChanged(target: any, func: () => void): void;
     setController(controller: IInputController): any;
     loadProject(id: string): Promise<void>;
     loadLevel(id: string): Promise<void>;
-    editLevel(): any;
+    edit(): any;
     start(): Promise<void>;
     stop(): void;
+    pause(): void;
     onRenderFrame(): void;
-    createSprite(name: string, uri: string, rm: IRigitModel | undefined): Promise<Sprite3>;
+    createSprite(name: string, uri: string, rm: IRigitModel | undefined, rigitKind?: RigitBodyKind): Promise<Sprite3>;
     removeSprite(sprite: Sprite3): any;
     forever(func: () => Promise<void>): Promise<void>;
     sendMesssage(address: string, msg: any): Promise<void>;
@@ -957,10 +1115,10 @@ export declare class MeshLevelLayer {
     removeFromScene(scene: Scene): void;
     updateScene(scene: Scene): void;
     getHeight(point: WorldCoord3): number;
-    getBlockByCoord(point: WorldCoord3): MapBlockCoord | undefined;
-    getBlock(xMap: number, zMap: number): MapBlockCoord | undefined;
+    getBlockByPoint(point: WorldCoord3): MapBlockCoord | undefined;
+    getBlockByPos(xBlock: number, zBlock: number): MapBlockCoord | undefined;
     deleteBlock(block: MapBlockCoord): void;
-    deleteBlockByCoord(x: number, z: number): void;
+    deleteBlockByPos(xPos: number, zPos: number): void;
     addBlock(pos: BlockPos3, block: VoxelModel): void;
 }
 
@@ -998,13 +1156,7 @@ export declare class MoveController2D implements IGamePhysicsInputController, II
     private attachGamepad;
 }
 
-export declare enum TrackingCameraKind {
-    Direct = 0,
-    FirstPerson = 1,
-    ThirdPerson = 2
-}
 export interface ITrackingCamera {
-    get cemraKind(): TrackingCameraKind;
     onTargetMove(pos: Vector3): void;
     onTargetSpeed(pos: Vector3): void;
     onTargetDirectionXZ(angle: number): void;
@@ -1015,33 +1167,38 @@ export declare class Sprite3 implements IRigitBody, IDigSprite {
     private _id;
     private _name;
     owner: any;
-    rigit: IRigitModel;
+    readonly rigit: IRigitModel | undefined;
     private _inactive;
+    private _rigitKind;
     private _speed;
-    private _worldSpeed;
+    private _physicsSpeed;
+    private _standing;
     private _angleXZ;
     private _position;
     private _trackingCamera;
     get id(): number;
     get name(): string;
-    get kind(): RigitBodyKind;
+    get rigitKind(): RigitBodyKind;
     get relativeSpeed(): Vector3;
-    get worldSpeed(): Vector3;
     get position(): Vector3;
-    get size(): Vector3;
+    get modelSize(): Vector3;
     get gravityFactor(): number;
     get maxClimbSpeed(): number;
+    get physicsSpeed(): Vector3;
     get x(): number;
     get y(): number;
     get z(): number;
-    constructor(name: string, rigit?: IRigitModel);
+    get angleXZ(): number;
+    get standing(): boolean;
+    getWorldSpeed(): Vector3;
+    constructor(name: string, rigit?: IRigitModel, rigitKind?: RigitBodyKind);
     load(uri: string): Promise<void>;
     addToScene(scene: Scene): void;
     removeFromScene(scene: Scene): void;
     onRender(tick: number): void;
     setPosition(pos: Vector3): void;
-    setWorldSpeed(speed: Vector3): void;
-    private computeWorldSpeed;
+    setPhysicsSpeed(speed: Vector3 | undefined): void;
+    setStanding(val: boolean): void;
     setRelativeSpeed(speed: Vector3): void;
     setDirectionXZ(angle: number): void;
     aabb(pos: Vector3 | undefined): RigitAABB;
@@ -1049,11 +1206,56 @@ export declare class Sprite3 implements IRigitBody, IDigSprite {
     onMove(pos: Vector3): void;
 }
 
+type WireSpriteFile = {
+    id: number;
+    code: string;
+    skins: {
+        id: string;
+        url: string;
+    }[];
+};
+export declare class SpriteFile {
+    private id;
+    private name;
+    private _code;
+    private _skins;
+    private get url();
+    constructor(id: number, file?: WireSpriteFile);
+    static load(id: number): Promise<SpriteFile>;
+    private loadWorker;
+    save(): Promise<void>;
+    addSkin(skinName: string, url: string): Promise<void>;
+    removeSkin(skinName: string): Promise<void>;
+    createSprite(skinName: string): Sprite3;
+}
+export declare class SpriteFileCollection {
+    private sprites;
+    load(): Promise<void>;
+    createSprite(name: string): Promise<SpriteFile>;
+}
+export declare let spriteFiles: SpriteFileCollection;
+
+export declare class ThirdPersonCamera implements ITrackingCamera {
+    private camera;
+    private cameraGroup;
+    private sprite;
+    private cameraOffset;
+    private spritePosition;
+    private angleXZ;
+    constructor(sprite: Sprite3, cameraOffset: Vector3, camera: PerspectiveCamera, cameraGroup: Group);
+    dispose(): void;
+    onTargetMove(pos: Vector3): void;
+    onTargetSpeed(speed: Vector3): void;
+    onTargetDirectionXZ(angle: number): void;
+    private updateCameraPos;
+}
+
 export declare class ThirdPersonControllerMoveEvent {
     readonly speedX: number;
     readonly speedZ: number;
     readonly angleXZ: number;
-    constructor(speedX: number, speedZ: number, angleXZ: number);
+    readonly fire: boolean;
+    constructor(speedX: number, speedZ: number, angleXZ: number, fire: boolean);
 }
 export type ThirdPersonControllerConfig = {
     maxSpeed: number;
@@ -1073,13 +1275,19 @@ export declare class ThirdPersonController implements IGamePhysicsInputControlle
     private angleXZ;
     private speedX;
     private speedZ;
+    private pointer;
+    private sprite;
+    private spriteOffset;
+    private trackingCamera;
     constructor(config: ThirdPersonControllerConfig);
     onXrSessionChanged(session: XRSession | undefined): void;
     start(): void;
     stop(): void;
+    followSprite(sprite: Sprite3, offset: Vector3): void;
     private onXrInputChanged;
     readInput(): Promise<ThirdPersonControllerMoveEvent | undefined>;
-    update(tick: number): void;
+    private computeEvent;
+    update(tick: number): undefined;
     private attachGamepad;
 }
 export declare function createThirdPersonControllerModule(): ModuleNode;
@@ -1095,10 +1303,10 @@ export declare class Ticker {
     private applyUpdates;
 }
 
-export declare class NotRunningError {
+export declare class NotRunningError extends Error {
 }
 export declare class VM implements IVM {
-    private _running;
+    private _appMode;
     private _ticker;
     private _physics;
     private _canvas;
@@ -1114,6 +1322,7 @@ export declare class VM implements IVM {
     private inputController;
     private _levelEditor;
     private readonly onLevelLoaded;
+    private readonly onAppModeChanged;
     particles: ParticlePool;
     get levelEditor(): ILevelEditor | undefined;
     get physics(): IGamePhysics;
@@ -1123,19 +1332,23 @@ export declare class VM implements IVM {
     get canvas(): HTMLElement;
     get camera(): ICameraLayer;
     get loader(): ICodeLoader;
-    get runner(): IVMCodeRunner;
+    get runner(): ICodeRunner;
+    get appMode(): AppMode;
     attachCamera(camera: ICameraLayer): void;
     registerLevelLoaded(target: any, func: (val: boolean) => void): void;
+    registerModeChanged(target: any, func: () => void): void;
     setController(controller: IInputController): IInputController;
     loadProject(id: string): Promise<void>;
     loadLevel(id: string): Promise<void>;
     start(): Promise<void>;
+    private setAppMode;
     private resetVm;
     stop(): void;
+    pause(): void;
     sendMesssage(address: string, msg: any): Promise<void>;
-    editLevel(): void;
+    edit(): void;
     onRenderFrame(): void;
-    createSprite(name: string, uri: string, rm?: IRigitModel | undefined): Promise<Sprite3>;
+    createSprite(name: string, uri: string, rm?: IRigitModel | undefined, rigitKind?: RigitBodyKind): Promise<Sprite3>;
     removeSprite(sprite: Sprite3): Promise<void>;
     forever(func: () => Promise<void>): Promise<void>;
     waitCollide(sprite: Sprite3, seconds: number | undefined): Promise<IRigitBody | null>;
@@ -1157,6 +1370,7 @@ export declare class MeshModel {
     material: MeshPhongMaterial;
     constructor(geo: BufferGeometry);
 }
+export declare const infiniteUp = 1000000;
 export declare const infiniteDown = -1000000;
 export declare class VoxelLevel implements IVoxelLevel {
     private scene;
@@ -1166,26 +1380,33 @@ export declare class VoxelLevel implements IVoxelLevel {
     private _blockSize;
     private _file;
     private layers;
+    private _floorLevel;
     private ambientLight;
     private directionalLight;
     get worldSize(): WorldSize3;
     get blockSize(): BlockSize3;
     get file(): IVoxelLevelFile;
+    get floorLevel(): number;
     constructor(file: IVoxelLevelFile);
     onStart(): void;
     onStop(): void;
     update(time: any, delta: any): void;
     load(): Promise<boolean>;
-    loadScene(scene: Scene): boolean;
+    loadScene(scene: Scene, editMode: boolean): boolean;
     blockSizeToWorldSize(mapSize: BlockSize3): WorldSize3;
     blockPosToWorldPos(mapPos: BlockPos3): WorldCoord3;
-    findBlock(point: Vector3): MapBlockCoord | undefined;
-    private deleteBlockByCoord;
+    worldPosToBlockPos(pos: WorldCoord3): BlockPos3;
+    getBlockByPoint(point: Vector3): MapBlockCoord | undefined;
+    getBlockByPos(x: number, y: number, z: number): MapBlockCoord | undefined;
+    private deleteBlockByPos;
     deleteBlock(block: MapBlockCoord | MapBlockRigitBody): void;
     private addBlockCore;
     addBlock(pos: BlockPos3, block: VoxelModel): void;
-    intersectBlocks(ro: IRigitBody, pos: WorldCoord3, func: (target: IRigitBody) => boolean): boolean;
-    getDistanceY(ro: IRigitBody, pos: Vector3): number;
+    getDistanceY(ro: IRigitBody, pos: WorldCoord3): {
+        intersectBody?: IRigitBody;
+        height: number;
+        distance: number;
+    };
     private onFileChangeBlock;
 }
 
@@ -1210,7 +1431,7 @@ export declare class VoxelLevelFile implements IVoxelLevelFile {
     get blockCount(): number;
     registerOnChangeCamera(func: () => void): void;
     registerOnChangeBlock(func: (blocks: FileMapBlock[]) => void): void;
-    deleteBlock(block: MapBlockCoord): void;
+    deleteBlock(pos: BlockPos3): void;
     addBlock(pos: BlockPos3, blockId: number): void;
     addBlocks(blocks: FileMapBlock[]): void;
     private getBlockKey;
@@ -1219,16 +1440,19 @@ export declare class VoxelLevelFile implements IVoxelLevelFile {
 export declare class Cube extends Sprite3 {
 }
 
-export declare class Mammal4Model implements IRigitModel {
+export declare class CubeModel implements IRigitModel {
     private voxelModel;
-    private meshModels;
+    private meshModel;
     private _size;
-    private _angleXZ;
+    private _directionAngleXZ;
+    private _rotationAngleXZ;
     private _position;
     private _baseX;
     private _baseZ;
     private _scale;
+    private _bottomPoints;
     get size(): Vector3;
+    get bottomPoints(): Coord3[];
     constructor(scale: number);
     load(uri: string): Promise<void>;
     addAnimation(name: string): void;
@@ -1241,32 +1465,12 @@ export declare class Mammal4Model implements IRigitModel {
     setPosition(pos: Vector3): void;
     setSpeed(speed: Vector3): void;
     setDirectionXZ(angle: number): void;
-    private setRotation;
+    setRotationXZ(angle: number): void;
+    private updateRotation;
     update(): void;
 }
 
 
-export declare class StaticCubeModel implements IRigitModel {
-    private voxelModel;
-    private meshModel;
-    private _size;
-    private _position;
-    private _scale;
-    get size(): Vector3;
-    constructor(scale: number);
-    load(uri: string): Promise<void>;
-    addAnimation(name: string): void;
-    addFrame(name: string, idx: number, duration: number): void;
-    animate(id: string): void;
-    addToScene(scene: Scene): void;
-    removeFromScene(scene: Scene): void;
-    onRenderFrame(tick: number): void;
-    aabb(pos: Vector3 | undefined): RigitAABB;
-    setPosition(pos: Vector3): void;
-    setSpeed(speed: Vector3): void;
-    setDirectionXZ(angle: number): void;
-    update(): void;
-}
 
 export default class AsyncEventSource<T> {
     private callbackSym;
@@ -1302,8 +1506,8 @@ export type WireString = {
     data: string;
 };
 export type WireGetStringsRequest = {
-    pattern: string | undefined;
-    keys: string[];
+    pattern?: string;
+    keys?: string[];
 };
 export type WireGetStringsResponse = {
     values: WireString[];
@@ -1340,7 +1544,11 @@ export declare function wireGetUserString(key: string): Promise<string | undefin
 export declare function wireSetUserString(key: string, value: string): Promise<void>;
 export declare function wireGetString(key: string): Promise<string | undefined>;
 export declare function wireGetObject<T>(key: string): Promise<T | undefined>;
-export declare function wireGetStrings(keys: string[]): Promise<WireString[]>;
+export declare function wireGetStrings(request: WireGetStringsRequest): Promise<WireString[]>;
+export declare function wireGetObjects<T>(request: WireGetStringsRequest): Promise<{
+    key: string;
+    data: T;
+}[] | undefined>;
 export declare function wireSetString(key: string, value: string): Promise<void>;
 export declare function wireSetStrings(keys: WireString[]): Promise<void>;
 export declare function getWireResourceUri(relativeUrl: string): string;
@@ -1397,9 +1605,10 @@ export declare function setElementVisible(elem: HTMLElement | undefined, val: bo
 export declare function setElementDisplay(elem: HTMLElement | undefined, val: boolean): void;
 export declare function createTextDiv(): [HTMLDivElement, HTMLSpanElement];
 export declare function createButton(parent: HTMLElement, className: string, text: string, handler: (evt: any) => any): HTMLButtonElement;
-export declare function createCommandButton(parent: HTMLElement, text: string, handler: (evt: any) => any): HTMLButtonElement;
+export declare function createCommandButton(text: string, handler: (evt: any) => any): HTMLButtonElement;
 export declare function createTextEntry(parent: HTMLElement, text: string, value: string, handler: ((val: string) => any) | undefined): HTMLDivElement;
 export declare function createNumberEntry(parent: HTMLElement, text: string, value: number, handler: ((val: number) => any) | undefined): HTMLDivElement;
+export declare function addText(parent: HTMLElement, text: string, css: string): void;
 
 export declare function perlinNoise(perilinW: number, perilinH: number, baseX: number, baseY: number, seed: number): Uint8ClampedArray;
 
@@ -1467,8 +1676,8 @@ export type CameraLayerProps = UiLayerProps & {
 };
 export declare class CameraLayer extends UiLayer2<CameraLayerProps> implements ICameraLayer {
     renderer: WebGLRenderer;
-    camera: PerspectiveCamera;
-    cameraGroup: Group;
+    _camera: PerspectiveCamera;
+    _cameraGroup: Group;
     scene: Scene | undefined;
     t_start: number;
     levelEditor: ILevelEditor | undefined;
@@ -1477,29 +1686,33 @@ export declare class CameraLayer extends UiLayer2<CameraLayerProps> implements I
     private isDown;
     private vrButton;
     private xrSessionChangedSource;
-    private trackingCamera;
     chunk_material: MeshPhongMaterial;
     p_light: PointLight;
-    maps_ground: number;
+    get scale(): number;
     constructor(props: CameraLayerProps);
     get canvas(): HTMLDivElement;
     get position(): Vector3;
+    get camera(): PerspectiveCamera;
+    get cameraGroup(): Group;
     set position(pos: Vector3);
     get viewSize(): PxSize;
     createScene(): void;
-    setThirdPersonCamera(sprite: Sprite3, cameraOffset: Vector3): void;
-    setDirectCamera(): void;
     registerXrSessionHandler(target: any, func: (session: XRSession | undefined) => void): void;
     setEditor(editor: ILevelEditor | undefined): void;
+    editCamera(): void;
+    private onContextMenu;
     private createCamera;
     private onLevelLoaded;
     reset(): void;
     onWindowResize(): void;
-    onMouseDown(htmlEvt: MouseEvent): boolean;
-    onMouseUp(htmlEvt: MouseEvent): boolean;
     private animate;
     render(): void;
 }
+
+export declare class FirstPersonControls {
+    constructor(object: any, domElement: any);
+}
+export { FirstPersonControls };
 
 export interface IGameShell {
     refresh(): void;
@@ -1510,15 +1723,17 @@ export interface IGameShell {
 export declare let shell: IGameShell;
 export declare function setShell(t: IGameShell): void;
 
+export declare class BlockRegister {
+    model: VoxelModel | undefined;
+}
+export declare function setBlockRegister(model: VoxelModel | undefined): void;
+export declare function getBlockRegister(): VoxelModel | undefined;
 export interface ILevelEditor {
-    onMouseDown(evt: MEvent): boolean;
-    onMouseUp(evt: MEvent): boolean;
-    onMouseMove(evt: MEvent): boolean;
-    selectBlock(model: VoxelModel): void;
     copyBlock(): void;
     cutBlock(): void;
     clearBlock(): void;
     pasteBlock(): void;
+    editCamera(): void;
     rotateXZ(): void;
     flipX(): void;
     flipZ(): void;
@@ -1578,24 +1793,30 @@ export interface IVoxelLevelFile {
     registerOnChangeCamera(func: () => void): any;
     registerOnChangeBlock(func: (blocks: FileMapBlock[]) => void): any;
     load(isTest: boolean): Promise<void>;
-    deleteBlock(block: MapBlockCoord): any;
+    deleteBlock(pos: BlockPos3): any;
     addBlock(pos: BlockPos3, blockId: number): any;
 }
 export interface IVoxelLevel {
     get worldSize(): WorldSize3;
     get blockSize(): BlockSize3;
     get file(): IVoxelLevelFile;
+    get floorLevel(): number;
     onStart(): any;
     onStop(): any;
     load(): Promise<boolean>;
-    loadScene(scene: Scene): any;
-    findBlock(point: Vector3): MapBlockCoord | undefined;
+    loadScene(scene: Scene, editMode: boolean): any;
+    getBlockByPoint(point: Vector3): MapBlockCoord | undefined;
+    getBlockByPos(x: number, y: number, z: number): MapBlockCoord | undefined;
     deleteBlock(block: MapBlockCoord | MapBlockRigitBody): any;
     addBlock(pos: BlockPos3, block: VoxelModel): any;
     blockSizeToWorldSize(gridSize: BlockSize3): WorldSize3;
     blockPosToWorldPos(gridPos: BlockPos3): WorldCoord3;
-    intersectBlocks(ro: IRigitBody, pos: WorldCoord3, func: (target: IRigitBody) => boolean): boolean;
-    getDistanceY(ro: IRigitBody, pos: Vector3): number;
+    worldPosToBlockPos(pos: WorldCoord3): BlockPos3;
+    getDistanceY(ro: IRigitBody, pos: Vector3): {
+        intersectBody?: IRigitBody;
+        height: number;
+        distance: number;
+    };
 }
 export declare let defaultMaterial: MeshPhongMaterial;
 
@@ -1615,7 +1836,6 @@ export declare class WEvent extends MEvent {
 }
 export declare class KeyBinder {
     private htmlElem;
-    private moveKeys;
     private keyUpHandlers;
     pressedKeys: any;
     private onInput;
@@ -1636,16 +1856,16 @@ export declare class LevelEditor implements ILevelEditor {
     private level;
     private input;
     static material: LineBasicMaterial;
-    private selectedBlock;
+    private orbitControls;
+    private selectedArea;
     private selection;
-    private currentModel;
     constructor(camera: ICameraLayer, level: IVoxelLevel);
     dispose(): void;
-    private onScroll;
-    onMouseDown(evt: MEvent): boolean;
-    onMouseUp(evt: MEvent): boolean;
-    onMouseMove(evt: MEvent): boolean;
-    selectBlock(model: VoxelModel): void;
+    private onMouseDown;
+    private onMouseUp;
+    onMouseMove(evt: MouseEvent): boolean;
+    editCamera(): void;
+    private moveCamera;
     rotateXZ(): void;
     flipX(): void;
     flipZ(): void;
@@ -1658,39 +1878,22 @@ export declare class LevelEditor implements ILevelEditor {
     private buildSelectionBox;
 }
 
-export type MapBitmap = {
-    w: number;
-    h: number;
-    data: Uint8ClampedArray;
-};
-export declare function createMapBitmap(w: number, h: number): MapBitmap;
-export declare function updateRect(rect: GridRect, xNew: number, yNew: number): GridRect;
-export type MapEditorUpdate = {
-    isEditMode?: boolean;
-    region?: GridRect;
-    scrollSize?: PxSize;
-    map?: IVoxelLevel;
-};
-export declare class MapEditorState {
-    private _isEditMode;
-    private _region?;
-    private _currentLayer?;
-    private _scrollSize;
-    private _world;
-    private eventSource;
-    get isEditMode(): boolean;
-    get currentLayer(): any | undefined;
-    get region(): GridRect | undefined;
-    get cameraSize(): PxSize | undefined;
-    get world(): any | undefined;
-    get currentTileLayer(): any | undefined;
-    static unknownLayerError: string;
-    constructor();
-    onChanged(target: any, func: (evt: MapEditorChangeEvent) => void): void;
-    update(val: MapEditorUpdate): void;
+export declare class PointerLockControls extends EventDispatcher {
+    isLocked: boolean;
+    private camera;
+    constructor(camera: any, domElement: any);
+    connect(): void;
+    disconnect(): void;
+    dispose(): void;
+    getObject(): PerspectiveCamera;
+    getDirection(v: any): any;
+    moveDirection(dx: number, dz: number): void;
+    moveForward(distance: number): void;
+    moveRight(distance: number): void;
+    lock(): void;
+    unlock(): void;
 }
-export declare let mapEditorState: MapEditorState;
-export declare function createMapEditorState(): void;
+export { PointerLockControls };
 
 export declare class ShellProps {
     width: number;
@@ -1746,7 +1949,7 @@ export type UiLayerProps = {
 };
 export interface IUiLayer2 {
     get id(): string;
-    get element(): HTMLElement;
+    get elements(): HTMLElement[];
     get visible(): boolean;
     set visible(val: boolean);
     focus(): void;
@@ -1754,29 +1957,19 @@ export interface IUiLayer2 {
 }
 export declare class UiLayer2<T extends UiLayerProps> implements IUiLayer2 {
     props: T;
-    protected _element: HTMLElement;
+    protected _elements: HTMLElement[];
     private _visible;
     protected _compositor: IUiCompositor | undefined;
     private _onFocusOut?;
-    constructor(props: T, element: HTMLElement, attachMouse?: boolean);
-    get element(): HTMLElement;
+    constructor(props: T, elements: HTMLElement[]);
+    get elements(): HTMLElement[];
     get id(): string;
     get visible(): boolean;
     set visible(val: boolean);
     focus(): void;
     setCompositor(compositor: IUiCompositor | undefined): void;
-    onMouseMove(evt: MouseEvent): boolean;
-    onMouseDown(evt: MouseEvent): boolean;
-    onMouseUp(evt: MouseEvent): boolean;
-    onWheel(evt: WheelEvent): boolean;
     protected updateElementSize(): void;
 }
-
-export type TilesetListProps = UiLayerProps & {
-    mapEditorState: MapEditorState;
-    scale: number;
-    scrollY?: number;
-};
 
 export declare class VRButton {
     element: HTMLElement;
@@ -1796,13 +1989,14 @@ export declare class VRButton {
 }
 
 export declare enum RigitBodyKind {
-    sprite = 0,
+    object = 0,
     block = 1,
-    boundary = 2
+    boundary = 2,
+    projectile = 3
 }
 export declare enum MassKind {
     stationary = 0,
-    mavable = 1
+    moveable = 1
 }
 export type RigitAABB = {
     xStart: number;
@@ -1815,16 +2009,20 @@ export type RigitAABB = {
 export interface IRigitBody {
     get id(): number;
     get name(): string;
-    get kind(): RigitBodyKind;
+    get rigitKind(): RigitBodyKind;
     get owner(): any;
+    get rigit(): IRigitModel | undefined;
+    get standing(): boolean;
     get gravityFactor(): number;
     get maxClimbSpeed(): number;
-    get worldSpeed(): Vector3;
+    getWorldSpeed(): Vector3;
     get relativeSpeed(): Vector3;
-    aabb(pos: Vector3 | undefined): RigitAABB;
-    setWorldSpeed(speed: Vector3): void;
     get position(): Vector3;
-    get size(): Vector3;
+    get modelSize(): Vector3;
+    get physicsSpeed(): Vector3;
+    aabb(pos: Vector3 | undefined): RigitAABB;
+    setPhysicsSpeed(speed: Vector3 | undefined): void;
+    setStanding(standing: boolean): void;
     onMove(pos: Vector3): void;
 }
 
@@ -1861,21 +2059,25 @@ export declare class MapBlockRigitBody implements IRigitBody, IDigBlock {
     get id(): number;
     get name(): string;
     get inactive(): boolean;
-    get kind(): RigitBodyKind;
+    get rigitKind(): RigitBodyKind;
     get owner(): any;
     get relativeSpeed(): Vector3;
-    get worldSpeed(): Vector3;
+    get physicsSpeed(): Vector3;
     get position(): Vector3;
-    get size(): Vector3;
+    get modelSize(): Vector3;
     get gravityFactor(): number;
     get maxClimbSpeed(): number;
+    get rigit(): IRigitModel | undefined;
     get x(): number;
     get y(): number;
     get z(): number;
+    get standing(): boolean;
+    getWorldSpeed(): Vector3;
     aabb(pos: Vector3 | undefined): RigitAABB;
-    setWorldSpeed(speed: Vector3): void;
+    setPhysicsSpeed(speed: Vector3 | undefined): void;
     setSpeed(speed: Vector3): void;
     onMove(pos: Vector3): void;
+    setStanding(val: boolean): void;
 }
 export declare class MapBoundaryRigitBody implements IRigitBody, IDigBoundary {
     private _size;
@@ -1884,20 +2086,24 @@ export declare class MapBoundaryRigitBody implements IRigitBody, IDigBoundary {
     get id(): number;
     get name(): string;
     get inactive(): boolean;
-    get kind(): RigitBodyKind;
+    get rigitKind(): RigitBodyKind;
     get owner(): any;
     get relativeSpeed(): Vector3;
-    get worldSpeed(): Vector3;
+    get physicsSpeed(): Vector3;
     get position(): Vector3;
-    get size(): Vector3;
+    get modelSize(): Vector3;
     get gravityFactor(): number;
     get maxClimbSpeed(): number;
+    get rigit(): IRigitModel | undefined;
+    get standing(): boolean;
     get x(): number;
     get y(): number;
     get z(): number;
+    getWorldSpeed(): Vector3;
     aabb(pos: Vector3 | undefined): RigitAABB;
-    setWorldSpeed(speed: Vector3): void;
+    setPhysicsSpeed(speed: Vector3 | undefined): void;
     setSpeed(speed: Vector3): void;
+    setStanding(val: boolean): void;
     onMove(pos: Vector3): void;
 }
 
@@ -1914,7 +2120,7 @@ export declare class ParticlePool {
     sprite_material: SpriteMaterial;
     constructor(scene: Scene, size: number, type: number);
     update(time: any, delta: any): void;
-    createParticle(opts: any): -1 | Particle;
+    createParticle(opts: any): Particle | -1;
     queueParticleDef(opts: any): void;
     fire(x: any, y: any, z: any): void;
     explosion(x: number, y: number, z: number, power: number, type: any): void;
@@ -2015,6 +2221,11 @@ export type BlockSize3 = {
     sx: number;
     sy: number;
     sz: number;
+};
+export type Coord3 = {
+    x: number;
+    y: number;
+    z: number;
 };
 
 export declare class SoundLoader {
@@ -2172,6 +2383,8 @@ export declare class VoxelModel {
     readonly frames: VoxelModelFrame[];
     constructor(id: number, voxUri: string, thumbnailUri: string, scale: number);
     get size(): Vector3;
+    get modelSize(): Vector3;
+    get modelCenter(): Vector3;
 }
 export declare class VoxelModelFrame {
     private readonly data;
@@ -2179,12 +2392,20 @@ export declare class VoxelModelFrame {
     chunk_sy: number;
     chunk_sz: number;
     stride_z: number;
+    min_x: number;
+    min_y: number;
+    min_z: number;
+    max_x: number;
+    max_y: number;
+    max_z: number;
     wireframe: boolean;
     private v;
     private c;
     private heightMap;
     get verticeCount(): number;
     get colorCount(): number;
+    get modelSize(): Vector3;
+    get modelCenter(): Vector3;
     private constructor();
     static load(data: VoxelFileFrame): VoxelModelFrame;
     static sameColor(block1: number, block2: number): boolean;
@@ -2218,7 +2439,7 @@ export declare class VoxelModelCache {
     getVoxelModel(url: string): VoxelModel | undefined;
     getVoxelModels(): Iterable<VoxelModel>;
     load(): Promise<boolean>;
-    loadModelEntries(modelEntries: WireDict[]): Promise<void>;
+    private loadModelEntries;
     importFiles(importFiles: ImportFile[]): Promise<WireModelInfo[] | undefined>;
     private loadModelFromString;
     private loadModelFromArray;

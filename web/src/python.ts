@@ -138,7 +138,7 @@ export function boxedBasic(): string {
 
     on start() begin
       forever do
-        var bomb:= System.createCubeSprite 'bomb' 'vox/bomb.vox'
+        var bomb:= System.createSprite 'bomb'
         Sprite.setPosition bomb Math.randInt(50, 150) 50 Math.randInt(50, 150)
     
         var speed:= 10;
@@ -172,7 +172,7 @@ export function boxedMonkey(): string {
   var monky;
 
   on load function() begin
-    monky:= Sprite.createCubeSprite 'monky' 'vox/monky.vox' scale:=0.5
+    monky:= Sprite.createSprite 'monky'
     Sprite.setPosition monky 120 20 120
 
     var ma:= Sprite.addAnimation monky 'move'
@@ -181,14 +181,46 @@ export function boxedMonkey(): string {
 
     ma:= Sprite.addAnimation monky 'stand'
     Sprite.addFrame ma idx:= 0 dur:=0
-  end`
+  end
+  
+  on start function() begin
+    System.log 'send start message'
+    System.sendMessage 'startMonky' monky
+
+    forever do
+      var ev := ThirdPersonController.readInput();
+
+      if ev.speedX != 0 or ev.speedZ != 0 then
+        Sprite.animate monky 'move'
+      else
+        Sprite.animate monky 'stand'
+      end
+
+      if ev.fire then
+        System.log 'shoot bread'
+        var bullet := Sprite.createProjectile monky 'bread'
+      end
+    end
+  end
+
+  on message='startMonky' function(monky: Sprite) begin
+    System.log 'start monky'
+    forever do
+      var collision := System.waitCollide monky
+      if collision is Sprite.Boundary then
+        System.log 'monky hit boundary'
+        System.sendMessage 'killedMonkey'
+        break;
+      end
+    end
+  end
+  `
 }
 
+// sprite is an class, which merges concept of module and class
 export function boxedBread(): string {
   return `
-  on message='shootBread' function(monky: Sprite) begin
-    System.log 'shoot bread'
-    var bullet := Sprite.createProjectile monky 'vox/bread.vox'
+  on create function(bullet: Sprite) begin
     Sprite.setSpeed bullet 50 20 0
     forever do
       var collision := System.waitCollide bullet
@@ -227,43 +259,11 @@ export function boxedBasic2(): string {
   on load function() begin
     System.loadLevel 'default'
 
-    monky:= Sprite.createCubeSprite 'monky' 'vox/monky.vox' scale:=0.5
+    monky:= Sprite.createSprite 'monky' 'vox/monky.vox' scale:=0.5
     Sprite.setPosition monky 120 20 120
 
     ThirdPersonController.configureController maxSpeed:=40 keySpeed:=10 thumbSpeed:=10 timeoutSeconds:=0.1
     ThirdPersonController.followSprite monky x:=100 y:=50 z:=0
-  end
-
-  on start function() begin
-    System.log 'send start message'
-    System.sendMessage 'startMonky' monky
-
-    forever do
-      var ev := ThirdPersonController.readInput();
-
-      if ev.speedX != 0 or ev.speedZ != 0 then
-        Sprite.animate monky 'move'
-      else
-        Sprite.animate monky 'stand'
-      end
-
-      if ev.fire then
-        System.log 'shoot bread'
-        System.sendMessage 'shootBread' monky
-      end
-    end
-  end
-
-  on message='startMonky' function(monky: Sprite) begin
-    System.log 'start monky'
-    forever do
-      var collision := System.waitCollide monky
-      if collision is Sprite.Boundary then
-        System.log 'monky hit boundary'
-        System.sendMessage 'killedMonkey'
-        break;
-      end
-    end
   end
 
   on message='killedMonkey' function(monky: Sprite) begin

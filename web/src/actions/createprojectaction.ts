@@ -10,7 +10,8 @@ import { ThumbnailRenderer } from "../voxel/thumbnailrenderer";
 import { VoxelLevelFile } from "../engine/voxellevelfile";
 import { FileMapBlock } from "../ui/ivoxellevel";
 import { FormPane } from "./formpane";
-import { SpriteFile } from "../engine/spritefile";
+import { SpriteFile, SpriteFileCollection, spriteFiles } from "../engine/spritefile";
+import { boxedMonkey } from "../python";
 
 export class CreateProjectAction extends BasicAction {
   get name(): string { return 'CreateProject' }
@@ -97,12 +98,7 @@ export async function createDefaultProject(): Promise<void> {
     return;
   }
 
-  // create sprites
-  let f1 = SpriteFile.create('monky');
-  f1.addSkin('1', 'vox/monky.vox')
-
-  let f2 = SpriteFile.create('bomb');
-  f2.addSkin('1', 'vox/bomb.vox')
+  createDefaultSprites();
 
   let file = await VoxelLevelFile.createLevel('levels/default');
 
@@ -114,6 +110,20 @@ export async function createDefaultProject(): Promise<void> {
   }
 
   file.addBlocks(blocks);
+}
+
+export async function createDefaultSprites(): Promise<void> {
+  // create sprites
+  let f1 = await spriteFiles.createSprite('monky');
+  f1.addSkin('monky', 'vox/monky.vox')
+  f1.code = boxedMonkey();
+
+  let f2 = await spriteFiles.createSprite('bomb');
+  f2.addSkin(undefined, 'vox/bomb.vox')
+
+  let f3 = await spriteFiles.createSprite('bread');
+  f3.addSkin('bread', 'vox/bread.vox')
+  f1.code = boxedMonkey();
 }
 
 export class CreateLevelAction extends BasicAction {

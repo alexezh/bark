@@ -84,10 +84,7 @@ export class Sprite3 implements IRigitBody, IDigSprite {
     this.rigit = rigit ?? new CubeModel(1.0);
     this._position = new Vector3();
     this._rigitKind = rigitKind ?? RigitBodyKind.object;
-  }
 
-  public async load(uri: string): Promise<void> {
-    await this.rigit!.load(uri);
     this.rigit!.setPosition(this._position);
     this.rigit!.setDirectionXZ(0);
   }
