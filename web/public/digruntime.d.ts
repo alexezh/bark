@@ -7,8 +7,6 @@ export declare class GameApp {
     private resizeCanvas;
 }
 
-export declare function boxedGame(): void;
-export declare function boxedBasic(): string;
 export declare function boxedMonkey(): string;
 export declare function boxedBread(): string;
 export declare function boxedBasic2(): string;
@@ -171,6 +169,7 @@ export declare class CreateProjectAction extends BasicAction {
     private createProject;
 }
 export declare function createDefaultProject(): Promise<void>;
+export declare function createDefaultSprites(): Promise<void>;
 export declare class CreateLevelAction extends BasicAction {
     constructor();
     protected onClick(bar: ICommandLayer): void;
@@ -529,6 +528,7 @@ export declare class CodeLoader implements ICodeLoader {
     addSystemModule(ast: ModuleNode): void;
     addUserModule(name: string, text: string | ModuleNode): void;
     updateUserModule(node: AstNode, text: string): void;
+    hasUserModule(name: string): boolean;
     getUserModule(name: string): ModuleNode | undefined;
     systemModules(): Iterable<ModuleNode>;
     userModules(): Iterable<ModuleNode>;
@@ -546,12 +546,14 @@ export declare class CodeLoader implements ICodeLoader {
 export type MessageHandler = (...args: any[]) => Promise<void>;
 export type StartHandler = () => Promise<void>;
 export type LoadHandler = () => Promise<void>;
+export type CreateSpriteHandler = (sprite: Sprite3) => Promise<void>;
 export type RuntimeModule = {
     [key: string]: Function;
 };
 export declare class CodeRunner implements ICodeRunner {
     private readonly _startHandlers;
     private readonly _loadHandlers;
+    private readonly _createHandlers;
     private _messageHandlers;
     load(loader: ICodeLoader | Function): Promise<void>;
     reset(): void;
@@ -559,7 +561,9 @@ export declare class CodeRunner implements ICodeRunner {
     onMessage(address: string, func: MessageHandler): void;
     onLoad(func: () => Promise<void>): void;
     onStart(func: () => Promise<void>): void;
+    onCreateSprite(name: string, func: () => Promise<void>): void;
     start(): Promise<void>;
+    createSprite(name: string, sprite: Sprite3): Promise<void>;
 }
 
 export declare function isParentNode(parent: TextBlock | ATextSegment | TextSpan, node: TextBlock | ATextSegment | TextSpan): boolean;
@@ -1033,6 +1037,14 @@ export interface IRigitModel {
     onRenderFrame(tick: number): any;
 }
 
+export interface ISpriteFile {
+    name: string;
+    code: string;
+    addSkin(url: string, skinName?: string): Promise<void>;
+    removeSkin(skinName: string): Promise<void>;
+    createSprite(bodyKind: RigitBodyKind, skinName: string | undefined, scale?: number): Promise<Sprite3>;
+}
+
 export interface IInputController {
     start(): any;
     stop(): any;
@@ -1049,6 +1061,7 @@ export interface ICodeLoader {
     addUserModule(name: string, text: string | ModuleNode): any;
     addSystemModule(module: ModuleNode): any;
     getUserModule(name: string): ModuleNode | undefined;
+    hasUserModule(name: string): boolean;
     systemModules(): Iterable<ModuleNode>;
     userModules(): Iterable<ModuleNode>;
     userFunctions(): Iterable<FuncDefNode>;
@@ -1086,7 +1099,7 @@ export interface IVM {
     stop(): void;
     pause(): void;
     onRenderFrame(): void;
-    createSprite(name: string, uri: string, rm: IRigitModel | undefined, rigitKind?: RigitBodyKind): Promise<Sprite3>;
+    createSprite(file: ISpriteFile, rm: IRigitModel | undefined, rigitKind?: RigitBodyKind): Sprite3;
     removeSprite(sprite: Sprite3): any;
     forever(func: () => Promise<void>): Promise<void>;
     sendMesssage(address: string, msg: any): Promise<void>;
@@ -1192,7 +1205,6 @@ export declare class Sprite3 implements IRigitBody, IDigSprite {
     get standing(): boolean;
     getWorldSpeed(): Vector3;
     constructor(name: string, rigit?: IRigitModel, rigitKind?: RigitBodyKind);
-    load(uri: string): Promise<void>;
     addToScene(scene: Scene): void;
     removeFromScene(scene: Scene): void;
     onRender(tick: number): void;
@@ -1208,29 +1220,33 @@ export declare class Sprite3 implements IRigitBody, IDigSprite {
 
 type WireSpriteFile = {
     id: number;
+    name: string;
     code: string;
     skins: {
         id: string;
         url: string;
     }[];
 };
-export declare class SpriteFile {
+export declare class SpriteFile implements ISpriteFile {
     private id;
-    private name;
     private _code;
+    name: string;
     private _skins;
-    private get url();
+    private static getSpriteUrl;
     constructor(id: number, file?: WireSpriteFile);
     static load(id: number): Promise<SpriteFile>;
-    private loadWorker;
-    save(): Promise<void>;
-    addSkin(skinName: string, url: string): Promise<void>;
+    get code(): string;
+    set code(val: string);
+    saveBackground(): void;
+    addSkin(url: string, skinName?: string): Promise<void>;
     removeSkin(skinName: string): Promise<void>;
-    createSprite(skinName: string): Sprite3;
+    createSprite(bodyKind: RigitBodyKind, skinName: string | undefined, scale?: number): Promise<Sprite3>;
 }
 export declare class SpriteFileCollection {
-    private sprites;
+    private spritesById;
+    private spritesByName;
     load(): Promise<void>;
+    findByName(name: string): SpriteFile | undefined;
     createSprite(name: string): Promise<SpriteFile>;
 }
 export declare let spriteFiles: SpriteFileCollection;
@@ -1348,7 +1364,7 @@ export declare class VM implements IVM {
     sendMesssage(address: string, msg: any): Promise<void>;
     edit(): void;
     onRenderFrame(): void;
-    createSprite(name: string, uri: string, rm?: IRigitModel | undefined, rigitKind?: RigitBodyKind): Promise<Sprite3>;
+    createSprite(file: ISpriteFile, rm?: IRigitModel | undefined, rigitKind?: RigitBodyKind): Sprite3;
     removeSprite(sprite: Sprite3): Promise<void>;
     forever(func: () => Promise<void>): Promise<void>;
     waitCollide(sprite: Sprite3, seconds: number | undefined): Promise<IRigitBody | null>;

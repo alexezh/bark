@@ -82,6 +82,7 @@ export class CodeRunner implements ICodeRunner {
   }
 
   public onCreateSprite(name: string, func: () => Promise<void>) {
+    console.log('register create handler ' + name);
     let handlers = this._createHandlers.get(name);
     if (!handlers) {
       handlers = [];

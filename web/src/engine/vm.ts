@@ -24,6 +24,7 @@ import { IRigitBody, RigitBodyKind } from "../voxel/irigitbody";
 import SyncEventSource from "../lib/synceventsource";
 import { spriteFiles } from "./spritefile";
 import { ISpriteFile } from "./ispritefile";
+import { boxedBasic2 } from "../python";
 
 type CollisionWaiter = {
   // if resolve is undefined, there is no waiter
@@ -114,6 +115,8 @@ export class VM implements IVM {
     if (projectConfig === undefined) {
       await this._createDefaultProject();
     }
+
+    this.loader.addUserModule('default', boxedBasic2());
 
     await spriteFiles.load();
 

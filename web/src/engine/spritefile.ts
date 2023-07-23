@@ -90,7 +90,7 @@ export class SpriteFile implements ISpriteFile {
   public async createSprite(bodyKind: RigitBodyKind, skinName: string | undefined, scale?: number): Promise<Sprite3> {
 
     skinName = skinName ?? defaultSkin;
-    let skinUrl: string | undefined = undefined;
+    let skinUrl = this._skins.get(skinName);
 
     if (!skinUrl) {
       throw new Error('Cannot load skin ' + skinName);
@@ -105,7 +105,7 @@ export class SpriteFile implements ISpriteFile {
     }
     await rigit!.load(skinUrl);
 
-    let sprite = vm.createSprite(this.name, rigit, bodyKind);
+    let sprite = vm.createSprite(this, rigit, bodyKind);
 
     return sprite;
   }
@@ -122,7 +122,7 @@ export class SpriteFileCollection {
     //this._levelFile = new VoxelLevelFile('levels/' + id);
     //await this._levelFile.load(false);
     let wireSprites = await wireGetObjects<WireSpriteFile>({ pattern: 'sprites/*' });
-    if (wireSprites) {
+    if (wireSprites && wireSprites.length > 0) {
       for (let wireSprite of wireSprites) {
         let file = new SpriteFile(wireSprite.data.id, wireSprite.data);
         this.spritesById.set(wireSprite.data.id, file);
