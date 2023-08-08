@@ -17,7 +17,7 @@ export type MapBlock = {
   model: VoxelModel;
   frame: number;
   // true if block is top most (no other blocks)
-  topmost: boolean;
+  // topmost: boolean;
 }
 
 export type MapBlockCoord = {
@@ -115,6 +115,8 @@ export interface IVoxelLevel {
    * adds block to runtime representation; not saved
    */
   addBlock(pos: BlockPos3, block: VoxelModel);
+
+  rotateBlockXZ(block: MapBlockCoord);
 
   // todo: add map objects and sprites here
 

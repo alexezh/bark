@@ -225,6 +225,15 @@ export class VoxelLevel implements IVoxelLevel {
         layer.updateScene(this.scene);
     }
 
+    public rotateBlockXZ(block: MapBlockCoord) {
+        let mb = (block instanceof MapBlockRigitBody) ? block.mapBlock : block;
+
+        console.log('rotate ' + mb.mapPos.x + ' ' + mb.mapPos.z);
+        let layer = this.layers[mb.mapPos.y];
+        layer.rotateBlockXZ(mb);
+        layer.updateScene(this.scene);
+    }
+
     private addBlockCore(pos: BlockPos3, block: VoxelModel): MeshLevelLayer {
         if (pos.y >= this.layers.length) {
             for (let i = this.layers.length - 1; i < pos.y; i++) {

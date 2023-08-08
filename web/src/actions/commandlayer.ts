@@ -70,6 +70,7 @@ export class CommandLayer extends UiLayer2<CommandBarProps> implements ICommandL
 
     this.pane = pane;
     this.pane.className = 'commandPane';
+    this.pane.setAttribute('tabindex', '0');
     setElementVisible(this.pane, false);
 
     // save properties for later

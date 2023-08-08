@@ -19,6 +19,19 @@ export type WireModelInfo = {
   rotateYZ: boolean;
 }
 
+//export function makeMapBlockOptions(frame: number, rotate: number): number {
+//  return frame | (rotate << 16);
+//}
+
+export function getModelRotateXZ(id: number): number {
+  return (id >> 16) & 3;
+}
+
+export function getModelFlip(id: number): number {
+  return (id >> 16) & 3;
+}
+
+
 export class VoxelModelCache {
   private readonly modelsByUrl: Map<string, VoxelModel> = new Map<string, VoxelModel>();
   private readonly modelsById: Map<number, VoxelModel> = new Map<number, VoxelModel>();
@@ -47,6 +60,11 @@ export class VoxelModelCache {
 
     await this.loadModelEntries(modelEntries);
     return true;
+  }
+
+  public rotateBlockXZ(model: VoxelModel): VoxelModel {
+    console.log('VoxelModelCache: rotaleBlockXZ');
+    return model;
   }
 
   private async loadModelEntries(modelEntries: WireDict[]): Promise<void> {

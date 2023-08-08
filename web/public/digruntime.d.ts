@@ -1131,6 +1131,7 @@ export declare class MeshLevelLayer {
     getBlockByPoint(point: WorldCoord3): MapBlockCoord | undefined;
     getBlockByPos(xBlock: number, zBlock: number): MapBlockCoord | undefined;
     deleteBlock(block: MapBlockCoord): void;
+    rotateBlockXZ(blockCoord: MapBlockCoord): void;
     deleteBlockByPos(xPos: number, zPos: number): void;
     addBlock(pos: BlockPos3, block: VoxelModel): void;
 }
@@ -1248,6 +1249,7 @@ export declare class SpriteFileCollection {
     load(): Promise<void>;
     findByName(name: string): SpriteFile | undefined;
     createSprite(name: string): Promise<SpriteFile>;
+    loadCode(loader: ICodeLoader): void;
 }
 export declare let spriteFiles: SpriteFileCollection;
 
@@ -1416,6 +1418,7 @@ export declare class VoxelLevel implements IVoxelLevel {
     getBlockByPos(x: number, y: number, z: number): MapBlockCoord | undefined;
     private deleteBlockByPos;
     deleteBlock(block: MapBlockCoord | MapBlockRigitBody): void;
+    rotateBlockXZ(block: MapBlockCoord): void;
     private addBlockCore;
     addBlock(pos: BlockPos3, block: VoxelModel): void;
     getDistanceY(ro: IRigitBody, pos: WorldCoord3): {
@@ -1507,6 +1510,13 @@ export declare function base64ToBytes(str: string): Uint8ClampedArray;
 
 export declare function printNetworkError(s: string): void;
 
+type QueueItem = () => Promise<void>;
+export declare class DispatchQueue {
+    private items;
+    private processing;
+    push(func: QueueItem): void;
+    private tryRun;
+}
 export interface IFetchAdapter {
     get(uri: string): Promise<Response>;
     post(uri: string, body: string): Promise<any>;
@@ -1766,7 +1776,6 @@ export type MapProps = {
 export type MapBlock = {
     model: VoxelModel;
     frame: number;
-    topmost: boolean;
 };
 export type MapBlockCoord = {
     model: VoxelModel;
@@ -1825,6 +1834,7 @@ export interface IVoxelLevel {
     getBlockByPos(x: number, y: number, z: number): MapBlockCoord | undefined;
     deleteBlock(block: MapBlockCoord | MapBlockRigitBody): any;
     addBlock(pos: BlockPos3, block: VoxelModel): any;
+    rotateBlockXZ(block: MapBlockCoord): any;
     blockSizeToWorldSize(gridSize: BlockSize3): WorldSize3;
     blockPosToWorldPos(gridPos: BlockPos3): WorldCoord3;
     worldPosToBlockPos(pos: WorldCoord3): BlockPos3;
@@ -2448,6 +2458,8 @@ export type WireModelInfo = {
     thumbnailUrl: string;
     rotateYZ: boolean;
 };
+export declare function getModelRotateXZ(id: number): number;
+export declare function getModelFlip(id: number): number;
 export declare class VoxelModelCache {
     private readonly modelsByUrl;
     private readonly modelsById;
@@ -2455,6 +2467,7 @@ export declare class VoxelModelCache {
     getVoxelModel(url: string): VoxelModel | undefined;
     getVoxelModels(): Iterable<VoxelModel>;
     load(): Promise<boolean>;
+    rotateBlockXZ(model: VoxelModel): VoxelModel;
     private loadModelEntries;
     importFiles(importFiles: ImportFile[]): Promise<WireModelInfo[] | undefined>;
     private loadModelFromString;

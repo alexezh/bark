@@ -87,7 +87,7 @@ export function boxedBasic2(): string {
     System.loadLevel 'default'
 
     monky:= Sprite.createSprite 'monky' scale:=0.5
-    Sprite.setPosition monky 120 20 120
+    Sprite.setPosition monky 120 20 200
 
     ThirdPersonController.configureController maxSpeed:=40 keySpeed:=10 thumbSpeed:=10 timeoutSeconds:=0.1
     ThirdPersonController.followSprite monky x:=100 y:=50 z:=0

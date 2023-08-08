@@ -6,6 +6,9 @@ export class BlockRegister {
 
 let blockRegister: BlockRegister = new BlockRegister();
 
+/**
+ * record model in register (aka clipboard)
+ */
 export function setBlockRegister(model: VoxelModel | undefined) {
   blockRegister.model = model;
 }

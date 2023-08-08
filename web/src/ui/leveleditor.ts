@@ -157,7 +157,17 @@ export class LevelEditor implements ILevelEditor {
   }
 
   rotateXZ(): void {
+    if (this.selectedArea === undefined) {
+      return;
+    }
 
+    let pos = this.selectedArea.pos;
+    let block = this.level.getBlockByPos(pos.x, pos.y, pos.z);
+    if (!block) {
+      return;
+    }
+
+    this.level.rotateBlockXZ(block);
   }
 
   flipX(): void {

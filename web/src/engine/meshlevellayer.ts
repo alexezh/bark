@@ -5,6 +5,7 @@ import { BlockPos3, WorldCoord3 } from "../voxel/pos3";
 import { VoxelGeometryWriter } from "../voxel/voxelgeometrywriter";
 import { VoxelModel, VoxelModelFrame } from "../voxel/voxelmodel";
 import { slice } from "lodash";
+import { modelCache } from "../voxel/voxelmodelcache";
 
 /**
  * single layer (y coordinate) of a level
@@ -196,6 +197,18 @@ export class MeshLevelLayer {
     this.dirty = true;
   }
 
+  public rotateBlockXZ(blockCoord: MapBlockCoord) {
+    let block = this.blocks[blockCoord.idx];
+    if (!block) {
+      return;
+    }
+
+    this.blocks[blockCoord.idx] = { model: modelCache.rotateBlockXZ(block.model), frame: 0 };
+    let sliceIdx = Math.floor(blockCoord.mapPos.z / this.sliceZSize);
+    this._meshDirty[sliceIdx] = true;
+    this.dirty = true;
+  }
+
   public deleteBlockByPos(xPos: number, zPos: number) {
     this.blocks[zPos * this.size.w + xPos] = undefined;
     let sliceIdx = Math.floor(zPos / this.sliceZSize);
@@ -205,7 +218,7 @@ export class MeshLevelLayer {
 
   public addBlock(pos: BlockPos3, block: VoxelModel) {
     let idx = pos.z * this.size.w + pos.x;
-    this.blocks[idx] = { model: block, frame: 0, topmost: false };
+    this.blocks[idx] = { model: block, frame: 0 };
     let sliceIdx = Math.floor(pos.z / this.sliceZSize);
     this._meshDirty[sliceIdx] = true;
     this.dirty = true;

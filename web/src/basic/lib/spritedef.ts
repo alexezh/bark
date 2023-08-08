@@ -41,7 +41,11 @@ async function createProjectile(baseSprite: Sprite3, name: string, scale?: numbe
 
 async function createSprite(name: string, scale?: number): Promise<IDigSprite> {
   let file = spriteFiles.findByName(name);
-  return file?.createSprite(RigitBodyKind.object, undefined, scale)!;
+  let sprite = await file?.createSprite(RigitBodyKind.object, undefined, scale)!;
+
+  vm.physics.addRigitObject(sprite);
+
+  return sprite;
 }
 
 // async function createMammal4Sprite(name: string, uri: string, scale?: number): Promise<IDigSprite> {
