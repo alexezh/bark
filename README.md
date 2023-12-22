@@ -4,7 +4,7 @@ The most visible project in this area is Scratch which provides a programming en
 
 The second problem with Scratch is that it only supports 2D sprites. 2D assets are easy to create initially, but very quickly the cost of making graphics assets becomes higher than the cost of coding. General purpose 3D assets are even more costly. However, Minecraft style voxel environment can provide a good compromise between complexity of model and flexibility.
 
-Another great idea in Scratch were Sprites based on Smalltalk greenthreads. A standard design for a game today is to update game state in a frame loop; aka callbacks. Callback based coding requires a developer to convert state management into some kind of state machine which is a lot harder than imperative programming. In Scratch, each sprite can run one or more infinite loops (green threads) for event processing or animation. 
+Another great idea in Scratch was the concept of Sprite based on Smalltalk greenthreads. A standard design for a game today is to update game state in a frame loop; aka callback executed on every frame. Callback based coding requires a developer to convert state management into some kind of state machine which is a lot harder than imperative programming. In Scratch, each sprite can run one or more infinite loops (green threads) for event processing or animation.
 
 In JS, green threads can be implemented with await, but the result code is quite hard for beginners.
 
