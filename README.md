@@ -77,8 +77,9 @@ Key ideas about the language
 - Use ":=" for assingment. It seems to be easier for beginngers to use "=" for comparison and ":=" for assingment
 - Functional. Functions and modules solve a lot of problems which OOP was solving. And it is easier to understand
 - Strongly typed. Functional style code shines with strong typing. Especially once typesystem supports operations on type such as "&" or "|" similar to TypeScript
-- Optional dot notation. One of the problems with functional syntax is pipelining. "foo(bar(blah(1)))" does not look as good as "blah(1).bar().foo()". Some languages solve this by allowing any method to be called with dot notation based on the first parameter. So you can call "1.blah().bar().foo()" instead of "foo(bar(blah(1)))"
+- Optional dot notation. One of the problems with functional syntax is pipelining. "foo(bar(blah(1)))" does not look as good as "blah(1).bar().foo()". Some languages solve this by allowing any method to be called with dot notation based on the first parameter. In Bark you can call "1.blah().bar().foo()" instead of "foo(bar(blah(1)))"
 - Built in green threads. Each event handler (such as startMonkey handler) runs on a separate green thread. Green threads are emulated using async/await methods. System calls such as "forever" can block execution of the loop to allow other code to run.
+- Zero cost interop with JS. Bark code is transpiled to JS. You can bring new JS code into Bark or use Bark code in JS.
 
 From implementation perspective, Bark consist of minimal server part and client part. 
 
