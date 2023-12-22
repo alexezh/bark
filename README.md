@@ -10,8 +10,9 @@ In JS, green threads can be implemented with await, but the result code is quite
 
 In Bark, I have combined vortex based graphics with a language inspired by Basic/Pascal/Oberon and green threads based on awaits. THe language is transpiled into JS which means that a developer can always use plain JS (or include JS libraries). 
 
-Here is example of code which creates a sprite and moves it.
+Here is example of code which creates a sprite and moves it in 3rd person mode.
 
+```
   var monky;
 
   on load function() begin
@@ -27,3 +28,11 @@ Here is example of code which creates a sprite and moves it.
   on message='killedMonkey' function(monky: Sprite) begin
     System.restart
   end
+```
+
+Bark consist of minimal server part and client part. 
+
+Server is implemented in C# and provides support for managing persisted state (storing game map and code in SQLITE) and realtime communication using WebSocket. In the future it might be extended to manage game runtime state.
+
+Client is implemented in TypeScript/WebGL. Bark transpiler uses hand written parser rather than relying on parser generator such as peg.js. This is done to enable better error handling and integration with editor logic (such as ability to recompile since line of code). Voxel rendering uses custom engine optimized for small words (1000*1000 blocks, no support for minecraft style infinite world)
+
