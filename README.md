@@ -14,8 +14,6 @@ Below is an example of code which creates a sprite and moves it in 3rd person mo
 
 In the example, the main code creates "monkey" sprite. Sprite creation invokes "on create" which handles which setups animation and sends "startMonky" message to inself. Similar to Scratch, sendMessage  asynchronous and processed by a separate green thread. create code then starts a loop which reads input from the controller and handles shooting. In this example, move handling is delegated to the keyboard controller as move requires a lot of subtle handling for jumping, climbing etc. But for simpler games it can be handled by this code as well. When a user presses space to shoot, code creates a projectile which is a special kind of sprite. The rest is handled by projectile code written in a similar way. 
 
-In JS, green threads are emulated using async/await methods. System calls such as "forever" can block execution of the loop to allow other code to run.
-
 ```
   on create function(monky: Sprite) begin
     var ma:= Sprite.addAnimation monky 'move'
@@ -74,7 +72,15 @@ In JS, green threads are emulated using async/await methods. System calls such a
   end
 ```
 
-Bark consist of minimal server part and client part. 
+Key ideas about the language
+
+- Use ":=" for assingment. It seems to be easier for beginngers to use "=" for comparison and ":=" for assingment
+- Functional. Functions and modules solve a lot of problems which OOP was solving. And it is easier to understand
+- Strongly typed. Functional style code shines with strong typing. Especially once typesystem supports operations on type such as "&" or "|" similar to TypeScript
+- Optional dot notation. One of the problems with functional syntax is pipelining. "foo(bar(blah(1)))" does not look as good as "blah(1).bar().foo()". Some languages solve this by allowing any method to be called with dot notation based on the first parameter. So you can call "1.blah().bar().foo()" instead of "foo(bar(blah(1)))"
+- Built in green threads. Each event handler (such as startMonkey handler) runs on a separate green thread. Green threads are emulated using async/await methods. System calls such as "forever" can block execution of the loop to allow other code to run.
+
+From implementation perspective, Bark consist of minimal server part and client part. 
 
 Server is implemented in C# and provides support for managing persisted state (storing game map and code in SQLITE) and realtime communication using WebSocket. 
 
