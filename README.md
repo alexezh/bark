@@ -10,9 +10,53 @@ In JS, green threads can be implemented with await, but the result code is quite
 
 In Bark, I have combined vortex based graphics with a language inspired by Basic/Pascal/Oberon and green threads based on awaits. THe language is transpiled into JS which means that a developer can always use plain JS (or include JS libraries). 
 
-Here is example of code which creates a sprite and moves it in 3rd person mode.
+Below is example of code which creates a sprite and moves it in 3rd person mode.
+
+In the example, main code creates monky sprite. Sprite creation invokes "on create" handles which setups animation and sends "startMonky" message to inself. Similar to Scratch, send message is asynchronous and processed by separate green thread. create code then starts a loop which reads input from controller and handles shooting. In this example, move handling is delegated to keyboard controller as move requires a lot of subtle handling for jumping, climbing etc. But for simpler games it can be handled by this code as well. When a user presses space to shoot, code creates a projectile which is a special kind of sprite. The rest is handled by projectile code written in a similar way. 
+
+In JS, green threads are emulated using async/await methods. System calls such as "forever" can block execution of the loop to allow other code to run.
 
 ```
+  on create function(monky: Sprite) begin
+    var ma:= Sprite.addAnimation monky 'move'
+
+    Sprite.addFrame ma idx:= 1 dur:=0.1 
+    Sprite.addFrame ma idx:= 2 dur:=0.1
+
+    ma:= Sprite.addAnimation monky 'stand'
+    Sprite.addFrame ma idx:= 0 dur:=0
+
+    System.log 'send start message'
+    System.sendMessage 'startMonky' monky
+
+    forever do
+      var ev := ThirdPersonController.readInput();
+
+      if ev.speedX != 0 or ev.speedZ != 0 then
+        Sprite.animate monky 'move'
+      else
+        Sprite.animate monky 'stand'
+      end
+
+      if ev.fire then
+        System.log 'shoot bread'
+        var bullet := Sprite.createProjectile monky 'bread'
+      end
+    end
+  end
+
+  on message='startMonky' function(monky: Sprite) begin
+    System.log 'start monky'
+    forever do
+      var collision := System.waitCollide monky
+      if collision is Sprite.Boundary then
+        System.log 'monky hit boundary'
+        System.sendMessage 'killedMonkey'
+        break;
+      end
+    end
+  end
+
   var monky;
 
   on load function() begin
