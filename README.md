@@ -12,6 +12,8 @@ In Bark, I have combined vortex based graphics with a language inspired by Basic
 
 Below is an example of code which creates a sprite and moves it in 3rd person mode.
 
+[<img src="./barkdemo1.mov" width="400" />]
+
 In the example, the main code creates "monkey" sprite. Sprite creation invokes "on create" which handles which setups animation and sends "startMonky" message to inself. Similar to Scratch, sendMessage  asynchronous and processed by a separate green thread. create code then starts a loop which reads input from the controller and handles shooting. In this example, move handling is delegated to the keyboard controller as move requires a lot of subtle handling for jumping, climbing etc. But for simpler games it can be handled by this code as well. When a user presses space to shoot, code creates a projectile which is a special kind of sprite. The rest is handled by projectile code written in a similar way. 
 
 ```
