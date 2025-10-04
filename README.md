@@ -12,64 +12,64 @@ In Bark, I have combined vortex based graphics with a language inspired by Basic
 
 Below is an example of code which creates a sprite and moves it in 3rd person mode.
 
-[<video src="./barkdemo1.mov" width="400" />]
+<video src="./barkdemo1.mov" width="400" />
 
 In the example, the main code creates "monkey" sprite. Sprite creation invokes "on create" which handles which setups animation and sends "startMonky" message to inself. Similar to Scratch, sendMessage  asynchronous and processed by a separate green thread. create code then starts a loop which reads input from the controller and handles shooting. In this example, move handling is delegated to the keyboard controller as move requires a lot of subtle handling for jumping, climbing etc. But for simpler games it can be handled by this code as well. When a user presses space to shoot, code creates a projectile which is a special kind of sprite. The rest is handled by projectile code written in a similar way. 
 
 ```
-  on create function(monky: Sprite) begin
-    var ma:= Sprite.addAnimation monky 'move'
+  on create function(monkey: Sprite) begin
+    var ma:= Sprite.addAnimation monkey 'move'
 
     Sprite.addFrame ma idx:= 1 dur:=0.1 
     Sprite.addFrame ma idx:= 2 dur:=0.1
 
-    ma:= Sprite.addAnimation monky 'stand'
+    ma:= Sprite.addAnimation monkey 'stand'
     Sprite.addFrame ma idx:= 0 dur:=0
 
     System.log 'send start message'
-    System.sendMessage 'startMonky' monky
+    System.sendMessage 'startMonkey' monkey
 
     forever do
       var ev := ThirdPersonController.readInput();
 
       if ev.speedX != 0 or ev.speedZ != 0 then
-        Sprite.animate monky 'move'
+        Sprite.animate monkey 'move'
       else
-        Sprite.animate monky 'stand'
+        Sprite.animate monkey 'stand'
       end
 
       if ev.fire then
         System.log 'shoot bread'
-        var bullet := Sprite.createProjectile monky 'bread'
+        var bullet := Sprite.createProjectile monkey 'bread'
       end
     end
   end
 
-  on message='startMonky' function(monky: Sprite) begin
-    System.log 'start monky'
+  on message='startMonkey' function(monkey: Sprite) begin
+    System.log 'start monkey'
     forever do
-      var collision := System.waitCollide monky
+      var collision := System.waitCollide monkey
       if collision is Sprite.Boundary then
-        System.log 'monky hit boundary'
+        System.log 'monkey hit boundary'
         System.sendMessage 'killedMonkey'
         break;
       end
     end
   end
 
-  var monky;
+  var monkey;
 
   on load function() begin
     System.loadLevel 'default'
 
-    monky:= Sprite.createSprite 'monky' scale:=0.5
-    Sprite.setPosition monky 120 20 200
+    monkey:= Sprite.createSprite 'monkey' scale:=0.5
+    Sprite.setPosition monkey 120 20 200
 
     ThirdPersonController.configureController maxSpeed:=40 keySpeed:=10 thumbSpeed:=10 timeoutSeconds:=0.1
-    ThirdPersonController.followSprite monky x:=100 y:=50 z:=0
+    ThirdPersonController.followSprite monkey x:=100 y:=50 z:=0
   end
 
-  on message='killedMonkey' function(monky: Sprite) begin
+  on message='killedMonkey' function(monkey: Sprite) begin
     System.restart
   end
 ```
